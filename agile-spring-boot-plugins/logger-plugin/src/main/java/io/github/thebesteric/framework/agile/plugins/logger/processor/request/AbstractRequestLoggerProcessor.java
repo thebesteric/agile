@@ -32,7 +32,8 @@ public abstract class AbstractRequestLoggerProcessor implements RequestLoggerPro
                 requestLog.setResult(JsonUtils.mapper.readTree(requestLog.getResult().toString()));
             }
         } catch (Exception ex) {
-            LoggerPrinter.error(log, "Cannot parse {} to json", requestLog.getResult());
+            LoggerPrinter.debug(log, "Cannot parse {} to json", requestLog.getResult().toString());
+            requestLog.setResult(requestLog.getResult().toString());
         }
         if (method != null) {
             buildSyntheticAgileLogger(method, requestLog);

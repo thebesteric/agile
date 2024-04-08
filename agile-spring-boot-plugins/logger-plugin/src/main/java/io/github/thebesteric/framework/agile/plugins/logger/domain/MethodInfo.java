@@ -25,12 +25,14 @@ public class MethodInfo {
     private LinkedHashMap<String, Object> arguments = new LinkedHashMap<>();
 
     // 需要简单处理的相关类型
-    public static final List<Class<?>> SIMPLE_PROCESS_CLASSES = new ArrayList<>();
+    private static final List<Class<?>> SIMPLE_PROCESS_CLASSES = new ArrayList<>();
 
     static {
         SIMPLE_PROCESS_CLASSES.add(ServletRequest.class);
         SIMPLE_PROCESS_CLASSES.add(ServletResponse.class);
         SIMPLE_PROCESS_CLASSES.add(File.class);
+        SIMPLE_PROCESS_CLASSES.add(MultipartFile.class);
+        SIMPLE_PROCESS_CLASSES.add(MultipartFile[].class);
         SIMPLE_PROCESS_CLASSES.add(InputStream.class);
         SIMPLE_PROCESS_CLASSES.add(OutputStream.class);
     }

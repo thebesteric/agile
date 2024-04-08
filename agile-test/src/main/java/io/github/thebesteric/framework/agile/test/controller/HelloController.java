@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogg
 import io.github.thebesteric.framework.agile.test.service.HelloService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +24,6 @@ public class HelloController {
     @Autowired
     HelloService helloService;
 
-
     @GetMapping("/foo")
     public Map<String, Object> foo(String name) {
         Map<String, Object> result = new HashMap<>();
@@ -41,6 +41,11 @@ public class HelloController {
         result.put("data", body);
         result.put("message", "success");
         return result;
+    }
+
+    @PostMapping("/upload")
+    public String upload(@RequestParam(value = "file") MultipartFile[] files) {
+        return "success";
     }
 
 }
