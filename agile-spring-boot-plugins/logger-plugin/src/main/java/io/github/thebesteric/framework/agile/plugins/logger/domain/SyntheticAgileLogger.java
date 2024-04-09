@@ -53,31 +53,20 @@ public class SyntheticAgileLogger {
         String tagOnType = null, tagOnMethod = null;
         String extraOnType = null, extraOnMethod = null;
         String levelOnType = null, levelOnMethod = null;
-        List<String> ignoreMethodsOnType = null, ignoreMethodsOnMethod = null, mergedIgnoreMethods = new ArrayList<>();
 
         if (onType != null) {
             tagOnType = onType.tag();
             extraOnType = onType.extra();
             levelOnType = onType.level();
-            ignoreMethodsOnType = List.of(onType.ignoreMethods());
         }
         if (onMethod != null) {
             tagOnMethod = onMethod.tag();
             extraOnMethod = onMethod.extra();
             levelOnMethod = onMethod.level();
-            ignoreMethodsOnMethod = List.of(onMethod.ignoreMethods());
         }
 
         // Set method attribute
         this.method = method;
-
-        // Merge ignore methods
-        if (ignoreMethodsOnType != null) {
-            mergedIgnoreMethods.addAll(ignoreMethodsOnType);
-        }
-        if (ignoreMethodsOnMethod != null) {
-            mergedIgnoreMethods.addAll(ignoreMethodsOnMethod);
-        }
 
         // Merge attributes
         this.tag = StringUtils.blankToNull(StringUtils.notEquals(defaultTag, tagOnMethod) ?
@@ -85,7 +74,6 @@ public class SyntheticAgileLogger {
         this.level = StringUtils.notEquals(defaultLevel.name(), levelOnMethod) ?
                 (levelOnMethod != null ? LogLevel.get(levelOnMethod) : LogLevel.get(levelOnType)) : (levelOnType == null ? defaultLevel : LogLevel.get(levelOnType));
         this.extra = StringUtils.blankToNull(StringUtils.isNotEmpty(extraOnMethod) ? extraOnMethod : extraOnType);
-        this.ignoreMethods = new HashSet<>(mergedIgnoreMethods).toArray(new String[0]);
 
         // Has not annotated @AgileLogger
         if (onType == null && onMethod == null) {

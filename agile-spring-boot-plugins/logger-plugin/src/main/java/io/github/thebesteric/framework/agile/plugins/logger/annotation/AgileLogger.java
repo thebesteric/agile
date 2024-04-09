@@ -22,13 +22,4 @@ public @interface AgileLogger {
      * <p>When an exception occurs, the log level is automatically changed to ERROR
      */
     String level() default "info";
-
-    /**
-     * Methods to ignore
-     * <p>Takes effect only on class
-     * <p>Method overloading is not considered if you need to consider method overloading, please use: {@link IgnoreMethod}
-     *
-     * @see IgnoreMethod
-     */
-    String[] ignoreMethods() default {};
 }
