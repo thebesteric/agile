@@ -24,6 +24,7 @@ public class HelloController {
     @Autowired
     HelloService helloService;
 
+    @CrossOrigin
     @GetMapping("/foo")
     public Map<String, Object> foo(String name) {
         Map<String, Object> result = new HashMap<>();
