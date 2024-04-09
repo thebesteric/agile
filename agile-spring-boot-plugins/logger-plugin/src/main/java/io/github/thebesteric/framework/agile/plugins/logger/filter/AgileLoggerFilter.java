@@ -41,6 +41,10 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
 
         // Fetch URI mapping Method
         Method method = URL_MAPPING.get(uri);
+        if (method == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         Class<?> targetClass = method.getDeclaringClass();
 
         // 该方法是否需要忽略
