@@ -11,9 +11,9 @@ import java.util.UUID;
  */
 public class TransactionUtils extends AbstractUtils {
 
-    public static final List<String> TRACK_ID_NAMES = CollectionUtils.createList("track-id", "x-track-id", "trans-id", "x-trans-id", "trace-id", "x-trace-id", "transaction-id", "x-transaction-id");
+    public static final List<String> TRACK_ID_NAMES = List.of("track-id", "x-track-id", "trans-id", "x-trans-id", "trace-id", "x-trace-id", "transaction-id", "x-transaction-id");
 
-    private static ThreadLocal<String> trackIdThreadLocal;
+    private static ThreadLocal<String> trackIdThreadLocal = new InheritableThreadLocal<>();
 
     static {
         initialize();
@@ -25,21 +25,30 @@ public class TransactionUtils extends AbstractUtils {
 
     public static ThreadLocal<String> create(String trackId) {
         if (trackIdThreadLocal != null) {
-            trackIdThreadLocal.remove();
+            trackIdThreadLocal = null;
         }
         return ThreadLocal.withInitial(() -> trackId);
     }
 
+    public static void createIfNecessary() {
+        if (trackIdThreadLocal == null) {
+            initialize();
+        }
+    }
+
     public static String get() {
+        createIfNecessary();
         return trackIdThreadLocal.get();
     }
 
     public static void set(String trackId) {
+        createIfNecessary();
         trackIdThreadLocal.set(trackId);
     }
 
     public static void clear() {
         trackIdThreadLocal.remove();
+        trackIdThreadLocal = null;
     }
 
     public static void initialize() {
@@ -48,5 +57,14 @@ public class TransactionUtils extends AbstractUtils {
 
     public static void initialize(String trackId) {
         trackIdThreadLocal = create(trackId);
+    }
+
+    public static boolean hasTrackIdInRequestHeader(String headerName) {
+        for (String name : TRACK_ID_NAMES) {
+            if (headerName.equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
