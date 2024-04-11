@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
 import java.util.Set;
 import java.util.UUID;
 
@@ -62,6 +63,9 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
         AgileLoggerRequestWrapper requestWrapper = new AgileLoggerRequestWrapper((HttpServletRequest) request);
         AgileLoggerResponseWrapper responseWrapper = new AgileLoggerResponseWrapper((HttpServletResponse) response);
 
+        // 初始化相关属性
+        initProperties(requestWrapper);
+
         // 开始计时
         String durationTag = DurationWatcher.start();
         try {
@@ -101,4 +105,19 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
         }
 
     }
+
+    /** 初始化相关属性 */
+    private void initProperties(HttpServletRequest request) {
+        // 设置自定义的 trackId
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            String headerValue = request.getHeader(headerName);
+            if (TransactionUtils.hasTrackIdInRequestHeader(headerName)) {
+                TransactionUtils.set(headerValue);
+                break;
+            }
+        }
+    }
+
 }
