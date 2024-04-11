@@ -1,12 +1,12 @@
 package io.github.thebesteric.framework.agile.test.controller;
 
+import io.github.thebesteric.framework.agile.core.domain.R;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
 import io.github.thebesteric.framework.agile.test.service.HelloService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -26,22 +26,14 @@ public class HelloController {
 
     @CrossOrigin
     @GetMapping("/foo")
-    public Map<String, Object> foo(String name) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("data", helloService.foo(name));
-        result.put("message", "success");
-        return result;
+    public R<String> foo(String name) {
+        return R.success(helloService.foo(name));
     }
 
     @AgileLogger
     @PostMapping("/bar")
-    public Map<String, Object> bar(@RequestBody Map<String, Object> body) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("code", 200);
-        result.put("data", body);
-        result.put("message", "success");
-        return result;
+    public R<Map<String, Object>> bar(@RequestBody Map<String, Object> body) {
+        return R.success(body);
     }
 
     @PostMapping("/upload")
