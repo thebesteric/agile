@@ -42,3 +42,35 @@ public class AgileLoggerConfig {
     }
 }
 ```
+### 自定义请求忽略或重写
+```java
+@Bean
+public RequestIgnoreProcessor headerIgnoreProcessor() {
+    return new HeaderIgnoreProcessor() {
+        @Override
+        protected String[] doIgnore(RequestLog requestLog) {
+            return new String[]{"apple", "banana"};
+        }
+
+        @Override
+        protected Map<String, String> doRewrite(RequestLog requestLog) {
+            return Map.of("phone", "*");
+        }
+    };
+}
+
+@Bean
+public RequestIgnoreProcessor parameterIgnoreProcessor() {
+    return new ParameterIgnoreProcessor() {
+        @Override
+        protected String[] doIgnore(RequestLog requestLog) {
+            return new String[]{"apple", "banana"};
+        }
+
+        @Override
+        protected Map<String, String> doRewrite(RequestLog requestLog) {
+            return Map.of("name", "**");
+        }
+    };
+}
+```
