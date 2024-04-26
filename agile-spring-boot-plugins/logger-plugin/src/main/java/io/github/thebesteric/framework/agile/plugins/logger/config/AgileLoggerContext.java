@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.core.generator.IdGenerator;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
 import io.github.thebesteric.framework.agile.core.matcher.method.MethodMatcher;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogMode;
+import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.RequestIgnoreProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.LogRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.RequestLoggerProcessor;
@@ -39,7 +40,7 @@ public class AgileLoggerContext {
     private final List<Recorder> recorders;
     private final List<ClassMatcher> classMatchers;
     private final List<MethodMatcher> methodMatchers;
-
+    private final List<RequestIgnoreProcessor> requestIgnoreProcessors;
 
 
     private final Queue<String> parentIdQueue = new LinkedList<>();
@@ -48,12 +49,14 @@ public class AgileLoggerContext {
     private final ResponseSuccessDefineProcessor responseSuccessDefineProcessor;
     private final String contextPath;
 
-    public AgileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders, List<ClassMatcher> classMatchers, List<MethodMatcher> methodMatchers) {
+    public AgileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders,
+                              List<ClassMatcher> classMatchers, List<MethodMatcher> methodMatchers, List<RequestIgnoreProcessor> requestIgnoreProcessors) {
         this.applicationContext = (GenericApplicationContext) applicationContext;
         this.properties = properties;
         this.recorders = recorders;
         this.classMatchers = classMatchers;
         this.methodMatchers = methodMatchers;
+        this.requestIgnoreProcessors = requestIgnoreProcessors;
         this.currentRecorder = initCurrentRecorder(properties);
         this.requestLoggerProcessor = getBeanOrDefault(RequestLoggerProcessor.class, new DefaultRequestLoggerProcessor());
         this.responseSuccessDefineProcessor = generateResponseSuccessDefineProcessor();
@@ -109,6 +112,7 @@ public class AgileLoggerContext {
      * @param beanName     beanName
      * @param beanType     Class<T>
      * @param defaultValue defaultValue
+     *
      * @return T
      */
     public <T> T getBeanOrDefault(String beanName, Class<T> beanType, T defaultValue) {

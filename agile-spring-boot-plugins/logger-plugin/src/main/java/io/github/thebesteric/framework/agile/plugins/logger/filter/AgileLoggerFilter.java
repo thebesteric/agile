@@ -8,6 +8,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.domain.IgnoredMethod
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
 import io.github.thebesteric.framework.agile.plugins.logger.filter.warpper.AgileLoggerRequestWrapper;
 import io.github.thebesteric.framework.agile.plugins.logger.filter.warpper.AgileLoggerResponseWrapper;
+import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.RequestIgnoreProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.RequestLoggerProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.response.ResponseSuccessDefineProcessor;
@@ -17,9 +18,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Enumeration;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * AgileLoggerRequestLogFilter
@@ -89,6 +88,14 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
                 requestLog.setException(exception);
                 requestLog.setLevel(LogLevel.ERROR);
             }
+
+            // 处理需要忽略的请求参数
+            List<RequestIgnoreProcessor> requestIgnoreProcessors = agileLoggerContext.getRequestIgnoreProcessors();
+            requestIgnoreProcessors = Optional.ofNullable(requestIgnoreProcessors).orElse(new ArrayList<>());
+            requestIgnoreProcessors.forEach(requestIgnoreProcessor -> {
+                requestIgnoreProcessor.ignore(requestLog);
+                requestIgnoreProcessor.rewrite(requestLog);
+            });
 
             // Record request info
             // 记录日志

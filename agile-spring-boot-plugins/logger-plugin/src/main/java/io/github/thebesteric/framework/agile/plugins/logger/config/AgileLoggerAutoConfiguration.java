@@ -12,6 +12,7 @@ import io.github.thebesteric.framework.agile.core.scaner.ClassPathScanner;
 import io.github.thebesteric.framework.agile.plugins.logger.advisor.AgileLoggerAdvice;
 import io.github.thebesteric.framework.agile.plugins.logger.advisor.AgileLoggerPointcut;
 import io.github.thebesteric.framework.agile.plugins.logger.filter.AgileLoggerFilter;
+import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.RequestIgnoreProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.mapping.MappingProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.mapping.impl.*;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.matcher.AgileLoggerOnClassMatcher;
@@ -68,8 +69,8 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
 
     @Bean
     public AgileLoggerContext agileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders,
-                                                 List<ClassMatcher> classMatchers, List<MethodMatcher> methodMatchers) {
-        return new AgileLoggerContext(applicationContext, properties, recorders, classMatchers, methodMatchers);
+                                                 List<ClassMatcher> classMatchers, List<MethodMatcher> methodMatchers, List<RequestIgnoreProcessor> requestIgnoreProcessors) {
+        return new AgileLoggerContext(applicationContext, properties, recorders, classMatchers, methodMatchers, requestIgnoreProcessors);
     }
 
     @Bean

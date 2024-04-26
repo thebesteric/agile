@@ -16,8 +16,7 @@ import java.util.List;
  * @version v1.0
  * @since 2024-03-11 14:04:42
  */
-@Getter
-@Setter
+@Data
 @ConfigurationProperties(prefix = AgileConstants.PROPERTIES_PREFIX)
 public class AgileLoggerProperties {
 
@@ -28,8 +27,7 @@ public class AgileLoggerProperties {
     @NestedConfigurationProperty
     private Async async = new Async();
 
-    @Getter
-    @Setter
+    @Data
     public static class Logger {
         private LogMode logMode = LogMode.LOG;
         private String uriPrefix;
@@ -37,8 +35,7 @@ public class AgileLoggerProperties {
         @NestedConfigurationProperty
         private ResponseSuccessDefine responseSuccessDefine;
 
-        @Getter
-        @Setter
+        @Data
         public static class ResponseSuccessDefine {
             private List<CodeField> codeFields;
             private List<String> messageFields;
