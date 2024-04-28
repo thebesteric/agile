@@ -5,7 +5,7 @@
     <groupId>io.github.thebesteric.framework.agile</groupId>
     <artifactId>agile</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.4</version>
+    <version>1.0.5</version>
 
     <name>agile</name>
     <url>https://github.com/thebesteric/apm-tracing</url>
