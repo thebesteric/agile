@@ -47,7 +47,9 @@ public class TransactionUtils extends AbstractUtils {
     }
 
     public static void clear() {
-        trackIdThreadLocal.remove();
+        if (trackIdThreadLocal != null) {
+            trackIdThreadLocal.remove();
+        }
         trackIdThreadLocal = null;
     }
 
