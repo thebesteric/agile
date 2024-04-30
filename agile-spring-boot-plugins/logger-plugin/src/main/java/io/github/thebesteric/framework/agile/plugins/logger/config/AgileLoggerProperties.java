@@ -17,7 +17,7 @@ import java.util.List;
  * @since 2024-03-11 14:04:42
  */
 @Data
-@ConfigurationProperties(prefix = AgileConstants.PROPERTIES_PREFIX)
+@ConfigurationProperties(prefix = AgileConstants.PROPERTIES_PREFIX + ".logger")
 public class AgileLoggerProperties {
 
     private boolean enable = true;
