@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.impl;
 
+import io.github.thebesteric.framework.agile.commons.util.StringUtils;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.AbstractRequestIgnoreProcessor;
 
@@ -26,6 +27,9 @@ public abstract class ParameterIgnoreProcessor extends AbstractRequestIgnoreProc
         Arrays.stream(ignores).forEach(key -> requestLog.getParams().remove(key));
         // 屏蔽 query
         String query = requestLog.getQuery();
+        if (StringUtils.isEmpty(query)) {
+            return;
+        }
         List<String> queryList = Arrays.asList(query.split("&"));
         List<Integer> ignoreIndexes = new ArrayList<>();
         Arrays.stream(ignores).forEach(key -> {
@@ -51,6 +55,9 @@ public abstract class ParameterIgnoreProcessor extends AbstractRequestIgnoreProc
         ignoreRewrites.forEach((key, value) -> requestLog.getParams().computeIfPresent(key, (k, v) -> value));
         // 重写 query
         String query = requestLog.getQuery();
+        if (StringUtils.isEmpty(query)) {
+            return;
+        }
         String[] queryArr = query.split("&");
         ignoreRewrites.forEach((key, value) -> {
             for (int i = 0; i < queryArr.length; i++) {
