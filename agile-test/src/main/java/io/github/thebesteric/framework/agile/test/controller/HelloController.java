@@ -1,7 +1,10 @@
 package io.github.thebesteric.framework.agile.test.controller;
 
 import io.github.thebesteric.framework.agile.core.domain.R;
+import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
+import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
+import io.github.thebesteric.framework.agile.test.domain.Id2Vo;
 import io.github.thebesteric.framework.agile.test.service.HelloService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +42,18 @@ public class HelloController {
     @PostMapping("/upload")
     public String upload(@RequestParam(value = "file") MultipartFile[] files) {
         return "success";
+    }
+
+    @GetMapping("/id1")
+    @Idempotent(timeout = 10000)
+    public R<String> id1(@IdempotentKey String name, @IdempotentKey Integer age) {
+        return R.success(name + "-" + age);
+    }
+
+    @PostMapping("/id2")
+    @Idempotent(timeout = 10000)
+    public R<Id2Vo> id2(@RequestBody Id2Vo id2Vo) {
+        return R.success(id2Vo);
     }
 
 }

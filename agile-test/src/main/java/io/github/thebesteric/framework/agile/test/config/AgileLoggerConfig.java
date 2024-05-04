@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.test.config;
 
+import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
+import io.github.thebesteric.framework.agile.plugins.idempotent.processor.impl.RedisIdempotentProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
@@ -8,6 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.imp
 import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.impl.ParameterIgnoreProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.CustomRecorder;
+import org.redisson.api.RedissonClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -63,6 +66,11 @@ public class AgileLoggerConfig {
                 return Map.of("name", "name**");
             }
         };
+    }
+
+    @Bean
+    public IdempotentProcessor redisIdempotentProcessor(RedissonClient redissonClient) {
+        return new RedisIdempotentProcessor(redissonClient);
     }
 
 }

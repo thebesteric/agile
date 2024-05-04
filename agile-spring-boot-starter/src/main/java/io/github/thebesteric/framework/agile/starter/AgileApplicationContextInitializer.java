@@ -28,8 +28,6 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
         // 设置包扫描路径
         LoggerPrinter.info("Base package path is {}", PackageFinder.getPackageNames());
 
-        EnableAgile enableAgile = startupClass.getAnnotation(EnableAgile.class);
-
         AgilePlugins[] plugins = AgilePlugins.values();
         for (AgilePlugins plugin : plugins) {
             try {
@@ -38,10 +36,7 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
                 LoggerPrinter.warn("{} plug-in not found.", plugin.name());
                 continue;
             }
-
-            if (AgilePlugins.LOGGER_PLUGIN.name.equals(plugin.name) && enableAgile.logger()) {
-                LoggerPrinter.info("The {} has been installed.", plugin.name);
-            }
+            LoggerPrinter.info("The {} has been installed.", plugin.name);
         }
     }
 

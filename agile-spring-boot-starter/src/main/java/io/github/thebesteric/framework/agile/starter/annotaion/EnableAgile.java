@@ -17,7 +17,4 @@ import java.lang.annotation.*;
 @Import(AgileMarker.class)
 @Documented
 public @interface EnableAgile {
-    boolean logger() default true;
-    boolean versioner() default false;
-    boolean mocker() default false;
 }
