@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.github.thebesteric.framework.agile.test</groupId>
     <artifactId>agile-test</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <name>agile-test</name>
     <description>agile-test</description>
     <properties>
@@ -50,6 +50,23 @@
             <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
             <artifactId>logger-plugin</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+            <artifactId>idempotent-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>3.29.0</version>
         </dependency>
 
     </dependencies>

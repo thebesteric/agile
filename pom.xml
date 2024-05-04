@@ -5,7 +5,7 @@
     <groupId>io.github.thebesteric.framework.agile</groupId>
     <artifactId>agile</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
 
     <name>agile</name>
     <url>https://github.com/thebesteric/apm-tracing</url>
@@ -65,6 +65,8 @@
         <junit.jupiter.version>5.10.0</junit.jupiter.version>
         <guava.version>33.0.0-jre</guava.version>
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
+        <vavr.version>0.10.4</vavr.version>
+        <redisson.version>3.29.0</redisson.version>
     </properties>
 
     <dependencies>
@@ -121,6 +123,12 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.vavr</groupId>
+            <artifactId>vavr</artifactId>
+            <version>${vavr.version}</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -153,6 +161,13 @@
                 <groupId>jakarta.servlet</groupId>
                 <artifactId>jakarta.servlet-api</artifactId>
                 <version>${jakarta.servlet-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
                 <scope>provided</scope>
             </dependency>
         </dependencies>
