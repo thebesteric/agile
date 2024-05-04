@@ -1,7 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.generator;
 
 import io.github.thebesteric.framework.agile.commons.util.AbstractUtils;
-import io.github.thebesteric.framework.agile.commons.util.StringUtils;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
 import org.springframework.util.ReflectionUtils;
@@ -33,8 +32,10 @@ public class IdempotentKeyGenerator extends AbstractUtils {
      */
     public static String generate(final Method method, final Object[] args) {
         Idempotent idempotent = method.getAnnotation(Idempotent.class);
-        final Parameter[] parameters = method.getParameters();
         StringBuilder sb = new StringBuilder();
+
+        // 获取方法参数上的 @IdempotentKey 注解
+        final Parameter[] parameters = method.getParameters();
         for (int i = 0; i < parameters.length; i++) {
             final IdempotentKey idempotentKey = parameters[i].getAnnotation(IdempotentKey.class);
             if (idempotentKey == null) {
@@ -43,26 +44,25 @@ public class IdempotentKeyGenerator extends AbstractUtils {
             // 拼接连接符 "|" + 参数值
             sb.append(idempotent.delimiter()).append(args[i]);
         }
-        // 如果方法上没有加 @IdempotentKey 注解
-        if (StringUtils.isEmpty(sb.toString())) {
-            // 获取方法参数的内注解
-            final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-            for (int i = 0; i < parameterAnnotations.length; i++) {
-                final Object object = args[i];
-                // 获取注解类中所有的属性字段
-                final Field[] fields = object.getClass().getDeclaredFields();
-                for (Field field : fields) {
-                    // 判断字段上是否有 @IdempotentKey 注解
-                    final IdempotentKey annotation = field.getAnnotation(IdempotentKey.class);
-                    if (annotation == null) {
-                        continue;
-                    }
-                    field.setAccessible(true);
-                    // 拼接连接符 "|" + 字段值
-                    sb.append(idempotent.delimiter()).append(ReflectionUtils.getField(field, object));
+
+        // 获取方法参数的内的 @IdempotentKey 注解
+        final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+        for (int i = 0; i < parameterAnnotations.length; i++) {
+            final Object object = args[i];
+            // 获取注解类中所有的属性字段
+            final Field[] fields = object.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                // 判断字段上是否有 @IdempotentKey 注解
+                final IdempotentKey annotation = field.getAnnotation(IdempotentKey.class);
+                if (annotation == null) {
+                    continue;
                 }
+                field.setAccessible(true);
+                // 拼接连接符 "|" + 字段值
+                sb.append(idempotent.delimiter()).append(ReflectionUtils.getField(field, object));
             }
         }
+
         // 返回 key：默认格式为：idempotent@class.method|xxx|yyy
         return idempotent.keyPrefix() + "@" + getMethodSignature(method) + sb;
     }
