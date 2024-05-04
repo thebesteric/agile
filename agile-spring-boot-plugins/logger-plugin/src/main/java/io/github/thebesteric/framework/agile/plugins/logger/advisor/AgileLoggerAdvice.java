@@ -32,6 +32,11 @@ public class AgileLoggerAdvice implements MethodInterceptor {
     @Override
     public Object invoke(@NonNull MethodInvocation invocation) throws Throwable {
 
+        if (!agileLoggerContext.getProperties().isEnable()) {
+            // 调用目标方法
+            return invocation.proceed();
+        }
+
         // 开始计时
         String durationTag = DurationWatcher.start();
         InvokeLog.Builder invokeLogBuilder = InvokeLog.builder();
