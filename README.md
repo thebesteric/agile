@@ -6,24 +6,25 @@
 ```yaml
 sourceflag:
   agile:
-    enable: true
     logger:
-      log-mode: log
-      curl-enable: true
-      response-success-define:
-        code-fields:
-          - name: code
-            value: 200
-          - name: code
-            value: 100
-        message-fields: message, msg
-    async:
-      enable: true
-      async-params:
-        core-pool-size: 1
-        maximum-pool-size: 2
-        keep-alive-time: 60s
-        queue-size: 1024
+        enable: true
+        logger:
+          log-mode: log
+          curl-enable: true
+          response-success-define:
+            code-fields:
+              - name: code
+                value: 200
+              - name: code
+                value: 100
+            message-fields: message, msg
+        async:
+          enable: true
+          async-params:
+            core-pool-size: 1
+            maximum-pool-size: 2
+            keep-alive-time: 60s
+            queue-size: 1024
 ```
 ### 自定义日志记录器
 自定义一个 bean 实现 CustomRecorder，实现 process 方法
@@ -72,5 +73,40 @@ public RequestIgnoreProcessor parameterIgnoreProcessor() {
             return Map.of("name", "**");
         }
     };
+}
+```
+## 幂等插件
+主要作用：防止接口重复提交，可自定义幂等关键信息
+### 使用方式
+1. 使用方法参数的幂等信息
+```java
+@GetMapping("/id1")
+@Idempotent(timeout = 1000)
+public R<String> id1(@IdempotentKey String name, @IdempotentKey Integer age) {
+    return R.success(name + "-" + age);
+}
+```
+2. 使用对象内的幂等信息
+```java
+@PostMapping("/id2")
+@Idempotent(timeout = 1000)
+public R<Id2Vo> id2(@RequestBody Id2Vo id2Vo) {
+    return R.success(id2Vo);
+}
+
+@Data
+public class Id2Vo {
+    @IdempotentKey
+    private String name;
+    @IdempotentKey
+    private Integer age;
+}
+```
+### 幂等实现类配置
+默认使用内存实现幂等操作，也可以使用 Redis 实现幂等操作，或自定义实现`IdempotentProcessor`接口
+```java
+@Bean
+public IdempotentProcessor redisIdempotentProcessor(RedissonClient redissonClient) {
+    return new RedisIdempotentProcessor(redissonClient);
 }
 ```

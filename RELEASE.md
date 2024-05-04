@@ -13,3 +13,6 @@
 - 日志插件 (feat): 支持忽略或冲泻请求日志中的请求信息（Params、Header、Cookie）
 ### v1.0.5
 - 日志插件 (bugfix): 修复 TransactionUtils.clear 时空指针的问题
+### v1.0.6
+- 日志插件 (chore): 修改日志配置文件的前缀
+- 幂等插件 (feat): 新增接口幂等判断插件
