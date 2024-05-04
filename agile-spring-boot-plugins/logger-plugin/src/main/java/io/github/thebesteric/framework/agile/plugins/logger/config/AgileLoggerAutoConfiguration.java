@@ -84,7 +84,7 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
     }
 
     @Bean
-    public DefaultPointcutAdvisor defaultPointcutAdvisor(AgileLoggerPointcut agileLoggerPointcut, AgileLoggerAdvice agileLoggerAdvice) {
+    public DefaultPointcutAdvisor agileLoggerPointcutAdvisor(AgileLoggerPointcut agileLoggerPointcut, AgileLoggerAdvice agileLoggerAdvice) {
         // 创建通知器，将切点和拦截器组合
         DefaultPointcutAdvisor advisor = new DefaultPointcutAdvisor();
         advisor.setPointcut(agileLoggerPointcut);
