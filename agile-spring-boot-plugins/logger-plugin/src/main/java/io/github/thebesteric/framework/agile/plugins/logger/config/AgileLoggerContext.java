@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.logger.config;
 
-import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
+import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.core.generator.DefaultIdGenerator;
 import io.github.thebesteric.framework.agile.core.generator.IdGenerator;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
@@ -11,8 +11,8 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.R
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.LogRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.RequestLoggerProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.impl.DefaultRequestLoggerProcessor;
-import io.github.thebesteric.framework.agile.plugins.logger.processor.response.impl.DefaultResponseSuccessDefineProcessorProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.response.ResponseSuccessDefineProcessor;
+import io.github.thebesteric.framework.agile.plugins.logger.processor.response.impl.DefaultResponseSuccessDefineProcessorProcessor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -31,11 +31,10 @@ import java.util.Queue;
  */
 @Getter
 @Slf4j
-public class AgileLoggerContext {
+public class AgileLoggerContext extends AbstractAgileContext {
 
     public static final IdGenerator idGenerator = DefaultIdGenerator.getInstance();
 
-    private final GenericApplicationContext applicationContext;
     private final AgileLoggerProperties properties;
     private final List<Recorder> recorders;
     private final List<ClassMatcher> classMatchers;
@@ -51,7 +50,7 @@ public class AgileLoggerContext {
 
     public AgileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders,
                               List<ClassMatcher> classMatchers, List<MethodMatcher> methodMatchers, List<RequestIgnoreProcessor> requestIgnoreProcessors) {
-        this.applicationContext = (GenericApplicationContext) applicationContext;
+        super((GenericApplicationContext) applicationContext);
         this.properties = properties;
         this.recorders = recorders;
         this.classMatchers = classMatchers;
@@ -90,42 +89,5 @@ public class AgileLoggerContext {
             recorder = new LogRecorder(properties);
         }
         return recorder;
-    }
-
-    public <T> T getBeanOrDefault(Class<T> beanType, T defaultValue) {
-        T obj = null;
-        try {
-            obj = this.applicationContext.getBean(beanType);
-        } catch (Exception e) {
-            if (defaultValue != null) {
-                obj = defaultValue;
-            } else {
-                LoggerPrinter.warn(log, e.getMessage());
-            }
-        }
-        return obj;
-    }
-
-    /**
-     * Get bean, using the default value if null
-     *
-     * @param beanName     beanName
-     * @param beanType     Class<T>
-     * @param defaultValue defaultValue
-     *
-     * @return T
-     */
-    public <T> T getBeanOrDefault(String beanName, Class<T> beanType, T defaultValue) {
-        T obj = null;
-        try {
-            obj = this.applicationContext.getBean(beanName, beanType);
-        } catch (Exception e) {
-            if (defaultValue != null) {
-                obj = defaultValue;
-            } else {
-                LoggerPrinter.debug(log, e.getMessage());
-            }
-        }
-        return obj;
     }
 }
