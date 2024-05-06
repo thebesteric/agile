@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.generator;
 
 import io.github.thebesteric.framework.agile.commons.util.AbstractUtils;
+import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
 import org.springframework.util.ReflectionUtils;
@@ -66,11 +67,7 @@ public class IdempotentKeyGenerator extends AbstractUtils {
             }
         }
 
-        // 返回 key：默认格式为：idempotent@class.method|xxx|yyy
-        return idempotent.keyPrefix() + getMethodSignature(method) + sb;
-    }
-
-    private static String getMethodSignature(Method method) {
-        return method.getDeclaringClass().getName() + "." + method.getName();
+        // 返回 key：默认格式为：idempotent:class.method|xxx|yyy
+        return idempotent.keyPrefix() + ReflectUtils.methodSignature(method) + sb;
     }
 }
