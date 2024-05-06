@@ -52,17 +52,17 @@
             <version>${project.version}</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>io.github.thebesteric.framework.agile.plugins</groupId>-->
-<!--            <artifactId>idempotent-plugin</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
-            <artifactId>idempotent-plugin-redis</artifactId>
+            <artifactId>idempotent-plugin</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+<!--        <dependency>-->
+<!--            <groupId>io.github.thebesteric.framework.agile.plugins</groupId>-->
+<!--            <artifactId>idempotent-plugin-redis</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
 
     </dependencies>
 
