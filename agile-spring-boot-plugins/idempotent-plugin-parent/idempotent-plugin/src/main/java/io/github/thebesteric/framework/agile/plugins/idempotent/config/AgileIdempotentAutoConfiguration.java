@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.config;
 
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
+import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
 import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIdempotentAdvice;
@@ -8,6 +9,7 @@ import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIde
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +28,7 @@ import java.util.List;
 @Configuration
 @EnableConfigurationProperties(AgileIdempotentProperties.class)
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX, name = "idempotent.enable", havingValue = "true", matchIfMissing = true)
 public class AgileIdempotentAutoConfiguration extends AbstractAgileInitialization {
 
     private final AgileIdempotentProperties properties;
