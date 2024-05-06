@@ -67,7 +67,7 @@ public class IdempotentKeyGenerator extends AbstractUtils {
         }
 
         // 返回 key：默认格式为：idempotent@class.method|xxx|yyy
-        return idempotent.keyPrefix() + "@" + getMethodSignature(method) + sb;
+        return idempotent.keyPrefix() + getMethodSignature(method) + sb;
     }
 
     private static String getMethodSignature(Method method) {

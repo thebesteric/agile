@@ -21,7 +21,7 @@ public @interface Idempotent {
     TimeUnit timeUnit() default TimeUnit.MILLISECONDS;
 
     /** 幂等前缀 */
-    String keyPrefix() default "idempotent";
+    String keyPrefix() default "idempotent:";
 
     /** key 分隔符 */
     String delimiter() default "|";
