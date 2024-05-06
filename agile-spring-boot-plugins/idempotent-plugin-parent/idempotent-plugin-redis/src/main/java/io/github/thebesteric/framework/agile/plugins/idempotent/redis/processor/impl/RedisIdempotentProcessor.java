@@ -1,4 +1,4 @@
-package io.github.thebesteric.framework.agile.plugins.idempotent.processor.impl;
+package io.github.thebesteric.framework.agile.plugins.idempotent.redis.processor.impl;
 
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
 import lombok.RequiredArgsConstructor;

@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.test.config;
 
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
-import io.github.thebesteric.framework.agile.plugins.idempotent.processor.impl.RedisIdempotentProcessor;
+import io.github.thebesteric.framework.agile.plugins.idempotent.redis.processor.impl.RedisIdempotentProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
