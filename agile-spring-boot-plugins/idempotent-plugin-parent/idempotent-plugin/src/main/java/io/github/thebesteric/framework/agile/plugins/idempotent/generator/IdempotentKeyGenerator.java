@@ -49,6 +49,9 @@ public class IdempotentKeyGenerator extends AbstractUtils {
         final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i = 0; i < parameterAnnotations.length; i++) {
             final Object object = args[i];
+            if (object == null) {
+                continue;
+            }
             // 获取注解类中所有的属性字段
             final Field[] fields = object.getClass().getDeclaredFields();
             for (Field field : fields) {
