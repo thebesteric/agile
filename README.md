@@ -78,6 +78,13 @@ public RequestIgnoreProcessor parameterIgnoreProcessor() {
 ## 幂等插件
 主要作用：防止接口重复提交，可自定义幂等关键信息
 ### 使用方式
+```xml
+<dependency>
+    <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+    <artifactId>idempotent-plugin</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+```
 1. 使用方法参数的幂等信息
 ```java
 @GetMapping("/id1")
@@ -103,7 +110,15 @@ public class Id2Vo {
 }
 ```
 ### 幂等实现类配置
-默认使用内存实现幂等操作，也可以使用 Redis 实现幂等操作，或自定义实现`IdempotentProcessor`接口
+默认使用内存实现幂等操作，或自定义实现`IdempotentProcessor`接口，如：使用 Redis 实现幂等操作
+```xml
+<dependency>
+    <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+    <artifactId>idempotent-plugin-redis</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+```
+代码实现
 ```java
 @Bean
 public IdempotentProcessor redisIdempotentProcessor(RedissonClient redissonClient) {
