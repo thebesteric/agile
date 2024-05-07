@@ -21,8 +21,10 @@ sourceflag:
           queue-size: 1024
     idempotent:
       enable: true
+      message: "接口幂等，无法提交"
     limiter:
       enable: true
+      message: "接口限流，无法提交"
 
 spring:
   data:
