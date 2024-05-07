@@ -125,3 +125,39 @@ public IdempotentProcessor redisIdempotentProcessor(RedissonClient redissonClien
     return new RedisIdempotentProcessor(redissonClient);
 }
 ```
+## 限流插件
+主要作用：进行接口限流，同时支持 IP 地址限流
+### 使用方式
+```xml
+<dependency>
+    <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+    <artifactId>limiter-plugin</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+```
+使用方式：
+- `timeout`：表示时间窗口
+- `count`：表示时间窗口内允许多少个请求
+- `type`：限流类型，分为 `RateLimitType.DEFAULT` 和 `RateLimitType.IP`
+```java
+@PostMapping("/limit")
+@RateLimiter(timeout = 10, count = 10)
+public R<Id2Vo> limit(@RequestBody Id2Vo id2Vo) {
+    return R.success(id2Vo);
+}
+```
+### 使用 Redis 作为限流实现
+```xml
+<dependency>
+    <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+    <artifactId>limiter-plugin-redis</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+```
+代码实现
+```java
+@Bean
+public RateLimiterProcessor redisRateLimiterProcessor(RedisTemplate<String, Object> redisTemplate) {
+    return new RedisRateLimiterProcessor(redisTemplate);
+}
+```
