@@ -67,7 +67,7 @@ public class IdempotentKeyGenerator extends AbstractUtils {
             }
         }
 
-        // 返回 key：默认格式为：idempotent:class.method|xxx|yyy
-        return idempotent.keyPrefix() + ReflectUtils.methodSignature(method) + sb;
+        // 返回 key：默认格式为：idempotent|class#method|xxx|yyy
+        return idempotent.keyPrefix() + idempotent.delimiter() + ReflectUtils.methodSignature(method) + sb;
     }
 }
