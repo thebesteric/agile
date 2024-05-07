@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.advisor;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
 import io.github.thebesteric.framework.agile.commons.util.StringUtils;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
@@ -15,8 +16,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -30,8 +29,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AgileIdempotentAdvice implements MethodInterceptor {
 
     private final AgileIdempotentContext context;
-
-    private final Set<String> KEYS = new HashSet<>(128);
 
     @Nullable
     @Override
@@ -56,7 +53,11 @@ public class AgileIdempotentAdvice implements MethodInterceptor {
         if (idempotentProcessor.tryLock(idempotentKey, System.currentTimeMillis(), idempotent.timeout(), idempotent.timeUnit())) {
             Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> new RuntimeException(ex.getMessage()));
         } else {
-            throw new IdempotentException(idempotent.message());
+            String message = context.getProperties().getMessage();
+            if (CharSequenceUtil.isEmpty(message)) {
+                message = idempotent.message();
+            }
+            throw new IdempotentException(message);
         }
 
         return result.get();

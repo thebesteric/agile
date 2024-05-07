@@ -15,4 +15,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = AgileConstants.PROPERTIES_PREFIX + ".idempotent")
 public class AgileIdempotentProperties {
     private boolean enable = true;
+    private String message;
 }

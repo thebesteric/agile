@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.limiter.advisor;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
 import io.github.thebesteric.framework.agile.commons.util.NetUtils;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
@@ -62,7 +63,11 @@ public class AgileRateLimiterAdvice implements MethodInterceptor {
         if (rateLimiterProcessor.tryRateLimit(key, timeout, count, rateLimiter.timeUnit())) {
             Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> new RuntimeException(ex.getMessage()));
         } else {
-            throw new RateLimitException(rateLimiter.message());
+            String message = context.getProperties().getMessage();
+            if (CharSequenceUtil.isEmpty(message)) {
+                message = rateLimiter.message();
+            }
+            throw new RateLimitException(message);
         }
 
         return result.get();

@@ -15,4 +15,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = AgileConstants.PROPERTIES_PREFIX + ".limiter")
 public class AgileRateLimiterProperties {
     private boolean enable = true;
+    private String message;
 }
