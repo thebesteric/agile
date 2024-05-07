@@ -7,27 +7,16 @@
 
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
-        <artifactId>agile</artifactId>
+        <artifactId>agile-spring-boot-plugins</artifactId>
         <version>1.0.7</version>
     </parent>
 
-    <artifactId>agile-spring-boot-plugins</artifactId>
+    <artifactId>limiter-plugin-parent</artifactId>
     <packaging>pom</packaging>
 
     <modules>
-        <module>logger-plugin</module>
-        <module>idempotent-plugin-parent</module>
-        <module>limiter-plugin-parent</module>
+        <module>limiter-plugin</module>
+        <module>limiter-plugin-redis</module>
     </modules>
-
-    <dependencies>
-
-        <dependency>
-            <groupId>io.github.thebesteric.framework.agile</groupId>
-            <artifactId>agile-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-    </dependencies>
 
 </project>

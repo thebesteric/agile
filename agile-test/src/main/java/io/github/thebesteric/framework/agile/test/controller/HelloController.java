@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.test.controller;
 import io.github.thebesteric.framework.agile.core.domain.R;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
+import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
 import io.github.thebesteric.framework.agile.test.domain.Id2Vo;
 import io.github.thebesteric.framework.agile.test.service.HelloService;
@@ -53,6 +54,12 @@ public class HelloController {
     @PostMapping("/id2")
     @Idempotent(timeout = 10000)
     public R<Id2Vo> id2(@RequestBody Id2Vo id2Vo) {
+        return R.success(id2Vo);
+    }
+
+    @PostMapping("/limit")
+    @RateLimiter(timeout = 10, count = 10)
+    public R<Id2Vo> limit(@RequestBody Id2Vo id2Vo) {
         return R.success(id2Vo);
     }
 

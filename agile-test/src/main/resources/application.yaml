@@ -1,28 +1,33 @@
 sourceflag:
   agile:
-    enable: true
     logger:
-      log-mode: log
-      curl-enable: true
-      response-success-define:
-        code-fields:
-          - name: code
-            value: 200
-          - name: code
-            value: 100
-        message-fields: message, msg
-    async:
       enable: true
-      async-params:
-        core-pool-size: 1
-        maximum-pool-size: 2
-        keep-alive-time: 60s
-        queue-size: 1024
+      logger:
+        log-mode: log
+        curl-enable: true
+        response-success-define:
+          code-fields:
+            - name: code
+              value: 200
+            - name: code
+              value: 100
+          message-fields: message, msg
+      async:
+        enable: true
+        async-params:
+          core-pool-size: 1
+          maximum-pool-size: 2
+          keep-alive-time: 60s
+          queue-size: 1024
+    idempotent:
+      enable: true
+    limiter:
+      enable: true
 
-#spring:
-#  data:
-#    redis:
-#      host: 127.0.0.1
-#      port: 6379
+spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
 
 
