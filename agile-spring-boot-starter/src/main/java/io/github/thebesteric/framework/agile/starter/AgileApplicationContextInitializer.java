@@ -43,6 +43,7 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
     @SneakyThrows
     @Override
     public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+        // 获取启动类
         Class<?> startupClass = AgileContext.getStartupClass(applicationContext);
         initialize(startupClass);
     }

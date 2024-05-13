@@ -28,6 +28,16 @@ public final class AgileContext {
         return (T) AopContext.currentProxy();
     }
 
+    /**
+     * 获取启动类
+     *
+     * @param applicationContext Spring 上下文
+     *
+     * @return Class<?> 启动类
+     *
+     * @author wangweijun
+     * @since 2024/5/13 10:06
+     */
     public static Class<?> getStartupClass(ApplicationContext applicationContext) {
         if (startupClass != null) {
             return startupClass;
