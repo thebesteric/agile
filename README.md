@@ -7,24 +7,34 @@
 sourceflag:
   agile:
     logger:
+      enable: true
+      logger:
+        log-mode: log
+        curl-enable: true
+        response-success-define:
+          code-fields:
+            - name: code
+              value: 200
+            - name: code
+              value: 100
+          message-fields: message, msg
+      async:
         enable: true
-        logger:
-          log-mode: log
-          curl-enable: true
-          response-success-define:
-            code-fields:
-              - name: code
-                value: 200
-              - name: code
-                value: 100
-            message-fields: message, msg
-        async:
-          enable: true
-          async-params:
-            core-pool-size: 1
-            maximum-pool-size: 2
-            keep-alive-time: 60s
-            queue-size: 1024
+        async-params:
+          core-pool-size: 1
+          maximum-pool-size: 2
+          keep-alive-time: 60s
+          queue-size: 1024
+    idempotent:
+      enable: true
+      message: "接口幂等，无法提交"
+    limiter:
+      enable: true
+      message: "接口限流，无法提交"
+    database:
+      enable: true
+      show-sql: true
+      ddl-auto: update
 ```
 ### 自定义日志记录器
 自定义一个 bean 实现 CustomRecorder，实现 process 方法
@@ -159,5 +169,49 @@ public R<Id2Vo> limit(@RequestBody Id2Vo id2Vo) {
 @Bean
 public RateLimiterProcessor redisRateLimiterProcessor(RedisTemplate<String, Object> redisTemplate) {
     return new RedisRateLimiterProcessor(redisTemplate);
+}
+```
+## 数据库插件
+支持正向创建和修改表结构
+### 使用方式
+```xml
+<dependency>
+    <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+    <artifactId>database-plugin</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+```
+> forUpdate 属性表示需要更新的字段，建议更新后删除
+```java
+@TableName("foo")
+public class Foo extends BaseEntity {
+
+    @EntityColumn(length = 32, unique = true, nullable = false, forUpdate = "hello", defaultExpression = "'foo'")
+    private String name;
+
+    @EntityColumn(name = "t_phone", unique = true, nullable = false, defaultExpression = "18", comment = "电话", unsigned = true)
+    private Integer age;
+
+    @EntityColumn(unique = true, defaultExpression = "'test'")
+    private String address;
+
+    @EntityColumn(length = 10, precision = 3, unique = true)
+    private BigDecimal amount;
+
+    @EntityColumn(nullable = false, type = EntityColumn.Type.SMALL_INT, unsigned = true)
+    private Season season;
+
+    @EntityColumn(length = 10, precision = 2)
+    private Float state;
+
+    @EntityColumn(type = EntityColumn.Type.DATETIME, defaultExpression = "now()")
+    private Date createTime;
+
+    @TableField("update_time")
+    private Date updateTime;
+
+    @TableField("t_test")
+    @EntityColumn(length = 64, nullable = false)
+    private String test;
 }
 ```
