@@ -28,7 +28,7 @@ import java.util.List;
 @Configuration
 @EnableConfigurationProperties(AgileRateLimiterProperties.class)
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX, name = "limiter.enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".limiter", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileRateLimiterAutoConfiguration extends AbstractAgileInitialization {
 
     private final AgileRateLimiterProperties properties;
@@ -44,7 +44,7 @@ public class AgileRateLimiterAutoConfiguration extends AbstractAgileInitializati
 
     @Bean
     public AgileRateLimiterContext agileRateLimiterContext(ApplicationContext applicationContext, AgileRateLimiterProperties properties,
-                                                         List<ClassMatcher> classMatchers) {
+                                                           List<ClassMatcher> classMatchers) {
         return new AgileRateLimiterContext(applicationContext, properties, classMatchers);
     }
 

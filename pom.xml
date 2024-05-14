@@ -68,6 +68,8 @@
         <vavr.version>0.10.4</vavr.version>
         <redisson.version>3.29.0</redisson.version>
         <hutool.version>5.8.27</hutool.version>
+        <mybatis-plus.version>3.5.6</mybatis-plus.version>
+        <mybatis.version>3.5.16</mybatis.version>
     </properties>
 
     <dependencies>
@@ -175,6 +177,18 @@
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>${redisson.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-annotation</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

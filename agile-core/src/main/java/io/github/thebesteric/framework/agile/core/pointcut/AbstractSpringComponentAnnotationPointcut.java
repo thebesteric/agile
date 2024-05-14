@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.core.pointcut;
 
 import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
+import lombok.EqualsAndHashCode;
 import org.springframework.aop.ClassFilter;
 import org.springframework.aop.support.JdkRegexpMethodPointcut;
 import org.springframework.lang.NonNull;
@@ -17,13 +18,13 @@ import java.util.List;
  * @version v1.0
  * @since 2024-05-06 17:39:22
  */
+@EqualsAndHashCode(callSuper = true)
 public abstract class AbstractSpringComponentAnnotationPointcut extends JdkRegexpMethodPointcut {
 
     protected final List<ClassMatcher> classMatchers;
 
     protected AbstractSpringComponentAnnotationPointcut(List<ClassMatcher> classMatchers) {
         this.classMatchers = classMatchers;
-
         // 创建正则表达式切点，匹配方法
         String[] packageNames = PackageFinder.getPackageNames().toArray(new String[0]);
         for (int i = 0; i < packageNames.length; i++) {

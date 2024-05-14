@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.logger.config;
 
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
+import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ComponentBeanClassMatcher;
@@ -24,6 +25,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.scaner.Agi
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
@@ -43,6 +45,7 @@ import java.util.List;
 @Configuration
 @EnableConfigurationProperties(AgileLoggerProperties.class)
 @RequiredArgsConstructor
+@ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".logger", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
 
     private final AgileLoggerProperties properties;

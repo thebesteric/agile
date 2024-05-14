@@ -28,7 +28,7 @@ import java.util.List;
 @Configuration
 @EnableConfigurationProperties(AgileIdempotentProperties.class)
 @RequiredArgsConstructor
-@ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX, name = "idempotent.enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".idempotent", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileIdempotentAutoConfiguration extends AbstractAgileInitialization {
 
     private final AgileIdempotentProperties properties;
@@ -66,5 +66,6 @@ public class AgileIdempotentAutoConfiguration extends AbstractAgileInitializatio
         advisor.setAdvice(agileIdempotentAdvice);
         return advisor;
     }
+
 
 }

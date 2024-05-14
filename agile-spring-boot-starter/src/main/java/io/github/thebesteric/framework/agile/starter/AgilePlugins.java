@@ -11,7 +11,8 @@ public enum AgilePlugins {
 
     LOGGER_PLUGIN("logger-plugin", "io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerAutoConfiguration"),
     IDEMPOTENT_PLUGIN("idempotent-plugin", "io.github.thebesteric.framework.agile.plugins.idempotent.config.AgileIdempotentAutoConfiguration"),
-    LIMITER_PLUGIN("limiter-plugin", "io.github.thebesteric.framework.agile.plugins.limiter.config.AgileRateLimiterAutoConfiguration");
+    LIMITER_PLUGIN("limiter-plugin", "io.github.thebesteric.framework.agile.plugins.limiter.config.AgileRateLimiterAutoConfiguration"),
+    DATABASE_PLUGIN("database-plugin", "io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseAutoConfiguration");
 
     final String name;
     final String className;

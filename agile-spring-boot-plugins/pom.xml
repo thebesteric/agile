@@ -16,6 +16,7 @@
 
     <modules>
         <module>logger-plugin</module>
+        <module>database-plugin</module>
         <module>idempotent-plugin-parent</module>
         <module>limiter-plugin-parent</module>
     </modules>

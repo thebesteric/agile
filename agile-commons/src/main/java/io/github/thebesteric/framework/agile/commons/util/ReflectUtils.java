@@ -8,6 +8,7 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * ReflectUtils
@@ -129,6 +130,122 @@ public class ReflectUtils extends AbstractUtils {
             list.addAll(Arrays.asList(indefiniteParams));
         }
         return list;
+    }
+
+    public static List<Field> getFields(Class<?> clazz, Predicate<Field> predicate) {
+        List<Field> fields = new ArrayList<>();
+        for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (predicate == null || predicate.test(field)) {
+                    fields.add(field);
+                }
+            }
+        }
+        return fields;
+    }
+
+    public static boolean isPublic(Class<?> clazz) {
+        return Modifier.isPublic(clazz.getModifiers());
+    }
+
+    public static boolean isPublic(Member member) {
+        return Modifier.isPublic(member.getModifiers());
+    }
+
+    public static boolean isPrivate(Class<?> clazz) {
+        return Modifier.isPrivate(clazz.getModifiers());
+    }
+
+    public static boolean isPrivate(Member member) {
+        return Modifier.isPrivate(member.getModifiers());
+    }
+
+    public static boolean isProtected(Class<?> clazz) {
+        return Modifier.isProtected(clazz.getModifiers());
+    }
+
+    public static boolean isProtected(Member member) {
+        return Modifier.isProtected(member.getModifiers());
+    }
+
+    public static boolean isStatic(Class<?> clazz) {
+        return Modifier.isStatic(clazz.getModifiers());
+    }
+
+    public static boolean isStatic(Member member) {
+        return Modifier.isStatic(member.getModifiers());
+    }
+
+    public static boolean isFinal(Class<?> clazz) {
+        return Modifier.isFinal(clazz.getModifiers());
+    }
+
+    public static boolean isFinal(Member member) {
+        return Modifier.isFinal(member.getModifiers());
+    }
+
+    public static boolean isTransient(Class<?> clazz) {
+        return Modifier.isTransient(clazz.getModifiers());
+    }
+
+    public static boolean isTransient(Member member) {
+        return Modifier.isTransient(member.getModifiers());
+    }
+
+    public static boolean isPrimitive(Field field) {
+        return isPrimitive(field.getType());
+    }
+
+    public static boolean isPrimitive(Class<?> clazz) {
+        return clazz.isPrimitive();
+    }
+
+    public static boolean isPrimitiveOrWarp(Field field) {
+        return isPrimitiveOrWarp(field.getType());
+    }
+
+    public static boolean isPrimitiveOrWarp(Class<?> clazz) {
+        try {
+            return clazz.isPrimitive() || ((Class<?>) clazz.getField("TYPE").get(null)).isPrimitive();
+        } catch (Exception ignore) {
+            return false;
+        }
+    }
+
+    public static boolean isListType(Class<?> clazz) {
+        return List.class.isAssignableFrom(clazz);
+    }
+
+    public static boolean isListType(Field field) {
+        Class<?> type = field.getType();
+        return isListType(type);
+    }
+
+    public static boolean isMapType(Class<?> clazz) {
+        return Map.class.isAssignableFrom(clazz);
+    }
+
+    public static boolean isMapType(Field field) {
+        Class<?> type = field.getType();
+        return isMapType(type);
+    }
+
+    public static boolean isArrayType(Class<?> clazz) {
+        return clazz.isArray();
+    }
+
+    public static boolean isArrayType(Field field) {
+        Class<?> type = field.getType();
+        return isArrayType(type);
+    }
+
+    public static boolean isStringType(Class<?> clazz) {
+        return String.class == clazz;
+    }
+
+    public static boolean isStringType(Field field) {
+        Class<?> type = field.getType();
+        return isStringType(type);
     }
 
 }
