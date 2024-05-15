@@ -70,6 +70,7 @@
         <hutool.version>5.8.27</hutool.version>
         <mybatis-plus.version>3.5.6</mybatis-plus.version>
         <mybatis.version>3.5.16</mybatis.version>
+        <jsqlparser.version>4.9</jsqlparser.version>
     </properties>
 
     <dependencies>
@@ -189,6 +190,12 @@
                 <groupId>org.mybatis</groupId>
                 <artifactId>mybatis</artifactId>
                 <version>${mybatis.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.github.jsqlparser</groupId>
+                <artifactId>jsqlparser</artifactId>
+                <version>${jsqlparser.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

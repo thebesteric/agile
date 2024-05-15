@@ -29,6 +29,7 @@ sourceflag:
       enable: true
       show-sql: true
       ddl-auto: update
+      format-sql: true
 
 spring:
   datasource:

@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.database.jdbc;
 
 import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.db.sql.SqlFormatter;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
@@ -345,7 +346,12 @@ public class AgileDatabaseJdbcTemplate {
             return creator.createPreparedStatement(connection.get()).executeUpdate();
         }).onFailure(e -> LoggerPrinter.error(log, e.getMessage(), e)).andThen(result -> {
             if (properties.isShowSql() && result == 0) {
-                LoggerPrinter.info(log, sql);
+                if (properties.isFormatSql()) {
+                    String formattedSql = SqlFormatter.format(sql);
+                    LoggerPrinter.info(log, formattedSql);
+                } else {
+                    LoggerPrinter.info(log, sql);
+                }
             }
         }).andFinallyTry(() -> connection.get().close());
     }
