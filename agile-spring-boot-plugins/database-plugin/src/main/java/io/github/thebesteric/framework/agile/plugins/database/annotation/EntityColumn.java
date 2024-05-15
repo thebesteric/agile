@@ -78,7 +78,7 @@ public @interface EntityColumn {
         TIMESTAMP("TIMESTAMP", false, false, false);
 
         /** 字段类型名称 */
-        private final String name;
+        private final String jdbcType;
         /** 是否支持符号 */
         private final boolean supportSign;
         /** 是否支持长度 */
@@ -86,8 +86,8 @@ public @interface EntityColumn {
         /** 是否支持精度 */
         private final boolean supportPrecision;
 
-        Type(String name, boolean supportSign, boolean supportLength, boolean supportPrecision) {
-            this.name = name;
+        Type(String jdbcType, boolean supportSign, boolean supportLength, boolean supportPrecision) {
+            this.jdbcType = jdbcType;
             this.supportSign = supportSign;
             this.supportLength = supportLength;
             this.supportPrecision = supportPrecision;

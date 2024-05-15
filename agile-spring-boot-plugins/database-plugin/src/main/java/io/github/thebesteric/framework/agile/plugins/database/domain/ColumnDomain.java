@@ -154,11 +154,11 @@ public class ColumnDomain {
 
     public String typeWithLength() {
         if (this.type.isSupportLength() && this.type.isSupportPrecision()) {
-            return type.name() + "(" + length + "," + precision + ")";
+            return type.getJdbcType() + "(" + length + "," + precision + ")";
         } else if (this.type.isSupportLength()) {
-            return type.name() + "(" + length + ")";
+            return type.getJdbcType() + "(" + length + ")";
         }
-        return type.name();
+        return type.getJdbcType();
     }
 
     public String uniqueKeyName(String tableName) {
