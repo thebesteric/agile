@@ -109,6 +109,9 @@ public class ColumnDomain {
         if (column == null && field.getType() == String.class) {
             return 255;
         }
+        if (column == null && field.getType() == Boolean.class || field.getType() == boolean.class) {
+            return 1;
+        }
         if (column != null && EntityColumn.Type.DETERMINE == column.type()) {
             EntityColumn.Type type = fieldType(field, column);
             if (type == EntityColumn.Type.VARCHAR) {
@@ -130,7 +133,9 @@ public class ColumnDomain {
         }
 
         Class<?> fieldType = field.getType();
-        if (fieldType == Byte.class || fieldType == byte.class) {
+        if (fieldType == Boolean.class || fieldType == boolean.class) {
+            return EntityColumn.Type.TINY_INT;
+        }else if (fieldType == Byte.class || fieldType == byte.class) {
             return EntityColumn.Type.TINY_INT;
         } else if (fieldType == Short.class || fieldType == short.class) {
             return EntityColumn.Type.SMALL_INT;

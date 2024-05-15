@@ -97,13 +97,9 @@ public class AgileDatabaseJdbcTemplate {
                 primaryKey = columnDomain.getName();
             }
             // 字段名
-            sb.append("`").append(columnDomain.getName()).append("`").append(" ").append(columnDomain.getType().getJdbcType());
+            sb.append("`").append(columnDomain.getName()).append("`");
             // 字段类型
-            if (EntityColumn.Type.VARCHAR == columnDomain.getType()) {
-                sb.append("(").append(columnDomain.getLength()).append(")");
-            } else if ((EntityColumn.Type.FLOAT == columnDomain.getType() || EntityColumn.Type.DOUBLE == columnDomain.getType() || EntityColumn.Type.DECIMAL == columnDomain.getType()) && columnDomain.getLength() != -1) {
-                sb.append("(").append(columnDomain.getLength()).append(",").append(columnDomain.getPrecision()).append(")");
-            }
+            sb.append(" ").append(columnDomain.typeWithLength());
             // 符号
             if (columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
                 sb.append(" ").append("UNSIGNED");
