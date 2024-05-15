@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.github.thebesteric.framework.agile.test</groupId>
     <artifactId>agile-test</artifactId>
-    <version>1.0.11.2</version>
+    <version>1.0.11.3</version>
     <name>agile-test</name>
     <description>agile-test</description>
     <properties>
