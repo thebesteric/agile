@@ -44,4 +44,7 @@ public class Foo extends BaseEntity {
     @TableField("t_test")
     @EntityColumn(length = 64, nullable = false)
     private String test;
+
+    @EntityColumn(nullable = false, defaultExpression = "0")
+    private boolean deleted;
 }
