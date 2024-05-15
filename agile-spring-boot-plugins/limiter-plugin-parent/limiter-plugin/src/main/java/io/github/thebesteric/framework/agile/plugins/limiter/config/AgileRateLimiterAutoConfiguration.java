@@ -36,10 +36,10 @@ public class AgileRateLimiterAutoConfiguration extends AbstractAgileInitializati
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Idempotent-plugin has been Disabled");
+            LoggerPrinter.info(log, "Limiter-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "limiter-plugin is running");
+        LoggerPrinter.info(log, "Limiter-plugin is running");
     }
 
     @Bean
