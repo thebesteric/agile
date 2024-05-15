@@ -11,6 +11,7 @@ import lombok.experimental.Accessors;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -133,9 +134,7 @@ public class ColumnDomain {
         }
 
         Class<?> fieldType = field.getType();
-        if (fieldType == Boolean.class || fieldType == boolean.class) {
-            return EntityColumn.Type.TINY_INT;
-        }else if (fieldType == Byte.class || fieldType == byte.class) {
+        if (fieldType == Boolean.class || fieldType == boolean.class || fieldType == Byte.class || fieldType == byte.class) {
             return EntityColumn.Type.TINY_INT;
         } else if (fieldType == Short.class || fieldType == short.class) {
             return EntityColumn.Type.SMALL_INT;
@@ -149,7 +148,7 @@ public class ColumnDomain {
             return EntityColumn.Type.DOUBLE;
         } else if (fieldType == BigDecimal.class) {
             return EntityColumn.Type.DECIMAL;
-        } else if (fieldType == Date.class) {
+        } else if (fieldType == Date.class || fieldType == LocalDateTime.class) {
             return EntityColumn.Type.DATETIME;
         } else if (fieldType == LocalDate.class) {
             return EntityColumn.Type.DATE;
