@@ -20,8 +20,12 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import javax.sql.DataSource;
 import java.beans.Transient;
 import java.lang.reflect.Field;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -93,7 +97,7 @@ public class AgileDatabaseJdbcTemplate {
                 primaryKey = columnDomain.getName();
             }
             // 字段名
-            sb.append("`").append(columnDomain.getName()).append("`").append(" ").append(columnDomain.getType().getName());
+            sb.append("`").append(columnDomain.getName()).append("`").append(" ").append(columnDomain.getType().getJdbcType());
             // 字段类型
             if (EntityColumn.Type.VARCHAR == columnDomain.getType()) {
                 sb.append("(").append(columnDomain.getLength()).append(")");
@@ -171,9 +175,14 @@ public class AgileDatabaseJdbcTemplate {
         ResultSet dataColumns = metaData.getColumns(null, "%", tableName, "%");
 
         // 表的所有字段名称
-        List<String> columnNames = new ArrayList<>();
+        Set<String> columnNames = new LinkedHashSet<>();
         while (dataColumns.next()) {
             String columnName = dataColumns.getString("COLUMN_NAME");
+            // 这里是防止 INNODB_COLUMN 有冗余字段
+            List<String> list = columnNames.stream().map(String::toLowerCase).toList();
+            if (list.contains(columnName.toLowerCase())) {
+                continue;
+            }
             columnNames.add(columnName);
         }
 
