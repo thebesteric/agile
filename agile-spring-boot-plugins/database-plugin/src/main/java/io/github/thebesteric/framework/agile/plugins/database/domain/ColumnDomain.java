@@ -96,11 +96,11 @@ public class ColumnDomain {
 
     public static String fieldName(Field field, EntityColumn column) {
         if (column != null && CharSequenceUtil.isNotEmpty(column.name())) {
-            return column.name();
+            return column.name().replace("`", "");
         }
         TableField tableField = field.getAnnotation(TableField.class);
         if (tableField != null && CharSequenceUtil.isNotEmpty(tableField.value())) {
-            return tableField.value();
+            return tableField.value().replace("`", "");
         }
         return CharSequenceUtil.toUnderlineCase(field.getName());
     }
