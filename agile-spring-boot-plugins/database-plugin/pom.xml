@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
         <artifactId>agile-spring-boot-plugins</artifactId>
-        <version>1.0.11.5</version>
+        <version>1.0.11.6</version>
     </parent>
 
     <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
@@ -29,11 +29,6 @@
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.jsqlparser</groupId>
-            <artifactId>jsqlparser</artifactId>
         </dependency>
     </dependencies>
 
