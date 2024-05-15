@@ -51,6 +51,9 @@ public @interface EntityColumn {
     /** 需要更新的表字段 */
     String forUpdate() default "";
 
+    /** 是否是数据库字段 */
+    boolean exist() default true;
+
     @Getter
     enum Type {
         DETERMINE("DETERMINE", false, false, false),

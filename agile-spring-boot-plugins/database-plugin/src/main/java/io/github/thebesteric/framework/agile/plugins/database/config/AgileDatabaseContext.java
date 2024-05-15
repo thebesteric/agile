@@ -33,13 +33,24 @@ public class AgileDatabaseContext extends AbstractAgileContext {
     public AgileDatabaseContext(ApplicationContext applicationContext, AgileDatabaseProperties properties) {
         super((GenericApplicationContext) applicationContext);
         this.properties = properties;
+        findEntityClasses();
+    }
+
+    private void findEntityClasses() {
         List<String> packageNames = PackageFinder.getPackageNames();
         List<Class<? extends Annotation>> classes = List.of(EntityClass.class, TableName.class);
         AnnotationTypeCandidateComponentScanner scanner = new AnnotationTypeCandidateComponentScanner(packageNames, classes);
         Set<String> entityClassNames = scanner.scan();
         if (entityClassNames != null) {
             for (String entityClassName : entityClassNames) {
-                Try.of(() -> entityClasses.add(Class.forName(entityClassName)));
+                Try.of(() -> {
+                    Class<?> clazz = Class.forName(entityClassName);
+                    EntityClass entityClassAnno = clazz.getAnnotation(EntityClass.class);
+                    if (entityClassAnno != null && entityClassAnno.ignore()) {
+                        return false;
+                    }
+                    return entityClasses.add(clazz);
+                });
             }
         }
     }

@@ -1,6 +1,8 @@
 package io.github.thebesteric.framework.agile.test.entity;
 
-import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityColumn;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 
 /**
  * BaseEntity
@@ -10,7 +12,15 @@ import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityC
  * @since 2024-05-13 18:56:49
  */
 public abstract class BaseEntity {
-    @EntityColumn(autoIncrement = true, comment = "主键", primary = true)
-    // @TableId(type = IdType.AUTO)
+
+    // @EntityColumn(autoIncrement = true, comment = "主键", primary = true)
+    @TableId(type = IdType.AUTO)
     private Integer id;
+
+    // @EntityColumn
+    @TableField(value = "`desc`")
+    private String desc;
+
+    @TableField(exist = false)
+    private String nickname;
 }

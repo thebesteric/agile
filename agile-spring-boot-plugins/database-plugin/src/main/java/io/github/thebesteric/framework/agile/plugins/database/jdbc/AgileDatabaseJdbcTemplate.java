@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.database.jdbc;
 
 import cn.hutool.core.text.CharSequenceUtil;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
@@ -17,6 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 
 import javax.sql.DataSource;
+import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.ArrayList;
@@ -78,7 +80,7 @@ public class AgileDatabaseJdbcTemplate {
     public void createTable(String tableName, Class<?> clazz) throws SQLException {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE TABLE `").append(tableName).append("` (");
-        List<Field> fields = ReflectUtils.getFields(clazz, field -> !ReflectUtils.isStatic(field) && !ReflectUtils.isFinal(field));
+        List<Field> fields = getEntityFields(clazz);
         String primaryKey = null;
         List<String> uniqueFieldNames = new ArrayList<>();
         for (Field field : fields) {
@@ -165,7 +167,7 @@ public class AgileDatabaseJdbcTemplate {
     }
 
     public void updateTable(String tableName, Class<?> clazz, DatabaseMetaData metaData) throws SQLException {
-        List<Field> fields = ReflectUtils.getFields(clazz, field -> !ReflectUtils.isStatic(field) && !ReflectUtils.isFinal(field));
+        List<Field> fields = getEntityFields(clazz);
         ResultSet dataColumns = metaData.getColumns(null, "%", tableName, "%");
 
         // 表的所有字段名称
@@ -341,5 +343,23 @@ public class AgileDatabaseJdbcTemplate {
                 LoggerPrinter.info(log, sql);
             }
         }).andFinallyTry(() -> connection.get().close());
+    }
+
+    private List<Field> getEntityFields(Class<?> clazz) {
+        return ReflectUtils.getFields(clazz, field -> {
+            EntityColumn entityColumn = field.getAnnotation(EntityColumn.class);
+            if (entityColumn != null && !entityColumn.exist()) {
+                return false;
+            }
+            TableField tableField = field.getAnnotation(TableField.class);
+            if (tableField != null && !tableField.exist()) {
+                return false;
+            }
+            Transient aTransient = field.getAnnotation(Transient.class);
+            if (aTransient != null) {
+                return false;
+            }
+            return !ReflectUtils.isStatic(field) && !ReflectUtils.isFinal(field);
+        });
     }
 }
