@@ -40,3 +40,5 @@
 - 数据库插件 (feat): 支持 LocalDateTime 类型
 ### v1.0.11.5
 - 数据库插件 (feat): 支持 SQL 语句格式化
+### v1.0.11.6
+- 数据库插件 (bugfix): 修复格式化时与 MyBatis-Plus 冲突的问题
