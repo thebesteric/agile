@@ -33,6 +33,9 @@ public @interface EntityColumn {
     /** 唯一键 */
     boolean unique() default false;
 
+    /** 联合唯一（组名，相同组名会组合成唯一索引） */
+    String uniqueGroup() default "";
+
     /** 注释 */
     String comment() default "";
 
@@ -53,6 +56,8 @@ public @interface EntityColumn {
 
     /** 是否是数据库字段 */
     boolean exist() default true;
+
+
 
     @Getter
     enum Type {

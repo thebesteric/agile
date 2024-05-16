@@ -25,10 +25,7 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -86,8 +83,10 @@ public class AgileDatabaseJdbcTemplate {
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE TABLE `").append(tableName).append("` (");
         List<Field> fields = getEntityFields(clazz);
+
         String primaryKey = null;
         List<String> uniqueFieldNames = new ArrayList<>();
+        Map<String, List<String>> uniqueGroups = new HashMap<>();
         for (Field field : fields) {
             // 获取字段信息
             ColumnDomain columnDomain = ColumnDomain.of(field);
@@ -130,15 +129,23 @@ public class AgileDatabaseJdbcTemplate {
             }
             sb.append(", ");
 
+            // 判断唯一键
             if (columnDomain.isUnique()) {
                 String uniqueFieldName = columnDomain.getName();
                 uniqueFieldNames.add(uniqueFieldName);
+            }
+
+            // 判断联合唯一键
+            if (CharSequenceUtil.isNotEmpty(columnDomain.getUniqueGroup())) {
+                List<String> columns = uniqueGroups.getOrDefault(columnDomain.getUniqueGroup(), new ArrayList<>());
+                columns.add(columnDomain.getName());
+                uniqueGroups.put(columnDomain.getUniqueGroup(), columns);
             }
         }
 
         // 主键
         if (CharSequenceUtil.isNotEmpty(primaryKey)) {
-            sb.append(String.format("CONSTRAINT %s_pk PRIMARY KEY (`%s`)", tableName, primaryKey)).append(",");
+            sb.append(String.format("CONSTRAINT %s_pk PRIMARY KEY (`%s`)", tableName, primaryKey)).append(", ");
         }
 
         // 唯一键
@@ -147,11 +154,27 @@ public class AgileDatabaseJdbcTemplate {
                 sb.append(" ");
             }
             String uniqueName = uniqueFieldNames.get(i);
-            sb.append(String.format("CONSTRAINT %s_uk_%s UNIQUE (`%s`)", tableName, uniqueName, uniqueName));
-            if (i != uniqueFieldNames.size() - 1) {
+            sb.append(String.format("CONSTRAINT %s_uk_%s UNIQUE (`%s`)", tableName, uniqueName, uniqueName)).append(", ");
+        }
+
+        // 联合唯一键
+        int uniqueGroupsLength = uniqueGroups.size();
+        for (Map.Entry<String, List<String>> entry : uniqueGroups.entrySet()) {
+            String uniqueGroupName = entry.getKey();
+            List<String> keys = entry.getValue();
+            StringBuilder uniqueKeys = new StringBuilder();
+            for (int i = 0; i < keys.size(); i++) {
+                uniqueKeys.append("`").append(keys.get(i)).append("`");
+                if (i != keys.size() - 1) {
+                    uniqueKeys.append(",").append(" ");
+                }
+            }
+            sb.append(String.format("CONSTRAINT %s_uk_%s UNIQUE (%s)", tableName, uniqueGroupName, uniqueKeys));
+            if (--uniqueGroupsLength != 0) {
                 sb.append(", ");
             }
         }
+
 
         // 去除最后一个逗号
         String sql = sb.toString().trim();
@@ -225,6 +248,7 @@ public class AgileDatabaseJdbcTemplate {
     }
 
     private void addColumns(String tableName, List<Field> newFields) throws SQLException {
+        Map<String, List<String>> uniqueGroups = new HashMap<>();
         for (Field field : newFields) {
             // 新增字段
             ColumnDomain columnDomain = ColumnDomain.of(field);
@@ -258,6 +282,31 @@ public class AgileDatabaseJdbcTemplate {
                 sb.append("UNIQUE").append(" ").append("(").append("`").append(columnDomain.getName()).append("`").append(")");
                 executeUpdate(sb.toString());
             }
+
+            // 判断联合唯一键
+            if (CharSequenceUtil.isNotEmpty(columnDomain.getUniqueGroup())) {
+                List<String> columns = uniqueGroups.getOrDefault(columnDomain.getUniqueGroup(), new ArrayList<>());
+                columns.add(columnDomain.getName());
+                uniqueGroups.put(columnDomain.getUniqueGroup(), columns);
+            }
+        }
+
+        // 新建联合唯一键
+        for (Map.Entry<String, List<String>> entry : uniqueGroups.entrySet()) {
+            String uniqueGroupName = entry.getKey();
+            List<String> keys = entry.getValue();
+            StringBuilder uniqueKeys = new StringBuilder();
+            for (int i = 0; i < keys.size(); i++) {
+                uniqueKeys.append("`").append(keys.get(i)).append("`");
+                if (i != keys.size() - 1) {
+                    uniqueKeys.append(",").append(" ");
+                }
+            }
+            StringBuilder sb = new StringBuilder();
+            sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+            sb.append("ADD CONSTRAINT").append(" ").append("%s_uk_%s".formatted(tableName, uniqueGroupName)).append(" ");
+            sb.append("UNIQUE").append(" ").append("(").append(uniqueKeys).append(")");
+            executeUpdate(sb.toString());
         }
     }
 

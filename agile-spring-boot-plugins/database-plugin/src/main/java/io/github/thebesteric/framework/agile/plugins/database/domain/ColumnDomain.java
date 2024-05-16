@@ -43,6 +43,9 @@ public class ColumnDomain {
     /** 唯一键 */
     private boolean unique = false;
 
+    /** 联合唯一（组名，相同组名会组合成唯一索引） */
+    private String uniqueGroup;
+
     /** 注释 */
     private String comment;
 
@@ -71,6 +74,7 @@ public class ColumnDomain {
         domain.precision = column != null ? column.precision() : 0;
         domain.primary = column != null ? column.primary() : tableId != null;
         domain.unique = column != null && column.unique();
+        domain.uniqueGroup = column != null ? column.uniqueGroup(): null;
         domain.comment = column != null ? column.comment() : null;
         domain.unsigned = column != null && column.unsigned();
         domain.nullable = nullable(column, tableId);
@@ -80,7 +84,7 @@ public class ColumnDomain {
         return domain;
     }
 
-    public static boolean autoIncrement(Field field, EntityColumn column) {
+    private static boolean autoIncrement(Field field, EntityColumn column) {
         if (column != null && column.autoIncrement()) {
             return true;
         }
@@ -88,14 +92,14 @@ public class ColumnDomain {
         return tableId != null && IdType.AUTO == tableId.type();
     }
 
-    public static boolean nullable(EntityColumn column, TableId tableId) {
+    private static boolean nullable(EntityColumn column, TableId tableId) {
         if (column != null) {
             return !column.primary() && column.nullable();
         }
         return tableId == null;
     }
 
-    public static String fieldName(Field field, EntityColumn column) {
+    private static String fieldName(Field field, EntityColumn column) {
         if (column != null && CharSequenceUtil.isNotEmpty(column.name())) {
             return column.name().replace("`", "");
         }
@@ -106,7 +110,7 @@ public class ColumnDomain {
         return CharSequenceUtil.toUnderlineCase(field.getName());
     }
 
-    public static Integer fieldLength(Field field, EntityColumn column) {
+    private static Integer fieldLength(Field field, EntityColumn column) {
         if (column == null && field.getType() == String.class) {
             return 255;
         }
@@ -128,7 +132,7 @@ public class ColumnDomain {
         return -1;
     }
 
-    public static EntityColumn.Type fieldType(Field field, EntityColumn column) {
+    private static EntityColumn.Type fieldType(Field field, EntityColumn column) {
         if (column != null && column.type() != EntityColumn.Type.DETERMINE) {
             return column.type();
         }
