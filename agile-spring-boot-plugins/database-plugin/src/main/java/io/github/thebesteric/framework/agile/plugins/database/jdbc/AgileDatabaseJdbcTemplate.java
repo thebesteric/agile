@@ -187,29 +187,44 @@ public class AgileDatabaseJdbcTemplate {
         List<Field> updateFields = new ArrayList<>();
 
         for (Field field : fields) {
-            EntityColumn entityColumn = field.getAnnotation(EntityColumn.class);
-            String currentColumnName = ColumnDomain.of(field).getName();
-            String forUpdateColumn = entityColumn == null ? null : entityColumn.forUpdate();
+            ColumnDomain columnDomain = ColumnDomain.of(field);
+            String forUpdateColumn = columnDomain.getForUpdate();
             // 需要更新的字段
             if (columnNames.contains(forUpdateColumn) && CharSequenceUtil.isNotEmpty(forUpdateColumn)) {
                 updateFields.add(field);
             }
             // 需要新增的字段
-            else if (!columnNames.contains(currentColumnName)) {
+            else if (!columnNames.contains(columnDomain.getName())) {
                 newFields.add(field);
             }
         }
 
+        List<String> currentColumnNames = fields.stream().map(field -> ColumnDomain.of(field).getName()).toList();
+        List<String> deleteColumns = columnNames.stream().filter(columnName->!currentColumnNames.contains(columnName)).toList();
+
+        if (!deleteColumns.isEmpty()) {
+            deleteColumns(tableName, deleteColumns);
+        }
+
         if (!updateFields.isEmpty()) {
-            updateColumn(tableName, updateFields, metaData);
+            updateColumns(tableName, updateFields, metaData);
         }
 
         if (!newFields.isEmpty()) {
-            addColumn(tableName, newFields);
+            addColumns(tableName, newFields);
         }
     }
 
-    private void addColumn(String tableName, List<Field> newFields) throws SQLException {
+    private void deleteColumns(String tableName, List<String> deleteColumns) throws SQLException {
+        for (String deleteColumn : deleteColumns) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+            sb.append("DROP COLUMN").append(" ").append("`").append(deleteColumn).append("`");
+            executeUpdate(sb.toString());
+        }
+    }
+
+    private void addColumns(String tableName, List<Field> newFields) throws SQLException {
         for (Field field : newFields) {
             // 新增字段
             ColumnDomain columnDomain = ColumnDomain.of(field);
@@ -246,7 +261,7 @@ public class AgileDatabaseJdbcTemplate {
         }
     }
 
-    private void updateColumn(String tableName, List<Field> updateFields, DatabaseMetaData metaData) throws SQLException {
+    private void updateColumns(String tableName, List<Field> updateFields, DatabaseMetaData metaData) throws SQLException {
 
         // 唯一索引
         List<String> uniqueIndexNames = new ArrayList<>();
