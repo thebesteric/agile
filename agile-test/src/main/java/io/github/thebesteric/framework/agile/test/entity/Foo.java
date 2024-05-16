@@ -47,4 +47,10 @@ public class Foo extends BaseEntity {
 
     @EntityColumn(nullable = false, defaultExpression = "0")
     private boolean deleted;
+
+    @EntityColumn(length = 64, nullable = false, uniqueGroup = "a_b")
+    private String a;
+
+    @EntityColumn(length = 64, nullable = false, uniqueGroup = "a_b")
+    private String b;
 }
