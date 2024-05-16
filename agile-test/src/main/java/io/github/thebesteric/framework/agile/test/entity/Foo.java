@@ -53,4 +53,13 @@ public class Foo extends BaseEntity {
 
     @EntityColumn(length = 64, nullable = false, uniqueGroup = "a_b")
     private String b;
+
+    @EntityColumn(length = 64, index = true, indexGroup = "c_e_d", indexGroupSort = 1)
+    private String c;
+
+    @EntityColumn(length = 64, indexGroup = "c_e_d", indexGroupSort = 3)
+    private String d;
+
+    @EntityColumn(length = 64, indexGroup = "c_e_d", indexGroupSort = 2)
+    private String e;
 }
