@@ -161,9 +161,9 @@ public class ColumnDomain {
     }
 
     public String typeWithLength() {
-        if (this.type.isSupportLength() && this.type.isSupportPrecision()) {
+        if (this.type.isSupportLength() && this.type.isSupportPrecision() && this.length > 0 && this.precision > 0) {
             return type.getJdbcType() + "(" + length + "," + precision + ")";
-        } else if (this.type.isSupportLength()) {
+        } else if (this.type.isSupportLength() && this.length > 0) {
             return type.getJdbcType() + "(" + length + ")";
         }
         return type.getJdbcType();
