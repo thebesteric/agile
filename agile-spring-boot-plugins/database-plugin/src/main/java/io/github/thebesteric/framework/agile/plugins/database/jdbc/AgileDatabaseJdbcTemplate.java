@@ -42,11 +42,15 @@ public class AgileDatabaseJdbcTemplate {
     private final JdbcTemplate jdbcTemplate;
     private final AgileDatabaseProperties properties;
 
+    enum Operation {
+        CREATE, UPDATE, DELETE, ADD
+    }
 
-    public AgileDatabaseJdbcTemplate(AgileDatabaseContext context, DataSource dataSource, AgileDatabaseProperties propertie) {
+
+    public AgileDatabaseJdbcTemplate(AgileDatabaseContext context, DataSource dataSource, AgileDatabaseProperties properties) {
         this.context = context;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
-        this.properties = propertie;
+        this.properties = properties;
     }
 
     @SneakyThrows
@@ -187,7 +191,7 @@ public class AgileDatabaseJdbcTemplate {
 
         sb.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
 
-        this.executeUpdate(sb.toString());
+        this.executeUpdate(sb.toString(), Operation.CREATE);
     }
 
     public void updateTable(String tableName, Class<?> clazz, DatabaseMetaData metaData) throws SQLException {
@@ -223,9 +227,9 @@ public class AgileDatabaseJdbcTemplate {
         }
 
         List<String> currentColumnNames = fields.stream().map(field -> ColumnDomain.of(field).getName()).toList();
-        List<String> deleteColumns = columnNames.stream().filter(columnName->!currentColumnNames.contains(columnName)).toList();
+        List<String> deleteColumns = columnNames.stream().filter(columnName -> !currentColumnNames.contains(columnName)).toList();
 
-        if (!deleteColumns.isEmpty()) {
+        if (!deleteColumns.isEmpty() && properties.isDeleteColumn()) {
             deleteColumns(tableName, deleteColumns);
         }
 
@@ -243,7 +247,7 @@ public class AgileDatabaseJdbcTemplate {
             StringBuilder sb = new StringBuilder();
             sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
             sb.append("DROP COLUMN").append(" ").append("`").append(deleteColumn).append("`");
-            executeUpdate(sb.toString());
+            executeUpdate(sb.toString(), Operation.DELETE);
         }
     }
 
@@ -271,7 +275,7 @@ public class AgileDatabaseJdbcTemplate {
             if (CharSequenceUtil.isNotEmpty(comment)) {
                 sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
             }
-            executeUpdate(sb.toString());
+            executeUpdate(sb.toString(), Operation.ADD);
 
             // 新建唯一约束
             if (columnDomain.isUnique()) {
@@ -280,7 +284,7 @@ public class AgileDatabaseJdbcTemplate {
                 sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
                 sb.append("ADD CONSTRAINT").append(" ").append(uniqueIndexName).append(" ");
                 sb.append("UNIQUE").append(" ").append("(").append("`").append(columnDomain.getName()).append("`").append(")");
-                executeUpdate(sb.toString());
+                executeUpdate(sb.toString(), Operation.ADD);
             }
 
             // 判断联合唯一键
@@ -306,7 +310,7 @@ public class AgileDatabaseJdbcTemplate {
             sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
             sb.append("ADD CONSTRAINT").append(" ").append("%s_uk_%s".formatted(tableName, uniqueGroupName)).append(" ");
             sb.append("UNIQUE").append(" ").append("(").append(uniqueKeys).append(")");
-            executeUpdate(sb.toString());
+            executeUpdate(sb.toString(), Operation.ADD);
         }
     }
 
@@ -350,7 +354,7 @@ public class AgileDatabaseJdbcTemplate {
             if (CharSequenceUtil.isNotEmpty(comment)) {
                 sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
             }
-            executeUpdate(sb.toString());
+            executeUpdate(sb.toString(), Operation.UPDATE);
 
             // 唯一约束变更
             if (columnDomain.isUnique()) {
@@ -361,14 +365,14 @@ public class AgileDatabaseJdbcTemplate {
                     sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
                     sb.append("ADD CONSTRAINT").append(" ").append(uniqueIndexName).append(" ");
                     sb.append("UNIQUE").append(" ").append("(").append("`").append(columnDomain.getName()).append("`").append(")");
-                    executeUpdate(sb.toString());
+                    executeUpdate(sb.toString(), Operation.ADD);
 
                     // 删除原来的唯一约束
                     sb = new StringBuilder();
                     sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
                     String oldUniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, forUpdateColumn);
                     sb.append("DROP KEY").append(" ").append(oldUniqueKeyName).append(" ");
-                    executeUpdate(sb.toString());
+                    executeUpdate(sb.toString(), Operation.DELETE);
                 }
             }
         }
@@ -398,7 +402,7 @@ public class AgileDatabaseJdbcTemplate {
     }
 
 
-    public void executeUpdate(final String sql) throws SQLException {
+    public void executeUpdate(final String sql, final Operation operation) throws SQLException {
         DataSource dataSource = this.jdbcTemplate.getDataSource();
         if (dataSource == null) {
             throw new SQLException("DataSource is null");
@@ -408,7 +412,11 @@ public class AgileDatabaseJdbcTemplate {
             connection.set(dataSource.getConnection());
             PreparedStatementCreator creator = conn -> conn.prepareStatement(sql);
             return creator.createPreparedStatement(connection.get()).executeUpdate();
-        }).onFailure(e -> LoggerPrinter.error(log, e.getMessage(), e)).andThen(result -> {
+        }).onFailure(e -> {
+            if (Operation.DELETE != operation) {
+                LoggerPrinter.error(log, e.getMessage(), e);
+            }
+        }).andThen(result -> {
             if (properties.isShowSql() && result == 0) {
                 if (properties.isFormatSql()) {
                     String formattedSql = SqlFormatter.format(sql);
