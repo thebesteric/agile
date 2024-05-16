@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
+import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseContext;
@@ -91,6 +92,8 @@ public class AgileDatabaseJdbcTemplate {
         String primaryKey = null;
         List<String> uniqueFieldNames = new ArrayList<>();
         Map<String, List<String>> uniqueGroups = new HashMap<>();
+        List<String> indexFieldNames = new ArrayList<>();
+        Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
         for (Field field : fields) {
             // 获取字段信息
             ColumnDomain columnDomain = ColumnDomain.of(field);
@@ -145,6 +148,19 @@ public class AgileDatabaseJdbcTemplate {
                 columns.add(columnDomain.getName());
                 uniqueGroups.put(columnDomain.getUniqueGroup(), columns);
             }
+
+            // 判断索引键
+            if (columnDomain.isIndex()) {
+                String indexFieldName = columnDomain.getName();
+                indexFieldNames.add(indexFieldName);
+            }
+
+            // 判断联合索引
+            if (CharSequenceUtil.isNotEmpty(columnDomain.getIndexGroup())) {
+                List<Pair<String, Integer>> columns = indexGroups.getOrDefault(columnDomain.getIndexGroup(), new ArrayList<>());
+                columns.add(Pair.of(columnDomain.getName(), columnDomain.getIndexGroupSort()));
+                indexGroups.put(columnDomain.getIndexGroup(), columns);
+            }
         }
 
         // 主键
@@ -179,7 +195,6 @@ public class AgileDatabaseJdbcTemplate {
             }
         }
 
-
         // 去除最后一个逗号
         String sql = sb.toString().trim();
         sb = new StringBuilder(sql);
@@ -188,10 +203,26 @@ public class AgileDatabaseJdbcTemplate {
         if (lastChar == ',') {
             sb.deleteCharAt(length - 1);
         }
-
         sb.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
 
+        // 创建表
         this.executeUpdate(sb.toString(), Operation.CREATE);
+
+        // 创建索引键
+        for (String indexName : indexFieldNames) {
+            createIndex(tableName, indexName);
+        }
+
+        // 创建联合索引键
+        for (Map.Entry<String, List<Pair<String, Integer>>> entry : indexGroups.entrySet()) {
+            String indexGroupName = entry.getKey();
+            List<Pair<String, Integer>> pairs = entry.getValue();
+            // 排序
+            pairs.sort(Comparator.comparingInt(Pair::getValue));
+
+            List<String> indexNames = pairs.stream().map(Pair::getKey).toList();
+            createIndex(tableName, indexGroupName, indexNames);
+        }
     }
 
     public void updateTable(String tableName, Class<?> clazz, DatabaseMetaData metaData) throws SQLException {
@@ -253,6 +284,7 @@ public class AgileDatabaseJdbcTemplate {
 
     private void addColumns(String tableName, List<Field> newFields) throws SQLException {
         Map<String, List<String>> uniqueGroups = new HashMap<>();
+        Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
         for (Field field : newFields) {
             // 新增字段
             ColumnDomain columnDomain = ColumnDomain.of(field);
@@ -293,9 +325,21 @@ public class AgileDatabaseJdbcTemplate {
                 columns.add(columnDomain.getName());
                 uniqueGroups.put(columnDomain.getUniqueGroup(), columns);
             }
+
+            // 判断索引
+            if (columnDomain.isIndex()) {
+                createIndex(tableName, columnDomain.getName());
+            }
+
+            // 判断联合索引
+            if (CharSequenceUtil.isNotEmpty(columnDomain.getIndexGroup())) {
+                List<Pair<String, Integer>> columns = indexGroups.getOrDefault(columnDomain.getIndexGroup(), new ArrayList<>());
+                columns.add(Pair.of(columnDomain.getName(), columnDomain.getIndexGroupSort()));
+                indexGroups.put(columnDomain.getIndexGroup(), columns);
+            }
         }
 
-        // 新建联合唯一键
+        // 创建联合唯一键
         for (Map.Entry<String, List<String>> entry : uniqueGroups.entrySet()) {
             String uniqueGroupName = entry.getKey();
             List<String> keys = entry.getValue();
@@ -311,6 +355,17 @@ public class AgileDatabaseJdbcTemplate {
             sb.append("ADD CONSTRAINT").append(" ").append("%s_uk_%s".formatted(tableName, uniqueGroupName)).append(" ");
             sb.append("UNIQUE").append(" ").append("(").append(uniqueKeys).append(")");
             executeUpdate(sb.toString(), Operation.ADD);
+        }
+
+        // 创建联合索引键
+        for (Map.Entry<String, List<Pair<String, Integer>>> entry : indexGroups.entrySet()) {
+            String indexGroupName = entry.getKey();
+            List<Pair<String, Integer>> pairs = entry.getValue();
+            // 排序
+            pairs.sort(Comparator.comparingInt(Pair::getValue));
+
+            List<String> indexNames = pairs.stream().map(Pair::getKey).toList();
+            createIndex(tableName, indexGroupName, indexNames);
         }
     }
 
@@ -378,7 +433,7 @@ public class AgileDatabaseJdbcTemplate {
         }
     }
 
-    public String getTableName(String tableNamePrefix, Class<?> clazz) {
+    private String getTableName(String tableNamePrefix, Class<?> clazz) {
         String tableName = tableNamePrefix == null ? "" : tableNamePrefix.trim();
         synchronized (this) {
             EntityClassDomain entityClassDomain = new EntityClassDomain();
@@ -399,6 +454,23 @@ public class AgileDatabaseJdbcTemplate {
             }
         }
         return tableName;
+    }
+
+    private void createIndex(String tableName, String indexName) throws SQLException {
+        String indexSql = String.format("CREATE INDEX %s_index_%s ON `%s` (`%s`)", tableName, indexName, tableName, indexName);
+        this.executeUpdate(indexSql, Operation.CREATE);
+    }
+
+    private void createIndex(String tableName, String indexGroupName, List<String> indexNames) throws SQLException {
+        StringBuilder indexKeys = new StringBuilder();
+        for (int i = 0; i < indexNames.size(); i++) {
+            indexKeys.append("`").append(indexNames.get(i)).append("`");
+            if (i != indexNames.size() - 1) {
+                indexKeys.append(",").append(" ");
+            }
+        }
+        String indexSql = String.format("CREATE INDEX %s_index_%s ON `%s` (%s)", tableName, indexGroupName, tableName, indexKeys);
+        this.executeUpdate(indexSql, Operation.CREATE);
     }
 
 

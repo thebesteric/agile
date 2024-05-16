@@ -46,6 +46,15 @@ public class ColumnDomain {
     /** 联合唯一（组名，相同组名会组合成唯一索引） */
     private String uniqueGroup;
 
+    /** 索引 */
+    private boolean index;
+
+    /** 索引组 */
+    private String indexGroup;
+
+    /** 索引组顺序 */
+    private int indexGroupSort;
+
     /** 注释 */
     private String comment;
 
@@ -75,6 +84,9 @@ public class ColumnDomain {
         domain.primary = column != null ? column.primary() : tableId != null;
         domain.unique = column != null && column.unique();
         domain.uniqueGroup = column != null ? column.uniqueGroup(): null;
+        domain.index = column != null && column.index();
+        domain.indexGroup = column != null ? column.indexGroup(): null;
+        domain.indexGroupSort = column != null ? column.indexGroupSort(): 0;
         domain.comment = column != null ? column.comment() : null;
         domain.unsigned = column != null && column.unsigned();
         domain.nullable = nullable(column, tableId);

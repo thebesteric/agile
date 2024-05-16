@@ -33,8 +33,17 @@ public @interface EntityColumn {
     /** 唯一键 */
     boolean unique() default false;
 
-    /** 联合唯一（组名，相同组名会组合成唯一索引） */
+    /** 联合唯一键（组名，相同组名会组合成唯一索引） */
     String uniqueGroup() default "";
+
+    /** 索引 */
+    boolean index() default false;
+
+    /** 索引组 */
+    String indexGroup() default "";
+
+    /** 索引组顺序 */
+    int indexGroupSort() default 0;
 
     /** 注释 */
     String comment() default "";
@@ -56,7 +65,6 @@ public @interface EntityColumn {
 
     /** 是否是数据库字段 */
     boolean exist() default true;
-
 
 
     @Getter
