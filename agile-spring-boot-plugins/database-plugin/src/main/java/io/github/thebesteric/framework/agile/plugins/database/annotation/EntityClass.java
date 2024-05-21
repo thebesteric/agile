@@ -16,6 +16,9 @@ public @interface EntityClass {
     /** 表名 */
     String value() default "";
 
+    /** 注释 */
+    String comment() default "";
+
     /** 忽略创建表 */
     boolean ignore() default false;
 }
