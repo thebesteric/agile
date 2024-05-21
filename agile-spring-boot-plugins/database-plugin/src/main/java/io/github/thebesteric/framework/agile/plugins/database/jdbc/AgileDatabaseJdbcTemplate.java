@@ -3,16 +3,15 @@ package io.github.thebesteric.framework.agile.plugins.database.jdbc;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.db.sql.SqlFormatter;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
-import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseContext;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseProperties;
 import io.github.thebesteric.framework.agile.plugins.database.domain.ColumnDomain;
 import io.github.thebesteric.framework.agile.plugins.database.domain.EntityClassDomain;
+import io.github.thebesteric.framework.agile.plugins.database.entity.TableMetadata;
 import io.vavr.control.Try;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +21,7 @@ import org.springframework.jdbc.core.PreparedStatementCreator;
 import javax.sql.DataSource;
 import java.beans.Transient;
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -44,7 +40,7 @@ public class AgileDatabaseJdbcTemplate {
     private final AgileDatabaseProperties properties;
 
     enum Operation {
-        CREATE, UPDATE, DELETE, ADD
+        CREATE, ADD, DROP, UPDATE, DELETE, INSERT
     }
 
 
@@ -70,38 +66,56 @@ public class AgileDatabaseJdbcTemplate {
         Set<Class<?>> entityClasses = context.getEntityClasses();
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
+            // 初始化元数据表
+            initTableMeta(metaData);
             for (Class<?> clazz : entityClasses) {
-                String tableName = getTableName(properties.getTableNamePrefix(), clazz);
-                ResultSet tables = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
-                if (!tables.next()) {
-                    createTable(tableName, clazz);
+                EntityClassDomain entityClassDomain = EntityClassDomain.of(properties.getTableNamePrefix(), clazz);
+                String tableName = entityClassDomain.getName();
+                ResultSet resultSet = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
+                if (!resultSet.next()) {
+                    createTable(entityClassDomain);
                 } else {
                     if (update) {
-                        updateTable(tableName, clazz, metaData);
+                        updateTable(entityClassDomain, metaData);
                     }
                 }
             }
         }
     }
 
-    public void createTable(String tableName, Class<?> clazz) throws SQLException {
+    private void initTableMeta(DatabaseMetaData metaData) throws SQLException {
+        EntityClassDomain entityClassDomain = EntityClassDomain.of(null, TableMetadata.class);
+        String tableName = entityClassDomain.getName();
+        ResultSet resultSet = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
+        if (!resultSet.next()) {
+            createTable(entityClassDomain);
+        }
+    }
+
+    public void createTable(EntityClassDomain entityClassDomain) throws SQLException {
+        String tableName = entityClassDomain.getName();
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE TABLE `").append(tableName).append("` (");
-        List<Field> fields = getEntityFields(clazz);
+        List<Field> fields = getEntityFields(entityClassDomain.getEntityClass());
 
-        String primaryKey = null;
-        List<String> uniqueFieldNames = new ArrayList<>();
+        List<ColumnDomain> columnDomains = new ArrayList<>();
+
+        ColumnDomain primaryKey = null;
+        List<ColumnDomain> uniqueFieldNames = new ArrayList<>();
         Map<String, List<String>> uniqueGroups = new HashMap<>();
         List<String> indexFieldNames = new ArrayList<>();
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
+
         for (Field field : fields) {
             // 获取字段信息
-            ColumnDomain columnDomain = ColumnDomain.of(field);
+            ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
+            columnDomains.add(columnDomain);
+
             if (columnDomain.isPrimary()) {
                 if (primaryKey != null) {
                     throw new SQLException("Primary key is duplicate: %s".formatted(primaryKey));
                 }
-                primaryKey = columnDomain.getName();
+                primaryKey = columnDomain;
             }
             // 字段名
             sb.append("`").append(columnDomain.getName()).append("`");
@@ -138,8 +152,7 @@ public class AgileDatabaseJdbcTemplate {
 
             // 判断唯一键
             if (columnDomain.isUnique()) {
-                String uniqueFieldName = columnDomain.getName();
-                uniqueFieldNames.add(uniqueFieldName);
+                uniqueFieldNames.add(columnDomain);
             }
 
             // 判断联合唯一键
@@ -164,8 +177,10 @@ public class AgileDatabaseJdbcTemplate {
         }
 
         // 主键
-        if (CharSequenceUtil.isNotEmpty(primaryKey)) {
-            sb.append(String.format("CONSTRAINT %s_pk PRIMARY KEY (`%s`)", tableName, primaryKey)).append(", ");
+        if (primaryKey != null) {
+            String name = primaryKey.getName();
+            String primaryKeyName = ColumnDomain.generatePrimaryKeyName(tableName, primaryKey.getName());
+            sb.append(String.format("CONSTRAINT %s PRIMARY KEY (`%s`)", primaryKeyName, name)).append(", ");
         }
 
         // 唯一键
@@ -173,8 +188,10 @@ public class AgileDatabaseJdbcTemplate {
             if (i == 0) {
                 sb.append(" ");
             }
-            String uniqueName = uniqueFieldNames.get(i);
-            sb.append(String.format("CONSTRAINT %s_uk_%s UNIQUE (`%s`)", tableName, uniqueName, uniqueName)).append(", ");
+            ColumnDomain uniqueColumnDomain = uniqueFieldNames.get(i);
+            String uniqueName = uniqueColumnDomain.getName();
+            String uniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, uniqueName);
+            sb.append(String.format("CONSTRAINT %s UNIQUE (`%s`)", uniqueKeyName, uniqueName)).append(", ");
         }
 
         // 联合唯一键
@@ -203,10 +220,18 @@ public class AgileDatabaseJdbcTemplate {
         if (lastChar == ',') {
             sb.deleteCharAt(length - 1);
         }
-        sb.append(") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+        sb.append(") COMMENT ").append("'").append(entityClassDomain.getComment()).append("'").append(" ");
+        sb.append("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
 
         // 创建表
         this.executeUpdate(sb.toString(), Operation.CREATE);
+
+        // 主键设置为第一列
+        if (primaryKey != null) {
+            String firstColumnSql = "ALTER TABLE `%s` MODIFY COLUMN `%s` %s %s NOT NULL FIRST"
+                    .formatted(tableName, primaryKey.getName(), primaryKey.typeWithLength(), primaryKey.isAutoIncrement() ? "AUTO_INCREMENT" : "");
+            this.executeUpdate(firstColumnSql, Operation.UPDATE);
+        }
 
         // 创建索引键
         for (String indexName : indexFieldNames) {
@@ -223,10 +248,17 @@ public class AgileDatabaseJdbcTemplate {
             List<String> indexNames = pairs.stream().map(Pair::getKey).toList();
             createIndex(tableName, indexGroupName, indexNames);
         }
+
+        // 插入元数据
+        for (ColumnDomain columnDomain : columnDomains) {
+            String insertSql = TableMetadata.insertSql(columnDomain.getTableName(), columnDomain.getName(), columnDomain.signature());
+            executeUpdate(insertSql, Operation.INSERT);
+        }
     }
 
-    public void updateTable(String tableName, Class<?> clazz, DatabaseMetaData metaData) throws SQLException {
-        List<Field> fields = getEntityFields(clazz);
+    public void updateTable(EntityClassDomain entityClassDomain, DatabaseMetaData metaData) throws SQLException {
+        String tableName = entityClassDomain.getName();
+        List<Field> fields = getEntityFields(entityClassDomain.getEntityClass());
         ResultSet dataColumns = metaData.getColumns(null, "%", tableName, "%");
 
         // 表的所有字段名称
@@ -245,19 +277,33 @@ public class AgileDatabaseJdbcTemplate {
         List<Field> updateFields = new ArrayList<>();
 
         for (Field field : fields) {
-            ColumnDomain columnDomain = ColumnDomain.of(field);
+            ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
+            String columnName = columnDomain.getName();
+
+            // 查元数据表，对比签名
+            String signature = null;
+            String columnSignature = columnDomain.signature();
+            final String selectSql = TableMetadata.selectSql(tableName, columnName);
+            Map<String, Object> result = executeSelect(selectSql);
+            // 元数据中存在对应的字段记录
+            if (!result.isEmpty()) {
+                signature = (String) result.get(TableMetadata.COLUMN_SIGNATURE);
+            }
+
+            boolean shouldUpdate = (CharSequenceUtil.isEmpty(signature) || !Objects.equals(columnSignature, signature)) && columnNames.contains(columnName);
+
             String forUpdateColumn = columnDomain.getForUpdate();
             // 需要更新的字段
-            if (columnNames.contains(forUpdateColumn) && CharSequenceUtil.isNotEmpty(forUpdateColumn)) {
+            if (shouldUpdate || (columnNames.contains(forUpdateColumn) && CharSequenceUtil.isNotEmpty(forUpdateColumn))) {
                 updateFields.add(field);
             }
             // 需要新增的字段
-            else if (!columnNames.contains(columnDomain.getName())) {
+            else if (!columnNames.contains(columnName)) {
                 newFields.add(field);
             }
         }
 
-        List<String> currentColumnNames = fields.stream().map(field -> ColumnDomain.of(field).getName()).toList();
+        List<String> currentColumnNames = fields.stream().map(field -> ColumnDomain.of(tableName, field).getName()).toList();
         List<String> deleteColumns = columnNames.stream().filter(columnName -> !currentColumnNames.contains(columnName)).toList();
 
         if (!deleteColumns.isEmpty() && properties.isDeleteColumn()) {
@@ -279,6 +325,9 @@ public class AgileDatabaseJdbcTemplate {
             sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
             sb.append("DROP COLUMN").append(" ").append("`").append(deleteColumn).append("`");
             executeUpdate(sb.toString(), Operation.DELETE);
+
+            // 删除元数据信息
+            executeUpdate(TableMetadata.deleteSql(tableName, deleteColumn), Operation.DELETE);
         }
     }
 
@@ -287,7 +336,7 @@ public class AgileDatabaseJdbcTemplate {
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
         for (Field field : newFields) {
             // 新增字段
-            ColumnDomain columnDomain = ColumnDomain.of(field);
+            ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
             StringBuilder sb = new StringBuilder();
             sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
             String columnName = columnDomain.getName();
@@ -337,6 +386,15 @@ public class AgileDatabaseJdbcTemplate {
                 columns.add(Pair.of(columnDomain.getName(), columnDomain.getIndexGroupSort()));
                 indexGroups.put(columnDomain.getIndexGroup(), columns);
             }
+
+            // 新增元数据
+            DataSource dataSource = this.jdbcTemplate.getDataSource();
+            assert dataSource != null;
+            try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
+                String columnSignature = columnDomain.signature();
+                final String insertSql = TableMetadata.insertSql(tableName, columnName, columnSignature);
+                executeUpdate(insertSql, Operation.INSERT);
+            }
         }
 
         // 创建联合唯一键
@@ -351,8 +409,9 @@ public class AgileDatabaseJdbcTemplate {
                 }
             }
             StringBuilder sb = new StringBuilder();
+            String uniqueKeyGroupName = ColumnDomain.generateUniqueKeyName(tableName, uniqueGroupName);
             sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-            sb.append("ADD CONSTRAINT").append(" ").append("%s_uk_%s".formatted(tableName, uniqueGroupName)).append(" ");
+            sb.append("ADD CONSTRAINT").append(" ").append(uniqueKeyGroupName).append(" ");
             sb.append("UNIQUE").append(" ").append("(").append(uniqueKeys).append(")");
             executeUpdate(sb.toString(), Operation.ADD);
         }
@@ -372,25 +431,43 @@ public class AgileDatabaseJdbcTemplate {
     private void updateColumns(String tableName, List<Field> updateFields, DatabaseMetaData metaData) throws SQLException {
 
         // 唯一索引
-        List<String> uniqueIndexNames = new ArrayList<>();
-        ResultSet indexInfo = metaData.getIndexInfo(null, null, tableName, true, false);
-        while (indexInfo.next()) {
-            String indexName = indexInfo.getString("INDEX_NAME");
+        Set<String> uniqueIndexNames = new LinkedHashSet<>();
+        ResultSet uniqueIndexInfo = metaData.getIndexInfo(null, null, tableName, true, false);
+        while (uniqueIndexInfo.next()) {
+            String indexName = uniqueIndexInfo.getString("INDEX_NAME");
             // 主键和非唯一索引，跳过
-            if (indexInfo.getBoolean("NON_UNIQUE") || "PRIMARY".equalsIgnoreCase(indexName)) {
+            if (uniqueIndexInfo.getBoolean("NON_UNIQUE") || "PRIMARY".equalsIgnoreCase(indexName)) {
                 continue;
             }
             uniqueIndexNames.add(indexName);
         }
 
+        // 普通索引
+        Set<String> indexNames = new LinkedHashSet<>();
+        ResultSet indexInfo = metaData.getIndexInfo(null, null, tableName, false, false);
+        while (indexInfo.next()) {
+            String indexName = indexInfo.getString("INDEX_NAME");
+            // 非唯一索引
+            if (indexInfo.getBoolean("NON_UNIQUE")) {
+                indexNames.add(indexName);
+            }
+        }
+
         for (Field field : updateFields) {
             // 字段信息变更
-            ColumnDomain columnDomain = ColumnDomain.of(field);
+            ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
             StringBuilder sb = new StringBuilder();
             sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+
             String forUpdateColumn = columnDomain.getForUpdate();
+            String columnName = columnDomain.getName();
+            // 字段名称变更的情况
             if (CharSequenceUtil.isNotEmpty(forUpdateColumn)) {
-                sb.append("CHANGE").append(" ").append("`").append(forUpdateColumn).append("`").append(" ").append("`").append(columnDomain.getName()).append("`").append(" ");
+                sb.append("CHANGE").append(" ").append("`").append(forUpdateColumn).append("`").append(" ").append("`").append(columnName).append("`").append(" ");
+            }
+            // 非字段名称变更的情况
+            else {
+                sb.append("MODIFY").append(" ").append("`").append(columnName).append("`").append(" ");
             }
             sb.append(columnDomain.typeWithLength()).append(" ");
 
@@ -398,11 +475,11 @@ public class AgileDatabaseJdbcTemplate {
                 sb.append("UNSIGNED").append(" ");
             }
 
-            sb.append("DEFAULT").append(" ");
             String defaultExpression = columnDomain.getDefaultExpression();
             if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
-                sb.append(defaultExpression).append(" ");
+                sb.append("DEFAULT").append(" ").append(defaultExpression).append(" ");
             }
+
             sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
 
             String comment = columnDomain.getComment();
@@ -412,52 +489,51 @@ public class AgileDatabaseJdbcTemplate {
             executeUpdate(sb.toString(), Operation.UPDATE);
 
             // 唯一约束变更
-            if (columnDomain.isUnique()) {
-                String uniqueIndexName = columnDomain.uniqueKeyName(tableName);
-                if (!uniqueIndexNames.contains(uniqueIndexName)) {
-                    // 新建唯一约束
-                    sb = new StringBuilder();
-                    sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-                    sb.append("ADD CONSTRAINT").append(" ").append(uniqueIndexName).append(" ");
-                    sb.append("UNIQUE").append(" ").append("(").append("`").append(columnDomain.getName()).append("`").append(")");
-                    executeUpdate(sb.toString(), Operation.ADD);
-
-                    // 删除原来的唯一约束
-                    sb = new StringBuilder();
-                    sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-                    String oldUniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, forUpdateColumn);
-                    sb.append("DROP KEY").append(" ").append(oldUniqueKeyName).append(" ");
-                    executeUpdate(sb.toString(), Operation.DELETE);
-                }
+            String uniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, columnName);
+            if (columnDomain.isUnique() && !uniqueIndexNames.contains(uniqueKeyName)) {
+                createUniqueIndex(tableName, columnName);
+            } else if (!columnDomain.isUnique() && uniqueIndexNames.contains(uniqueKeyName)) {
+                dropUniqueIndex(tableName, columnName);
             }
+
+            // 普通索引变更
+            String indexNameKey = ColumnDomain.generateIndexName(tableName, columnDomain.getName());
+            if (columnDomain.isIndex() && !indexNames.contains(indexNameKey)) {
+                createIndex(tableName, columnName);
+            } else if (!columnDomain.isIndex() && indexNames.contains(indexNameKey)) {
+                dropIndex(tableName, columnName);
+            }
+
+            // 更新元信息
+            Map<String, Object> result = executeSelect(TableMetadata.selectSql(tableName, columnName));
+            // 元数据中不存在对应的字段记录，则表示需要新增
+            if (result.isEmpty()) {
+                // 新增元数据
+                executeUpdate(TableMetadata.insertSql(tableName, columnName, columnDomain.signature()), Operation.INSERT);
+            }
+            // 元数据中存在对应的字段记录，则表示需要更新
+            else {
+                // 更新元数据
+                executeUpdate(TableMetadata.updateSql(tableName, columnName, columnDomain.signature()), Operation.UPDATE);
+            }
+
         }
     }
 
-    private String getTableName(String tableNamePrefix, Class<?> clazz) {
-        String tableName = tableNamePrefix == null ? "" : tableNamePrefix.trim();
-        synchronized (this) {
-            EntityClassDomain entityClassDomain = new EntityClassDomain();
-            EntityClass entityClassAnno = clazz.getDeclaredAnnotation(EntityClass.class);
-            if (entityClassAnno != null) {
-                entityClassDomain.setTableName(entityClassAnno.value());
-            } else {
-                // Mybatis plus @TableName annotation supports
-                TableName tableNameAnno = clazz.getDeclaredAnnotation(TableName.class);
-                entityClassDomain.setTableName(tableNameAnno.value());
-            }
-
-            String name = entityClassDomain.getTableName().trim();
-            if (CharSequenceUtil.isNotEmpty(name)) {
-                tableName += name;
-            } else {
-                tableName += CharSequenceUtil.toUnderlineCase(clazz.getSimpleName());
-            }
-        }
-        return tableName;
+    private void createUniqueIndex(String tableName, String columnName) throws SQLException {
+        String uniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, columnName);
+        String uniqueIndexSql = String.format("ALTER TABLE `%s` ADD CONSTRAINT `%s` UNIQUE (`%s`)", tableName, uniqueKeyName, columnName);
+        this.executeUpdate(uniqueIndexSql, Operation.CREATE);
     }
 
-    private void createIndex(String tableName, String indexName) throws SQLException {
-        String indexSql = String.format("CREATE INDEX %s_index_%s ON `%s` (`%s`)", tableName, indexName, tableName, indexName);
+    private void dropUniqueIndex(String tableName, String columnName) throws SQLException {
+        String uniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, columnName);
+        this.executeUpdate("ALTER TABLE `%s` DROP KEY `%s`".formatted(tableName, uniqueKeyName), Operation.DROP);
+    }
+
+    private void createIndex(String tableName, String columnName) throws SQLException {
+        String indexNameKey = ColumnDomain.generateIndexName(tableName, columnName);
+        String indexSql = String.format("CREATE INDEX %s ON `%s` (`%s`)", indexNameKey, tableName, columnName);
         this.executeUpdate(indexSql, Operation.CREATE);
     }
 
@@ -469,8 +545,53 @@ public class AgileDatabaseJdbcTemplate {
                 indexKeys.append(",").append(" ");
             }
         }
-        String indexSql = String.format("CREATE INDEX %s_index_%s ON `%s` (%s)", tableName, indexGroupName, tableName, indexKeys);
+        String indexGroupNameKey = ColumnDomain.generateIndexName(tableName, indexGroupName);
+        String indexSql = String.format("CREATE INDEX %s ON `%s` (%s)", indexGroupNameKey, tableName, indexKeys);
         this.executeUpdate(indexSql, Operation.CREATE);
+    }
+
+    private void dropIndex(String tableName, String columnName) throws SQLException {
+        String indexNameKey = ColumnDomain.generateIndexName(tableName, columnName);
+        this.executeUpdate("DROP INDEX `%s` on `%s`".formatted(indexNameKey, tableName), Operation.DROP);
+    }
+
+    public Map<String, Object> executeSelect(final String sql) throws SQLException {
+        DataSource dataSource = this.jdbcTemplate.getDataSource();
+        if (dataSource == null) {
+            throw new SQLException("DataSource is null");
+        }
+        AtomicReference<Connection> connection = new AtomicReference<>();
+        return Try.of(() -> {
+            Map<String, Object> result = new LinkedHashMap<>();
+            connection.set(dataSource.getConnection());
+            PreparedStatementCreator creator = conn -> conn.prepareStatement(sql);
+            ResultSet resultSet = creator.createPreparedStatement(connection.get()).executeQuery();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnsCount = metaData.getColumnCount();
+            // 封装 key
+            List<String> keys = new ArrayList<>();
+            for (int i = 1; i <= columnsCount; i++) {
+                String columnName = metaData.getColumnName(i);
+                keys.add(columnName);
+            }
+            // 封装 value
+            while (resultSet.next()) {
+                for (int i = 1; i <= columnsCount; i++) {
+                    Object columnValue = resultSet.getObject(i);
+                    result.put(keys.get(i - 1), columnValue);
+                }
+            }
+            return result;
+        }).onFailure(e -> LoggerPrinter.error(log, e.getMessage(), e)).andThen(result -> {
+            if (properties.isShowSql() && log.isDebugEnabled()) {
+                if (properties.isFormatSql()) {
+                    String formattedSql = SqlFormatter.format(sql);
+                    LoggerPrinter.info(log, formattedSql);
+                } else {
+                    LoggerPrinter.info(log, sql);
+                }
+            }
+        }).andFinallyTry(() -> connection.get().close()).get();
     }
 
 

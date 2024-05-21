@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.database.domain;
 
 import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -24,6 +25,8 @@ import java.util.Date;
 @Data
 @Accessors(chain = true)
 public class ColumnDomain {
+    /** 所属表 */
+    private String tableName;
 
     /** 名称 */
     private String name;
@@ -73,10 +76,11 @@ public class ColumnDomain {
     /** 需要更新的表字段 */
     private String forUpdate;
 
-    public static ColumnDomain of(Field field) {
+    public static ColumnDomain of(String tableName, Field field) {
         EntityColumn column = field.getAnnotation(EntityColumn.class);
         TableId tableId = field.getAnnotation(TableId.class);
         ColumnDomain domain = new ColumnDomain();
+        domain.tableName = tableName;
         domain.name = fieldName(field, column);
         domain.type = fieldType(field, column);
         domain.length = fieldLength(field, column);
@@ -185,7 +189,20 @@ public class ColumnDomain {
         return generateUniqueKeyName(tableName, this.name);
     }
 
+    public String signature() {
+        String str = this.toString();
+        return DigestUtil.md5Hex(str);
+    }
+
+    public static String generatePrimaryKeyName(String tableName, String columnName) {
+        return tableName + "_pk_" + columnName;
+    }
+
     public static String generateUniqueKeyName(String tableName, String columnName) {
         return tableName + "_uk_" + columnName;
+    }
+
+    public static String generateIndexName(String tableName, String columnName) {
+        return tableName + "_index_" + columnName;
     }
 }
