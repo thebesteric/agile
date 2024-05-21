@@ -30,6 +30,7 @@ sourceflag:
       show-sql: true
       ddl-auto: update
       format-sql: true
+      delete-column: true
 
 spring:
   datasource:

@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.test.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityColumn;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ import java.util.Date;
  * @since 2024-05-13 15:24:30
  */
 @TableName("foo")
+@EntityClass(comment = "测试表")
 public class Foo extends BaseEntity {
 
     @EntityColumn(length = 32, unique = true, nullable = false, forUpdate = "hello", defaultExpression = "'foo'")
@@ -42,7 +44,7 @@ public class Foo extends BaseEntity {
     private Date updateTime;
 
     @TableField("t_test")
-    @EntityColumn(length = 64, nullable = false)
+    @EntityColumn(length = 64, nullable = false, defaultExpression = "'hello'")
     private String test;
 
     @EntityColumn(nullable = false, defaultExpression = "0")
@@ -62,4 +64,7 @@ public class Foo extends BaseEntity {
 
     @EntityColumn(length = 64, indexGroup = "c_e_d", indexGroupSort = 2)
     private String e;
+
+    @EntityColumn(length = 32, index = true)
+    private String f;
 }
