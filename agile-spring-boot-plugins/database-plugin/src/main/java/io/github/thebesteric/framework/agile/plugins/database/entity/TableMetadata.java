@@ -21,6 +21,8 @@ import java.util.Date;
 @Setter
 @EntityClass(TableMetadata.TABLE_NAME)
 public class TableMetadata implements Serializable {
+    @Serial
+    private static final long serialVersionUID = -234369174588816818L;
 
     public static final String TABLE_NAME = "AGILE_TABLE_METADATA";
     public static final String COLUMN_ID = "ID";
@@ -32,9 +34,6 @@ public class TableMetadata implements Serializable {
     public static final String COLUMN_UPDATED_AT = "UPDATED_AT";
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    @Serial
-    private static final long serialVersionUID = -234369174588816818L;
 
     @EntityColumn(name = COLUMN_ID, primary = true, autoIncrement = true)
     private Integer id;
@@ -56,6 +55,11 @@ public class TableMetadata implements Serializable {
 
     @EntityColumn(name = COLUMN_UPDATED_AT, type = EntityColumn.Type.DATETIME)
     private Date updatedAt;
+
+    public static String tableExists(String schema) {
+        return "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = '%s' AND table_name = '%s') AS 'exists'"
+                .formatted(schema, TABLE_NAME);
+    }
 
     public static String insertSql(String tableName, String columnName, String signature) {
         String columns = "`%s`, `%s`, `%s`, `%s`".formatted(COLUMN_TABLE_NAME, COLUMN_COLUMN_NAME, COLUMN_SIGNATURE, COLUMN_CREATED_AT);

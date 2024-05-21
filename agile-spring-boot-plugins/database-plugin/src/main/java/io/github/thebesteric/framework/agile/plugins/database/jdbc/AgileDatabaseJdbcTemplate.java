@@ -84,10 +84,12 @@ public class AgileDatabaseJdbcTemplate {
     }
 
     private void initTableMeta(DatabaseMetaData metaData) throws SQLException {
-        EntityClassDomain entityClassDomain = EntityClassDomain.of(null, TableMetadata.class);
-        String tableName = entityClassDomain.getName();
-        ResultSet resultSet = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
-        if (!resultSet.next()) {
+        String jdbcUrl = metaData.getURL();
+        String databaseName = jdbcUrl.split("//")[1].split("/")[1].split("\\?")[0];
+        String existsSql = TableMetadata.tableExists(databaseName);
+        Map<String, Object> result = executeSelect(existsSql);
+        if (result != null && !result.isEmpty() && (Long) result.get("exists") == 0) {
+            EntityClassDomain entityClassDomain = EntityClassDomain.of(null, TableMetadata.class);
             createTable(entityClassDomain);
         }
     }
