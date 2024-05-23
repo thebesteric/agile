@@ -1,6 +1,8 @@
 package io.github.thebesteric.framework.agile.plugins.database.config;
 
+import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.github.thebesteric.framework.agile.commons.exception.DuplicateParamsException;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
 import io.github.thebesteric.framework.agile.core.scaner.AnnotationTypeCandidateComponentScanner;
@@ -42,15 +44,30 @@ public class AgileDatabaseContext extends AbstractAgileContext {
         AnnotationTypeCandidateComponentScanner scanner = new AnnotationTypeCandidateComponentScanner(packageNames, classes);
         Set<String> entityClassNames = scanner.scan();
         if (entityClassNames != null) {
+            Set<String> tableNames = new HashSet<>();
             for (String entityClassName : entityClassNames) {
-                Try.of(() -> {
-                    Class<?> clazz = Class.forName(entityClassName);
-                    EntityClass entityClassAnno = clazz.getAnnotation(EntityClass.class);
-                    if (entityClassAnno != null && entityClassAnno.ignore()) {
-                        return false;
-                    }
-                    return entityClasses.add(clazz);
-                });
+                Class<?> clazz = Try.of(() -> Class.forName(entityClassName)).get();
+                // 不需要创建表的实体类
+                EntityClass entityClassAnno = clazz.getAnnotation(EntityClass.class);
+                if (entityClassAnno != null && entityClassAnno.ignore()) {
+                    continue;
+                }
+                // 获取表名
+                String tableName = null;
+                if (entityClassAnno != null) {
+                    tableName = entityClassAnno.value();
+                }
+                if (CharSequenceUtil.isEmpty(tableName)) {
+                    TableName tableNameAnno = clazz.getAnnotation(TableName.class);
+                    tableName = tableNameAnno.value();
+                }
+                // 判断表名是否重复
+                if (tableNames.contains(tableName)) {
+                    throw new DuplicateParamsException("Duplicate tableName exception: " + tableName);
+                }
+                tableNames.add(tableName);
+                // 加入集合
+                entityClasses.add(clazz);
             }
         }
     }

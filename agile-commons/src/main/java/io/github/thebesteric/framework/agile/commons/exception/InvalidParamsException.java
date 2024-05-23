@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.commons.exception;
 
+import java.io.Serial;
+
 /**
  * InvalidDataException
  *
@@ -7,6 +9,9 @@ package io.github.thebesteric.framework.agile.commons.exception;
  * @version 1.0
  */
 public class InvalidParamsException extends RuntimeException {
+    @Serial
+    private static final long serialVersionUID = 4455818024758136958L;
+
     public InvalidParamsException() {
         super("Invalid params exception");
     }
