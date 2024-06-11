@@ -94,9 +94,6 @@ public class AgileDatabaseJdbcTemplate {
             EntityClassDomain entityClassDomain = EntityClassDomain.of(null, TableMetadata.class);
             // 创建表
             createTable(entityClassDomain);
-            // 插入元数据
-            String insertSql = TableMetadata.insertSql(TableMetadata.MetadataType.TABLE, entityClassDomain.getTableName(), null, entityClassDomain.signature());
-            executeUpdate(insertSql, Operation.INSERT);
         }
     }
 
