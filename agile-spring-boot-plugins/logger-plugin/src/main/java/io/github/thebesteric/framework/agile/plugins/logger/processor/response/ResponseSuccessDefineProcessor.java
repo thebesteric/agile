@@ -38,8 +38,8 @@ public interface ResponseSuccessDefineProcessor {
      */
     default JsonNode getResultJsonNode(Object result) throws JsonProcessingException {
         if (result == null) return null;
-        String resultJsonStr = JsonUtils.mapper.writeValueAsString(result);
-        return JsonUtils.mapper.readTree(resultJsonStr);
+        String resultJsonStr = JsonUtils.MAPPER.writeValueAsString(result);
+        return JsonUtils.MAPPER.readTree(resultJsonStr);
     }
 
     /**

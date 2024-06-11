@@ -31,10 +31,10 @@ public class JsonUtils extends AbstractUtils {
 
     private static final Pattern PATTERN = Pattern.compile("\\s*|\t|\r|\n");
 
-    public static ObjectMapper mapper = new ObjectMapper();
+    public static final ObjectMapper MAPPER = new ObjectMapper();
 
     static {
-        mapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
+        MAPPER.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true)
                 .configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true)
                 .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
                 .configure(DeserializationFeature.ACCEPT_EMPTY_ARRAY_AS_NULL_OBJECT, true)
@@ -44,7 +44,6 @@ public class JsonUtils extends AbstractUtils {
                 // Fix Java 8 date/time type `java.time.LocalDateTime` not supported by default
                 .registerModule(new JavaTimeModule())
                 .setSerializationInclusion(JsonInclude.Include.ALWAYS);
-
     }
 
     public static <T> T toObject(String jsonStr, Class<T> clazz) {
@@ -52,7 +51,7 @@ public class JsonUtils extends AbstractUtils {
             return null;
         }
         try {
-            return mapper.readValue(jsonStr, clazz);
+            return MAPPER.readValue(jsonStr, clazz);
         } catch (Exception e) {
             LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
         }
@@ -68,8 +67,8 @@ public class JsonUtils extends AbstractUtils {
             return null;
         }
         try {
-            CollectionType listType = mapper.getTypeFactory().constructCollectionType(ArrayList.class, clazz);
-            return mapper.readValue(jsonStr, listType);
+            CollectionType listType = MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, clazz);
+            return MAPPER.readValue(jsonStr, listType);
         } catch (IOException e) {
             LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
         }
@@ -85,8 +84,8 @@ public class JsonUtils extends AbstractUtils {
             return null;
         }
         try {
-            MapLikeType mapType = mapper.getTypeFactory().constructMapLikeType(Map.class, key, value);
-            return mapper.readValue(jsonStr, mapType);
+            MapLikeType mapType = MAPPER.getTypeFactory().constructMapLikeType(Map.class, key, value);
+            return MAPPER.readValue(jsonStr, mapType);
         } catch (IOException e) {
             LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
         }
@@ -102,7 +101,7 @@ public class JsonUtils extends AbstractUtils {
             return null;
         }
         try {
-            return mapper.writeValueAsString(obj);
+            return MAPPER.writeValueAsString(obj);
         } catch (Exception e) {
             LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
         }
@@ -112,7 +111,7 @@ public class JsonUtils extends AbstractUtils {
     public static JsonNode toJsonNode(String jsonStr) {
         JsonNode jsonNode;
         try {
-            jsonNode = mapper.readTree(jsonStr);
+            jsonNode = MAPPER.readTree(jsonStr);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

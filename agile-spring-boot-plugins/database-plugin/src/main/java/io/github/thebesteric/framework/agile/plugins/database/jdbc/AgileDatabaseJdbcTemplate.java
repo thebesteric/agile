@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.database.jdbc;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.db.sql.SqlFormatter;
 import com.baomidou.mybatisplus.annotation.TableField;
+import io.github.thebesteric.framework.agile.commons.util.CollectionUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
@@ -15,15 +16,16 @@ import io.github.thebesteric.framework.agile.plugins.database.entity.TableMetada
 import io.vavr.control.Try;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.annotation.Transient;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 
 import javax.sql.DataSource;
-import java.beans.Transient;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * AgileDatabaseJdbcTemplate
@@ -70,7 +72,7 @@ public class AgileDatabaseJdbcTemplate {
             initTableMeta(metaData);
             for (Class<?> clazz : entityClasses) {
                 EntityClassDomain entityClassDomain = EntityClassDomain.of(properties.getTableNamePrefix(), clazz);
-                String tableName = entityClassDomain.getName();
+                String tableName = entityClassDomain.getTableName();
                 ResultSet resultSet = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
                 if (!resultSet.next()) {
                     createTable(entityClassDomain);
@@ -86,16 +88,20 @@ public class AgileDatabaseJdbcTemplate {
     private void initTableMeta(DatabaseMetaData metaData) throws SQLException {
         String jdbcUrl = metaData.getURL();
         String databaseName = jdbcUrl.split("//")[1].split("/")[1].split("\\?")[0];
-        String existsSql = TableMetadata.tableExists(databaseName);
+        String existsSql = TableMetadata.tableExistsSql(databaseName);
         Map<String, Object> result = executeSelect(existsSql);
         if (result != null && !result.isEmpty() && (Long) result.get("exists") == 0) {
             EntityClassDomain entityClassDomain = EntityClassDomain.of(null, TableMetadata.class);
+            // 创建表
             createTable(entityClassDomain);
+            // 插入元数据
+            String insertSql = TableMetadata.insertSql(TableMetadata.MetadataType.TABLE, entityClassDomain.getTableName(), null, entityClassDomain.signature());
+            executeUpdate(insertSql, Operation.INSERT);
         }
     }
 
     public void createTable(EntityClassDomain entityClassDomain) throws SQLException {
-        String tableName = entityClassDomain.getName();
+        String tableName = entityClassDomain.getTableName();
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE TABLE `").append(tableName).append("` (");
         List<Field> fields = getEntityFields(entityClassDomain.getEntityClass());
@@ -103,9 +109,9 @@ public class AgileDatabaseJdbcTemplate {
         List<ColumnDomain> columnDomains = new ArrayList<>();
 
         ColumnDomain primaryKey = null;
-        List<ColumnDomain> uniqueFieldNames = new ArrayList<>();
+        List<ColumnDomain> uniqueColumnDomains = new ArrayList<>();
         Map<String, List<String>> uniqueGroups = new HashMap<>();
-        List<String> indexFieldNames = new ArrayList<>();
+        List<ColumnDomain> indexColumnDomains = new ArrayList<>();
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
 
         for (Field field : fields) {
@@ -154,7 +160,7 @@ public class AgileDatabaseJdbcTemplate {
 
             // 判断唯一键
             if (columnDomain.isUnique()) {
-                uniqueFieldNames.add(columnDomain);
+                uniqueColumnDomains.add(columnDomain);
             }
 
             // 判断联合唯一键
@@ -166,8 +172,7 @@ public class AgileDatabaseJdbcTemplate {
 
             // 判断索引键
             if (columnDomain.isIndex()) {
-                String indexFieldName = columnDomain.getName();
-                indexFieldNames.add(indexFieldName);
+                indexColumnDomains.add(columnDomain);
             }
 
             // 判断联合索引
@@ -186,11 +191,11 @@ public class AgileDatabaseJdbcTemplate {
         }
 
         // 唯一键
-        for (int i = 0; i < uniqueFieldNames.size(); i++) {
+        for (int i = 0; i < uniqueColumnDomains.size(); i++) {
             if (i == 0) {
                 sb.append(" ");
             }
-            ColumnDomain uniqueColumnDomain = uniqueFieldNames.get(i);
+            ColumnDomain uniqueColumnDomain = uniqueColumnDomains.get(i);
             String uniqueName = uniqueColumnDomain.getName();
             String uniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, uniqueName);
             sb.append(String.format("CONSTRAINT %s UNIQUE (`%s`)", uniqueKeyName, uniqueName)).append(", ");
@@ -235,31 +240,121 @@ public class AgileDatabaseJdbcTemplate {
             this.executeUpdate(firstColumnSql, Operation.UPDATE);
         }
 
-        // 创建索引键
-        for (String indexName : indexFieldNames) {
-            createIndex(tableName, indexName);
+        // 创建唯一索引（包含使用 @Unique 注解的类上的列）
+        List<String> uniqueColumns = entityClassDomain.getOnClassUniqueColumns();
+        for (ColumnDomain uniqueColumnDomain : uniqueColumnDomains) {
+            String columnName = uniqueColumnDomain.getName();
+            if (uniqueColumns.contains(columnName)) {
+                uniqueColumns.remove(columnName);
+            }
+        }
+        for (String uniqueColumn : uniqueColumns) {
+            // 创建唯一索引
+            createUniqueIndex(tableName, uniqueColumn);
         }
 
-        // 创建联合索引键
+        // 创建唯一索引组（使用 @UniqueGroup 注解的列）
+        List<List<String>> uniqueGroupColumns = entityClassDomain.getOnClassUniqueGroupColumns();
+        for (Map.Entry<String, List<String>> entry : uniqueGroups.entrySet()) {
+            List<String> groupColumns = entry.getValue();
+            for (List<String> groupColumnsOnClass : uniqueGroupColumns) {
+                if (CollectionUtils.isEquals(groupColumns, groupColumnsOnClass)) {
+                    uniqueGroupColumns.remove(groupColumnsOnClass);
+                    break;
+                }
+            }
+        }
+        for (List<String> groupColumns : uniqueGroupColumns) {
+            // 创建唯一索引组
+            createUniqueGroupIndex(tableName, groupColumns);
+        }
+
+
+        // 创建索引键（包含使用 @Index 注解的类上的列）
+        List<String> indexColumns = entityClassDomain.getOnClassIndexColumns();
+        for (ColumnDomain indexColumnDomain : indexColumnDomains) {
+            String columnName = indexColumnDomain.getName();
+            if (indexColumns.contains(columnName)) {
+                indexColumns.remove(columnName);
+            }
+        }
+        for (String indexColumn : indexColumns) {
+            // 创建普通索引
+            createIndex(tableName, indexColumn);
+        }
+
+        // 创建普通索引
         for (Map.Entry<String, List<Pair<String, Integer>>> entry : indexGroups.entrySet()) {
             String indexGroupName = entry.getKey();
             List<Pair<String, Integer>> pairs = entry.getValue();
             // 排序
             pairs.sort(Comparator.comparingInt(Pair::getValue));
-
             List<String> indexNames = pairs.stream().map(Pair::getKey).toList();
-            createIndex(tableName, indexGroupName, indexNames);
+            // 创建普通索引
+            createIndex(tableName, indexGroupName, indexNames, true);
+        }
+
+        // 创建普通索引组（使用 @IndexGroup 注解的列）
+        List<List<String>> indexGroupColumns = entityClassDomain.getOnClassIndexGroupColumns();
+        for (Map.Entry<String, List<Pair<String, Integer>>> entry : indexGroups.entrySet()) {
+            List<Pair<String, Integer>> pairs = entry.getValue();
+            // 排序
+            pairs.sort(Comparator.comparingInt(Pair::getValue));
+            List<String> indexNames = pairs.stream().map(Pair::getKey).toList();
+            for (List<String> indexGroupColumnsOnClass : indexGroupColumns) {
+                if (CollectionUtils.isStrictEquals(indexNames, indexGroupColumnsOnClass)) {
+                    indexGroupColumns.remove(indexGroupColumnsOnClass);
+                    break;
+                }
+            }
+        }
+        for (List<String> groupColumns : indexGroupColumns) {
+            // 创建普通索引组
+            createGroupIndex(tableName, groupColumns);
         }
 
         // 插入元数据
         for (ColumnDomain columnDomain : columnDomains) {
-            String insertSql = TableMetadata.insertSql(columnDomain.getTableName(), columnDomain.getName(), columnDomain.signature());
+            String selectSql = TableMetadata.selectSql(TableMetadata.MetadataType.COLUMN, columnDomain.getTableName(), columnDomain.getName());
+            Map<String, Object> result = executeSelect(selectSql);
+            if (!result.isEmpty()) {
+                String signature = (String) result.get(TableMetadata.COLUMN_SIGNATURE);
+                String currSignature = columnDomain.signature();
+                if (!signature.equals(currSignature)) {
+                    // 更新元数据
+                    String insertSql = TableMetadata.updateSql(TableMetadata.MetadataType.COLUMN, columnDomain.getTableName(), columnDomain.getName(), currSignature);
+                    executeUpdate(insertSql, Operation.UPDATE);
+                }
+            } else {
+                // 插入元数据
+                String insertSql = TableMetadata.insertSql(TableMetadata.MetadataType.COLUMN, columnDomain.getTableName(), columnDomain.getName(), columnDomain.signature());
+                executeUpdate(insertSql, Operation.INSERT);
+            }
+        }
+
+        // 更新表元数据信息
+        updateTableMetaData(entityClassDomain, tableName);
+    }
+
+    private void updateTableMetaData(EntityClassDomain entityClassDomain, String tableName) throws SQLException {
+        String selectSql = TableMetadata.selectSql(TableMetadata.MetadataType.TABLE, tableName, null);
+        Map<String, Object> result = executeSelect(selectSql);
+        if (!result.isEmpty()) {
+            String signature = (String) result.get(TableMetadata.COLUMN_SIGNATURE);
+            String currSignature = entityClassDomain.signature();
+            if (!signature.equals(currSignature)) {
+                // 更新元数据
+                String insertSql = TableMetadata.updateSql(TableMetadata.MetadataType.TABLE, tableName, null, currSignature);
+                executeUpdate(insertSql, Operation.UPDATE);
+            }
+        } else {
+            String insertSql = TableMetadata.insertSql(TableMetadata.MetadataType.TABLE, tableName, null, entityClassDomain.signature());
             executeUpdate(insertSql, Operation.INSERT);
         }
     }
 
     public void updateTable(EntityClassDomain entityClassDomain, DatabaseMetaData metaData) throws SQLException {
-        String tableName = entityClassDomain.getName();
+        String tableName = entityClassDomain.getTableName();
         List<Field> fields = getEntityFields(entityClassDomain.getEntityClass());
         ResultSet dataColumns = metaData.getColumns(null, "%", tableName, "%");
 
@@ -278,14 +373,16 @@ public class AgileDatabaseJdbcTemplate {
         List<Field> newFields = new ArrayList<>();
         List<Field> updateFields = new ArrayList<>();
 
+        List<ColumnDomain> columnDomains = new ArrayList<>();
         for (Field field : fields) {
             ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
+            columnDomains.add(columnDomain);
             String columnName = columnDomain.getName();
 
             // 查元数据表，对比签名
             String signature = null;
             String columnSignature = columnDomain.signature();
-            final String selectSql = TableMetadata.selectSql(tableName, columnName);
+            final String selectSql = TableMetadata.selectSql(TableMetadata.MetadataType.COLUMN, tableName, columnName);
             Map<String, Object> result = executeSelect(selectSql);
             // 元数据中存在对应的字段记录
             if (!result.isEmpty()) {
@@ -309,19 +406,197 @@ public class AgileDatabaseJdbcTemplate {
         List<String> deleteColumns = columnNames.stream().filter(columnName -> !currentColumnNames.contains(columnName)).toList();
 
         if (!deleteColumns.isEmpty() && properties.isDeleteColumn()) {
-            deleteColumns(tableName, deleteColumns);
+            deleteColumns(entityClassDomain, deleteColumns);
         }
 
         if (!updateFields.isEmpty()) {
-            updateColumns(tableName, updateFields, metaData);
+            updateColumns(entityClassDomain, updateFields, metaData);
         }
 
         if (!newFields.isEmpty()) {
-            addColumns(tableName, newFields);
+            addColumns(entityClassDomain, newFields);
+        }
+
+        // 更新表上的相关注解
+        String currTableSignature = entityClassDomain.signature();
+        final String selectSql = TableMetadata.selectSql(TableMetadata.MetadataType.TABLE, tableName, null);
+        Map<String, Object> result = executeSelect(selectSql);
+        // 元数据中存在对应的字段记录
+        if (!result.isEmpty()) {
+            String tableSignature = (String) result.get(TableMetadata.COLUMN_SIGNATURE);
+            if (!currTableSignature.equals(tableSignature)) {
+                // 执行更新表上的相关注解
+                updateTableHeaderAnnotation(metaData, entityClassDomain, columnDomains);
+            }
+        }
+
+        // 更新表元数据信息
+        updateTableMetaData(entityClassDomain, tableName);
+    }
+
+    private void updateTableHeaderAnnotation(DatabaseMetaData metaData, EntityClassDomain entityClassDomain, List<ColumnDomain> columnDomains) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
+
+        // 更新表注释
+        String remarks = TableMetadata.tableRemarks(metaData, tableName);
+        String comment = entityClassDomain.getComment();
+        if (!Objects.equals(remarks, comment)) {
+            executeUpdate("ALTER TABLE `%s` COMMENT '%s'".formatted(tableName, comment), Operation.UPDATE);
+        }
+
+        // 更新普通索引
+        updateTableHeaderAnnotationByIndex(metaData, entityClassDomain, columnDomains);
+
+        // 更新唯一索引
+        updateTableHeaderAnnotationByUniqueIndex(metaData, entityClassDomain, columnDomains);
+
+        // 更新表元数据
+        String updateSql = TableMetadata.updateSql(TableMetadata.MetadataType.TABLE, tableName, null, entityClassDomain.signature());
+        executeUpdate(updateSql, Operation.UPDATE);
+    }
+
+    private void updateTableHeaderAnnotationByUniqueIndex(DatabaseMetaData metaData, EntityClassDomain entityClassDomain, List<ColumnDomain> columnDomains) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
+        // 唯一索引（现存的）
+        Set<String> inDatabaseUniqueIndexNames = TableMetadata.uniqueIndexNames(metaData, tableName);
+
+        // 列上的所有的唯一索引
+        Set<String> columnUniqueIndexNames = columnDomains.stream().filter(ColumnDomain::isUnique)
+                .map(c -> ColumnDomain.generateUniqueKeyName(tableName, c.getName())).collect(Collectors.toSet());
+        // 列上的所有唯一索引组
+        Set<String> columnUniqueGroupIndexNames = columnDomains.stream().filter(c -> CharSequenceUtil.isNotBlank(c.getUniqueGroup()))
+                .collect(Collectors.groupingBy(ColumnDomain::getUniqueGroup))
+                .keySet().stream().map(s -> ColumnDomain.generateUniqueKeyName(tableName, s)).collect(Collectors.toSet());
+        // 合并唯一索引
+        columnUniqueIndexNames.addAll(columnUniqueGroupIndexNames);
+
+        // 类上当前索引（最新的）
+        List<String> onClassUniqueIndexColumns = entityClassDomain.getOnClassUniqueColumns();
+        List<List<String>> onClassUniqueIndexGroupColumns = entityClassDomain.getOnClassUniqueGroupColumns();
+
+        // 更新索引逻辑
+        // 创建新的的索引
+        for (String onClassUniqueIndexColumn : onClassUniqueIndexColumns) {
+            String onClassUniqueIndexName = ColumnDomain.generateUniqueKeyName(tableName, onClassUniqueIndexColumn);
+            if (!inDatabaseUniqueIndexNames.contains(onClassUniqueIndexName)) {
+                if (columnUniqueIndexNames.stream().anyMatch(onClassUniqueIndexName::equals)) {
+                    continue;
+                }
+                createUniqueIndex(tableName, onClassUniqueIndexColumn);
+            }
+        }
+        // 创建新的的索引组
+        for (List<String> onClassUniqueIndexGroupColumn : onClassUniqueIndexGroupColumns) {
+            String onClassUniqueIndexGroupName = ColumnDomain.generateUniqueKeyName(tableName, String.join("_", onClassUniqueIndexGroupColumn));
+            if (!inDatabaseUniqueIndexNames.contains(onClassUniqueIndexGroupName)) {
+                if (columnUniqueIndexNames.stream().anyMatch(onClassUniqueIndexGroupName::equals)) {
+                    continue;
+                }
+                createUniqueGroupIndex(tableName, onClassUniqueIndexGroupName, onClassUniqueIndexGroupColumn, false);
+            }
+        }
+
+        // 删除不存在的索引
+        for (String uniqueIndexName : inDatabaseUniqueIndexNames) {
+            boolean uniqueIndexNameOnClass = false;
+            boolean uniqueIndexGroupNameOnClass = false;
+            // 判断当前的索引是否在类上
+            for (String onCLassUniqueIndexColumn : onClassUniqueIndexColumns) {
+                String onClassUniqueIndexName = ColumnDomain.generateUniqueKeyName(tableName, onCLassUniqueIndexColumn);
+                if (uniqueIndexName.equals(onClassUniqueIndexName)) {
+                    uniqueIndexNameOnClass = true;
+                    break;
+                }
+            }
+            // 判断当前的索引组是否在类上
+            for (List<String> uniqueIndexGroupColumns : onClassUniqueIndexGroupColumns) {
+                String onClassUniqueIndexGroupName = ColumnDomain.generateUniqueKeyName(tableName, String.join("_", uniqueIndexGroupColumns));
+                if (uniqueIndexName.equals(onClassUniqueIndexGroupName)) {
+                    uniqueIndexGroupNameOnClass = true;
+                    break;
+                }
+            }
+
+            // 当前索引不在字段上，同时也不在类上，则删除
+            if (columnUniqueIndexNames.stream().noneMatch(uniqueIndexName::equals) && !uniqueIndexNameOnClass && !uniqueIndexGroupNameOnClass) {
+                dropUniqueIndex(tableName, uniqueIndexName, false);
+            }
+        }
+
+    }
+
+    private void updateTableHeaderAnnotationByIndex(DatabaseMetaData metaData, EntityClassDomain entityClassDomain, List<ColumnDomain> columnDomains) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
+        // 普通索引（现存的）
+        Set<String> indexNames = TableMetadata.indexNames(metaData, tableName);
+
+        // 列上的所有的索引
+        Set<String> columnIndexNames = columnDomains.stream().filter(ColumnDomain::isIndex)
+                .map(c -> ColumnDomain.generateIndexKeyName(tableName, c.getName())).collect(Collectors.toSet());
+        // 列上的所有索引组
+        Set<String> columnGroupIndexNames = columnDomains.stream().filter(c -> CharSequenceUtil.isNotBlank(c.getIndexGroup()))
+                .collect(Collectors.groupingBy(ColumnDomain::getIndexGroup))
+                .keySet().stream().map(s -> ColumnDomain.generateIndexKeyName(tableName, s)).collect(Collectors.toSet());
+        // 合并索引
+        columnIndexNames.addAll(columnGroupIndexNames);
+
+        // 类上当前索引（最新的）
+        List<String> onClassIndexColumns = entityClassDomain.getOnClassIndexColumns();
+        List<List<String>> onClassIndexGroupColumns = entityClassDomain.getOnClassIndexGroupColumns();
+
+        // 更新索引逻辑
+        // 创建新的的索引
+        for (String onClassIndexColumn : onClassIndexColumns) {
+            String onClassIndexName = ColumnDomain.generateIndexKeyName(tableName, onClassIndexColumn);
+            if (!indexNames.contains(onClassIndexName)) {
+                if (columnIndexNames.stream().anyMatch(onClassIndexName::equals)) {
+                    continue;
+                }
+                createIndex(tableName, onClassIndexColumn);
+            }
+        }
+        // 创建新的的索引组
+        for (List<String> onClassIndexGroupColumn : onClassIndexGroupColumns) {
+            String onClassIndexGroupName = ColumnDomain.generateIndexKeyName(tableName, String.join("_", onClassIndexGroupColumn));
+            if (!indexNames.contains(onClassIndexGroupName)) {
+                if (columnIndexNames.stream().anyMatch(onClassIndexGroupName::equals)) {
+                    continue;
+                }
+                createGroupIndex(tableName, onClassIndexGroupName, onClassIndexGroupColumn, false);
+            }
+        }
+
+        // 删除不存在的索引
+        for (String indexName : indexNames) {
+            boolean indexNameOnClass = false;
+            boolean indexGroupNameOnClass = false;
+            // 判断当前的索引是否在类上
+            for (String onCLassIndexColumn : onClassIndexColumns) {
+                String onClassIndexName = ColumnDomain.generateIndexKeyName(tableName, onCLassIndexColumn);
+                if (indexName.equals(onClassIndexName)) {
+                    indexNameOnClass = true;
+                    break;
+                }
+            }
+            // 判断当前的索引组是否在类上
+            for (List<String> indexGroupColumns : onClassIndexGroupColumns) {
+                String onClassIndexGroupName = ColumnDomain.generateIndexKeyName(tableName, String.join("_", indexGroupColumns));
+                if (indexName.equals(onClassIndexGroupName)) {
+                    indexGroupNameOnClass = true;
+                    break;
+                }
+            }
+
+
+            // 当前索引不在字段上，同时也不在类上，则删除
+            if (columnIndexNames.stream().noneMatch(indexName::equals) && !indexNameOnClass && !indexGroupNameOnClass) {
+                dropIndex(tableName, indexName, false);
+            }
         }
     }
 
-    private void deleteColumns(String tableName, List<String> deleteColumns) throws SQLException {
+    private void deleteColumns(EntityClassDomain entityClassDomain, List<String> deleteColumns) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
         for (String deleteColumn : deleteColumns) {
             StringBuilder sb = new StringBuilder();
             sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
@@ -329,11 +604,12 @@ public class AgileDatabaseJdbcTemplate {
             executeUpdate(sb.toString(), Operation.DELETE);
 
             // 删除元数据信息
-            executeUpdate(TableMetadata.deleteSql(tableName, deleteColumn), Operation.DELETE);
+            executeUpdate(TableMetadata.deleteSql(TableMetadata.MetadataType.COLUMN, tableName, deleteColumn), Operation.DELETE);
         }
     }
 
-    private void addColumns(String tableName, List<Field> newFields) throws SQLException {
+    private void addColumns(EntityClassDomain entityClassDomain, List<Field> newFields) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
         Map<String, List<String>> uniqueGroups = new HashMap<>();
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
         for (Field field : newFields) {
@@ -394,7 +670,7 @@ public class AgileDatabaseJdbcTemplate {
             assert dataSource != null;
             try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
                 String columnSignature = columnDomain.signature();
-                final String insertSql = TableMetadata.insertSql(tableName, columnName, columnSignature);
+                final String insertSql = TableMetadata.insertSql(TableMetadata.MetadataType.COLUMN, tableName, columnName, columnSignature);
                 executeUpdate(insertSql, Operation.INSERT);
             }
         }
@@ -426,34 +702,20 @@ public class AgileDatabaseJdbcTemplate {
             pairs.sort(Comparator.comparingInt(Pair::getValue));
 
             List<String> indexNames = pairs.stream().map(Pair::getKey).toList();
-            createIndex(tableName, indexGroupName, indexNames);
+            createIndex(tableName, indexGroupName, indexNames, true);
         }
     }
 
-    private void updateColumns(String tableName, List<Field> updateFields, DatabaseMetaData metaData) throws SQLException {
+    private void updateColumns(EntityClassDomain entityClassDomain, List<Field> updateFields, DatabaseMetaData metaData) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
 
-        // 唯一索引
-        Set<String> uniqueIndexNames = new LinkedHashSet<>();
-        ResultSet uniqueIndexInfo = metaData.getIndexInfo(null, null, tableName, true, false);
-        while (uniqueIndexInfo.next()) {
-            String indexName = uniqueIndexInfo.getString("INDEX_NAME");
-            // 主键和非唯一索引，跳过
-            if (uniqueIndexInfo.getBoolean("NON_UNIQUE") || "PRIMARY".equalsIgnoreCase(indexName)) {
-                continue;
-            }
-            uniqueIndexNames.add(indexName);
-        }
+        // 唯一索引（数据库）
+        Set<String> inDatabaseUniqueIndexNames = TableMetadata.uniqueIndexNames(metaData, tableName);
+        // 普通索引（数据库）
+        Set<String> inDatabaseIndexNames = TableMetadata.indexNames(metaData, tableName);
 
-        // 普通索引
-        Set<String> indexNames = new LinkedHashSet<>();
-        ResultSet indexInfo = metaData.getIndexInfo(null, null, tableName, false, false);
-        while (indexInfo.next()) {
-            String indexName = indexInfo.getString("INDEX_NAME");
-            // 非唯一索引
-            if (indexInfo.getBoolean("NON_UNIQUE")) {
-                indexNames.add(indexName);
-            }
-        }
+        Map<String, List<String>> uniqueGroups = new HashMap<>();
+        Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
 
         for (Field field : updateFields) {
             // 字段信息变更
@@ -491,34 +753,124 @@ public class AgileDatabaseJdbcTemplate {
             executeUpdate(sb.toString(), Operation.UPDATE);
 
             // 唯一约束变更
+            List<String> onClassUniqueIndexColumns = entityClassDomain.getOnClassUniqueColumns();
             String uniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, columnName);
-            if (columnDomain.isUnique() && !uniqueIndexNames.contains(uniqueKeyName)) {
+            if (columnDomain.isUnique() && !inDatabaseUniqueIndexNames.contains(uniqueKeyName) && !onClassUniqueIndexColumns.contains(columnName)) {
                 createUniqueIndex(tableName, columnName);
-            } else if (!columnDomain.isUnique() && uniqueIndexNames.contains(uniqueKeyName)) {
-                dropUniqueIndex(tableName, columnName);
+                // 从唯一索引（数据库）添加
+                inDatabaseUniqueIndexNames.add(uniqueKeyName);
+
+            } else if (!columnDomain.isUnique() && inDatabaseUniqueIndexNames.contains(uniqueKeyName) && !onClassUniqueIndexColumns.contains(columnName)) {
+                dropUniqueIndex(tableName, columnName, true);
+                // 从唯一索引（数据库）删除
+                inDatabaseUniqueIndexNames.remove(uniqueKeyName);
             }
 
             // 普通索引变更
-            String indexNameKey = ColumnDomain.generateIndexName(tableName, columnDomain.getName());
-            if (columnDomain.isIndex() && !indexNames.contains(indexNameKey)) {
+            List<String> onClassIndexColumns = entityClassDomain.getOnClassIndexColumns();
+            String indexNameKey = ColumnDomain.generateIndexKeyName(tableName, columnDomain.getName());
+            if (columnDomain.isIndex() && !inDatabaseIndexNames.contains(indexNameKey) && !onClassIndexColumns.contains(columnName)) {
                 createIndex(tableName, columnName);
-            } else if (!columnDomain.isIndex() && indexNames.contains(indexNameKey)) {
-                dropIndex(tableName, columnName);
+                // 从普通索引（数据库）添加
+                inDatabaseIndexNames.add(indexNameKey);
+            } else if (!columnDomain.isIndex() && inDatabaseIndexNames.contains(indexNameKey) && !onClassIndexColumns.contains(columnName)) {
+                dropIndex(tableName, columnName, true);
+                // 从普通索引（数据库）删除
+                inDatabaseIndexNames.remove(indexNameKey);
+            }
+
+            // 判断联合唯一键
+            if (CharSequenceUtil.isNotEmpty(columnDomain.getUniqueGroup())) {
+                List<String> columns = uniqueGroups.getOrDefault(columnDomain.getUniqueGroup(), new ArrayList<>());
+                columns.add(columnDomain.getName());
+                uniqueGroups.put(columnDomain.getUniqueGroup(), columns);
+            }
+
+            // 判断联合索引
+            if (CharSequenceUtil.isNotEmpty(columnDomain.getIndexGroup())) {
+                List<Pair<String, Integer>> columns = indexGroups.getOrDefault(columnDomain.getIndexGroup(), new ArrayList<>());
+                columns.add(Pair.of(columnDomain.getName(), columnDomain.getIndexGroupSort()));
+                indexGroups.put(columnDomain.getIndexGroup(), columns);
             }
 
             // 更新元信息
-            Map<String, Object> result = executeSelect(TableMetadata.selectSql(tableName, columnName));
+            Map<String, Object> result = executeSelect(TableMetadata.selectSql(TableMetadata.MetadataType.COLUMN, tableName, columnName));
             // 元数据中不存在对应的字段记录，则表示需要新增
             if (result.isEmpty()) {
                 // 新增元数据
-                executeUpdate(TableMetadata.insertSql(tableName, columnName, columnDomain.signature()), Operation.INSERT);
+                executeUpdate(TableMetadata.insertSql(TableMetadata.MetadataType.COLUMN, tableName, columnName, columnDomain.signature()), Operation.INSERT);
             }
             // 元数据中存在对应的字段记录，则表示需要更新
             else {
                 // 更新元数据
-                executeUpdate(TableMetadata.updateSql(tableName, columnName, columnDomain.signature()), Operation.UPDATE);
+                executeUpdate(TableMetadata.updateSql(TableMetadata.MetadataType.COLUMN, tableName, columnName, columnDomain.signature()), Operation.UPDATE);
             }
+        }
 
+        // 更新普通索引
+        updateIndex(inDatabaseIndexNames, entityClassDomain);
+
+        // 更新唯一索引
+        updateUniqueIndex(inDatabaseUniqueIndexNames, entityClassDomain);
+    }
+
+    private void updateUniqueIndex(Set<String> inDatabaseUniqueIndexNames, EntityClassDomain entityClassDomain) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
+        // 所有唯一索引组
+        Map<String, List<String>> uniqueGroupMap = entityClassDomain.uniqueGroups();
+        // 所有唯一索引（不包含唯一索引组）
+        Map<String, String> uniques = entityClassDomain.uniques();
+        // 所有唯一索引
+        Set<String> allUniqueNames = new HashSet<>();
+
+        // 合并唯一索引
+        allUniqueNames.addAll(uniqueGroupMap.keySet());
+        allUniqueNames.addAll(uniques.keySet());
+
+        // 创建唯一索引组
+        for (Map.Entry<String, List<String>> entry : uniqueGroupMap.entrySet()) {
+            String uniqueGroupKey = entry.getKey();
+            if (!inDatabaseUniqueIndexNames.contains(uniqueGroupKey)) {
+                createUniqueGroupIndex(tableName, uniqueGroupKey, entry.getValue(), false);
+            }
+        }
+
+        // 删除不需要的唯一索引组
+        for (String uniqueIndexName : inDatabaseUniqueIndexNames) {
+            Set<String> uniqueGroupKeys = uniqueGroupMap.keySet();
+            if (!uniqueGroupKeys.contains(uniqueIndexName) && !allUniqueNames.contains(uniqueIndexName)) {
+                dropUniqueIndex(tableName, uniqueIndexName, false);
+            }
+        }
+    }
+
+    private void updateIndex(Set<String> indexNames, EntityClassDomain entityClassDomain) throws SQLException {
+        String tableName = entityClassDomain.getTableName();
+        // 所有普通索引组
+        Map<String, List<String>> indexGroupMap = entityClassDomain.indexGroups();
+        // 所有普通索引（不包含普通索引组）
+        Map<String, String> indices = entityClassDomain.indices();
+        // 所有的索引
+        Set<String> allIndexNames = new HashSet<>();
+
+        // 合并索引
+        allIndexNames.addAll(indexGroupMap.keySet());
+        allIndexNames.addAll(indices.keySet());
+
+        // 创建普通索引组
+        for (Map.Entry<String, List<String>> entry : indexGroupMap.entrySet()) {
+            String indexGroupKey = entry.getKey();
+            if (!indexNames.contains(indexGroupKey)) {
+                createGroupIndex(tableName, indexGroupKey, entry.getValue(), false);
+            }
+        }
+
+        // 删除不需要的普通索引组
+        for (String indexName : indexNames) {
+            Set<String> indexGroupKeys = indexGroupMap.keySet();
+            if (!indexGroupKeys.contains(indexName) && !allIndexNames.contains(indexName)) {
+                dropIndex(tableName, indexName, false);
+            }
         }
     }
 
@@ -528,32 +880,59 @@ public class AgileDatabaseJdbcTemplate {
         this.executeUpdate(uniqueIndexSql, Operation.CREATE);
     }
 
-    private void dropUniqueIndex(String tableName, String columnName) throws SQLException {
-        String uniqueKeyName = ColumnDomain.generateUniqueKeyName(tableName, columnName);
+    private void createUniqueGroupIndex(String tableName, String uniqueGroupName, List<String> columnNames, boolean generateUniqueIndexName) throws SQLException {
+        StringBuilder columnKeyNames = new StringBuilder();
+        for (int i = 0; i < columnNames.size(); i++) {
+            columnKeyNames.append("`").append(columnNames.get(i)).append("`");
+            if (i != columnNames.size() - 1) {
+                columnKeyNames.append(",").append(" ");
+            }
+        }
+        String indexGroupNameKey = generateUniqueIndexName ? ColumnDomain.generateIndexKeyName(tableName, uniqueGroupName) : uniqueGroupName;
+        String uniqueIndexSql = String.format("CREATE UNIQUE INDEX `%s` ON `%s` (%s);", indexGroupNameKey, tableName, columnKeyNames);
+        this.executeUpdate(uniqueIndexSql, Operation.CREATE);
+    }
+
+    private void createUniqueGroupIndex(String tableName, List<String> columnNames) throws SQLException {
+        String uniqueGroupName = tableName + ColumnDomain.UNIQUE_KEY_PREFIX_SUFFIX + String.join("_", columnNames);
+        createUniqueGroupIndex(tableName, uniqueGroupName, columnNames, true);
+    }
+
+    private void dropUniqueIndex(String tableName, String name, boolean generateIndexName) throws SQLException {
+        String uniqueKeyName = generateIndexName ? ColumnDomain.generateUniqueKeyName(tableName, name) : name;
         this.executeUpdate("ALTER TABLE `%s` DROP KEY `%s`".formatted(tableName, uniqueKeyName), Operation.DROP);
     }
 
     private void createIndex(String tableName, String columnName) throws SQLException {
-        String indexNameKey = ColumnDomain.generateIndexName(tableName, columnName);
+        String indexNameKey = ColumnDomain.generateIndexKeyName(tableName, columnName);
         String indexSql = String.format("CREATE INDEX %s ON `%s` (`%s`)", indexNameKey, tableName, columnName);
         this.executeUpdate(indexSql, Operation.CREATE);
     }
 
-    private void createIndex(String tableName, String indexGroupName, List<String> indexNames) throws SQLException {
+    private void createIndex(String tableName, String indexGroupName, List<String> columnNames, boolean generateIndexName) throws SQLException {
         StringBuilder indexKeys = new StringBuilder();
-        for (int i = 0; i < indexNames.size(); i++) {
-            indexKeys.append("`").append(indexNames.get(i)).append("`");
-            if (i != indexNames.size() - 1) {
+        for (int i = 0; i < columnNames.size(); i++) {
+            indexKeys.append("`").append(columnNames.get(i)).append("`");
+            if (i != columnNames.size() - 1) {
                 indexKeys.append(",").append(" ");
             }
         }
-        String indexGroupNameKey = ColumnDomain.generateIndexName(tableName, indexGroupName);
+        String indexGroupNameKey = generateIndexName ? ColumnDomain.generateIndexKeyName(tableName, indexGroupName) : indexGroupName;
         String indexSql = String.format("CREATE INDEX %s ON `%s` (%s)", indexGroupNameKey, tableName, indexKeys);
         this.executeUpdate(indexSql, Operation.CREATE);
     }
 
-    private void dropIndex(String tableName, String columnName) throws SQLException {
-        String indexNameKey = ColumnDomain.generateIndexName(tableName, columnName);
+    private void createGroupIndex(String tableName, List<String> columnNames) throws SQLException {
+        String indexGroupName = String.join("_", columnNames);
+        createGroupIndex(tableName, indexGroupName, columnNames, true);
+    }
+
+    private void createGroupIndex(String tableName, String indexGroupName, List<String> columnNames, boolean generateIndexName) throws SQLException {
+        createIndex(tableName, indexGroupName, columnNames, generateIndexName);
+    }
+
+    private void dropIndex(String tableName, String name, boolean generateIndexName) throws SQLException {
+        String indexNameKey = generateIndexName ? ColumnDomain.generateIndexKeyName(tableName, name) : name;
         this.executeUpdate("DROP INDEX `%s` on `%s`".formatted(indexNameKey, tableName), Operation.DROP);
     }
 
@@ -584,7 +963,7 @@ public class AgileDatabaseJdbcTemplate {
                 }
             }
             return result;
-        }).onFailure(e -> LoggerPrinter.error(log, e.getMessage(), e)).andThen(result -> {
+        }).onFailure(e -> LoggerPrinter.error(log, e.getMessage() + ": {}", sql, e)).andThen(result -> {
             if (properties.isShowSql() && log.isDebugEnabled()) {
                 if (properties.isFormatSql()) {
                     String formattedSql = SqlFormatter.format(sql);
@@ -608,8 +987,13 @@ public class AgileDatabaseJdbcTemplate {
             PreparedStatementCreator creator = conn -> conn.prepareStatement(sql);
             return creator.createPreparedStatement(connection.get()).executeUpdate();
         }).onFailure(e -> {
+            // 更新或新建重复数据，忽略
+            if (e instanceof SQLSyntaxErrorException && e.getMessage().startsWith("Duplicate key")) {
+                LoggerPrinter.warn(log, e.getMessage() + ": {}", sql);
+                return;
+            }
             if (Operation.DELETE != operation) {
-                LoggerPrinter.error(log, e.getMessage(), e);
+                LoggerPrinter.error(log, e.getMessage() + ": {}", sql, e);
             }
         }).andThen(result -> {
             if (properties.isShowSql() && result == 0) {

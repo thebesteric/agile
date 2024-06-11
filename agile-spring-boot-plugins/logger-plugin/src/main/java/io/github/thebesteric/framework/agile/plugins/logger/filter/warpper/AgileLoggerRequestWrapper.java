@@ -76,7 +76,7 @@ public class AgileLoggerRequestWrapper extends HttpServletRequestWrapper {
         String rawBody = getRawBody();
         if (rawBody != null) {
             try {
-                return JsonUtils.mapper.readValue(rawBody, Map.class);
+                return JsonUtils.MAPPER.readValue(rawBody, Map.class);
             } catch (JsonProcessingException e) {
                 return rawBody;
             }

@@ -89,7 +89,7 @@ public class InvokeLog {
     @Override
     @SneakyThrows
     public String toString() {
-        return JsonUtils.mapper.writeValueAsString(this);
+        return JsonUtils.MAPPER.writeValueAsString(this);
     }
 
     public static class Builder {

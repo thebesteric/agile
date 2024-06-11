@@ -139,6 +139,19 @@ public class CollectionUtils extends AbstractUtils {
         return set == null ? new HashSet<>() : set;
     }
 
+    public static <T> boolean isEquals(List<T> list1, List<T> list2) {
+        Set<T> set1 = new HashSet<>(list1);
+        Set<T> set2 = new HashSet<>(list2);
+        if (set1.size() != set2.size()) {
+            return false;
+        }
+        return !set1.addAll(set2);
+    }
+
+    public static  <T> boolean isStrictEquals(List<T> list1, List<T> list2) {
+        return list1.equals(list2);
+    }
+
     public static String toString(Object obj) {
         return ArrayUtils.toString(obj);
     }

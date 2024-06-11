@@ -76,6 +76,10 @@ public class ColumnDomain {
     /** 需要更新的表字段 */
     private String forUpdate;
 
+    public static final String PRIMARY_KEY_PREFIX_SUFFIX = "_pk_";
+    public static final String UNIQUE_KEY_PREFIX_SUFFIX = "_uk_";
+    public static final String INDEX_KEY_PREFIX_SUFFIX = "_index_";
+
     public static ColumnDomain of(String tableName, Field field) {
         EntityColumn column = field.getAnnotation(EntityColumn.class);
         TableId tableId = field.getAnnotation(TableId.class);
@@ -87,10 +91,10 @@ public class ColumnDomain {
         domain.precision = column != null ? column.precision() : 0;
         domain.primary = column != null ? column.primary() : tableId != null;
         domain.unique = column != null && column.unique();
-        domain.uniqueGroup = column != null ? column.uniqueGroup(): null;
+        domain.uniqueGroup = column != null ? column.uniqueGroup() : null;
         domain.index = column != null && column.index();
-        domain.indexGroup = column != null ? column.indexGroup(): null;
-        domain.indexGroupSort = column != null ? column.indexGroupSort(): 0;
+        domain.indexGroup = column != null ? column.indexGroup() : null;
+        domain.indexGroupSort = column != null ? column.indexGroupSort() : 0;
         domain.comment = column != null ? column.comment() : null;
         domain.unsigned = column != null && column.unsigned();
         domain.nullable = nullable(column, tableId);
@@ -181,6 +185,8 @@ public class ColumnDomain {
             return type.getJdbcType() + "(" + length + "," + precision + ")";
         } else if (this.type.isSupportLength() && this.length > 0) {
             return type.getJdbcType() + "(" + length + ")";
+        } else if (this.type == EntityColumn.Type.VARCHAR && this.length < 0) {
+            return type.getJdbcType() + "(255)";
         }
         return type.getJdbcType();
     }
@@ -195,14 +201,14 @@ public class ColumnDomain {
     }
 
     public static String generatePrimaryKeyName(String tableName, String columnName) {
-        return tableName + "_pk_" + columnName;
+        return tableName + PRIMARY_KEY_PREFIX_SUFFIX + columnName;
     }
 
     public static String generateUniqueKeyName(String tableName, String columnName) {
-        return tableName + "_uk_" + columnName;
+        return tableName + UNIQUE_KEY_PREFIX_SUFFIX + columnName;
     }
 
-    public static String generateIndexName(String tableName, String columnName) {
-        return tableName + "_index_" + columnName;
+    public static String generateIndexKeyName(String tableName, String columnName) {
+        return tableName + INDEX_KEY_PREFIX_SUFFIX + columnName;
     }
 }

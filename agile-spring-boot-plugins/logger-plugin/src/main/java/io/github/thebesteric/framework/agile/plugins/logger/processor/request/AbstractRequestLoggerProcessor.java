@@ -29,7 +29,7 @@ public abstract class AbstractRequestLoggerProcessor implements RequestLoggerPro
         RequestLog requestLog = new RequestLog(id, requestWrapper, responseWrapper, duration);
         try {
             if (requestLog.getResult() != null) {
-                requestLog.setResult(JsonUtils.mapper.readTree(requestLog.getResult().toString()));
+                requestLog.setResult(JsonUtils.MAPPER.readTree(requestLog.getResult().toString()));
             }
         } catch (Exception ex) {
             LoggerPrinter.debug(log, "Cannot parse {} to json", requestLog.getResult().toString());

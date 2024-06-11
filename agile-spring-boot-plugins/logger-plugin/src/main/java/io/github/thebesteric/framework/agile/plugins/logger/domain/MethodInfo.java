@@ -81,6 +81,6 @@ public class MethodInfo {
     @Override
     @SneakyThrows
     public String toString() {
-        return JsonUtils.mapper.writeValueAsString(this);
+        return JsonUtils.MAPPER.writeValueAsString(this);
     }
 }
