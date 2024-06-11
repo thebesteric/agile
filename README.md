@@ -25,16 +25,6 @@ sourceflag:
           maximum-pool-size: 2
           keep-alive-time: 60s
           queue-size: 1024
-    idempotent:
-      enable: true
-      message: "接口幂等，无法提交"
-    limiter:
-      enable: true
-      message: "接口限流，无法提交"
-    database:
-      enable: true
-      show-sql: true
-      ddl-auto: update
 ```
 ### 自定义日志记录器
 自定义一个 bean 实现 CustomRecorder，实现 process 方法
@@ -181,7 +171,17 @@ public RateLimiterProcessor redisRateLimiterProcessor(RedisTemplate<String, Obje
     <version>${latest.version}</version>
 </dependency>
 ```
-> forUpdate 属性表示需要更新的字段，建议更新后删除
+相关配置项
+```yaml
+sourceflag:
+  agile:
+    database:
+      enable: true
+      show-sql: true
+      ddl-auto: update
+      format-sql: true
+      delete-column: true
+```
 ```java
 @TableName("foo")
 public class Foo extends BaseEntity {
