@@ -7,12 +7,12 @@
 
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
-        <artifactId>agile-spring-boot-plugins</artifactId>
+        <artifactId>database-plugin-parent</artifactId>
         <version>1.0.11.15</version>
     </parent>
 
     <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
-    <artifactId>database-plugin</artifactId>
+    <artifactId>database-plugin-core</artifactId>
 
     <dependencies>
         <dependency>
