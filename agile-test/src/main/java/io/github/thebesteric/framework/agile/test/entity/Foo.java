@@ -2,8 +2,8 @@ package io.github.thebesteric.framework.agile.test.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityClass;
-import io.github.thebesteric.framework.agile.plugins.database.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -19,7 +19,7 @@ import java.util.Date;
 @EntityClass(comment = "测试表")
 public class Foo extends BaseEntity {
 
-    @EntityColumn(length = 32, unique = true, nullable = false, forUpdate = "hello", defaultExpression = "'foo'")
+    @EntityColumn(length = 32, unique = true, nullable = false, defaultExpression = "'foo'")
     private String name;
 
     @EntityColumn(name = "t_phone", unique = true, nullable = false, defaultExpression = "18", comment = "电话", unsigned = true)

@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.test.entity;
 
-import io.github.thebesteric.framework.agile.plugins.database.annotation.*;
+
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.*;
 
 /**
  * Bar
