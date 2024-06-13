@@ -101,7 +101,7 @@ public class AgileDatabaseJdbcTemplate {
         String tableName = entityClassDomain.getTableName();
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE TABLE `").append(tableName).append("` (");
-        List<Field> fields = getEntityFields(entityClassDomain.getEntityClass());
+        List<Field> fields = entityClassDomain.getEntityFields();
 
         List<ColumnDomain> columnDomains = new ArrayList<>();
 
@@ -352,7 +352,7 @@ public class AgileDatabaseJdbcTemplate {
 
     public void updateTable(EntityClassDomain entityClassDomain, DatabaseMetaData metaData) throws SQLException {
         String tableName = entityClassDomain.getTableName();
-        List<Field> fields = getEntityFields(entityClassDomain.getEntityClass());
+        List<Field> fields = entityClassDomain.getEntityFields();
         ResultSet dataColumns = metaData.getColumns(null, "%", tableName, "%");
 
         // 表的所有字段名称
@@ -1002,23 +1002,5 @@ public class AgileDatabaseJdbcTemplate {
                 }
             }
         }).andFinallyTry(() -> connection.get().close());
-    }
-
-    private List<Field> getEntityFields(Class<?> clazz) {
-        return ReflectUtils.getFields(clazz, field -> {
-            EntityColumn entityColumn = field.getAnnotation(EntityColumn.class);
-            if (entityColumn != null && !entityColumn.exist()) {
-                return false;
-            }
-            TableField tableField = field.getAnnotation(TableField.class);
-            if (tableField != null && !tableField.exist()) {
-                return false;
-            }
-            Transient aTransient = field.getAnnotation(Transient.class);
-            if (aTransient != null) {
-                return false;
-            }
-            return !ReflectUtils.isStatic(field) && !ReflectUtils.isFinal(field);
-        });
     }
 }
