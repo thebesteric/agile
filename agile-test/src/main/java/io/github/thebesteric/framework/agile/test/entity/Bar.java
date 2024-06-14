@@ -51,4 +51,7 @@ public class Bar {
 
     private Season season;
 
+    @EntityColumn(type = EntityColumn.Type.TINY_BLOB)
+    private Byte[] bytes;
+
 }

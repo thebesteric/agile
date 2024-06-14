@@ -83,9 +83,17 @@ public @interface EntityColumn {
         DECIMAL("DECIMAL", true, true, true),
 
         VARCHAR("VARCHAR", false, true, false),
-        TEXT("TEXT", false, false, false),
-        BLOB("BLOB", false, false, false),
         JSON("JSON", false, false, false),
+
+        TINY_TEXT("TINYTEXT", false, false, false),
+        MEDIUM_TEXT("MEDIUMTEXT", false, false, false),
+        TEXT("TEXT", false, false, false),
+        LONG_TEXT("LONGTEXT", false, false, false),
+
+        TINY_BLOB("TINYBLOB", false, false, false),
+        MEDIUM_BLOB("MEDIUMBLOB", false, false, false),
+        BLOB("BLOB", false, false, false),
+        LONG_BLOB("LONGBLOB", false, false, false),
 
         DATE("DATE", false, false, false),
         DATETIME("DATETIME", false, false, false),

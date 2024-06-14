@@ -176,6 +176,8 @@ public class ColumnDomain {
             return EntityColumn.Type.DATETIME;
         } else if (fieldType == LocalDate.class) {
             return EntityColumn.Type.DATE;
+        } else if (fieldType == Byte[].class || fieldType == byte[].class) {
+            return EntityColumn.Type.BLOB;
         }
         return EntityColumn.Type.VARCHAR;
     }
