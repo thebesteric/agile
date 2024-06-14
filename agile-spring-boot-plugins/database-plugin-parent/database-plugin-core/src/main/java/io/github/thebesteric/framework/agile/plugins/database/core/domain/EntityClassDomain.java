@@ -33,6 +33,10 @@ public class EntityClassDomain {
     private List<String> onClassIndexColumns = new ArrayList<>();
     private List<List<String>> onClassIndexGroupColumns = new ArrayList<>();
 
+    public static EntityClassDomain of(Class<?> entityClass) {
+        return of(null, entityClass);
+    }
+
     public static EntityClassDomain of(String tableNamePrefix, Class<?> entityClass) {
         EntityClassDomain entityClassDomain = new EntityClassDomain();
         EntityClass entityClassAnno = entityClass.getDeclaredAnnotation(EntityClass.class);
