@@ -60,9 +60,8 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
     }
 
     @Bean
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public FilterRegistrationBean filterRegister(AgileLoggerContext agileLoggerContext) {
-        FilterRegistrationBean frBean = new FilterRegistrationBean();
+    public FilterRegistrationBean<AgileLoggerFilter> agileLoggerFilterRegister(AgileLoggerContext agileLoggerContext) {
+        FilterRegistrationBean<AgileLoggerFilter> frBean = new FilterRegistrationBean<>();
         frBean.setName(AgileLoggerFilter.class.getSimpleName());
         frBean.setFilter(new AgileLoggerFilter(agileLoggerContext));
         frBean.addUrlPatterns("/*");
