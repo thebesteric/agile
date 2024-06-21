@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.database.core.jdbc;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.db.sql.SqlFormatter;
 import io.github.thebesteric.framework.agile.commons.util.CollectionUtils;
@@ -7,7 +8,9 @@ import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.ReferenceDomain;
 import io.vavr.control.Try;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
@@ -26,16 +29,84 @@ import java.util.concurrent.atomic.AtomicReference;
  * @since 2024-06-14 13:36:57
  */
 @Slf4j
+@Getter
 public class JdbcTemplateHelper {
 
-    private JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
+    private final String jdbcUrl;
+    private final String schema;
 
-    public JdbcTemplateHelper(DataSource dataSource) {
+    // 表对应的外键集合
+    private Map<EntityClassDomain, List<ColumnDomain>> createdTableWithForeignKeys = new HashMap<>();
+
+    public JdbcTemplateHelper(DataSource dataSource) throws SQLException {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        try (Connection connection = dataSource.getConnection()) {
+            DatabaseMetaData metaData = connection.getMetaData();
+            jdbcUrl = metaData.getURL();
+            schema = jdbcUrl.split("//")[1].split("/")[1].split("\\?")[0];
+        }
     }
 
     public enum Operation {
         CREATE, ADD, DROP, UPDATE, DELETE, INSERT
+    }
+
+    /**
+     * 表是否存在
+     *
+     * @param tableName 表名
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/6/17 12:18
+     */
+    public boolean tableExists(String tableName) throws SQLException {
+        String tableExistsSql = TableMetadataHelper.tableExistsSql(schema, tableName);
+        Map<String, Object> result = executeSelect(tableExistsSql);
+        return result != null && !result.isEmpty() && (Long) result.get("exists") != 0;
+    }
+
+    /**
+     * 表是否存在
+     *
+     * @param entityClassDomain 实体类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/6/17 12:18
+     */
+    public boolean tableExists(EntityClassDomain entityClassDomain) throws SQLException {
+        return tableExists(entityClassDomain.getTableName());
+    }
+
+    /**
+     * 表是否存在
+     *
+     * @param clazz 实体类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/6/17 12:18
+     */
+    public boolean tableExists(Class<?> clazz) throws SQLException {
+        EntityClassDomain entityClassDomain = EntityClassDomain.of(clazz);
+        return tableExists(entityClassDomain);
+    }
+
+    /**
+     * 创建表
+     *
+     * @param clazz 实体类
+     *
+     * @author wangweijun
+     * @since 2024/6/14 13:50
+     */
+    public List<ColumnDomain> createTable(Class<?> clazz) throws SQLException {
+        return this.createTable(EntityClassDomain.of(clazz), true, true);
     }
 
     /**
@@ -75,6 +146,7 @@ public class JdbcTemplateHelper {
      */
     public List<ColumnDomain> createTable(EntityClassDomain entityClassDomain, boolean showSql, boolean formatSql) throws SQLException {
         String tableName = entityClassDomain.getTableName();
+
         StringBuilder sb = new StringBuilder();
         sb.append("CREATE TABLE `").append(tableName).append("` (");
         List<Field> fields = entityClassDomain.getEntityFields();
@@ -87,17 +159,26 @@ public class JdbcTemplateHelper {
         List<ColumnDomain> indexColumnDomains = new ArrayList<>();
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
 
+        List<ColumnDomain> foreignKeys = new ArrayList<>();
+
         for (Field field : fields) {
             // 获取字段信息
             ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
             columnDomains.add(columnDomain);
 
+            // 主键判断
             if (columnDomain.isPrimary()) {
                 if (primaryKey != null) {
                     throw new SQLException("Primary key is duplicate: %s".formatted(primaryKey));
                 }
                 primaryKey = columnDomain;
             }
+
+            // 外键判断
+            if (columnDomain.getReference() != null) {
+                foreignKeys.add(columnDomain);
+            }
+
             // 字段名
             sb.append("`").append(columnDomain.getName()).append("`");
             // 字段类型
@@ -215,6 +296,7 @@ public class JdbcTemplateHelper {
 
         // 创建唯一索引（包含使用 @Unique 注解的类上的列）
         List<String> uniqueColumns = entityClassDomain.getOnClassUniqueColumns();
+        uniqueColumns = new ArrayList<>(uniqueColumns);
         for (ColumnDomain uniqueColumnDomain : uniqueColumnDomains) {
             String columnName = uniqueColumnDomain.getName();
             if (uniqueColumns.contains(columnName)) {
@@ -228,6 +310,7 @@ public class JdbcTemplateHelper {
 
         // 创建唯一索引组（使用 @UniqueGroup 注解的列）
         List<List<String>> uniqueGroupColumns = entityClassDomain.getOnClassUniqueGroupColumns();
+        uniqueGroupColumns = new ArrayList<>(uniqueGroupColumns);
         for (Map.Entry<String, List<String>> entry : uniqueGroups.entrySet()) {
             List<String> groupColumns = entry.getValue();
             for (List<String> groupColumnsOnClass : uniqueGroupColumns) {
@@ -244,6 +327,7 @@ public class JdbcTemplateHelper {
 
         // 创建索引键（包含使用 @Index 注解的类上的列）
         List<String> indexColumns = entityClassDomain.getOnClassIndexColumns();
+        indexColumns = new ArrayList<>(indexColumns);
         for (ColumnDomain indexColumnDomain : indexColumnDomains) {
             String columnName = indexColumnDomain.getName();
             if (indexColumns.contains(columnName)) {
@@ -268,6 +352,7 @@ public class JdbcTemplateHelper {
 
         // 创建普通索引组（使用 @IndexGroup 注解的列）
         List<List<String>> indexGroupColumns = entityClassDomain.getOnClassIndexGroupColumns();
+        indexGroupColumns = new ArrayList<>(indexGroupColumns);
         for (Map.Entry<String, List<Pair<String, Integer>>> entry : indexGroups.entrySet()) {
             List<Pair<String, Integer>> pairs = entry.getValue();
             // 排序
@@ -283,6 +368,11 @@ public class JdbcTemplateHelper {
         for (List<String> groupColumns : indexGroupColumns) {
             // 创建普通索引组
             createGroupIndex(tableName, groupColumns);
+        }
+
+        // 添加外键
+        if (CollUtil.isNotEmpty(foreignKeys)) {
+            this.createdTableWithForeignKeys.put(entityClassDomain, foreignKeys);
         }
 
         return columnDomains;
@@ -494,6 +584,83 @@ public class JdbcTemplateHelper {
                 this.dropUniqueIndex(tableName, uniqueIndexName, false);
             }
         }
+    }
+
+    public void createPrimaryKey(String tableName, String columnName) throws SQLException {
+        String primaryKeyName = ColumnDomain.generatePrimaryKeyName(tableName, columnName);
+        String sql = "ALTER TABLE `%s` ADD CONSTRAINT `%s` PRIMARY KEY (`%s`)".formatted(tableName, primaryKeyName, columnName);
+        this.executeUpdate(sql, Operation.CREATE);
+    }
+
+    public void createPrimaryKeyWithoutAutoIncrement(String tableName, String columnName, String columnType) throws SQLException {
+        this.createPrimaryKey(tableName, columnName);
+        String sql = "ALTER TABLE `%s` MODIFY `%s` %s AUTO_INCREMENT".formatted(tableName, columnName, columnType);
+        this.executeUpdate(sql, Operation.CREATE);
+    }
+
+    /**
+     * 创建外键（新增表的时候会生效）
+     *
+     * @author wangweijun
+     * @since 2024/6/20 15:05
+     */
+    public void createForeignKeyOnCreated() throws SQLException {
+        for (Map.Entry<EntityClassDomain, List<ColumnDomain>> entry : this.createdTableWithForeignKeys.entrySet()) {
+            EntityClassDomain classDomain = entry.getKey();
+            List<ColumnDomain> foreignKeys = entry.getValue();
+            for (ColumnDomain foreignKeyDomain : foreignKeys) {
+                ReferenceDomain referenceDomain = foreignKeyDomain.getReference();
+                // 创建外键
+                createForeignKey(classDomain.getTableName(), referenceDomain);
+            }
+        }
+    }
+
+    public void updateTableComments(String tableName, String comment) throws SQLException {
+        String sql = "ALTER TABLE `%s` COMMENT '%s'".formatted(tableName, comment);
+        executeUpdate(sql, JdbcTemplateHelper.Operation.UPDATE);
+    }
+
+    public void createForeignKey(String tableName, ReferenceDomain referenceDomain) throws SQLException {
+        // 字段名
+        String columnName = referenceDomain.getColumn();
+        // 目标表
+        String targetTableName = referenceDomain.getTargetTableName();
+        // 目标字段
+        String targetColumnName = referenceDomain.getTargetColumn();
+        this.createForeignKey(tableName, columnName, targetTableName, targetColumnName);
+    }
+
+    public void createForeignKey(String tableName, String columnName, String targetTableName, String targetColumnName) throws SQLException {
+        String foreignKeyName = ColumnDomain.generateForeignKeyName(tableName, columnName, targetTableName, targetColumnName);
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+        sb.append("ADD CONSTRAINT").append(" ").append(foreignKeyName).append(" ");
+        sb.append("FOREIGN KEY").append(" ").append("(").append("`").append(columnName).append("`").append(")").append(" ");
+        sb.append("REFERENCES").append(" ").append("`").append(targetTableName).append("`").append(" ").append("(").append("`").append(targetColumnName).append("`").append(")");
+        executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.ADD);
+    }
+
+    public void dropForeignKey(String tableName, String foreignKeyName) throws SQLException {
+        this.executeUpdate("ALTER TABLE `%s` DROP FOREIGN KEY `%s`".formatted(tableName, foreignKeyName), Operation.DROP);
+        this.dropIndex(tableName, foreignKeyName, false);
+    }
+
+    public void dropColumn(DatabaseMetaData metaData, String tableName, String deleteColumn) throws SQLException {
+        // 判断是否有对应的外键
+        Set<ReferenceDomain> foreignKeyDomains = TableMetadataHelper.foreignKeyDomains(metaData, tableName);
+        for (ReferenceDomain foreignKeyDomain : foreignKeyDomains) {
+            if (foreignKeyDomain.getColumn().equalsIgnoreCase(deleteColumn)) {
+                // 删除外键
+                this.dropForeignKey(tableName, foreignKeyDomain.getForeignKeyName());
+            }
+        }
+
+        // 删除列
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+        sb.append("DROP COLUMN").append(" ").append("`").append(deleteColumn).append("`");
+        this.executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.DELETE);
     }
 
 }

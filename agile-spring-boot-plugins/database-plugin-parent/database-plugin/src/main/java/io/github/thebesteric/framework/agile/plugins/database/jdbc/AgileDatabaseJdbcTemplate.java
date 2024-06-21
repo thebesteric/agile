@@ -1,11 +1,14 @@
 package io.github.thebesteric.framework.agile.plugins.database.jdbc;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseContext;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseProperties;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.ReferenceDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.TableColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.TableMetadataHelper;
 import io.github.thebesteric.framework.agile.plugins.database.entity.AgileTableMetadata;
@@ -34,10 +37,10 @@ public class AgileDatabaseJdbcTemplate {
     private final JdbcTemplateHelper jdbcTemplateHelper;
     private final AgileDatabaseProperties properties;
 
-    public AgileDatabaseJdbcTemplate(AgileDatabaseContext context, DataSource dataSource, AgileDatabaseProperties properties) {
+    public AgileDatabaseJdbcTemplate(AgileDatabaseContext context, DataSource dataSource, AgileDatabaseProperties properties) throws SQLException {
         this.context = context;
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.jdbcTemplateHelper = new JdbcTemplateHelper(dataSource);
+        this.jdbcTemplate = this.jdbcTemplateHelper.getJdbcTemplate();
         this.properties = properties;
     }
 
@@ -55,10 +58,11 @@ public class AgileDatabaseJdbcTemplate {
         DataSource dataSource = jdbcTemplate.getDataSource();
         assert dataSource != null;
         Set<Class<?>> entityClasses = context.getEntityClasses();
+
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
             // 初始化元数据表
-            initTableMeta(metaData);
+            initTableMeta();
             for (Class<?> clazz : entityClasses) {
                 EntityClassDomain entityClassDomain = EntityClassDomain.of(properties.getTableNamePrefix(), clazz);
                 String tableName = entityClassDomain.getTableName();
@@ -71,17 +75,15 @@ public class AgileDatabaseJdbcTemplate {
                     }
                 }
             }
+            // 创建外键（只会在新增表的时候生效）
+            jdbcTemplateHelper.createForeignKeyOnCreated();
         }
     }
 
-    private void initTableMeta(DatabaseMetaData metaData) throws SQLException {
-        String jdbcUrl = metaData.getURL();
-        String databaseName = jdbcUrl.split("//")[1].split("/")[1].split("\\?")[0];
-        String existsSql = TableMetadataHelper.tableExistsSql(databaseName, AgileTableMetadata.TABLE_NAME);
-        Map<String, Object> result = executeSelect(existsSql);
-        if (result != null && !result.isEmpty() && (Long) result.get("exists") == 0) {
+    private void initTableMeta() throws SQLException {
+        boolean tableExists = this.jdbcTemplateHelper.tableExists(AgileTableMetadata.TABLE_NAME);
+        if (!tableExists) {
             EntityClassDomain entityClassDomain = EntityClassDomain.of(AgileTableMetadata.class);
-            // 创建表
             createTable(entityClassDomain);
         }
     }
@@ -134,19 +136,10 @@ public class AgileDatabaseJdbcTemplate {
     public void updateTable(EntityClassDomain entityClassDomain, DatabaseMetaData metaData) throws SQLException {
         String tableName = entityClassDomain.getTableName();
         List<Field> fields = entityClassDomain.getEntityFields();
-        ResultSet dataColumns = metaData.getColumns(null, "%", tableName, "%");
 
         // 表的所有字段名称
-        Set<String> columnNames = new LinkedHashSet<>();
-        while (dataColumns.next()) {
-            String columnName = dataColumns.getString("COLUMN_NAME");
-            // 这里是防止 INNODB_COLUMN 有冗余字段
-            List<String> list = columnNames.stream().map(String::toLowerCase).toList();
-            if (list.contains(columnName.toLowerCase())) {
-                continue;
-            }
-            columnNames.add(columnName);
-        }
+        Set<TableColumn> tableColumns = TableMetadataHelper.tableColumns(metaData, tableName);
+        Set<String> columnNames = tableColumns.stream().map(TableColumn::getColumnName).collect(Collectors.toSet());
 
         List<Field> newFields = new ArrayList<>();
         List<Field> updateFields = new ArrayList<>();
@@ -184,7 +177,7 @@ public class AgileDatabaseJdbcTemplate {
         List<String> deleteColumns = columnNames.stream().filter(columnName -> !currentColumnNames.contains(columnName)).toList();
 
         if (!deleteColumns.isEmpty() && properties.isDeleteColumn()) {
-            deleteColumns(entityClassDomain, deleteColumns);
+            deleteColumns(metaData, entityClassDomain, deleteColumns);
         }
 
         if (!updateFields.isEmpty()) {
@@ -219,7 +212,7 @@ public class AgileDatabaseJdbcTemplate {
         String remarks = TableMetadataHelper.tableRemarks(metaData, tableName);
         String comment = entityClassDomain.getComment();
         if (!Objects.equals(remarks, comment)) {
-            executeUpdate("ALTER TABLE `%s` COMMENT '%s'".formatted(tableName, comment), JdbcTemplateHelper.Operation.UPDATE);
+            this.jdbcTemplateHelper.updateTableComments(tableName, comment);
         }
 
         // 更新普通索引
@@ -373,14 +366,10 @@ public class AgileDatabaseJdbcTemplate {
         }
     }
 
-    private void deleteColumns(EntityClassDomain entityClassDomain, List<String> deleteColumns) throws SQLException {
+    private void deleteColumns(DatabaseMetaData metaData, EntityClassDomain entityClassDomain, List<String> deleteColumns) throws SQLException {
         String tableName = entityClassDomain.getTableName();
         for (String deleteColumn : deleteColumns) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-            sb.append("DROP COLUMN").append(" ").append("`").append(deleteColumn).append("`");
-            executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.DELETE);
-
+            jdbcTemplateHelper.dropColumn(metaData, tableName, deleteColumn);
             // 删除元数据信息
             executeUpdate(AgileTableMetadata.deleteSql(AgileTableMetadata.MetadataType.COLUMN, tableName, deleteColumn), JdbcTemplateHelper.Operation.DELETE);
         }
@@ -414,14 +403,23 @@ public class AgileDatabaseJdbcTemplate {
             }
             executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.ADD);
 
+            // 新建主键
+            if (columnDomain.isPrimary()) {
+                if (columnDomain.isAutoIncrement()) {
+                    this.jdbcTemplateHelper.createPrimaryKeyWithoutAutoIncrement(tableName, columnDomain.getName(), columnDomain.typeWithLength());
+                } else {
+                    this.jdbcTemplateHelper.createPrimaryKey(tableName, columnDomain.getName());
+                }
+            }
+
+            // 创建外键
+            if (columnDomain.getReference() != null) {
+                this.jdbcTemplateHelper.createForeignKey(tableName, columnDomain.getReference());
+            }
+
             // 新建唯一约束
             if (columnDomain.isUnique()) {
-                String uniqueIndexName = columnDomain.uniqueKeyName(tableName);
-                sb = new StringBuilder();
-                sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-                sb.append("ADD CONSTRAINT").append(" ").append(uniqueIndexName).append(" ");
-                sb.append("UNIQUE").append(" ").append("(").append("`").append(columnDomain.getName()).append("`").append(")");
-                executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.ADD);
+                this.jdbcTemplateHelper.createUniqueIndex(tableName, columnDomain.getName());
             }
 
             // 判断联合唯一键
@@ -491,6 +489,10 @@ public class AgileDatabaseJdbcTemplate {
         Set<String> inDatabaseUniqueIndexNames = TableMetadataHelper.uniqueIndexNames(metaData, tableName);
         // 普通索引（数据库）
         Set<String> inDatabaseIndexNames = TableMetadataHelper.indexNames(metaData, tableName);
+        // 外键（数据库）
+        Set<String> inDatabaseForeignKeyNames = TableMetadataHelper.foreignKeyDomains(metaData, tableName).stream().map(ReferenceDomain::getForeignKeyName).collect(Collectors.toSet());
+        // 外键（当前）
+        Set<String> currentForeignKeyNames = new HashSet<>();
 
         Map<String, List<String>> uniqueGroups = new HashMap<>();
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
@@ -529,6 +531,18 @@ public class AgileDatabaseJdbcTemplate {
                 sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
             }
             executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.UPDATE);
+
+            // 外键变更
+            ReferenceDomain reference = columnDomain.getReference();
+            if (reference != null) {
+                String foreignKeyName = reference.getForeignKeyName();
+                if (!inDatabaseForeignKeyNames.contains(foreignKeyName)) {
+                    // 创建外键
+                    this.jdbcTemplateHelper.createForeignKey(tableName, reference);
+                    currentForeignKeyNames.add(foreignKeyName);
+                    inDatabaseForeignKeyNames.add(foreignKeyName);
+                }
+            }
 
             // 唯一约束变更
             List<String> onClassUniqueIndexColumns = entityClassDomain.getOnClassUniqueColumns();
@@ -582,6 +596,14 @@ public class AgileDatabaseJdbcTemplate {
             else {
                 // 更新元数据
                 executeUpdate(AgileTableMetadata.updateSql(AgileTableMetadata.MetadataType.COLUMN, tableName, columnName, columnDomain.signature()), JdbcTemplateHelper.Operation.UPDATE);
+            }
+        }
+
+        // 删除多余的外键
+        List<String> toDeleteForeignKeyNames = inDatabaseForeignKeyNames.stream().filter(fk -> !currentForeignKeyNames.contains(fk)).toList();
+        if (CollUtil.isNotEmpty(toDeleteForeignKeyNames)) {
+            for (String toDeleteForeignKeyName : toDeleteForeignKeyNames) {
+                this.jdbcTemplateHelper.dropForeignKey(tableName, toDeleteForeignKeyName);
             }
         }
 

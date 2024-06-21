@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 
 /**
  * AgileDatabaseAutoConfiguration
@@ -49,7 +50,7 @@ public class AgileDatabaseAutoConfiguration extends AbstractAgileInitialization 
     }
 
     @Bean
-    public AgileDatabaseJdbcTemplate agileDatabaseJdbcTemplate(AgileDatabaseContext context, @Nullable DataSource dataSource) {
+    public AgileDatabaseJdbcTemplate agileDatabaseJdbcTemplate(AgileDatabaseContext context, @Nullable DataSource dataSource) throws SQLException {
         return new AgileDatabaseJdbcTemplate(context, dataSource, properties);
     }
 

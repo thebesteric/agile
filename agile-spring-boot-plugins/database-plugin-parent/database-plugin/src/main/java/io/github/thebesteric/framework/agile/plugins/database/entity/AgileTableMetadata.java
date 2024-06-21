@@ -83,7 +83,7 @@ public class AgileTableMetadata implements Serializable {
 
     public static String deleteSql(MetadataType metadataType, String tableName, String deleteColumn) {
         return "DELETE FROM %s WHERE `%s` = '%s' AND `%s` = '%s' AND `%s` = '%s'"
-                .formatted(AgileTableMetadata.COLUMN_TYPE, metadataType.name(), AgileTableMetadata.TABLE_NAME, COLUMN_TABLE_NAME, tableName, COLUMN_COLUMN_NAME, deleteColumn);
+                .formatted(AgileTableMetadata.TABLE_NAME, AgileTableMetadata.COLUMN_TYPE, metadataType.name(), COLUMN_TABLE_NAME, tableName, COLUMN_COLUMN_NAME, deleteColumn);
     }
 
     public static String updateSql(MetadataType metadataType, String tableName, String columnName, String signature) {

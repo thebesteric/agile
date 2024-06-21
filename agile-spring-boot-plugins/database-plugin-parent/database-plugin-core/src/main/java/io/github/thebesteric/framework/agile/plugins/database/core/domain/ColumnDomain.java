@@ -5,7 +5,9 @@ import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import io.github.thebesteric.framework.agile.core.domain.None;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.Reference;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -76,7 +78,11 @@ public class ColumnDomain {
     /** 需要更新的表字段 */
     private String forUpdate;
 
+    /** 外键 */
+    private ReferenceDomain reference;
+
     public static final String PRIMARY_KEY_PREFIX_SUFFIX = "_pk_";
+    public static final String FOREIGN_KEY_PREFIX_SUFFIX = "_fk_";
     public static final String UNIQUE_KEY_PREFIX_SUFFIX = "_uk_";
     public static final String INDEX_KEY_PREFIX_SUFFIX = "_index_";
 
@@ -101,7 +107,21 @@ public class ColumnDomain {
         domain.defaultExpression = column != null ? column.defaultExpression() : null;
         domain.autoIncrement = autoIncrement(field, column);
         domain.forUpdate = column != null ? column.forUpdate() : null;
+        domain.reference = referenceDomain(tableName, domain.name, column);
         return domain;
+    }
+
+    private static ReferenceDomain referenceDomain(String tableName, String columnName, EntityColumn column) {
+        if (column != null) {
+            Reference reference = column.reference();
+            if (reference.targetEntityClass() != None.class) {
+                Class<?> targetEntityClass = reference.targetEntityClass();
+                EntityClassDomain entityClassDomain = EntityClassDomain.of(targetEntityClass);
+                String targetTableName = entityClassDomain.getTableName();
+                return ReferenceDomain.of(tableName, columnName, targetTableName, reference.targetColumn());
+            }
+        }
+        return null;
     }
 
     private static boolean autoIncrement(Field field, EntityColumn column) {
@@ -139,10 +159,8 @@ public class ColumnDomain {
         }
         if (column != null && EntityColumn.Type.DETERMINE == column.type()) {
             EntityColumn.Type type = fieldType(field, column);
-            if (type == EntityColumn.Type.VARCHAR) {
-                if (column.length() == -1) {
-                    return 255;
-                }
+            if (type == EntityColumn.Type.VARCHAR && column.length() == -1) {
+                return 255;
             }
             return column.length();
         }
@@ -193,10 +211,6 @@ public class ColumnDomain {
         return type.getJdbcType();
     }
 
-    public String uniqueKeyName(String tableName) {
-        return generateUniqueKeyName(tableName, this.name);
-    }
-
     public String signature() {
         String str = this.toString();
         return DigestUtil.md5Hex(str);
@@ -204,6 +218,10 @@ public class ColumnDomain {
 
     public static String generatePrimaryKeyName(String tableName, String columnName) {
         return tableName + PRIMARY_KEY_PREFIX_SUFFIX + columnName;
+    }
+
+    public static String generateForeignKeyName(String tableName, String columnName, String targetTableName, String targetColumnName) {
+        return tableName + "_" + columnName + FOREIGN_KEY_PREFIX_SUFFIX + targetTableName + "_" + targetColumnName;
     }
 
     public static String generateUniqueKeyName(String tableName, String columnName) {

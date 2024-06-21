@@ -66,6 +66,9 @@ public @interface EntityColumn {
     /** 是否是数据库字段 */
     boolean exist() default true;
 
+    /** 外键引用关系 */
+    Reference reference() default @Reference();
+
 
     @Getter
     enum Type {
