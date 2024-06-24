@@ -68,7 +68,7 @@
         <vavr.version>0.10.4</vavr.version>
         <redisson.version>3.29.0</redisson.version>
         <hutool.version>5.8.27</hutool.version>
-        <mybatis-plus.version>3.5.6</mybatis-plus.version>
+        <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <mybatis.version>3.5.16</mybatis.version>
     </properties>
 
