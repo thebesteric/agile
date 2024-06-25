@@ -36,6 +36,12 @@ public class ColumnDomain {
     /** 类型 */
     private EntityColumn.Type type = EntityColumn.Type.VARCHAR;
 
+    /** 字段名 */
+    private String fieldName;
+
+    /** 字段类型 */
+    private Class<?> fieldType;
+
     /** 长度 */
     private int length;
 
@@ -91,8 +97,10 @@ public class ColumnDomain {
         TableId tableId = field.getAnnotation(TableId.class);
         ColumnDomain domain = new ColumnDomain();
         domain.tableName = tableName;
-        domain.name = fieldName(field, column);
-        domain.type = fieldType(field, column);
+        domain.name = columnName(field, column);
+        domain.type = columnType(field, column);
+        domain.fieldName = field.getName();
+        domain.fieldType = field.getType();
         domain.length = fieldLength(field, column);
         domain.precision = column != null ? column.precision() : 0;
         domain.primary = column != null ? column.primary() : tableId != null;
@@ -139,7 +147,7 @@ public class ColumnDomain {
         return tableId == null;
     }
 
-    private static String fieldName(Field field, EntityColumn column) {
+    private static String columnName(Field field, EntityColumn column) {
         if (column != null && CharSequenceUtil.isNotEmpty(column.name())) {
             return column.name().replace("`", "");
         }
@@ -158,7 +166,7 @@ public class ColumnDomain {
             return 1;
         }
         if (column != null && EntityColumn.Type.DETERMINE == column.type()) {
-            EntityColumn.Type type = fieldType(field, column);
+            EntityColumn.Type type = columnType(field, column);
             if (type == EntityColumn.Type.VARCHAR && column.length() == -1) {
                 return 255;
             }
@@ -170,7 +178,7 @@ public class ColumnDomain {
         return -1;
     }
 
-    private static EntityColumn.Type fieldType(Field field, EntityColumn column) {
+    private static EntityColumn.Type columnType(Field field, EntityColumn column) {
         if (column != null && column.type() != EntityColumn.Type.DETERMINE) {
             return column.type();
         }
