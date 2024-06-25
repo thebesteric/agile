@@ -61,7 +61,7 @@ public class AgileRateLimiterAdvice implements MethodInterceptor {
             throw new InvalidParamsException("timeout and count must be great than 0");
         }
         if (rateLimiterProcessor.tryRateLimit(key, timeout, count, rateLimiter.timeUnit())) {
-            Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> new RuntimeException(ex.getMessage()));
+            Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> ex);
         } else {
             String message = context.getProperties().getMessage();
             if (CharSequenceUtil.isEmpty(message)) {

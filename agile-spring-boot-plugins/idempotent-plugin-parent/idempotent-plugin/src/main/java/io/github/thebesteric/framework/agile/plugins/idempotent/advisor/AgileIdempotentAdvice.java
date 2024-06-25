@@ -51,7 +51,7 @@ public class AgileIdempotentAdvice implements MethodInterceptor {
         final String idempotentKey = IdempotentKeyGenerator.generate(method, args);
         IdempotentProcessor idempotentProcessor = context.getIdempotentProcessor();
         if (idempotentProcessor.tryLock(idempotentKey, System.currentTimeMillis(), idempotent.timeout(), idempotent.timeUnit())) {
-            Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> new RuntimeException(ex.getMessage()));
+            Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> ex);
         } else {
             String message = context.getProperties().getMessage();
             if (CharSequenceUtil.isEmpty(message)) {
