@@ -10,6 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.Reference;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.springframework.data.annotation.Transient;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -87,6 +88,9 @@ public class ColumnDomain {
     /** 外键 */
     private ReferenceDomain reference;
 
+    /** 是否是数据库字段 */
+    private boolean exist = true;
+
     public static final String PRIMARY_KEY_PREFIX_SUFFIX = "_pk_";
     public static final String FOREIGN_KEY_PREFIX_SUFFIX = "_fk_";
     public static final String UNIQUE_KEY_PREFIX_SUFFIX = "_uk_";
@@ -116,6 +120,7 @@ public class ColumnDomain {
         domain.autoIncrement = autoIncrement(field, column);
         domain.forUpdate = column != null ? column.forUpdate() : null;
         domain.reference = referenceDomain(tableName, domain.name, column);
+        domain.exist = columnExist(field, column);
         return domain;
     }
 
@@ -145,6 +150,13 @@ public class ColumnDomain {
             return !column.primary() && column.nullable();
         }
         return tableId == null;
+    }
+
+    private static boolean columnExist(Field field, EntityColumn column) {
+        if (column != null) {
+            return column.exist();
+        }
+        return !field.isAnnotationPresent(Transient.class);
     }
 
     private static String columnName(Field field, EntityColumn column) {
