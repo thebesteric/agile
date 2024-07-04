@@ -215,3 +215,171 @@ public class Foo extends BaseEntity {
     private String test;
 }
 ```
+## 工作流插件
+### 相关配置
+```yaml
+sourceflag:
+  agile:
+    workflow:
+      ddl-auto: update
+```
+### 使用方式
+```java
+class DeploymentServiceTest {
+
+    @Autowired
+    WorkflowEngine workflowEngine;
+
+    /**
+     * 创建一个流程定义
+     */
+    @Test
+    void createWorkflow() {
+        workflowEngine.setCurrentUser("admin");
+        DeploymentService deploymentService = workflowEngine.getDeploymentService();
+        WorkflowDefinition workflowDefinition = WorkflowDefinitionBuilder.builder().tenantId("1")
+                .key("test-key").name("测试流程").type("测试").desc("这是一个测试流程").build();
+        WorkflowDefinition workflow = deploymentService.create(workflowDefinition);
+        System.out.println(workflow);
+    }
+
+    /**
+     * 定义工作流程节点
+     */
+    @Test
+    void createNodeDefinitions() {
+        String tenantId = "8888";
+        workflowEngine.setCurrentUser("admin");
+        DeploymentService deploymentService = workflowEngine.getDeploymentService();
+        WorkflowDefinition workflowDefinition = deploymentService.get(tenantId, "test-key");
+        if (workflowDefinition == null) {
+            workflowDefinition = WorkflowDefinitionBuilder.builder().tenantId(tenantId).key("test-key").name("测试流程").type("测试").desc("这是一个测试流程").build();
+            workflowDefinition = deploymentService.create(workflowDefinition);
+        }
+
+        createNodeDefinitions(tenantId, workflowDefinition);
+
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        workflowService.createRelations(tenantId, workflowDefinition.getId());
+
+    }
+
+    private void createNodeDefinitions(String tenantId, WorkflowDefinition workflowDefinition) {
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        Conditions conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点").conditions(conditions).approveType(ApproveType.ALL)
+                .approverId("张三").approverId("李四")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门经理审批").desc("任务节点").conditions(conditions)
+                .approverId("王五")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("人事主管审批").desc("任务节点")
+                .approverId("赵六")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+    }
+
+    /**
+     * 提交流程
+     */
+    @Test
+    void start() {
+        String tenantId = "8888";
+        String requesterId = "eric";
+        workflowEngine.setCurrentUser(requesterId);
+        RuntimeService runtimeService = workflowEngine.getRuntimeService();
+        RequestConditions requestConditions = RequestConditions.newInstance();
+        requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
+        runtimeService.start(tenantId, "test-key", requesterId, "123-789-3", "org.agile.workflow.Business.class", "请假申请单", requestConditions);
+    }
+
+    /**
+     * 取消流程
+     */
+    @Test
+    void cancel() {
+        String tenantId = "8888";
+        String requesterId = "eric";
+        workflowEngine.setCurrentUser(requesterId);
+        RuntimeService runtimeService = workflowEngine.getRuntimeService();
+        List<WorkflowInstance> workflowInstances = runtimeService.findWorkflowInstancesByRequestId("1", requesterId, WorkflowStatus.IN_PROGRESS);
+        for (WorkflowInstance workflowInstance : workflowInstances) {
+            runtimeService.cancel(tenantId, workflowInstance.getId());
+        }
+    }
+
+    /**
+     * 同意流程
+     */
+    @Test
+    void approve() {
+        String tenantId = "8888";
+        String approverId = "张三";
+        workflowEngine.setCurrentUser(approverId);
+        RuntimeService runtimeService = workflowEngine.getRuntimeService();
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        if (!taskInstances.isEmpty()) {
+            for (TaskInstance taskInstance : taskInstances) {
+                runtimeService.approve(tenantId, taskInstance.getId(), approverId, "同意");
+            }
+        }
+    }
+
+    /**
+     * 拒绝流程
+     */
+    @Test
+    void reject() {
+        String tenantId = "8888";
+        String approverId = "张三";
+        workflowEngine.setCurrentUser(approverId);
+        RuntimeService runtimeService = workflowEngine.getRuntimeService();
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        if (!taskInstances.isEmpty()) {
+            for (TaskInstance taskInstance : taskInstances) {
+                runtimeService.reject(tenantId, taskInstance.getId(), approverId, "不同意");
+            }
+        }
+    }
+
+    /**
+     * 放弃流程
+     */
+    @Test
+    void abandon() {
+        String tenantId = "8888";
+        String approverId = "张三";
+        workflowEngine.setCurrentUser(approverId);
+        RuntimeService runtimeService = workflowEngine.getRuntimeService();
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        if (!taskInstances.isEmpty()) {
+            for (TaskInstance taskInstance : taskInstances) {
+                runtimeService.abandon(tenantId, taskInstance.getId(), approverId, "弃权");
+            }
+        }
+    }
+}
+```

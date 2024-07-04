@@ -67,3 +67,10 @@
 - 数据库插件 (bugfix): 修复 VARCHAR 没有长度的问题
 ### v1.0.11.15
 - 数据库插件 (bugfix): 修复元数据表会插入重复数据问题
+### v1.0.12
+- 幂等插件 (bugfix): 修复异常会包装为 RuntimeException 的问题
+- 限流插件 (bugfix): 修复异常会包装为 RuntimeException 的问题
+- 数据库插件 (refactor): 结构调整，优化部分代码
+- 数据库插件 (feat): 支持 BLOB 类型
+- 数据库插件 (feat): 支持外键映射
+- 工作流插件 (feat): 新增工作流插件
