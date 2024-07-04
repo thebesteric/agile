@@ -19,6 +19,9 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.*;
 @IndexGroup(columns = {"e", "d"})
 public class Bar {
 
+    @EntityColumn(reference = @Reference(targetEntityClass = Foo.class, targetColumn = "id"))
+    private Integer fooId;
+
     @EntityColumn(length = 32, uniqueGroup = "a_b")
     private String a;
 

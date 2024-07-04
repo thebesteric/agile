@@ -44,3 +44,6 @@ spring:
       host: 127.0.0.1
       port: 6379
 
+logging:
+  level:
+    org.springframework.jdbc.core.JdbcTemplate: DEBUG

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.github.thebesteric.framework.agile.core.domain.None;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.IgnoredEntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.Reference;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -155,6 +156,9 @@ public class ColumnDomain {
     private static boolean columnExist(Field field, EntityColumn column) {
         if (column != null) {
             return column.exist();
+        }
+        if (field.isAnnotationPresent(IgnoredEntityColumn.class)) {
+            return false;
         }
         return !field.isAnnotationPresent(Transient.class);
     }

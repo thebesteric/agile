@@ -20,4 +20,12 @@ public class ParseErrorException extends RuntimeException {
     public ParseErrorException(String message, Object... params) {
         super(String.format(message, params));
     }
+
+    public ParseErrorException(Throwable cause) {
+        super(cause);
+    }
+
+    public ParseErrorException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

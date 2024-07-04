@@ -16,9 +16,10 @@
 
     <modules>
         <module>logger-plugin</module>
-        <module>database-plugin</module>
         <module>idempotent-plugin-parent</module>
         <module>limiter-plugin-parent</module>
+        <module>database-plugin-parent</module>
+        <module>workflow-plugin</module>
     </modules>
 
     <dependencies>

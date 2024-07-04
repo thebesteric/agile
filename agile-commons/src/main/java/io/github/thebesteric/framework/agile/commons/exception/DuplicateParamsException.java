@@ -20,4 +20,12 @@ public class DuplicateParamsException extends RuntimeException {
     public DuplicateParamsException(String message, Object... params) {
         super(String.format(message, params));
     }
+
+    public DuplicateParamsException(Throwable cause) {
+        super(cause);
+    }
+
+    public DuplicateParamsException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

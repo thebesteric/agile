@@ -12,6 +12,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -50,8 +51,8 @@ public class AgileDatabaseAutoConfiguration extends AbstractAgileInitialization 
     }
 
     @Bean
-    public AgileDatabaseJdbcTemplate agileDatabaseJdbcTemplate(AgileDatabaseContext context, @Nullable DataSource dataSource) throws SQLException {
-        return new AgileDatabaseJdbcTemplate(context, dataSource, properties);
+    public AgileDatabaseJdbcTemplate agileDatabaseJdbcTemplate(AgileDatabaseContext context, @Nullable DataSource dataSource, @Nullable PlatformTransactionManager transactionManager) throws SQLException {
+        return new AgileDatabaseJdbcTemplate(context, dataSource, transactionManager, properties);
     }
 
 }

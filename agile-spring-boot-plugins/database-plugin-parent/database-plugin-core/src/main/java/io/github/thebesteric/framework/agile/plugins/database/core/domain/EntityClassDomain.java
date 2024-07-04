@@ -28,6 +28,7 @@ public class EntityClassDomain {
     private String comment;
     private Class<?> entityClass;
     private List<Field> entityFields = new ArrayList<>();
+    private List<ColumnDomain> columnDomains = new ArrayList<>();
     private List<String> onClassUniqueColumns = new ArrayList<>();
     private List<List<String>> onClassUniqueGroupColumns = new ArrayList<>();
     private List<String> onClassIndexColumns = new ArrayList<>();
@@ -72,6 +73,12 @@ public class EntityClassDomain {
         entityClassDomain.comment = comment;
         entityClassDomain.entityClass = entityClass;
         entityClassDomain.entityFields = entityFields(entityClass);
+
+        // 封装为 ColumnDomain
+        for (Field entityField : entityClassDomain.entityFields) {
+            entityClassDomain.columnDomains.add(ColumnDomain.of(tableName, entityField));
+        }
+
 
         // 唯一索引
         if (uniqueAnnotations.length > 0) {
@@ -242,6 +249,10 @@ public class EntityClassDomain {
             }
             Transient aTransient = field.getAnnotation(Transient.class);
             if (aTransient != null) {
+                return false;
+            }
+            IgnoredEntityColumn ignoredEntityColumn = field.getAnnotation(IgnoredEntityColumn.class);
+            if (ignoredEntityColumn != null) {
                 return false;
             }
             return !ReflectUtils.isStatic(field) && !ReflectUtils.isFinal(field);

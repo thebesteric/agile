@@ -25,12 +25,24 @@ public final class DateUtils extends AbstractUtils {
 
     @SneakyThrows
     public static Date parseToDate(String str) {
-        return CharSequenceUtil.isEmpty(str) ? null : new SimpleDateFormat(DEFAULT_DATE_FORMAT).parse(str);
+        return parse(str, DEFAULT_DATE_FORMAT);
     }
 
     @SneakyThrows
     public static Date parseToDateTime(String str) {
-        return CharSequenceUtil.isEmpty(str) ? null : new SimpleDateFormat(DEFAULT_DATE_TIME_FORMAT).parse(str);
+        return parse(str, DEFAULT_DATE_TIME_FORMAT);
+    }
+
+    public static String format(Date date, String pattern) {
+        return new SimpleDateFormat(pattern).format(date);
+    }
+
+    public static String formatToDate(Date date) {
+        return format(date, DEFAULT_DATE_FORMAT);
+    }
+
+    public static String formatToDateTime(Date date) {
+        return format(date, DEFAULT_DATE_TIME_FORMAT);
     }
 
 }

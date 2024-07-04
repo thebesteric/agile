@@ -22,7 +22,7 @@ public abstract class AbstractAgileContext {
         this.applicationContext = applicationContext;
     }
 
-    protected <T> T getBeanOrDefault(Class<T> beanType, T defaultValue) {
+    public <T> T getBeanOrDefault(Class<T> beanType, T defaultValue) {
         T obj = null;
         try {
             obj = this.applicationContext.getBean(beanType);
@@ -45,7 +45,7 @@ public abstract class AbstractAgileContext {
      *
      * @return T
      */
-    protected <T> T getBeanOrDefault(String beanName, Class<T> beanType, T defaultValue) {
+    public <T> T getBeanOrDefault(String beanName, Class<T> beanType, T defaultValue) {
         T obj = null;
         try {
             obj = this.applicationContext.getBean(beanName, beanType);

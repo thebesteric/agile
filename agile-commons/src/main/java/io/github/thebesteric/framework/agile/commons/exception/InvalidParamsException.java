@@ -19,4 +19,12 @@ public class InvalidParamsException extends RuntimeException {
     public InvalidParamsException(String message, Object... params) {
         super(String.format(message, params));
     }
+
+    public InvalidParamsException(Throwable cause) {
+        super(cause);
+    }
+
+    public InvalidParamsException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

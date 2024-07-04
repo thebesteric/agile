@@ -15,6 +15,7 @@ import io.github.thebesteric.framework.agile.plugins.database.entity.AgileTableM
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
@@ -37,9 +38,9 @@ public class AgileDatabaseJdbcTemplate {
     private final JdbcTemplateHelper jdbcTemplateHelper;
     private final AgileDatabaseProperties properties;
 
-    public AgileDatabaseJdbcTemplate(AgileDatabaseContext context, DataSource dataSource, AgileDatabaseProperties properties) throws SQLException {
+    public AgileDatabaseJdbcTemplate(AgileDatabaseContext context, DataSource dataSource, PlatformTransactionManager transactionManager, AgileDatabaseProperties properties) throws SQLException {
         this.context = context;
-        this.jdbcTemplateHelper = new JdbcTemplateHelper(dataSource);
+        this.jdbcTemplateHelper = new JdbcTemplateHelper(dataSource, transactionManager);
         this.jdbcTemplate = this.jdbcTemplateHelper.getJdbcTemplate();
         this.properties = properties;
     }
@@ -369,7 +370,7 @@ public class AgileDatabaseJdbcTemplate {
     private void deleteColumns(DatabaseMetaData metaData, EntityClassDomain entityClassDomain, List<String> deleteColumns) throws SQLException {
         String tableName = entityClassDomain.getTableName();
         for (String deleteColumn : deleteColumns) {
-            jdbcTemplateHelper.dropColumn(metaData, tableName, deleteColumn);
+            jdbcTemplateHelper.deleteColumn(metaData, tableName, deleteColumn);
             // 删除元数据信息
             executeUpdate(AgileTableMetadata.deleteSql(AgileTableMetadata.MetadataType.COLUMN, tableName, deleteColumn), JdbcTemplateHelper.Operation.DELETE);
         }
@@ -381,57 +382,13 @@ public class AgileDatabaseJdbcTemplate {
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
         for (Field field : newFields) {
             // 新增字段
-            ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
-            StringBuilder sb = new StringBuilder();
-            sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-            String columnName = columnDomain.getName();
-            sb.append("ADD").append(" ").append("`").append(columnName).append("`").append(" ").append(columnDomain.typeWithLength()).append(" ");
-
-            if (columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
-                sb.append("UNSIGNED").append(" ");
-            }
-
-            String defaultExpression = columnDomain.getDefaultExpression();
-            if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
-                sb.append("DEFAULT").append(" ").append(defaultExpression).append(" ");
-            }
-            sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
-
-            String comment = columnDomain.getComment();
-            if (CharSequenceUtil.isNotEmpty(comment)) {
-                sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
-            }
-            executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.ADD);
-
-            // 新建主键
-            if (columnDomain.isPrimary()) {
-                if (columnDomain.isAutoIncrement()) {
-                    this.jdbcTemplateHelper.createPrimaryKeyWithoutAutoIncrement(tableName, columnDomain.getName(), columnDomain.typeWithLength());
-                } else {
-                    this.jdbcTemplateHelper.createPrimaryKey(tableName, columnDomain.getName());
-                }
-            }
-
-            // 创建外键
-            if (columnDomain.getReference() != null) {
-                this.jdbcTemplateHelper.createForeignKey(tableName, columnDomain.getReference());
-            }
-
-            // 新建唯一约束
-            if (columnDomain.isUnique()) {
-                this.jdbcTemplateHelper.createUniqueIndex(tableName, columnDomain.getName());
-            }
+            ColumnDomain columnDomain = this.jdbcTemplateHelper.addColumn(tableName, field);
 
             // 判断联合唯一键
             if (CharSequenceUtil.isNotEmpty(columnDomain.getUniqueGroup())) {
                 List<String> columns = uniqueGroups.getOrDefault(columnDomain.getUniqueGroup(), new ArrayList<>());
                 columns.add(columnDomain.getName());
                 uniqueGroups.put(columnDomain.getUniqueGroup(), columns);
-            }
-
-            // 判断索引
-            if (columnDomain.isIndex()) {
-                this.jdbcTemplateHelper.createIndex(tableName, columnDomain.getName());
             }
 
             // 判断联合索引
@@ -446,7 +403,7 @@ public class AgileDatabaseJdbcTemplate {
             assert dataSource != null;
             try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
                 String columnSignature = columnDomain.signature();
-                final String insertSql = AgileTableMetadata.insertSql(AgileTableMetadata.MetadataType.COLUMN, tableName, columnName, columnSignature);
+                final String insertSql = AgileTableMetadata.insertSql(AgileTableMetadata.MetadataType.COLUMN, tableName, columnDomain.getName(), columnSignature);
                 executeUpdate(insertSql, JdbcTemplateHelper.Operation.INSERT);
             }
         }
@@ -499,38 +456,8 @@ public class AgileDatabaseJdbcTemplate {
 
         for (Field field : updateFields) {
             // 字段信息变更
-            ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
-            StringBuilder sb = new StringBuilder();
-            sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-
-            String forUpdateColumn = columnDomain.getForUpdate();
+            ColumnDomain columnDomain = this.jdbcTemplateHelper.updateColumn(tableName, field);
             String columnName = columnDomain.getName();
-            // 字段名称变更的情况
-            if (CharSequenceUtil.isNotEmpty(forUpdateColumn)) {
-                sb.append("CHANGE").append(" ").append("`").append(forUpdateColumn).append("`").append(" ").append("`").append(columnName).append("`").append(" ");
-            }
-            // 非字段名称变更的情况
-            else {
-                sb.append("MODIFY").append(" ").append("`").append(columnName).append("`").append(" ");
-            }
-            sb.append(columnDomain.typeWithLength()).append(" ");
-
-            if (columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
-                sb.append("UNSIGNED").append(" ");
-            }
-
-            String defaultExpression = columnDomain.getDefaultExpression();
-            if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
-                sb.append("DEFAULT").append(" ").append(defaultExpression).append(" ");
-            }
-
-            sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
-
-            String comment = columnDomain.getComment();
-            if (CharSequenceUtil.isNotEmpty(comment)) {
-                sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
-            }
-            executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.UPDATE);
 
             // 外键变更
             ReferenceDomain reference = columnDomain.getReference();

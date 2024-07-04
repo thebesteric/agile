@@ -14,12 +14,20 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.sql.DataSource;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * JdbcTemplateHelper
@@ -33,14 +41,16 @@ import java.util.concurrent.atomic.AtomicReference;
 public class JdbcTemplateHelper {
 
     private final JdbcTemplate jdbcTemplate;
+    private final PlatformTransactionManager transactionManager;
     private final String jdbcUrl;
     private final String schema;
 
     // 表对应的外键集合
-    private Map<EntityClassDomain, List<ColumnDomain>> createdTableWithForeignKeys = new HashMap<>();
+    private final Map<EntityClassDomain, List<ColumnDomain>> createdTableWithForeignKeys = new HashMap<>();
 
-    public JdbcTemplateHelper(DataSource dataSource) throws SQLException {
+    public JdbcTemplateHelper(DataSource dataSource, PlatformTransactionManager transactionManager) throws SQLException {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.transactionManager = transactionManager;
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
             jdbcUrl = metaData.getURL();
@@ -50,6 +60,112 @@ public class JdbcTemplateHelper {
 
     public enum Operation {
         CREATE, ADD, DROP, UPDATE, DELETE, INSERT
+    }
+
+    /**
+     * 获取元数据
+     *
+     * @param function 有返回值的函数
+     *
+     * @return R
+     *
+     * @author wangweijun
+     * @since 2024/7/4 17:52
+     */
+    public <R> R getDatabaseMetaData(Function<DatabaseMetaData, R> function) throws SQLException {
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        if (dataSource == null) {
+            throw new SQLException("DataSource is null");
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            return function.apply(connection.getMetaData());
+        }
+    }
+
+    /**
+     * 获取元数据
+     *
+     * @param consumer 没有返回值的函数
+     *
+     * @author wangweijun
+     * @since 2024/7/4 17:52
+     */
+    public void getDatabaseMetaData(Consumer<DatabaseMetaData> consumer) throws SQLException {
+        DataSource dataSource = jdbcTemplate.getDataSource();
+        if (dataSource == null) {
+            throw new SQLException("DataSource is null");
+        }
+        try (Connection connection = dataSource.getConnection()) {
+            consumer.accept(connection.getMetaData());
+        }
+    }
+
+    /**
+     * 在事务中执行（有返回值）默认不会创建新的事务
+     *
+     * @param supplier supplier
+     *
+     * @author wangweijun
+     * @since 2024/6/24 14:55
+     */
+    public <T> T executeInTransaction(Supplier<T> supplier) {
+        return this.executeInTransaction(supplier, false);
+    }
+
+    /**
+     * 在事务中执行（有返回值）
+     *
+     * @param supplier  supplier
+     * @param createNew 是否创建新的事务
+     *
+     * @author wangweijun
+     * @since 2024/6/24 14:55
+     */
+    public <T> T executeInTransaction(Supplier<T> supplier, boolean createNew) {
+        if (TransactionSynchronizationManager.isActualTransactionActive() && !createNew) {
+            return supplier.get();
+        } else {
+            TransactionDefinition def = new DefaultTransactionDefinition();
+            TransactionStatus status = transactionManager.getTransaction(def);
+            return Try.of(supplier::get).onSuccess(result -> transactionManager.commit(status)).onFailure(e -> {
+                LoggerPrinter.error(log, "Failed to execute: {}", e.getMessage(), e);
+                transactionManager.rollback(status);
+            }).get();
+        }
+    }
+
+    /**
+     * 在事务中执行（没有返回值）默认不会创建新的事务
+     *
+     * @param runnable runnable
+     *
+     * @author wangweijun
+     * @since 2024/6/25 13:48
+     */
+    public void executeInTransaction(Runnable runnable) {
+        this.executeInTransaction(runnable, false);
+    }
+
+    /**
+     * 在事务中执行（没有返回值）
+     *
+     * @param runnable  runnable
+     * @param createNew 是否创建新的事务
+     *
+     * @author wangweijun
+     * @since 2024/6/25 13:48
+     */
+    public void executeInTransaction(Runnable runnable, boolean createNew) {
+        if (TransactionSynchronizationManager.isActualTransactionActive() && !createNew) {
+            runnable.run();
+        } else {
+            TransactionDefinition def = new DefaultTransactionDefinition();
+            TransactionStatus status = transactionManager.getTransaction(def);
+            Try.run(runnable::run).onSuccess(result -> transactionManager.commit(status)).onFailure(e -> {
+                LoggerPrinter.error(log, "Failed to execute: {}", e.getMessage(), e);
+                transactionManager.rollback(status);
+            }).get();
+        }
     }
 
     /**
@@ -95,6 +211,171 @@ public class JdbcTemplateHelper {
     public boolean tableExists(Class<?> clazz) throws SQLException {
         EntityClassDomain entityClassDomain = EntityClassDomain.of(clazz);
         return tableExists(entityClassDomain);
+    }
+
+    /**
+     * 添加列
+     *
+     * @param tableName 表名
+     * @param field     字段名
+     *
+     * @return ColumnDomain
+     *
+     * @author wangweijun
+     * @since 2024/7/4 17:21
+     */
+    public ColumnDomain addColumn(String tableName, Field field) throws SQLException {
+        ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
+        return this.addColumn(columnDomain);
+    }
+
+    /**
+     * 添加列
+     *
+     * @param columnDomain 列对象
+     *
+     * @return ColumnDomain
+     *
+     * @author wangweijun
+     * @since 2024/7/4 17:21
+     */
+    public ColumnDomain addColumn(ColumnDomain columnDomain) throws SQLException {
+        String tableName = columnDomain.getTableName();
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+        sb.append("ADD").append(" ").append("`").append(columnDomain.getName()).append("`").append(" ").append(columnDomain.typeWithLength()).append(" ");
+
+        if (columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
+            sb.append("UNSIGNED").append(" ");
+        }
+
+        String defaultExpression = columnDomain.getDefaultExpression();
+        if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
+            sb.append("DEFAULT").append(" ").append(defaultExpression).append(" ");
+        }
+        sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
+
+        String comment = columnDomain.getComment();
+        if (CharSequenceUtil.isNotEmpty(comment)) {
+            sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
+        }
+        this.executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.ADD);
+
+        // 新建主键
+        if (columnDomain.isPrimary()) {
+            if (columnDomain.isAutoIncrement()) {
+                this.createPrimaryKeyWithoutAutoIncrement(tableName, columnDomain.getName(), columnDomain.typeWithLength());
+            } else {
+                this.createPrimaryKey(tableName, columnDomain.getName());
+            }
+        }
+
+        // 创建外键
+        if (columnDomain.getReference() != null) {
+            this.createForeignKey(tableName, columnDomain.getReference());
+        }
+
+        // 新建唯一约束
+        if (columnDomain.isUnique()) {
+            this.createUniqueIndex(tableName, columnDomain.getName());
+        }
+
+        // 判断索引
+        if (columnDomain.isIndex()) {
+            this.createIndex(tableName, columnDomain.getName());
+        }
+
+        return columnDomain;
+    }
+
+    /**
+     * 删除列
+     *
+     * @param metaData     元数据
+     * @param tableName    表名
+     * @param deleteColumn 需要删除的列名
+     *
+     * @author wangweijun
+     * @since 2024/7/4 17:22
+     */
+    public void deleteColumn(DatabaseMetaData metaData, String tableName, String deleteColumn) throws SQLException {
+        // 判断是否有对应的外键
+        Set<ReferenceDomain> foreignKeyDomains = TableMetadataHelper.foreignKeyDomains(metaData, tableName);
+        for (ReferenceDomain foreignKeyDomain : foreignKeyDomains) {
+            if (foreignKeyDomain.getColumn().equalsIgnoreCase(deleteColumn)) {
+                // 删除外键
+                this.dropForeignKey(tableName, foreignKeyDomain.getForeignKeyName());
+            }
+        }
+
+        // 删除列
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+        sb.append("DROP COLUMN").append(" ").append("`").append(deleteColumn).append("`");
+        this.executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.DELETE);
+    }
+
+    /**
+     * 更新列
+     *
+     * @param tableName 表名
+     * @param field     字段名
+     *
+     * @return ColumnDomain
+     *
+     * @author wangweijun
+     * @since 2024/7/4 17:21
+     */
+    public ColumnDomain updateColumn(String tableName, Field field) throws SQLException {
+        ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
+        return this.updateColumn(columnDomain);
+    }
+
+    /**
+     * 更新列
+     *
+     * @param columnDomain 列对象
+     *
+     * @return ColumnDomain
+     *
+     * @author wangweijun
+     * @since 2024/7/4 17:29
+     */
+    public ColumnDomain updateColumn(ColumnDomain columnDomain) throws SQLException {
+        String tableName = columnDomain.getTableName();
+        StringBuilder sb = new StringBuilder();
+        sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
+
+        String forUpdateColumn = columnDomain.getForUpdate();
+        String columnName = columnDomain.getName();
+        // 字段名称变更的情况
+        if (CharSequenceUtil.isNotEmpty(forUpdateColumn)) {
+            sb.append("CHANGE").append(" ").append("`").append(forUpdateColumn).append("`").append(" ").append("`").append(columnName).append("`").append(" ");
+        }
+        // 非字段名称变更的情况
+        else {
+            sb.append("MODIFY").append(" ").append("`").append(columnName).append("`").append(" ");
+        }
+        sb.append(columnDomain.typeWithLength()).append(" ");
+
+        if (columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
+            sb.append("UNSIGNED").append(" ");
+        }
+
+        String defaultExpression = columnDomain.getDefaultExpression();
+        if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
+            sb.append("DEFAULT").append(" ").append(defaultExpression).append(" ");
+        }
+
+        sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
+
+        String comment = columnDomain.getComment();
+        if (CharSequenceUtil.isNotEmpty(comment)) {
+            sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
+        }
+        this.executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.UPDATE);
+
+        return columnDomain;
     }
 
     /**
@@ -644,23 +925,6 @@ public class JdbcTemplateHelper {
     public void dropForeignKey(String tableName, String foreignKeyName) throws SQLException {
         this.executeUpdate("ALTER TABLE `%s` DROP FOREIGN KEY `%s`".formatted(tableName, foreignKeyName), Operation.DROP);
         this.dropIndex(tableName, foreignKeyName, false);
-    }
-
-    public void dropColumn(DatabaseMetaData metaData, String tableName, String deleteColumn) throws SQLException {
-        // 判断是否有对应的外键
-        Set<ReferenceDomain> foreignKeyDomains = TableMetadataHelper.foreignKeyDomains(metaData, tableName);
-        for (ReferenceDomain foreignKeyDomain : foreignKeyDomains) {
-            if (foreignKeyDomain.getColumn().equalsIgnoreCase(deleteColumn)) {
-                // 删除外键
-                this.dropForeignKey(tableName, foreignKeyDomain.getForeignKeyName());
-            }
-        }
-
-        // 删除列
-        StringBuilder sb = new StringBuilder();
-        sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
-        sb.append("DROP COLUMN").append(" ").append("`").append(deleteColumn).append("`");
-        this.executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.DELETE);
     }
 
 }
