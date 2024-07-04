@@ -17,6 +17,7 @@
         <dependency>
             <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
             <artifactId>database-plugin-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
