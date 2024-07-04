@@ -82,7 +82,7 @@ public class AgileWorkflowAutoConfiguration extends AbstractAgileInitialization 
     }
 
     @Bean
-    public WorkflowEngine workflowEngine(AgileWorkflowContext context) {
+    public WorkflowEngine agileWorkflowEngine(AgileWorkflowContext context) {
         return new WorkflowEngine(context);
     }
 

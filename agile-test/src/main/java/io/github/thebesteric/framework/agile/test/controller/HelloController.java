@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idemp
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
 import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
+import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.test.domain.Id2Vo;
 import io.github.thebesteric.framework.agile.test.service.HelloService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,9 @@ public class HelloController {
 
     @Autowired
     HelloService helloService;
+
+    @Autowired
+    WorkflowEngine workflowEngine;
 
     @CrossOrigin
     @GetMapping("/foo")

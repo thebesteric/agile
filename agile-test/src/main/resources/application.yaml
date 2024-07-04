@@ -31,6 +31,8 @@ sourceflag:
       ddl-auto: update
       format-sql: true
       delete-column: true
+    workflow:
+      ddl-auto: update
 
 spring:
   datasource:
