@@ -69,9 +69,6 @@ public class WorkflowEngine {
         AgileWorkflowProperties properties = context.getProperties();
         AgileWorkflowProperties.DDLAuto ddlAuto = properties.getDdlAuto();
 
-        ddlAuto = AgileWorkflowProperties.DDLAuto.UPDATE;
-
-
         if (AgileWorkflowProperties.DDLAuto.CREATE == ddlAuto || AgileWorkflowProperties.DDLAuto.UPDATE == ddlAuto) {
             for (Class<? extends BaseEntity> entityClass : ENTITY_CLASSES) {
                 EntityClassDomain entityClassDomain = EntityClassDomain.of(entityClass);
