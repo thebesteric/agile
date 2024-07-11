@@ -43,10 +43,10 @@ public class AgileTableMetadata implements Serializable {
     @EntityColumn(name = COLUMN_TYPE, length = 32)
     private MetadataType type;
 
-    @EntityColumn(name = COLUMN_TABLE_NAME, length = 32)
+    @EntityColumn(name = COLUMN_TABLE_NAME, length = 128)
     private String tableName;
 
-    @EntityColumn(name = COLUMN_COLUMN_NAME, length = 32)
+    @EntityColumn(name = COLUMN_COLUMN_NAME, length = 64)
     private String columnName;
 
     @EntityColumn(name = COLUMN_SIGNATURE, length = 32)
