@@ -9,6 +9,7 @@ import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.OrderByParam;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.QueryOperator;
@@ -105,9 +106,10 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
      */
     public void updateById(T entity) {
         entity.setUpdatedAt(new Date());
-        entity.setUpdatedBy(AgileWorkflowContext.getCurrentUser());
         entity.setVersion(entity.getVersion() + 1);
-
+        if (entity.getUpdatedAt() == null) {
+            entity.setUpdatedBy(AgileWorkflowContext.getCurrentUser());
+        }
         // 获取实体类对应的字段和值
         Pair<List<ColumnDomain>, List<Object>> entityParams = getEntityParams(entity);
 
@@ -143,9 +145,12 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
     public T save(T entity) {
         entity.setUpdatedAt(null);
         entity.setUpdatedBy(null);
-        entity.setCreatedAt(new Date());
-        entity.setCreatedBy(AgileWorkflowContext.getCurrentUser());
-
+        if (entity.getCreatedAt() == null) {
+            entity.setCreatedAt(new Date());
+        }
+        if (entity.getCreatedBy() == null) {
+            entity.setCreatedBy(AgileWorkflowContext.getCurrentUser());
+        }
         // 获取实体类对应的字段和值
         Pair<List<ColumnDomain>, List<Object>> entityParams = getEntityParams(entity);
 
@@ -286,15 +291,22 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
      * @since 2024/6/28 18:08
      */
     @SuppressWarnings("unchecked")
-    public List<T> find(Query query) {
+    public Page<T> find(Query query) {
         String selectSql = this.queryToSelectSql(query);
-        return this.jdbcTemplate.query(selectSql, (rs, rowNum) -> {
+        List<T> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> {
             try {
                 return (T) type.getMethod("of", ResultSet.class).invoke(null, rs);
             } catch (Exception e) {
                 throw new ExecuteErrorException(e.getMessage(), e);
             }
         });
+        Pager pager = query.getPager();
+        if (pager != null) {
+            String countSql = this.queryToCountSql(query);
+            Long count = this.jdbcTemplate.queryForObject(countSql, Long.class);
+            return Page.of(pager.getPage(), pager.getPageSize(), count == null ? 0 : count, records);
+        }
+        return Page.of(records);
     }
 
     /**
@@ -324,6 +336,21 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
             selectSql += " LIMIT %s OFFSET %s".formatted(pager.getPageSize(), pager.getOffset());
         }
         return selectSql;
+    }
+
+    private String queryToCountSql(Query query) {
+        String whereClause = getWhereClause(query.getQueryParams());
+        String orderByClause = getOrderByClause(query.getOrderByParams());
+        String selectSql = """
+                SELECT * FROM %s t
+                """.formatted(tableName);
+        if (CharSequenceUtil.isNotEmpty(whereClause)) {
+            selectSql += " WHERE " + whereClause;
+        }
+        if (CharSequenceUtil.isNotEmpty(orderByClause)) {
+            selectSql += " ORDER BY " + orderByClause;
+        }
+        return "SELECT COUNT(*) FROM (" + selectSql + ")";
     }
 
     /**

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 请求条件（申请人条件）
+ * 请求条件（申请条件）
  *
  * @author wangweijun
  * @version v1.0

@@ -328,7 +328,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
     public List<NodeDefinition> findToTaskNodesByFromNodeId(String tenantId, Integer fromNodeDefinitionId) {
         final String selectSql = """
                 SELECT * FROM awf_node_definition WHERE `state` = 1 AND `id` IN (
-                    SELECT `to_node_id` FROM awf_node_relation WHERE `from_node_id` = ? AND `tenant_id` = ?
+                    SELECT `to_node_id` FROM awf_node_relation WHERE `active` = 1 AND `from_node_id` = ? AND `tenant_id` = ?
                 )
                 """;
         RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);

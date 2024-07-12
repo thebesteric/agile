@@ -32,7 +32,7 @@ class WorkflowServiceTest {
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class).eq(WorkflowDefinition::getTenantId, tenantId)
                 .page(1, 10).build();
-        List<WorkflowDefinition> workflowInstances = workflowService.findWorkflowDefinitions(query);
+        List<WorkflowDefinition> workflowInstances = workflowService.findWorkflowDefinitions(query).getRecords();
         workflowInstances.forEach(System.out::println);
     }
 
@@ -44,7 +44,7 @@ class WorkflowServiceTest {
                 .like(WorkflowInstance::getBusinessId, "123%").orderBy(WorkflowInstance::getCreatedAt, OrderByOperator.DESC)
                 .page(1, 10)
                 .build();
-        List<WorkflowInstance> workflowInstances = workflowService.findWorkflowInstances(query);
+        List<WorkflowInstance> workflowInstances = workflowService.findWorkflowInstances(query).getRecords();
         workflowInstances.forEach(System.out::println);
     }
 }

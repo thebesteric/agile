@@ -39,6 +39,11 @@ public class TaskHistoryExecutorBuilder extends AbstractExecutorBuilder<TaskHist
         return this;
     }
 
+    public TaskHistoryExecutorBuilder title(String title) {
+        this.taskHistoryExecutor.getTaskHistory().setTitle(title);
+        return this;
+    }
+
     public TaskHistoryExecutorBuilder message(TaskHistoryMessage message) {
         this.taskHistoryExecutor.getTaskHistory().setMessage(message);
         return this;

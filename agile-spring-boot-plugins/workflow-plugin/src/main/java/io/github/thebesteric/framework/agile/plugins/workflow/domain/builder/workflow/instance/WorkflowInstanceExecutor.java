@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance;
 
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
@@ -9,6 +10,7 @@ import lombok.Setter;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * WorkflowInstanceExecutor
@@ -61,29 +63,36 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
     /**
      * 根据发起人 ID 查询流程实例
      *
-     * @param tenantId       租户 ID
-     * @param requesterId    发起人 ID
-     * @param workflowStatus 流程状态
-     * @param page           页码
-     * @param pageSize       每页数量
+     * @param tenantId         租户 ID
+     * @param requesterId      发起人 ID
+     * @param workflowStatuses 流程状态
+     * @param page             页码
+     * @param pageSize         每页数量
      *
      * @return List<WorkflowInstance>
      *
      * @author wangweijun
      * @since 2024/6/27 12:40
      */
-    public List<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, WorkflowStatus workflowStatus, Integer page, Integer pageSize) {
+    public Page<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
         String selectSql = """
-                SELECT * FROM awf_wf_instance i left join test.awf_wf_definition d
+                SELECT i.* FROM awf_wf_instance i left join awf_wf_definition d
                 ON i.wf_def_id = d.id AND d.tenant_id = ?
                 WHERE i.`requester_id` = ? AND i.`state` = 1
                 """;
-        if (workflowStatus != null) {
-            selectSql += " AND i.`status` = " + workflowStatus.getCode();
+        if (workflowStatuses != null && !workflowStatuses.isEmpty()) {
+            String codes = workflowStatuses.stream().map(WorkflowStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));
+            selectSql += " AND i.`status` in (" + codes + ")";
         }
+
+        String countSql = "SELECT COUNT(*) FROM (" + selectSql + ") AS t";
+        Integer count = this.jdbcTemplate.queryForObject(countSql, Integer.class, tenantId, requesterId);
+
         selectSql += " ORDER BY i.`id` DESC LIMIT ? OFFSET ?";
         Integer offset = (page - 1) * pageSize;
-        return this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, requesterId, pageSize, offset);
+        List<WorkflowInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, requesterId, pageSize, offset);
+
+        return Page.of(page, pageSize, count, records);
     }
 
     /**
@@ -98,15 +107,15 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @author wangweijun
      * @since 2024/6/27 12:40
      */
-    public List<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, WorkflowStatus workflowStatus) {
-        return findByRequesterId(tenantId, requesterId, workflowStatus, 1, Integer.MAX_VALUE);
+    public Page<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, WorkflowStatus workflowStatus) {
+        return findByRequesterId(tenantId, requesterId, workflowStatus == null ? null : List.of(workflowStatus), 1, Integer.MAX_VALUE);
     }
 
     /**
      * 根据发起人 ID 查询流程实例
      *
-     * @param tenantId       租户 ID
-     * @param requesterId    发起人 ID
+     * @param tenantId    租户 ID
+     * @param requesterId 发起人 ID
      *
      * @return List<WorkflowInstance>
      *
@@ -114,6 +123,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @since 2024/6/27 12:40
      */
     public List<WorkflowInstance> findByRequesterId(String tenantId, String requesterId) {
-        return findByRequesterId(tenantId, requesterId, null);
+        Page<WorkflowInstance> page = findByRequesterId(tenantId, requesterId, null);
+        return page.getRecords();
     }
 }

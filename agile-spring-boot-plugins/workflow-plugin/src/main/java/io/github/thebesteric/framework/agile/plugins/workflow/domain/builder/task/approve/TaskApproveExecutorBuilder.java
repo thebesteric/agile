@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve;
 
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskApprove;
@@ -46,6 +47,11 @@ public class TaskApproveExecutorBuilder extends AbstractExecutorBuilder<TaskAppr
 
     public TaskApproveExecutorBuilder status(ApproveStatus approveStatus) {
         this.taskApproveExecutor.getTaskApprove().setStatus(approveStatus);
+        return this;
+    }
+
+    public TaskApproveExecutorBuilder active(ActiveStatus approveStatus) {
+        this.taskApproveExecutor.getTaskApprove().setActive(approveStatus);
         return this;
     }
 

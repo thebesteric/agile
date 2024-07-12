@@ -31,7 +31,9 @@ public class WorkflowDefinitionBuilder extends AbstractBuilder<WorkflowDefinitio
 
     public WorkflowDefinitionBuilder key(String key) {
         this.workflowDefinition.setKey(key);
-        this.workflowDefinition.setName(key);
+        if (CharSequenceUtil.isEmpty(this.workflowDefinition.getName())) {
+            this.workflowDefinition.setName(key);
+        }
         return this;
     }
 
@@ -41,17 +43,9 @@ public class WorkflowDefinitionBuilder extends AbstractBuilder<WorkflowDefinitio
     }
 
     public WorkflowDefinitionBuilder type(String type) {
-        this.workflowDefinition.setType(type);
-        return this;
-    }
-
-    public WorkflowDefinitionBuilder createdBy(String user) {
-        this.workflowDefinition.setCreatedBy(user);
-        return this;
-    }
-
-    public WorkflowDefinitionBuilder updateBy(String user) {
-        this.workflowDefinition.setUpdatedBy(user);
+        if (CharSequenceUtil.isNotEmpty(type)) {
+            this.workflowDefinition.setType(type);
+        }
         return this;
     }
 

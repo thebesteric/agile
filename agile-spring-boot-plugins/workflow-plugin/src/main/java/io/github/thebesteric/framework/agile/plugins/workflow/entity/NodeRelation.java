@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.entity;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -41,6 +42,9 @@ public class NodeRelation extends BaseEntity {
     @EntityColumn(nullable = false, comment = "节点顺序")
     private Integer sequence;
 
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "活动状态")
+    private ActiveStatus active = ActiveStatus.ACTIVE;
+
     public static NodeRelation of(ResultSet rs) throws SQLException {
         NodeRelation nodeRelation = new NodeRelation();
         nodeRelation.setTenantId(rs.getString("tenant_id"));
@@ -49,6 +53,7 @@ public class NodeRelation extends BaseEntity {
         nodeRelation.setFromNodeId(rs.getInt("from_node_id"));
         nodeRelation.setToNodeId(rs.getInt("to_node_id"));
         nodeRelation.setSequence(rs.getInt("sequence"));
+        nodeRelation.setActive(ActiveStatus.of(rs.getInt("active")));
         return of(nodeRelation, rs);
     }
 }

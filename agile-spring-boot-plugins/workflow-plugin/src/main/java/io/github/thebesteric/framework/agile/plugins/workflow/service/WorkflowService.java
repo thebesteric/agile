@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
@@ -38,7 +39,7 @@ public interface WorkflowService {
      * @author wangweijun
      * @since 2024/6/28 17:59
      */
-    List<WorkflowDefinition> findWorkflowDefinitions(Query query);
+    Page<WorkflowDefinition> findWorkflowDefinitions(Query query);
 
     /**
      * 获取流程实例
@@ -50,7 +51,7 @@ public interface WorkflowService {
      * @author wangweijun
      * @since 2024/6/28 17:59
      */
-    List<WorkflowInstance> findWorkflowInstances(Query query);
+    Page<WorkflowInstance> findWorkflowInstances(Query query);
 
     /**
      * 创建节点定义

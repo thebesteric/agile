@@ -1,6 +1,8 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
@@ -91,6 +93,21 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
     }
 
     /**
+     * 获取流程定义列表（分页）
+     *
+     * @param tenantId 租户
+     * @param pager    分页参数
+     */
+    @Override
+    public Page<WorkflowDefinition> find(String tenantId, Pager pager) {
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                .eq(WorkflowDefinition::getTenantId, tenantId)
+                .page(pager.getPage(), pager.getPageSize()).build();
+        return executor.find(query);
+    }
+
+    /**
      * 禁用流程定义
      *
      * @param tenantId 租户
@@ -127,8 +144,8 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
                 .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinition.getId())
                 .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
                 .eq(WorkflowInstance::getState, 1).build();
-        List<WorkflowInstance> workflowInstances = workflowInstanceExecutor.find(query);
-        if (CollUtil.isNotEmpty(workflowInstances)) {
+        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+        if (CollUtil.isNotEmpty(page.getRecords())) {
             throw new WorkflowInstanceInProgressException();
         }
         this.workflowDefinitionExecutorBuilder.build().updateById(workflowDefinition);

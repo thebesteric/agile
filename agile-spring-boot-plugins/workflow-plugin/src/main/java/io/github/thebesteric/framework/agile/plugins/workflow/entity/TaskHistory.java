@@ -36,17 +36,18 @@ public class TaskHistory extends BaseEntity {
     @EntityColumn(name = "task_inst_id", comment = "任务实例 ID")
     private Integer taskInstanceId;
 
+    @EntityColumn(name = "title", length = 64, comment = "日志标题")
+    private String title;
+
     @EntityColumn(type = EntityColumn.Type.VARCHAR, length = 255, nullable = false, comment = "日志信息")
     private TaskHistoryMessage message;
-
-    @EntityColumn(type = EntityColumn.Type.VARCHAR, length = 64, nullable = false, comment = "xxxxxxxxxx")
-    private String name;
 
     public static TaskHistory of(ResultSet rs) throws SQLException {
         TaskHistory taskApprove = new TaskHistory();
         taskApprove.setTenantId(rs.getString("tenant_id"));
         taskApprove.setWorkflowInstanceId(rs.getInt("wf_inst_id"));
         taskApprove.setTaskInstanceId(rs.getInt("task_inst_id"));
+        taskApprove.setTitle(rs.getString("title"));
         taskApprove.setMessage(TaskHistoryMessage.of(rs.getString("message")));
         return of(taskApprove, rs);
     }

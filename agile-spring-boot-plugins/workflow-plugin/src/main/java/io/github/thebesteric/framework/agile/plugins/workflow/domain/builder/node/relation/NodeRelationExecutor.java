@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation;
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
+import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRelation;
 import io.vavr.control.Try;
@@ -10,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,7 +73,7 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
      */
     public NodeRelation getByWorkflowDefinitionIdAndFromNodeAndToNode(String tenantId, Integer workflowDefinitionId, Integer fromNodeId, Integer toNodeId) {
         final String selectSql = """
-                SELECT * FROM awf_node_relation WHERE `tenant_id` = ? AND `wf_def_id` = ? AND `from_node_id` = ? AND `to_node_id` = ? AND `state` = 1
+                SELECT * FROM awf_node_relation WHERE `active` = 1 AND `tenant_id` = ? AND `wf_def_id` = ? AND `from_node_id` = ? AND `to_node_id` = ? AND `state` = 1
                 """;
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> NodeRelation.of(rs), tenantId, workflowDefinitionId, fromNodeId, toNodeId)).getOrNull();
     }
@@ -89,7 +91,7 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
      */
     public List<NodeRelation> findByFromNodeId(String tenantId, Integer fromNodeId) {
         final String selectSql = """
-                SELECT * FROM awf_node_relation WHERE `tenant_id` = ? AND `from_node_id` = ?
+                SELECT * FROM awf_node_relation WHERE `active` = 1 AND `tenant_id` = ? AND `from_node_id` = ?
                 """;
         RowMapper<NodeRelation> rowMapper = (ResultSet rs, int rowNum) -> NodeRelation.of(rs);
         return this.jdbcTemplate.query(selectSql, rowMapper, tenantId, fromNodeId).stream().toList();
@@ -108,7 +110,7 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
      */
     public List<NodeRelation> findByFromNodeIds(String tenantId, List<Integer> fromNodeIds) {
         final String selectSql = """
-                SELECT * FROM awf_node_relation WHERE `tenant_id` = ? AND find_in_set(`from_node_id`, ?)
+                SELECT * FROM awf_node_relation WHERE `active` = 1 AND `tenant_id` = ? AND find_in_set(`from_node_id`, ?)
                 """;
         RowMapper<NodeRelation> rowMapper = (ResultSet rs, int rowNum) -> NodeRelation.of(rs);
         String ids = fromNodeIds.stream().map(Object::toString).collect(Collectors.joining(","));
@@ -128,14 +130,14 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
      */
     public List<NodeRelation> findByToNodeId(String tenantId, Integer toNodeId) {
         final String selectSql = """
-                SELECT * FROM awf_node_relation WHERE `to_node_id` = ?
+                SELECT * FROM awf_node_relation WHERE `active` = 1 AND `to_node_id` = ?
                 """;
         RowMapper<NodeRelation> rowMapper = (ResultSet rs, int rowNum) -> NodeRelation.of(rs);
         return this.jdbcTemplate.query(selectSql, rowMapper, tenantId, toNodeId).stream().toList();
     }
 
     /**
-     * 根据流程定义 ID 删除节点关系
+     * 根据流程定义 ID 将节点关系设置为无效
      *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
@@ -143,10 +145,10 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
      * @author wangweijun
      * @since 2024/7/3 14:55
      */
-    public void cleanByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
-        final String deleteSql = """
-                DELETE FROM awf_node_relation WHERE `tenant_id` = ? AND `wf_def_id` = ?
+    public void inactiveByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
+        final String updateSql = """
+                UPDATE awf_node_relation set `active` = 0, `version` = `version` + 1, `updated_at` = ?, `updated_by` = ? WHERE `tenant_id` = ? AND `wf_def_id` = ?
                 """;
-        jdbcTemplate.update(deleteSql, tenantId, workflowDefinitionId);
+        jdbcTemplate.update(updateSql, new Date(), AgileWorkflowContext.getCurrentUser(), tenantId, workflowDefinitionId);
     }
 }

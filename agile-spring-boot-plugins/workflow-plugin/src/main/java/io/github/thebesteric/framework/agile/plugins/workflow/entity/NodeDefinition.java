@@ -17,6 +17,7 @@ import java.io.Serial;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -63,6 +64,7 @@ public class NodeDefinition extends BaseEntity {
      * 是否包含审批条件
      *
      * @return boolean
+     *
      * @author wangweijun
      * @since 2024/7/4 13:33
      */
@@ -73,25 +75,45 @@ public class NodeDefinition extends BaseEntity {
     /**
      * 添加审批人
      *
-     * @param approverId 审批人 ID
+     * @param approverIds 审批人 IDs
      *
      * @author wangweijun
      * @since 2024/7/3 10:44
      */
-    public void addApproverId(String approverId) {
-        approverIds.add(approverId);
+    public void addApprovers(String approverId, String... approverIds) {
+        this.approverIds.add(approverId);
+        if (approverIds != null && approverIds.length > 0) {
+            this.approverIds.addAll(List.of(approverIds));
+        }
     }
 
     /**
      * 移除审批人
      *
-     * @param approverId 审批人 ID
+     * @param approverIds 审批人 IDs
      *
      * @author wangweijun
      * @since 2024/7/3 10:44
      */
-    public void removeApproverId(String approverId) {
-        approverIds.remove(approverId);
+    public void removeApprovers(String approverId, String... approverIds) {
+        this.approverIds.remove(approverId);
+        if (approverIds != null && approverIds.length > 0) {
+            List.of(approverIds).forEach(this.approverIds::remove);
+        }
+    }
+
+    /**
+     * 替换审批人
+     *
+     * @param oldApproverId 原审批人
+     * @param newApproverId 新审批人
+     *
+     * @author wangweijun
+     * @since 2024/7/12 14:10
+     */
+    public void replaceApprover(String oldApproverId, String newApproverId) {
+        approverIds.remove(oldApproverId);
+        approverIds.add(newApproverId);
     }
 
     /**
@@ -100,7 +122,7 @@ public class NodeDefinition extends BaseEntity {
      * @author wangweijun
      * @since 2024/7/3 13:38
      */
-    public void clearApproverIds() {
+    public void clearApprovers() {
         approverIds.clear();
     }
 

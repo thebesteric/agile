@@ -55,4 +55,16 @@ public class TaskInstance extends BaseEntity {
         taskInstance.setTotalCount(rs.getInt("total_count"));
         return of(taskInstance, rs);
     }
+
+    /**
+     * 审批任务是否结束
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/7/12 15:31
+     */
+    public boolean isCompleted() {
+        return NodeStatus.COMPLETED == this.status;
+    }
 }

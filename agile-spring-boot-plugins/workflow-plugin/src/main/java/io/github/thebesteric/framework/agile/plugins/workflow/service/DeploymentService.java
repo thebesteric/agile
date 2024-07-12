@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 
 import java.util.List;
@@ -60,6 +62,19 @@ public interface DeploymentService {
      * @since 2024/6/17 15:26
      */
     List<WorkflowDefinition> find(String tenantId);
+
+
+    /**
+     * 获取流程定义列表（分页）
+     *
+     * @param tenantId 租户
+     *
+     * @return WorkflowDefinition
+     *
+     * @author wangweijun
+     * @since 2024/6/17 15:26
+     */
+    Page<WorkflowDefinition> find(String tenantId, Pager pager);
 
     /**
      * 禁用

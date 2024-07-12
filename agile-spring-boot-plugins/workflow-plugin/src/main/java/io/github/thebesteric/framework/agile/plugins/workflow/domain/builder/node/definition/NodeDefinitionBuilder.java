@@ -5,7 +5,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 
 import java.util.List;
@@ -27,8 +26,8 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
 
     public static NodeDefinitionBuilder builderNode(String tenantId, Integer workflowDefinitionId, NodeType nodeType, Integer sequence) {
         NodeDefinitionBuilder builder = new NodeDefinitionBuilder(new NodeDefinition());
-        builder.tenantId(tenantId);
-        builder.workflowDefinitionId(workflowDefinitionId);
+        builder.nodeDefinition.setTenantId(tenantId);
+        builder.nodeDefinition.setWorkflowDefinitionId(workflowDefinitionId);
         builder.nodeDefinition.setNodeType(nodeType);
         builder.nodeDefinition.setSequence(sequence);
         return builder;
@@ -44,20 +43,6 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
 
     public static NodeDefinitionBuilder builderTaskNode(String tenantId, Integer workflowDefinitionId, Integer sequence) {
         return builderNode(tenantId, workflowDefinitionId, NodeType.TASK, sequence);
-    }
-
-    public NodeDefinitionBuilder workflowDefinition(WorkflowDefinition workflowDefinition) {
-        return workflowDefinitionId(workflowDefinition.getId());
-    }
-
-    public NodeDefinitionBuilder workflowDefinitionId(Integer workflowDefinitionId) {
-        this.nodeDefinition.setWorkflowDefinitionId(workflowDefinitionId);
-        return this;
-    }
-
-    public NodeDefinitionBuilder tenantId(String tenantId) {
-        this.nodeDefinition.setTenantId(tenantId);
-        return this;
     }
 
     public NodeDefinitionBuilder name(String name) {
@@ -91,17 +76,7 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
     }
 
     public NodeDefinitionBuilder approverIds(List<String> approverIds) {
-        approverIds.forEach(approverId -> this.nodeDefinition.getApproverIds().add(approverId));
-        return this;
-    }
-
-    public NodeDefinitionBuilder createdBy(String user) {
-        this.nodeDefinition.setCreatedBy(user);
-        return this;
-    }
-
-    public NodeDefinitionBuilder updateBy(String user) {
-        this.nodeDefinition.setUpdatedBy(user);
+        approverIds.forEach(this::approverId);
         return this;
     }
 

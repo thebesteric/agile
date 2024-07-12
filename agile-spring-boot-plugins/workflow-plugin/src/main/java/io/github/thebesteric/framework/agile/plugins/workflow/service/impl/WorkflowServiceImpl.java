@@ -1,10 +1,14 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.PublishStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
@@ -19,8 +23,10 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wor
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowInstanceInProgressException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractWorkflowService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.*;
@@ -33,6 +39,7 @@ import java.util.stream.Collectors;
  * @version v1.0
  * @since 2024-06-13 21:23:21
  */
+@Slf4j
 public class WorkflowServiceImpl extends AbstractWorkflowService {
 
     private final NodeDefinitionExecutorBuilder nodeDefinitionExecutorBuilder;
@@ -40,7 +47,6 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     private final NodeAssignmentExecutorBuilder nodeAssignmentExecutorBuilder;
     private final WorkflowInstanceExecutorBuilder workflowInstanceExecutorBuilder;
     private final WorkflowDefinitionExecutorBuilder workflowDefinitionExecutorBuilder;
-    ;
 
     public WorkflowServiceImpl(AgileWorkflowContext context) {
         super(context);
@@ -73,7 +79,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @return List<WorkflowDefinition>
      */
     @Override
-    public List<WorkflowDefinition> findWorkflowDefinitions(Query query) {
+    public Page<WorkflowDefinition> findWorkflowDefinitions(Query query) {
         return workflowDefinitionExecutorBuilder.build().find(query);
     }
 
@@ -85,7 +91,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @return List<WorkflowInstance>
      */
     @Override
-    public List<WorkflowInstance> findWorkflowInstances(Query query) {
+    public Page<WorkflowInstance> findWorkflowInstances(Query query) {
         return workflowInstanceExecutorBuilder.build().find(query);
     }
 
@@ -204,6 +210,11 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     public void updateNode(NodeDefinition nodeDefinition) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
+
+            if (NodeType.START == nodeDefinition.getNodeType() || NodeType.END == nodeDefinition.getNodeType()) {
+                throw new WorkflowException("节点更新修改失败: 无法修改开始节点或结束节点");
+            }
+
             // 租户 ID
             String tenantId = nodeDefinition.getTenantId();
 
@@ -222,8 +233,8 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                     .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
                     .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
                     .eq(WorkflowInstance::getState, 1).build();
-            List<WorkflowInstance> workflowInstances = workflowInstanceExecutor.find(query);
-            if (CollUtil.isNotEmpty(workflowInstances)) {
+            Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+            if (CollUtil.isNotEmpty(page.getRecords())) {
                 throw new WorkflowInstanceInProgressException();
             }
 
@@ -249,6 +260,12 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 更新节点定义
             nodeDefinitionExecutor.updateById(nodeDefinition);
+
+            // 将流程定义设置为未发布
+            if (workflowDefinition.isPublished()) {
+                workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
+                workflowDefinitionExecutor.updateById(workflowDefinition);
+            }
         });
     }
 
@@ -275,9 +292,20 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
 
-            // 删除原有节点定义
-            this.cleanRelations(tenantId, workflowDefinitionId);
+            // 获取流程定义
+            WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+            WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
 
+            // 查看是否已经发布
+            if (workflowDefinition.isPublished()) {
+                LoggerPrinter.debug(log, "流程定义已发布，无需重复发布: {}", workflowDefinitionId);
+                return;
+            }
+
+            // 删除原有节点定义
+            this.inactiveRelations(tenantId, workflowDefinitionId);
+
+            // 获取开始节点、任务节点、结束节点
             NodeDefinition startNode = this.getStartNode(tenantId, workflowDefinitionId);
             List<NodeDefinition> taskNodes = this.findTaskNodes(tenantId, workflowDefinitionId);
             NodeDefinition endNode = this.getEndNode(tenantId, workflowDefinitionId);
@@ -301,12 +329,12 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 this.createRelation(rejectNodeRelation);
                 sequence++;
             }
-        }, true);
-    }
 
-    private void cleanRelations(String tenantId, Integer workflowDefinitionId) {
-        NodeRelationExecutor executor = nodeRelationExecutorBuilder.build();
-        executor.cleanByWorkflowDefinitionId(tenantId, workflowDefinitionId);
+            // 将流程定义设置为发布状态
+            workflowDefinition.setPublish(PublishStatus.PUBLISHED);
+            workflowDefinitionExecutor.updateById(workflowDefinition);
+
+        }, true);
     }
 
     private void createRelations(String tenantId, Integer workflowDefinitionId, List<NodeDefinition> fromNodes, List<NodeDefinition> toNodes, Integer sequence) {
@@ -318,9 +346,13 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         }
     }
 
-
     private void createRelation(NodeRelation nodeRelation) {
         NodeRelationExecutor executor = nodeRelationExecutorBuilder.nodeRelation(nodeRelation).build();
         executor.save();
+    }
+
+    private void inactiveRelations(String tenantId, Integer workflowDefinitionId) {
+        NodeRelationExecutor executor = nodeRelationExecutorBuilder.build();
+        executor.inactiveByWorkflowDefinitionId(tenantId, workflowDefinitionId);
     }
 }

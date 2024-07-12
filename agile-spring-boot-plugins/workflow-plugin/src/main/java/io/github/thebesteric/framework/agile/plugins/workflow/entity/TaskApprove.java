@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.entity;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
@@ -40,7 +41,10 @@ public class TaskApprove extends BaseEntity {
     private String approverId;
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批状态")
-    private ApproveStatus status;
+    private ApproveStatus status = ApproveStatus.IN_PROGRESS;
+
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "活动状态")
+    private ActiveStatus active = ActiveStatus.ACTIVE;
 
     @EntityColumn(length = 255, comment = "审批意见")
     private String comment;
@@ -52,6 +56,7 @@ public class TaskApprove extends BaseEntity {
         taskApprove.setTaskInstanceId(rs.getInt("task_inst_id"));
         taskApprove.setApproverId(rs.getString("approver_id"));
         taskApprove.setStatus(ApproveStatus.of(rs.getInt("status")));
+        taskApprove.setActive(ActiveStatus.of(rs.getInt("active")));
         taskApprove.setComment(rs.getString("comment"));
         return of(taskApprove, rs);
     }
