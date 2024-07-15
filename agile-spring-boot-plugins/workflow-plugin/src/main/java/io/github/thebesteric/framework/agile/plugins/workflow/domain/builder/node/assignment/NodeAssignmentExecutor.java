@@ -40,7 +40,7 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
         // 检查是否有已存在的节点定义
         NodeAssignment existsNodeAssignment = this.getByNodeDefinitionIdAndUserId();
         if (existsNodeAssignment != null) {
-            throw new DataExistsException("NodeAssignment already exists");
+            throw new DataExistsException("已存在相同的节点审批人");
         }
         return super.save(nodeAssignment);
     }

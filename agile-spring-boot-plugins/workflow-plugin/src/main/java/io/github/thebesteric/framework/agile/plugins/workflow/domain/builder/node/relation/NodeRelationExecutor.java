@@ -37,7 +37,7 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
         // 检查是否有已存在的节点定义
         NodeRelation existsNodeRelation = this.getByWorkflowDefinitionIdAndFromNodeAndToNode();
         if (existsNodeRelation != null) {
-            throw new DataExistsException("NodeRelation already exists");
+            throw new DataExistsException("已存在相同的节点关系");
         }
         return super.save(nodeRelation);
     }

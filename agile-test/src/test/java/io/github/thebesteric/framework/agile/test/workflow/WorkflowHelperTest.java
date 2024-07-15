@@ -2,9 +2,11 @@ package io.github.thebesteric.framework.agile.test.workflow;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Condition;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
@@ -16,6 +18,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.Dep
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.RuntimeServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.TaskHistoryServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.WorkflowServiceHelper;
+import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,12 +65,63 @@ class WorkflowHelperTest {
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
         workflowServiceHelper.setCurrentUser("admin");
 
-        workflowServiceHelper.createStartNode(workflowDefinition, "请假流程开始");
-        workflowServiceHelper.createTaskNode(NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
-                .name("部门主管审批").approverId("张三").approverId("李四"));
-        workflowServiceHelper.createTaskNode(NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
-                .name("部门经理审批").approverId("王五"));
-        workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
+        // workflowServiceHelper.createStartNode(workflowDefinition, "请假流程开始");
+        // workflowServiceHelper.createTaskNode(NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+        //         .name("部门主管审批").approverId("张三").approverId("李四"));
+        // workflowServiceHelper.createTaskNode(NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+        //         .name("部门经理审批").approverId("王五"));
+        // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
+
+        createWorkflow4(tenantId, workflowDefinition);
+    }
+
+    private void createWorkflow4(String tenantId, WorkflowDefinition workflowDefinition) {
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        Conditions conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点").conditions(conditions).approveType(ApproveType.ANY)
+                .approverId("张三").approverId("李四")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门经理审批").desc("任务节点").conditions(conditions)
+                .approverId("王五")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("人事主管审批").desc("任务节点").conditions(conditions)
+                .approverId("赵六")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("人事经理审批").desc("任务节点").conditions(conditions)
+                .approverId("孙七")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
     }
 
     /**
@@ -97,7 +151,11 @@ class WorkflowHelperTest {
 
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(userId);
-        runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天");
+        // runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天");
+
+        RequestConditions requestConditions = RequestConditions.newInstance();
+        requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
+        runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions);
     }
 
     /**
@@ -105,9 +163,11 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        // String approverId = "张三";
+        String approverId = "张三";
         // String approverId = "李四";
-        String approverId = "王五";
+        // String approverId = "王五";
+        // String approverId = "赵六";
+        // String approverId = "孙七";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
@@ -129,9 +189,10 @@ class WorkflowHelperTest {
      */
     @Test
     void reject() {
-        // String approverId = "张三";
+        String approverId = "张三";
         // String approverId = "李四";
-        String approverId = "王五";
+        // String approverId = "王五";
+        // String approverId = "赵六";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
@@ -151,9 +212,9 @@ class WorkflowHelperTest {
      */
     @Test
     void abandon() {
-        // String approverId = "张三";
+        String approverId = "张三";
         // String approverId = "李四";
-        String approverId = "王五";
+        // String approverId = "王五";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);

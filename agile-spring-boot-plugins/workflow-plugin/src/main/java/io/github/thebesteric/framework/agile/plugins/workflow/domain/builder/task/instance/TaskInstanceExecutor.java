@@ -37,7 +37,7 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
         // 检查是否有已存在的节点定义
         TaskInstance existsTaskInstance = this.getByWorkflowInstanceIdAndNodeDefinitionId();
         if (existsTaskInstance != null) {
-            throw new DataExistsException("TaskInstance already exists");
+            throw new DataExistsException("已存在相同的任务实例");
         }
         return super.save(taskInstance);
     }

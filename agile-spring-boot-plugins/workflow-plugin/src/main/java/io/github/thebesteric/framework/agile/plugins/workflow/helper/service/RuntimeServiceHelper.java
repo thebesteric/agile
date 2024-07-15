@@ -212,7 +212,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 16:31
      */
     public void approve(String tenantId, Integer taskInstanceId, String approverId, String comment) {
-        runtimeService.approve(tenantId, taskInstanceId, approverId, comment);
+        this.runtimeService.approve(tenantId, taskInstanceId, approverId, comment);
     }
 
     /**
@@ -226,7 +226,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/10 13:37
      */
     public void reject(TaskInstance taskInstance, String approverId, String comment) {
-        runtimeService.reject(taskInstance.getTenantId(), taskInstance.getId(), approverId, comment);
+        this.runtimeService.reject(taskInstance.getTenantId(), taskInstance.getId(), approverId, comment);
     }
 
     /**
@@ -241,7 +241,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/10 13:37
      */
     public void reject(String tenantId, Integer taskInstanceId, String approverId, String comment) {
-        runtimeService.reject(tenantId, taskInstanceId, approverId, comment);
+        this.runtimeService.reject(tenantId, taskInstanceId, approverId, comment);
     }
 
     /**
@@ -270,7 +270,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/10 17:40
      */
     public void abandon(String tenantId, Integer taskInstanceId, String approverId, String comment) {
-        runtimeService.abandon(tenantId, taskInstanceId, approverId, comment);
+        this.runtimeService.abandon(tenantId, taskInstanceId, approverId, comment);
     }
 
     /**
@@ -295,6 +295,6 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/10 17:55
      */
     public void cancel(String tenantId, Integer workerInstanceId) {
-        runtimeService.cancel(tenantId, workerInstanceId);
+        this.runtimeService.cancel(tenantId, workerInstanceId);
     }
 }

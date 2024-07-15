@@ -41,7 +41,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
         // 检查是否有已存在的流程定义
         WorkflowDefinition existsWorkflowDefinition = this.getByTenantAndKey();
         if (existsWorkflowDefinition != null) {
-            throw new DataExistsException("WorkflowDefinition already exists");
+            throw new DataExistsException("已存在相同的流程定义");
         }
         return super.save(workflowDefinition);
     }

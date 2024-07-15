@@ -43,7 +43,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
         // 检查是否有已存在的节点定义
         TaskApprove existsTaskApprove = this.getByTaskInstanceIdAndApproverId();
         if (existsTaskApprove != null) {
-            throw new DataExistsException("TaskApprove already exists");
+            throw new DataExistsException("已存在相同的节点审批人");
         }
         return super.save(taskApprove);
     }

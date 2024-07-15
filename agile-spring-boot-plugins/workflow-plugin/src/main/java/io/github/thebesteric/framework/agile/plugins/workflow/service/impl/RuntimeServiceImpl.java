@@ -108,11 +108,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 记录流程日志（开始审批）
             recordLogs(tenantId, workflowInstanceId, startTaskInstance.getId(), startNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_STARTED);
 
-            // 创建下一个审批实例
+            // 创建下一个审批实例（多个审批实例，通常是条件节点）
             List<NodeDefinition> toTaskNodes = nodeDefinitionExecutor.findToTaskNodesByFromNodeId(tenantId, startNodeDefinition.getId());
             if (CollUtil.isNotEmpty(toTaskNodes)) {
                 List<NodeDefinition> nextNodeDefinitions = new ArrayList<>();
-                // 只是一个审批节点
+                // 只有一个审批节点
                 if (toTaskNodes.size() == 1) {
                     NodeDefinition toTaskNode = toTaskNodes.get(0);
                     Conditions conditions = toTaskNode.getConditions();
@@ -120,7 +120,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     if (conditions == null || conditions.matchRequestCondition(requestConditions)) {
                         nextNodeDefinitions.add(toTaskNode);
                     }
-                } else {
+                }
+                // 存在多个审批节点
+                else {
                     for (NodeDefinition toTaskNode : toTaskNodes) {
                         // 没有审批条件或满足审批条件
                         Conditions conditions = toTaskNode.getConditions();
@@ -146,7 +148,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     taskInstanceExecutor = taskInstanceExecutorBuilder.status(NodeStatus.IN_PROGRESS)
                             .tenantId(tenantId)
                             .workflowInstanceId(workflowInstanceId).nodeDefinitionId(nextNodeDefinitionId)
-                            .totalCount(nextNodeAssignments.size()).approvedCount(0)
+                            .approvedCount(0)
+                            // 设置总需要审批的次数
+                            .totalCount(calcTotalCount(nextNodeDefinition.getApproveType(), nextNodeAssignments.size()))
                             .build();
                     TaskInstance nextTaskInstance = taskInstanceExecutor.save();
                     Integer nextTaskInstanceId = nextTaskInstance.getId();
@@ -165,6 +169,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             }
             return workflowInstance;
         });
+    }
+
+    /**
+     * 计算总需要审批的次数
+     *
+     * @param approveType    审批类型
+     * @param assignmentSize 候选审批人数量
+     *
+     * @return Integer
+     *
+     * @author wangweijun
+     * @since 2024/7/15 09:44
+     */
+    private Integer calcTotalCount(ApproveType approveType, Integer assignmentSize) {
+        return ApproveType.ANY == approveType ? 1 : assignmentSize;
     }
 
     /**
@@ -376,6 +395,17 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             List<TaskInstance> nextTaskInstances = null;
             // 已完成审批的人数 approved_count 等于所有需要审批的人数 total_count
             if (Objects.equals(taskInstance.getApprovedCount(), taskInstance.getTotalCount())) {
+                // 任一审批人审批通过的条件下，将其他审批人节点设置为 SKIP，表示跳过
+                if (ApproveType.ANY == nodeDefinition.getApproveType()) {
+                    // 获取其他的审批人节点
+                    List<TaskApprove> otherActiveTaskApproves = taskApproveExecutor.findByTaskInstanceIdAndActiveStatus(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
+                    otherActiveTaskApproves.forEach(otherActiveTaskApprove -> {
+                        // 将其他审批人节点设置为 SKIP，表示跳过
+                        otherActiveTaskApprove.setStatus(ApproveStatus.SKIPPED);
+                        otherActiveTaskApprove.setActive(ActiveStatus.INACTIVE);
+                        taskApproveExecutor.updateById(otherActiveTaskApprove);
+                    });
+                }
                 taskInstance.setStatus(NodeStatus.COMPLETED);
                 // 指向下一个审批节点
                 nextTaskInstances = this.next(tenantId, taskInstance.getId());
@@ -418,6 +448,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 找到所有未进行审批的审批人节点，并将其状态设置为：已失效
             List<TaskApprove> activeTaskApproves = taskApproveExecutor.findByTaskInstanceIdAndActiveStatus(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
             activeTaskApproves.forEach(activeTaskApprove -> {
+                activeTaskApprove.setStatus(ApproveStatus.SKIPPED);
                 activeTaskApprove.setActive(ActiveStatus.INACTIVE);
                 taskApproveExecutor.updateById(activeTaskApprove);
             });
@@ -505,7 +536,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     nextTaskInstances = this.next(tenantId, taskInstanceId);
                 } else {
                     // 最后一个审批人，无法放弃审批
-                    throw new WorkflowException("The last approver can't give up the approval");
+                    throw new WorkflowException("最后一个审批人无法放弃审批");
                 }
             }
             taskInstanceExecutor.updateById(taskInstance);
@@ -513,8 +544,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 记录流程日志（审批弃权）
             recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstanceId, nodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ABANDONED);
 
-            // 没有下一级审批节点，表示流程已经结束
-            if (nextTaskInstances == null) {
+            // 没有下一级审批节点，且当前审批节点全部审批完成，则表示流程已经结束
+            if (nextTaskInstances == null && taskInstance.isCompleted()) {
                 // 记录流程日志（审批结束）
                 NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, nodeDefinition.getWorkflowDefinitionId());
                 recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), null, endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ENDED);
@@ -537,7 +568,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             throw new WorkflowException("The workflow instance status is not in progress: %s", workflowInstance.getStatus().getDesc());
         }
 
-        // 查找审批状态
+        // 获取该流程下所有的审批人
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
         // 查看是否已经有人参与了审批
@@ -549,6 +580,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 未审批的审批人节点：设置为已失效
         List<TaskApprove> inProgressApproves = taskApproves.stream().filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus()).toList();
         inProgressApproves.forEach(inProgressApprove -> {
+            inProgressApprove.setStatus(ApproveStatus.SKIPPED);
             inProgressApprove.setActive(ActiveStatus.INACTIVE);
             taskApproveExecutor.updateById(inProgressApprove);
         });
