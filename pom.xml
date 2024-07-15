@@ -5,7 +5,7 @@
     <groupId>io.github.thebesteric.framework.agile</groupId>
     <artifactId>agile</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.12</version>
+    <version>1.0.12.1</version>
 
     <name>agile</name>
     <url>https://github.com/thebesteric/agile</url>
