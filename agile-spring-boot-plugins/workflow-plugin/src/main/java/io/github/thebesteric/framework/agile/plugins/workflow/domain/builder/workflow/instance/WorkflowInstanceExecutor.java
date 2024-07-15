@@ -92,7 +92,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
         Integer offset = (page - 1) * pageSize;
         List<WorkflowInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, requesterId, pageSize, offset);
 
-        return Page.of(page, pageSize, count, records);
+        return Page.of(page, pageSize, count == null ? 0 : count, records);
     }
 
     /**

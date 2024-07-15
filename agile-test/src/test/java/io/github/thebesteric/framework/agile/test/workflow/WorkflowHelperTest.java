@@ -9,15 +9,9 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCond
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.WorkflowHelper;
-import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.DeploymentServiceHelper;
-import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.RuntimeServiceHelper;
-import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.TaskHistoryServiceHelper;
-import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.WorkflowServiceHelper;
+import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
@@ -155,7 +149,11 @@ class WorkflowHelperTest {
 
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
-        runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions);
+        WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions);
+
+        // 添加附件
+        RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
+        repositoryServiceHelper.addAttachment(workflowInstance, "123456", "test.txt", "txt", "/attachment/test.txt");
     }
 
     /**
@@ -181,6 +179,11 @@ class WorkflowHelperTest {
             String comment = "同意";
             runtimeServiceHelper.approve(taskInstance, approverId, comment);
             System.out.println(approverId + ": " + comment);
+
+            // 查看附件
+            RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
+            List<WorkflowRepository> attachments = repositoryServiceHelper.findAttachments(taskInstance);
+            attachments.forEach(System.out::println);
         });
     }
 
@@ -280,5 +283,42 @@ class WorkflowHelperTest {
     }
 
 
+    @Test
+    void attachments() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
+
+        List<WorkflowRepository> attachments = repositoryServiceHelper.findAttachmentsByWorkflowDefinitionId(tenantId, 1);
+        attachments.forEach(System.out::println);
+        System.out.println("===");
+
+        Page<WorkflowRepository> page = repositoryServiceHelper.findAttachmentsByWorkflowDefinitionId(tenantId, 1, 2, 2);
+        System.out.println(page);
+        System.out.println("===");
+
+        attachments = repositoryServiceHelper.findAttachmentsByWorkflowInstanceId(tenantId, 8);
+        attachments.forEach(System.out::println);
+        System.out.println("===");
+
+        page = repositoryServiceHelper.findAttachmentsByWorkflowInstanceId(tenantId, 8, 1, 2);
+        System.out.println(page);
+        System.out.println("===");
+
+        attachments = repositoryServiceHelper.findAttachmentsByTaskInstanceId(tenantId, 23);
+        attachments.forEach(System.out::println);
+        System.out.println("===");
+
+        page = repositoryServiceHelper.findAttachmentsByTaskInstanceId(tenantId, 24, 1, 2);
+        System.out.println(page);
+        System.out.println("===");
+
+        Integer affect = repositoryServiceHelper.clearAttachmentsByWorkflowInstance(tenantId, 8);
+        System.out.println(affect);
+        System.out.println("===");
+
+        affect = repositoryServiceHelper.clearAttachmentsByWorkflowDefinition(tenantId, 1);
+        System.out.println(affect);
+
+    }
 
 }

@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.*;
+import io.github.thebesteric.framework.agile.plugins.database.core.exception.QueryParseException;
 import lombok.SneakyThrows;
 
 import java.io.Serializable;
@@ -26,16 +27,18 @@ import java.util.function.Function;
  */
 public class QueryBuilderWrapper {
 
+    private static final String QUERY_PARSE_ERROR_MESSAGE = "Failed to extract field name";
+
     public static class Builder<T> {
         private final Class<T> clazz;
         private final Field[] fields;
-        private EntityClassDomain entityClassDomain;
-        private List<ColumnDomain> columnDomains;
+        private final EntityClassDomain entityClassDomain;
+        private final List<ColumnDomain> columnDomains;
 
         private final List<QueryParam> queryParams;
         private final List<OrderByParam> orderByParams;
         private Pager pager;
-        private boolean toUnderline;
+        private final boolean toUnderline;
 
         public Builder(Class<T> clazz, boolean toUnderline) {
             this.clazz = clazz;
@@ -57,7 +60,7 @@ public class QueryBuilderWrapper {
                 String fieldName = getFieldName(getter);
                 queryParams.add(QueryParam.of(fieldName, queryOperator, value, toUnderline));
             } catch (Exception e) {
-                throw new RuntimeException("Failed to extract field name", e);
+                throw new QueryParseException(QUERY_PARSE_ERROR_MESSAGE, e);
             }
             return this;
         }
@@ -72,7 +75,7 @@ public class QueryBuilderWrapper {
                 String fieldName = getFieldName(getter);
                 orderByParams.add(OrderByParam.of(fieldName, orderByOperator, toUnderline));
             } catch (Exception e) {
-                throw new RuntimeException("Failed to extract field name", e);
+                throw new QueryParseException(QUERY_PARSE_ERROR_MESSAGE, e);
             }
             return this;
         }
@@ -253,7 +256,8 @@ public class QueryBuilderWrapper {
             try {
                 runnable.run();
             } catch (Exception e) {
-                LoggerPrinter.error("Failed to extract field name", e.getMessage(), e);
+                LoggerPrinter.error(QUERY_PARSE_ERROR_MESSAGE, e.getMessage(), e);
+                throw new QueryParseException(QUERY_PARSE_ERROR_MESSAGE, e);
             }
             return this;
         }

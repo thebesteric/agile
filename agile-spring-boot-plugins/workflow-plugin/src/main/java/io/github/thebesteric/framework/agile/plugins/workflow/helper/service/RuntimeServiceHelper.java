@@ -37,11 +37,13 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @param requesterId        申请人
      * @param desc               申请内容
      *
+     * @return 流程实例
+     *
      * @author wangweijun
      * @since 2024/7/9 14:02
      */
-    public void start(WorkflowDefinition workflowDefinition, String requesterId, String desc) {
-        this.start(workflowDefinition, requesterId, null, null, desc);
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String desc) {
+        return this.start(workflowDefinition, requesterId, null, null, desc);
     }
 
     /**
@@ -53,11 +55,13 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @param businessType       业务类型
      * @param desc               申请内容
      *
+     * @return 流程实例
+     *
      * @author wangweijun
      * @since 2024/7/9 14:02
      */
-    public void start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc) {
-        this.start(workflowDefinition, requesterId, businessId, businessType, desc, null);
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc) {
+        return this.start(workflowDefinition, requesterId, businessId, businessType, desc, null);
     }
 
     /**
@@ -70,13 +74,15 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @param desc               申请内容
      * @param requestConditions  申请条件
      *
+     * @return 流程实例
+     *
      * @author wangweijun
      * @since 2024/7/9 14:02
      */
-    public void start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
         String tenantId = workflowDefinition.getTenantId();
         String key = workflowDefinition.getKey();
-        this.start(tenantId, key, requesterId, businessId, businessType, desc, requestConditions);
+        return this.start(tenantId, key, requesterId, businessId, businessType, desc, requestConditions);
     }
 
     /**
@@ -90,11 +96,13 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @param desc                  申请内容
      * @param requestConditions     申请条件
      *
+     * @return 流程实例
+     *
      * @author wangweijun
      * @since 2024/7/9 14:02
      */
-    public void start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
-        this.runtimeService.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, requestConditions);
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
+        return this.runtimeService.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, requestConditions);
     }
 
     /**

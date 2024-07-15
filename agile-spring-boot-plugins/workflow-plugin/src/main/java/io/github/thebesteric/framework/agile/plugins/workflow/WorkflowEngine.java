@@ -11,9 +11,11 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
+import io.github.thebesteric.framework.agile.plugins.workflow.service.RepositoryService;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.RuntimeService;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.DeploymentServiceImpl;
+import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.RepositoryServiceImpl;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.RuntimeServiceImpl;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.WorkflowServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +39,7 @@ public class WorkflowEngine {
     private final AgileWorkflowContext context;
 
     private static final List<Class<? extends BaseEntity>> ENTITY_CLASSES = List.of(
-            WorkflowDefinition.class, WorkflowInstance.class,
+            WorkflowDefinition.class, WorkflowInstance.class, WorkflowRepository.class,
             NodeDefinition.class, NodeAssignment.class, NodeRelation.class,
             TaskInstance.class, TaskApprove.class, TaskHistory.class
     );
@@ -148,6 +150,18 @@ public class WorkflowEngine {
      */
     public RuntimeService getRuntimeService() {
         return this.context.getBeanOrDefault(RuntimeService.class, new RuntimeServiceImpl(this.context));
+    }
+
+    /**
+     * 获取仓库 Service
+     *
+     * @return RepositoryService
+     *
+     * @author wangweijun
+     * @since 2024/7/15 13:46
+     */
+    public RepositoryService getRepositoryService() {
+        return this.context.getBeanOrDefault(RepositoryService.class, new RepositoryServiceImpl(this.context));
     }
 
 }
