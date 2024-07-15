@@ -76,9 +76,9 @@ public @interface EntityColumn {
 
         BOOLEAN("TINYINT", true, false, false),
         TINY_INT("TINYINT", true, false, false),
-        INT("INT", true, false, false),
         SMALL_INT("SMALLINT", true, false, false),
         MEDIUM_INT("MEDIUMINT", true, false, false),
+        INT("INT", true, false, false),
         BIG_INT("BIGINT", true, false, false),
 
         FLOAT("FLOAT", true, true, true),
@@ -89,13 +89,13 @@ public @interface EntityColumn {
         JSON("JSON", false, false, false),
 
         TINY_TEXT("TINYTEXT", false, false, false),
-        MEDIUM_TEXT("MEDIUMTEXT", false, false, false),
         TEXT("TEXT", false, false, false),
+        MEDIUM_TEXT("MEDIUMTEXT", false, false, false),
         LONG_TEXT("LONGTEXT", false, false, false),
 
         TINY_BLOB("TINYBLOB", false, false, false),
-        MEDIUM_BLOB("MEDIUMBLOB", false, false, false),
         BLOB("BLOB", false, false, false),
+        MEDIUM_BLOB("MEDIUMBLOB", false, false, false),
         LONG_BLOB("LONGBLOB", false, false, false),
 
         DATE("DATE", false, false, false),
