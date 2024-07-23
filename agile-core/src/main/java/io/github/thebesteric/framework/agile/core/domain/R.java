@@ -4,6 +4,9 @@ import io.github.thebesteric.framework.agile.commons.util.TransactionUtils;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 
+import java.util.Objects;
+import java.util.Optional;
+
 @Data
 public class R<T> {
 
@@ -81,6 +84,10 @@ public class R<T> {
 
     public static <T> R<T> error(int code, String message, T data) {
         return build(code, message, data);
+    }
+
+    public static <T> T extract(R<T> result, T defaultValue) {
+        return Optional.ofNullable(result).filter(e -> Objects.equals(HttpStatus.OK.value(), e.getCode())).map(R::getData).orElse(defaultValue);
     }
 
     public R<T> message(String msg) {
