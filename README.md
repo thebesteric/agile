@@ -383,3 +383,32 @@ class DeploymentServiceTest {
     }
 }
 ```
+## 微信开放平台插件
+```yaml
+sourceflag:
+  agile:
+    wechat:
+      mini:
+        enable: true
+        app-id: 123456789
+        app-secret: 123456789
+      third:
+        enable: true
+        component-app-id: 123456789
+        component-app-secret: 123456789
+        verify-token: 123456789
+        encrypt-aes-key: 123456789
+```
+
+### 使用方式
+```java
+class DeploymentServiceTest {
+
+    @Autowired
+    private WechatMiniHelper wechatMiniHelper;
+
+    @Autowired
+    private WechatThirdPlatformHelper wechatThirdPlatformHelper;
+
+}
+```
