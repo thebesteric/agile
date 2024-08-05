@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.test.controller;
 
+import io.github.thebesteric.framework.agile.wechat.third.platform.WechatMiniHelper;
 import io.github.thebesteric.framework.agile.wechat.third.platform.WechatThirdPlatformHelper;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.third.platform_credential.CredentialApi;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.response.third.ComponentAccessTokenResponse;
@@ -15,6 +16,7 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.listener.Auth
 import io.github.thebesteric.framework.agile.wechat.third.platform.listener.MessageEventListener;
 import io.github.thebesteric.framework.agile.wechat.third.platform.listener.WechatThirdPlatformListener;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +31,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/wechat-third-platform")
 public class WechatThirdPlatformController {
+
+    @Autowired
+    private WechatMiniHelper wechatMiniHelper;
+
+    @Autowired
+    private WechatThirdPlatformHelper wechatThirdPlatformHelper;
 
     /** 第三方组件的 AppId */
     private final static String COMPONENT_APP_ID = "wxa2fb5b84243374b2";
