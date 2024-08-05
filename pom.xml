@@ -30,6 +30,7 @@
         <module>agile-core</module>
         <module>agile-spring-boot-starter</module>
         <module>agile-spring-boot-plugins</module>
+        <module>agile-wechat-plugins</module>
     </modules>
 
     <developers>
@@ -70,9 +71,18 @@
         <hutool.version>5.8.27</hutool.version>
         <mybatis-plus.version>3.5.7</mybatis-plus.version>
         <mybatis.version>3.5.16</mybatis.version>
+        <swagger-annotations-jakarta.version>2.2.22</swagger-annotations-jakarta.version>
     </properties>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <version>${spring.boot.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -189,6 +199,12 @@
                 <groupId>org.mybatis</groupId>
                 <artifactId>mybatis</artifactId>
                 <version>${mybatis.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>${swagger-annotations-jakarta.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

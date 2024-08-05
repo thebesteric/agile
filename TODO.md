@@ -12,3 +12,11 @@
 
 # Mock 数据
 @Mock
+
+# 支持启动后导入 sql 脚本
+database.executeSqlScript
+ResourceDatabasePopulator
+https://blog.csdn.net/weixin_43888891/article/details/130305198
+
+# Logger BUGs
+- 实体类使用了 typeHandler 的时候，序列化的时候会报错

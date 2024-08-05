@@ -33,6 +33,15 @@ sourceflag:
       delete-column: true
     workflow:
       ddl-auto: update
+    wechat:
+      mini:
+        enable: true
+        app-id: 123456789
+        app-secret: 123456789
+      third:
+        enable: true
+        component-app-id: 123456789
+        component-app-secret: 123456789
 
 spring:
   datasource:
