@@ -4,7 +4,7 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.api.third.pla
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.third.platform_manage.template.TemplateManageApi;
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.third.WechatThirdPlatformProperties;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.Component;
-import io.github.thebesteric.framework.agile.wechat.third.platform.listener.WechatThirdPlatformListener;
+import io.github.thebesteric.framework.agile.wechat.third.platform.listener.third.WechatThirdPlatformListener;
 import lombok.Data;
 
 /**

@@ -7,7 +7,7 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.reques
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.response.BaseResponse;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.response.WechatResponse;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.response.third.*;
-import io.github.thebesteric.framework.agile.wechat.third.platform.listener.MessageEventListener;
+import io.github.thebesteric.framework.agile.wechat.third.platform.listener.third.MessageEventListener;
 import io.github.thebesteric.framework.agile.wechat.third.platform.utils.HttpUtils;
 
 import java.io.InputStream;

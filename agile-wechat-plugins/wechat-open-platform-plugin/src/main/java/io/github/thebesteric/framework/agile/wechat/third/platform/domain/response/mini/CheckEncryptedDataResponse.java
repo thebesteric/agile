@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.respon
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.Date;
 
@@ -15,6 +16,7 @@ import java.util.Date;
  * @version v1.0
  * @since 2024-08-02 15:33:12
  */
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "检查加密信息")

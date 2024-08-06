@@ -5,14 +5,16 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.respon
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
- * PhoneNumberResponse
+ * 获取手机号
  *
  * @author wangweijun
  * @version v1.0
  * @since 2024-08-02 15:48:51
  */
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "获取手机号")

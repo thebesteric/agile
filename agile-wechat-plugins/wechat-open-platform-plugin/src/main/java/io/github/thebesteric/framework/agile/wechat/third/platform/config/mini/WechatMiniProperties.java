@@ -20,4 +20,26 @@ public class WechatMiniProperties {
     private String appId;
     /** 小程序唯一凭证密钥，即 AppSecret，获取方式同 appid */
     private String appSecret;
+    /** 小程序消息推送配置 */
+    private MessagePush messagePush;
+
+    @Data
+    public static class MessagePush {
+        /** 必须为英文或数字，长度为 3-32 字符 */
+        private String token;
+        /** 消息加密密钥由 43 位字符组成，字符范围为 A-Z,a-z,0-9 */
+        private String encodingAesKey;
+        /** 加密类型 */
+        private EncryptType encryptType = EncryptType.CIPHERTEXT;
+        /** 数据格式 */
+        private MessageType messageType = MessageType.XML;
+    }
+
+    public enum EncryptType {
+        PLAINTEXT, COMPATIBILITY, CIPHERTEXT
+    }
+
+    public enum MessageType {
+        JSON, XML
+    }
 }

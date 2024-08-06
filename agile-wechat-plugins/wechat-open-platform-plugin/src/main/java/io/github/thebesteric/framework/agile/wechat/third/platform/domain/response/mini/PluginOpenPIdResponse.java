@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.respon
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * 获取插件用户 openpid
@@ -13,6 +14,7 @@ import lombok.EqualsAndHashCode;
  * @version v1.0
  * @since 2024-08-02 14:26:04
  */
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "插件用户信息")

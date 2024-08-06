@@ -23,12 +23,14 @@
       - 查询加密 URLLink `queryUrlLink`
     - [ShortLinkApi.java](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fmini_code%2FShortLinkApi.java) Short Link
       - 获取 ShortLink `generateShortLink`
-  - [customer](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fcustomer) 小程序客服
-    - [CustomerMessageApi.java](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fcustomer%2FCustomerMessageApi.java) 客服消息
+  - [mini_customer](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fmini_customer) 小程序客服
+    - [MiniCustomerMessageApi.java](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fmini_customer%2FMiniCustomerMessageApi.java) 客服消息
       - 获取客服消息内的临时素材 `getTempMedia`
       - 下发客服当前输入状态 `setTyping`
       - 新增图片素材 `uploadTempMedia`
       - 发送客服消息 `sendCustomMessage`
+  - [wechat_customer](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fwechat_customer) 微信客服
+    - [WechatCustomerApi.java](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fwechat_customer%2FWechatCustomerApi.java) 微信客服
   - [message](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fmessage) 消息相关
     - [DynamicMessageApi.java](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fmessage%2FDynamicMessageApi.java) 动态消息
       - 创建 activity_id `createActivityId`

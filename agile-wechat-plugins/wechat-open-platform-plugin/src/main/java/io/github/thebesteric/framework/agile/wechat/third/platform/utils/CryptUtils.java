@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.wechat.third.platform.utils;
 
 import io.github.thebesteric.framework.agile.commons.util.AbstractUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
+import io.github.thebesteric.framework.agile.wechat.third.platform.config.mini.WechatMiniProperties;
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.third.WechatThirdPlatformProperties;
 import io.github.thebesteric.framework.agile.wechat.third.platform.exception.AesException;
 import lombok.extern.slf4j.Slf4j;
@@ -30,17 +31,25 @@ public class CryptUtils {
 
     private static final Charset UTF_8_CHARSET = StandardCharsets.UTF_8;
 
-    private final String componentAppId;
+    private final String appId;
     private final String verifyToken;
     private final byte[] aesKey;
 
     public CryptUtils(WechatThirdPlatformProperties properties) throws AesException {
-        if (properties.getEncryptAesKey().length() != 43) {
+        this(properties.getComponentAppId(), properties.getVerifyToken(), properties.getEncryptAesKey());
+    }
+
+    public CryptUtils(WechatMiniProperties properties) throws AesException {
+        this(properties.getAppId(), properties.getMessagePush().getToken(), properties.getMessagePush().getEncodingAesKey());
+    }
+
+    public CryptUtils(String appId, String verifyToken, String encryptAesKey) throws AesException {
+        if (encryptAesKey.length() != 43) {
             throw new AesException(AesException.IllegalAesKey);
         }
-        this.verifyToken = properties.getVerifyToken();
-        this.componentAppId = properties.getComponentAppId();
-        aesKey = Base64.decodeBase64(properties.getEncryptAesKey() + "=");
+        this.verifyToken = verifyToken;
+        this.appId = appId;
+        aesKey = Base64.decodeBase64(encryptAesKey + "=");
     }
 
     /**
@@ -118,7 +127,7 @@ public class CryptUtils {
         }
 
         // appid不相同的情况
-        if (!from_appid.equals(componentAppId)) {
+        if (!from_appid.equals(appId)) {
             throw new AesException(AesException.ValidateAppidError);
         }
         return xmlContent;

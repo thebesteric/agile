@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.WechatMiniHel
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.message.SubscribeMessageApi;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_code.MiniCodeApi;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_code.UrlSchemaApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.config.mini.WechatMiniProperties;
 import io.github.thebesteric.framework.agile.wechat.third.platform.constant.mini.EnvVersion;
 import io.github.thebesteric.framework.agile.wechat.third.platform.constant.mini.MiniProgramState;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.request.mini.GenerateSchemeRequest;
@@ -33,20 +34,23 @@ class WechatMiniHelperTest {
     private static String appSecret = "ee1a1a02cd51887054f1f7f8ec4bd042";
 
     static {
-        wechatMiniHelper = new WechatMiniHelper(appId, appSecret);
+        WechatMiniProperties properties = new WechatMiniProperties();
+        properties.setAppId(appId);
+        properties.setAppSecret(appSecret);
+        wechatMiniHelper = new WechatMiniHelper(properties);
     }
 
     @Test
     void sendMessage() {
-        AccessTokenResponse accessToken = wechatMiniHelper.getCredentialApi().getAccessToken();
+        AccessTokenResponse accessToken = wechatMiniHelper.getCredentialModule().credentialApi().getAccessToken();
         System.out.println("accessToken = " + accessToken.getAccessToken());
 
-        Code2SessionResponse code2Session = wechatMiniHelper.getLoginApi().code2Session("0e3zMJ000cDuBS1EW7400QfJbA2zMJ0Z");
+        Code2SessionResponse code2Session = wechatMiniHelper.getMiniProgramLoginModule().loginApi().code2Session("0e3zMJ000cDuBS1EW7400QfJbA2zMJ0Z");
         System.out.println("openId = " + code2Session.getOpenId());
         System.out.println("unionId = " + code2Session.getUnionId());
         System.out.println("sessionKey = " + code2Session.getSessionKey());
 
-        SubscribeMessageApi subscribeMessageApi = wechatMiniHelper.getSubscribeMessageApi();
+        SubscribeMessageApi subscribeMessageApi = wechatMiniHelper.getMessageModule().subscribeMessageApi();
         SendMessageRequest sendMessageRequest = new SendMessageRequest();
         sendMessageRequest.setMiniprogramState(MiniProgramState.DEVELOPER);
         sendMessageRequest.setToUser(code2Session.getOpenId());
@@ -64,10 +68,10 @@ class WechatMiniHelperTest {
 
     @Test
     void qrCode() {
-        AccessTokenResponse accessToken = wechatMiniHelper.getCredentialApi().getAccessToken();
+        AccessTokenResponse accessToken = wechatMiniHelper.getCredentialModule().credentialApi().getAccessToken();
         System.out.println("accessToken = " + accessToken.getAccessToken());
 
-        MiniCodeApi miniCodeApi = wechatMiniHelper.getMiniCodeApi();
+        MiniCodeApi miniCodeApi = wechatMiniHelper.getMiniCodeModule().miniCodeApi();
         GetQRCodeRequest qrCodeRequest = new GetQRCodeRequest();
         qrCodeRequest.setWidth(280);
         GetQRCodeResponse qrCodeResponse = miniCodeApi.getQRCode(accessToken.getAccessToken(), qrCodeRequest);
@@ -77,10 +81,10 @@ class WechatMiniHelperTest {
 
     @Test
     void getScheme() {
-        AccessTokenResponse accessToken = wechatMiniHelper.getCredentialApi().getAccessToken();
+        AccessTokenResponse accessToken = wechatMiniHelper.getCredentialModule().credentialApi().getAccessToken();
         System.out.println("accessToken = " + accessToken.getAccessToken());
 
-        UrlSchemaApi urlSchemaApi = wechatMiniHelper.getUrlSchemaApi();
+        UrlSchemaApi urlSchemaApi = wechatMiniHelper.getMiniCodeModule().urlSchemaApi();
         GenerateSchemeRequest request = new GenerateSchemeRequest();
         GenerateSchemeRequest.JumpWxa jumpWxa = new GenerateSchemeRequest.JumpWxa();
         jumpWxa.setPath("pages/index/index");

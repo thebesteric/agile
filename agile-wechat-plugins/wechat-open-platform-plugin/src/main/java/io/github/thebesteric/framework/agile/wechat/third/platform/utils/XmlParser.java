@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.wechat.third.platform.utils;
 
 import io.github.thebesteric.framework.agile.commons.util.AbstractUtils;
-import io.github.thebesteric.framework.agile.wechat.third.platform.domain.xml.AbstractEvent;
+import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.third.AbstractEvent;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
 

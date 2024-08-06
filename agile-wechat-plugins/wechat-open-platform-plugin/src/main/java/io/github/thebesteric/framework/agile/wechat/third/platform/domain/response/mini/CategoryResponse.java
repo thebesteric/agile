@@ -4,17 +4,19 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.respon
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * DataResponse
+ * 类目列表
  *
  * @author wangweijun
  * @version v1.0
  * @since 2024-08-02 16:14:53
  */
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Schema(description = "类目列表")

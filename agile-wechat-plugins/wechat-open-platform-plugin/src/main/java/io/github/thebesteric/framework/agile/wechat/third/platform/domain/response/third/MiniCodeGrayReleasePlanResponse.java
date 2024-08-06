@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.respon
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * 分阶段发布详情
@@ -13,8 +14,10 @@ import lombok.EqualsAndHashCode;
  * @version v1.0
  * @since 2024-08-02 10:25:28
  */
+@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 @Data
+@Schema(description = "分阶段发布详情")
 public class MiniCodeGrayReleasePlanResponse extends WechatResponse {
 
     @JsonProperty("gray_release_plan")

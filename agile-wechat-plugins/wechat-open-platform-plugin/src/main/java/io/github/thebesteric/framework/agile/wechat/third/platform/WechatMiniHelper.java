@@ -1,17 +1,26 @@
 package io.github.thebesteric.framework.agile.wechat.third.platform;
 
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.credential.CredentialApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.login.LoginApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.credential.CredentialModule;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.message.DynamicMessageApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.message.MessageModule;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.message.SubscribeMessageApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_code.MiniCodeApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_code.ShortLinkApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_code.UrlLinkApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_code.UrlSchemaApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.user.MobileApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.user.NetworkApi;
-import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.user.UserInfoApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_code.*;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_customer.MiniCustomerMessageApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_customer.MiniCustomerModule;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_login.LoginApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_login.MiniProgramLoginModule;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_security.ContentSecurityApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_security.MiniSecurityModule;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.mini_security.UserRiskRankApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.user_info.MobileApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.user_info.NetworkApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.user_info.UserInfoApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.user_info.UserInfoModule;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.wechat_customer.WechatCustomerApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.wechat_customer.WechatCustomerModule;
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.mini.WechatMiniProperties;
+import io.github.thebesteric.framework.agile.wechat.third.platform.listener.mini.WechatMiniListener;
 import lombok.Getter;
 
 /**
@@ -24,54 +33,44 @@ import lombok.Getter;
 @Getter
 public class WechatMiniHelper {
 
-    private final String appId;
-    private final String appSecret;
+    /** 配置内容 */
+    private final WechatMiniProperties properties;
 
     /** 接口调用凭证 */
-    private final CredentialApi credentialApi;
-
-    /** 用户信息-用户信息 */
-    private final UserInfoApi userInfoApi;
-    /** 用户信息-手机号 */
-    private final MobileApi mobileApi;
-    /** 用户信息-网络 */
-    private final NetworkApi networkApi;
-
+    private final CredentialModule credentialModule;
     /** 小程序登录 */
-    private final LoginApi loginApi;
+    private final MiniProgramLoginModule miniProgramLoginModule;
+    /** 用户信息 */
+    private final UserInfoModule userInfoModule;
+    /** 消息相关 */
+    private final MessageModule messageModule;
+    /** 小程序码与小程序链接 */
+    private final MiniCodeModule miniCodeModule;
+    /** 小程序客服 */
+    private final MiniCustomerModule miniCustomerModule;
+    /** 小程序安全 */
+    private final MiniSecurityModule miniSecurityModule;
+    /** 微信客服 */
+    private final WechatCustomerModule wechatCustomerModule;
 
-    /** 消息相关-动态消息 */
-    private final DynamicMessageApi dynamicMessageApi;
-    /** 消息相关-订阅消息 */
-    private final SubscribeMessageApi subscribeMessageApi;
-
-    /** 小程序码与小程序链接-小程序码 */
-    private final MiniCodeApi miniCodeApi;
-    /** 小程序码与小程序链接-ShortLink */
-    private final ShortLinkApi shortLinkApi;
-    /** 小程序码与小程序链接-UrlLink */
-    private final UrlLinkApi urlLinkApi;
-    /** 小程序码与小程序链接-UrlSchema */
-    private final UrlSchemaApi urlSchemaApi;
-
-    public WechatMiniHelper(final String appId, final String appSecret) {
-        this.appId = appId;
-        this.appSecret = appSecret;
-        this.credentialApi = new CredentialApi(appId, appSecret);
-        this.userInfoApi = new UserInfoApi();
-        this.mobileApi = new MobileApi();
-        this.networkApi = new NetworkApi();
-        this.loginApi = new LoginApi(appId, appSecret);
-        this.dynamicMessageApi = new DynamicMessageApi();
-        this.subscribeMessageApi = new SubscribeMessageApi();
-        this.miniCodeApi = new MiniCodeApi();
-        this.shortLinkApi = new ShortLinkApi();
-        this.urlLinkApi = new UrlLinkApi();
-        this.urlSchemaApi = new UrlSchemaApi();
-    }
+    /** 事件监听 */
+    private final WechatMiniListener listener;
 
     public WechatMiniHelper(final WechatMiniProperties properties) {
-        this(properties.getAppId(), properties.getAppSecret());
+        this.properties = properties;
+        String appId = properties.getAppId();
+        String appSecret = properties.getAppSecret();
+
+        this.credentialModule = new CredentialModule(new CredentialApi(appId, appSecret));
+        this.miniProgramLoginModule = new MiniProgramLoginModule(new LoginApi(appId, appSecret));
+        this.userInfoModule = new UserInfoModule(new UserInfoApi(), new MobileApi(), new NetworkApi());
+        this.messageModule = new MessageModule(new DynamicMessageApi(), new SubscribeMessageApi());
+        this.miniCodeModule = new MiniCodeModule(new MiniCodeApi(), new ShortLinkApi(), new UrlLinkApi(), new UrlSchemaApi());
+        this.miniCustomerModule = new MiniCustomerModule(new MiniCustomerMessageApi());
+        this.miniSecurityModule = new MiniSecurityModule(new ContentSecurityApi(), new UserRiskRankApi());
+        this.wechatCustomerModule = new WechatCustomerModule(new WechatCustomerApi());
+
+        this.listener = new WechatMiniListener(properties);
     }
 
 }

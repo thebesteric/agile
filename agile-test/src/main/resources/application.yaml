@@ -36,8 +36,13 @@ sourceflag:
     wechat:
       mini:
         enable: true
-        app-id: 123456789
-        app-secret: 123456789
+        app-id: wxdc5814ab8fad0908
+        app-secret: ee1a1a02cd51887054f1f7f8ec4bd042
+        message-push:
+          token: 123456
+          encoding-aes-key: m20QJDz5tU4vMD2oskWH5TZv2kCfkV5l7ma68Tubmrq
+          encrypt-type: ciphertext
+          message-type: xml
       third:
         enable: true
         component-app-id: 123456789
