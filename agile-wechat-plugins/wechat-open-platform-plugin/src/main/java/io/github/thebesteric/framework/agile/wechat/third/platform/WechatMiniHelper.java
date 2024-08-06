@@ -2,6 +2,8 @@ package io.github.thebesteric.framework.agile.wechat.third.platform;
 
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.credential.CredentialApi;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.credential.CredentialModule;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.hardware.HardwareApi;
+import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.hardware.HardwareModule;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.message.DynamicMessageApi;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.message.MessageModule;
 import io.github.thebesteric.framework.agile.wechat.third.platform.api.mini.message.SubscribeMessageApi;
@@ -52,6 +54,8 @@ public class WechatMiniHelper {
     private final MiniSecurityModule miniSecurityModule;
     /** 微信客服 */
     private final WechatCustomerModule wechatCustomerModule;
+    /** 硬件设备 */
+    private final HardwareModule hardwareModule;
 
     /** 事件监听 */
     private final WechatMiniListener listener;
@@ -69,6 +73,7 @@ public class WechatMiniHelper {
         this.miniCustomerModule = new MiniCustomerModule(new MiniCustomerMessageApi());
         this.miniSecurityModule = new MiniSecurityModule(new ContentSecurityApi(), new UserRiskRankApi());
         this.wechatCustomerModule = new WechatCustomerModule(new WechatCustomerApi());
+        this.hardwareModule = new HardwareModule(new HardwareApi());
 
         this.listener = new WechatMiniListener(properties);
     }

@@ -55,6 +55,16 @@
       - 获取插件用户 openPId `getPluginOpenPId`
       - 检查加密信息 `checkEncryptedData`
       - 支付后获取 UnionID `getPaidUnionId`
+  - [hardware](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fhardware) 硬件设备
+    - [HardwareApi.java](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fmini%2Fhardware%2FHardwareApi.java) 硬件设备
+      - 发送设备消息 `sendHardwareDeviceMessage`
+      - 获取设备票据 `getSnTicket`
+      - 创建设备组 `createIotGroupId`
+      - 设备组删除设备 `removeIotGroupDevice`
+      - 设备组添加设备 `addIotGroupDevice`
+      - 查询设备组信息 `getIotGroupInfo`
+      - 激活设备 license `activeLicenseDevice`
+      - 查询 license 资源包列表 `getLicensePkgList`
 - **微信开放平台**
   - [platform_credential](src/main/java/io/github/thebesteric/framework/agile/wechat/third/platform/api/third/platform_credential) 第三方平台调用凭证
     - [CredentialApi.java](src%2Fmain%2Fjava%2Fio%2Fgithub%2Fthebesteric%2Fframework%2Fagile%2Fwechat%2Fthird%2Fplatform%2Fapi%2Fthird%2Fplatform_credential%2FCredentialApi.java) 凭证管理
