@@ -66,7 +66,7 @@ public class WechatMiniListener extends AbstractListener {
         }
 
         String msgType = baseMiniEvent.getMsgType();
-        if ("event".equalsIgnoreCase(msgType)) {
+        if ("event".equalsIgnoreCase(msgType) && eventListener != null) {
             String event = baseMiniEvent.getEvent();
             switch (event) {
                 // 音视频内容安全识别
@@ -82,7 +82,7 @@ public class WechatMiniListener extends AbstractListener {
                 default:
                     eventListener.onUnknownEvent(baseMiniEvent);
             }
-        } else {
+        } else if (messageListener != null) {
             switch (msgType) {
                 // 文本消息
                 case "text":
@@ -103,7 +103,6 @@ public class WechatMiniListener extends AbstractListener {
                     messageListener.onUnknownEvent(baseMiniEvent);
             }
         }
-
 
         return "success";
     }
