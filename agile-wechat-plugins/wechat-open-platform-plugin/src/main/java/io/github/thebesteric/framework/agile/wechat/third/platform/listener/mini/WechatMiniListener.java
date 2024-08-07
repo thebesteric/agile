@@ -3,9 +3,7 @@ package io.github.thebesteric.framework.agile.wechat.third.platform.listener.min
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.mini.WechatMiniProperties;
-import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.AbstractMiniEvent;
-import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.BaseMiniEvent;
-import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.MediaCheckAsyncEvent;
+import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.*;
 import io.github.thebesteric.framework.agile.wechat.third.platform.exception.AesException;
 import io.github.thebesteric.framework.agile.wechat.third.platform.listener.AbstractListener;
 import io.github.thebesteric.framework.agile.wechat.third.platform.utils.CryptUtils;
@@ -32,15 +30,15 @@ public class WechatMiniListener extends AbstractListener {
 
     private final WechatMiniProperties properties;
 
-    public String listen(HttpServletRequest request, AbstractWechatMiniEventListener eventListener) throws Exception {
+    public String listen(HttpServletRequest request, AbstractWechatMiniEventListener eventListener, AbstractWechatMiniMessageListener messageListener) throws Exception {
         String httpMethod = request.getMethod();
         if ("GET".equalsIgnoreCase(httpMethod)) {
             return doGet(request);
         }
-        return doPost(request, eventListener);
+        return doPost(request, eventListener, messageListener);
     }
 
-    public String doPost(HttpServletRequest request, AbstractWechatMiniEventListener eventListener) throws Exception {
+    public String doPost(HttpServletRequest request, AbstractWechatMiniEventListener eventListener, AbstractWechatMiniMessageListener messageListener) throws Exception {
         // 获取请求体
         String requestStr = getRequestBodyStr(request);
 
@@ -67,16 +65,45 @@ public class WechatMiniListener extends AbstractListener {
             baseMiniEvent.setEncrypt(encrypt);
         }
 
-        String event = baseMiniEvent.getEvent();
-        switch (event) {
-            // 音视频内容安全识别
-            case "wxa_media_check":
-                MediaCheckAsyncEvent mediaCheckAsyncEvent = parseObject(requestStr, messageType, MediaCheckAsyncEvent.class);
-                eventListener.onMediaCheckAsyncEvent(mediaCheckAsyncEvent);
-                break;
-            default:
-                eventListener.onUnknownEvent(baseMiniEvent);
+        String msgType = baseMiniEvent.getMsgType();
+        if ("event".equalsIgnoreCase(msgType)) {
+            String event = baseMiniEvent.getEvent();
+            switch (event) {
+                // 音视频内容安全识别
+                case "wxa_media_check":
+                    MediaCheckAsyncEvent mediaCheckAsyncEvent = parseObject(requestStr, messageType, MediaCheckAsyncEvent.class);
+                    eventListener.onMediaCheckAsyncEvent(mediaCheckAsyncEvent);
+                    break;
+                // 进入会话事件
+                case "user_enter_tempsession":
+                    CustomerSessionMessageEvent customerSessionMessageEvent = parseObject(requestStr, messageType, CustomerSessionMessageEvent.class);
+                    eventListener.onSessionMessageEvent(customerSessionMessageEvent);
+                    break;
+                default:
+                    eventListener.onUnknownEvent(baseMiniEvent);
+            }
+        } else {
+            switch (msgType) {
+                // 文本消息
+                case "text":
+                    CustomerTextMessageEvent customerTextMessageEvent = parseObject(requestStr, messageType, CustomerTextMessageEvent.class);
+                    messageListener.onCustomerTextMessageEvent(customerTextMessageEvent);
+                    break;
+                // 图片消息
+                case "image":
+                    CustomerImageMessageEvent customerImageMessageEvent = parseObject(requestStr, messageType, CustomerImageMessageEvent.class);
+                    messageListener.onCustomerImageMessageEvent(customerImageMessageEvent);
+                    break;
+                // 卡片消息
+                case "miniprogrampage":
+                    CustomerMiniCardMessageEvent customerMiniCardMessageEvent = parseObject(requestStr, messageType, CustomerMiniCardMessageEvent.class);
+                    messageListener.onCustomerMiniCardMessageEvent(customerMiniCardMessageEvent);
+                    break;
+                default:
+                    messageListener.onUnknownEvent(baseMiniEvent);
+            }
         }
+
 
         return "success";
     }

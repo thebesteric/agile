@@ -35,7 +35,7 @@ public abstract class AbstractMiniEvent extends AbstractEvent {
 
     @JsonProperty("MsgType")
     @XmlElement(name = "MsgType")
-    @Schema(description = "消息类型，event 或 text")
+    @Schema(description = "消息类型，event 或其他消息类型")
     private String msgType;
 
     @JsonProperty("Event")
