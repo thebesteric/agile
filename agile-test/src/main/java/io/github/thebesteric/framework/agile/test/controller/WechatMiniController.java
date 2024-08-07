@@ -3,11 +3,13 @@ package io.github.thebesteric.framework.agile.test.controller;
 import io.github.thebesteric.framework.agile.wechat.third.platform.WechatMiniHelper;
 import io.github.thebesteric.framework.agile.wechat.third.platform.constant.mini.MediaCheckType;
 import io.github.thebesteric.framework.agile.wechat.third.platform.constant.mini.Scene;
+import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.CustomerTextMessageEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.MediaCheckAsyncEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.request.mini.MediaCheckAsyncRequest;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.response.mini.AccessTokenResponse;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.response.mini.MediaCheckSyncResponse;
 import io.github.thebesteric.framework.agile.wechat.third.platform.listener.mini.AbstractWechatMiniEventListener;
+import io.github.thebesteric.framework.agile.wechat.third.platform.listener.mini.AbstractWechatMiniMessageListener;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class WechatMiniController {
     private final WechatMiniHelper wechatMiniHelper;
 
     private final MyWechatMiniEventListener myWechatMiniEventListener = new MyWechatMiniEventListener();
+    private final MyWechatMiniMessageListener myWechatMiniMessageListener = new MyWechatMiniMessageListener();
 
     @GetMapping("/mediaCheckAsyncEvent")
     public MediaCheckSyncResponse mediaCheckAsyncEvent() {
@@ -48,19 +51,26 @@ public class WechatMiniController {
 
     @PostMapping("/test")
     public String test(HttpServletRequest request) throws Exception {
-        return wechatMiniHelper.getListener().listen(request, myWechatMiniEventListener);
+        return wechatMiniHelper.getListener().listen(request, myWechatMiniEventListener, myWechatMiniMessageListener);
     }
 
     @RequestMapping("/callback")
     public String callback(HttpServletRequest request) throws Exception {
         System.out.println("request.getMethod() = " + request.getMethod());
-        return wechatMiniHelper.getListener().listen(request, myWechatMiniEventListener);
+        return wechatMiniHelper.getListener().listen(request, myWechatMiniEventListener, myWechatMiniMessageListener);
     }
 
     public static class MyWechatMiniEventListener extends AbstractWechatMiniEventListener {
         @Override
         public void onMediaCheckAsyncEvent(MediaCheckAsyncEvent mediaCheckAsyncEvent) {
             log.info("mediaCheckAsyncEvent = {}", mediaCheckAsyncEvent);
+        }
+    }
+
+    public static class MyWechatMiniMessageListener extends AbstractWechatMiniMessageListener {
+        @Override
+        public void onCustomerTextMessageEvent(CustomerTextMessageEvent customerTextMessageEvent) {
+            super.onCustomerTextMessageEvent(customerTextMessageEvent);
         }
     }
 
