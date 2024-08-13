@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.commons.util.ClassPathUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
+import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationParasiticContext;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationRegister;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener.AnnotationParasiticRegisteredListener;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.scan.AnnotationScanner;
@@ -31,7 +32,7 @@ import java.util.List;
 @EnableConfigurationProperties(AnnotationScannerProperties.class)
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".annotation-scanner", name = "enable", havingValue = "true", matchIfMissing = true)
-public class AnnotationScannerAutoConfiguration  extends AbstractAgileInitialization {
+public class AnnotationScannerAutoConfiguration extends AbstractAgileInitialization {
 
     private final AnnotationScannerProperties properties;
 
@@ -50,7 +51,13 @@ public class AnnotationScannerAutoConfiguration  extends AbstractAgileInitializa
         List<String> compilePaths = ClassPathUtils.compilePaths;
         AnnotationRegister annotationRegister = super.getBean(AnnotationRegister.class);
         AnnotationParasiticRegisteredListener listener = super.getBean(AnnotationParasiticRegisteredListener.class);
-        new AnnotationScanner(annotationRegister, listener).scan(projectPath, compilePaths);
+        AnnotationParasiticContext context = super.getBean(AnnotationParasiticContext.class);
+        new AnnotationScanner(context, annotationRegister, listener).scan(projectPath, compilePaths);
+    }
+
+    @Bean
+    public AnnotationParasiticContext annotationParasiticContext() {
+        return new AnnotationParasiticContext();
     }
 
 

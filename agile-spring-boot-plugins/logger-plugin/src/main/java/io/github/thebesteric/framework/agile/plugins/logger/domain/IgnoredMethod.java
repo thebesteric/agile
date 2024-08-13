@@ -78,7 +78,7 @@ public class IgnoredMethod {
                 }
             }
             currentClass = currentClass.getSuperclass();
-        } while (currentClass != Object.class);
+        } while (currentClass != null && currentClass != Object.class);
 
         // 返回该类所有需要忽略的方法
         return currentIgnoredMethods;

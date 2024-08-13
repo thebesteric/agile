@@ -22,6 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnnotationScanner implements ClassPathScanner {
 
+    private final AnnotationParasiticContext annotationParasiticContext;
     private final AnnotationRegister annotationRegister;
     private final AnnotationParasiticRegisteredListener listener;
 
@@ -44,7 +45,7 @@ public class AnnotationScanner implements ClassPathScanner {
             if (clazz.isAnnotationPresent(annotationClass)) {
                 Annotation annotation = clazz.getAnnotation(annotationClass);
                 Parasitic parasitic = Parasitic.of(annotation, clazz);
-                AnnotationParasiticContext.add(annotationClass, parasitic);
+                annotationParasiticContext.add(annotationClass, parasitic);
                 if (listener != null) {
                     listener.onClassParasiticRegistered(parasitic);
                 }
@@ -58,14 +59,14 @@ public class AnnotationScanner implements ClassPathScanner {
                     if (declaredMethod.isAnnotationPresent(annotationClass)) {
                         Annotation annotation = declaredMethod.getAnnotation(annotationClass);
                         Parasitic parasitic = Parasitic.of(annotation, clazz, declaredMethod);
-                        AnnotationParasiticContext.add(annotationClass, parasitic);
+                        annotationParasiticContext.add(annotationClass, parasitic);
                         if (listener != null) {
                             listener.onMethodParasiticRegistered(parasitic);
                         }
                     }
                 }
                 currentClass = currentClass.getSuperclass();
-            } while (currentClass != Object.class);
+            } while (currentClass != null && currentClass != Object.class);
         }
     }
 }
