@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.core.pointcut.AbstractSpringCompone
 import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
 import io.github.thebesteric.framework.agile.plugins.limiter.config.AgileRateLimiterContext;
 
+import java.io.Serial;
 import java.lang.annotation.Annotation;
 
 /**
@@ -14,6 +15,8 @@ import java.lang.annotation.Annotation;
  * @since 2024-04-30 15:29:43
  */
 public class AgileRateLimiterPointcut extends AbstractSpringComponentAnnotationPointcut {
+    @Serial
+    private static final long serialVersionUID = 7591337085710426535L;
 
     public AgileRateLimiterPointcut(AgileRateLimiterContext context) {
         super(context.getClassMatchers());

@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.core.pointcut.AbstractSpringCompone
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
 import io.github.thebesteric.framework.agile.plugins.idempotent.config.AgileIdempotentContext;
 
+import java.io.Serial;
 import java.lang.annotation.Annotation;
 
 /**
@@ -14,6 +15,8 @@ import java.lang.annotation.Annotation;
  * @since 2024-04-30 15:29:43
  */
 public class AgileIdempotentPointcut extends AbstractSpringComponentAnnotationPointcut {
+    @Serial
+    private static final long serialVersionUID = -7686894236205872162L;
 
     public AgileIdempotentPointcut(AgileIdempotentContext context) {
         super(context.getClassMatchers());
