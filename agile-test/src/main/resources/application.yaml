@@ -33,6 +33,11 @@ sourceflag:
       delete-column: true
     workflow:
       ddl-auto: update
+    annotation-scanner:
+      enable: true
+      annotation-class-names:
+        - org.springframework.web.bind.annotation.CrossOrigin
+        - org.springframework.web.bind.annotation.RestController
     wechat:
       mini:
         enable: true

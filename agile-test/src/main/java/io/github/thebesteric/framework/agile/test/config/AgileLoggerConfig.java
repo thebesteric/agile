@@ -12,6 +12,9 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationRegister;
+import io.github.thebesteric.framework.agile.plugins.annotation.scanner.domain.Parasitic;
+import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener.AnnotationParasiticRegisteredListener;
 import io.github.thebesteric.framework.agile.plugins.limiter.processor.RateLimiterProcessor;
 import io.github.thebesteric.framework.agile.plugins.limiter.redis.processor.impl.RedisRateLimiterProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
@@ -30,6 +33,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -131,6 +136,31 @@ public class AgileLoggerConfig {
     @Bean
     public RateLimiterProcessor redisRateLimiterProcessor(RedisTemplate<String, Object> redisTemplate) {
         return new RedisRateLimiterProcessor(redisTemplate);
+    }
+
+    // @Bean
+    public AnnotationRegister annotationRegister() {
+        AnnotationRegister annotationRegister = new AnnotationRegister();
+        annotationRegister.register(CrossOrigin.class);
+        annotationRegister.register(RestController.class);
+        return annotationRegister;
+    }
+
+    @Bean
+    public AnnotationParasiticRegisteredListener listener(){
+        return new AnnotationParasiticRegisteredListener() {
+            @Override
+            public void onClassParasiticRegistered(Parasitic parasitic) {
+                String annotation = parasitic.getAnnotation().annotationType().getName();
+                System.out.println("onClassParasiticRegistered: " + annotation + " - " + parasitic.getClazz().getName());
+            }
+
+            @Override
+            public void onMethodParasiticRegistered(Parasitic parasitic) {
+                String annotation = parasitic.getAnnotation().annotationType().getName();
+                System.out.println("onMethodParasiticRegistered: " + annotation + " - " + parasitic.getClazz().getName() + " - " + parasitic.getMethod().getName());
+            }
+        };
     }
 
 }
