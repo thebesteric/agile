@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
         <artifactId>agile</artifactId>
-        <version>1.0.13.1</version>
+        <version>1.0.14</version>
     </parent>
 
     <artifactId>agile-spring-boot-plugins</artifactId>
@@ -20,6 +20,7 @@
         <module>limiter-plugin-parent</module>
         <module>database-plugin-parent</module>
         <module>workflow-plugin</module>
+        <module>annotation-scanner-plugin</module>
     </modules>
 
     <dependencies>
