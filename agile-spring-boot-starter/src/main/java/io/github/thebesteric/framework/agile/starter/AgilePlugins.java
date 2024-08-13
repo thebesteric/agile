@@ -14,6 +14,7 @@ public enum AgilePlugins {
     LIMITER_PLUGIN("limiter-plugin", "io.github.thebesteric.framework.agile.plugins.limiter.config.AgileRateLimiterAutoConfiguration"),
     DATABASE_PLUGIN("database-plugin", "io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseAutoConfiguration"),
     WORKFLOW_PLUGIN("workflow-plugin", "io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowAutoConfiguration"),
+    ANNOTATION_SCANNER_PLUGIN("annotation-scanner-plugin", "io.github.thebesteric.framework.agile.plugins.annotation.scanner.config.AnnotationScannerAutoConfiguration"),
     WECHAT_OPEN_PLATFORM_PLUGIN("wechat-plugin", "io.github.thebesteric.framework.agile.wechat.third.platform.config.AgileWechatOpenAutoConfiguration");
 
     final String name;
