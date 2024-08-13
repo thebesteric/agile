@@ -404,13 +404,17 @@ sourceflag:
 @EnableTransactionManagement
 public class AgileTestApplication implements CommandLineRunner {
 
+    @Resource
+    @Lazy
+    private AnnotationParasiticContext annotationParasiticContext;
+
     public static void main(String[] args) {
         SpringApplication.run(AgileTestApplication.class, args);
     }
 
     @Override
     public void run(String... args) throws Exception {
-        List<Parasitic> parasites = AnnotationParasiticContext.get(RestController.class);
+        List<Parasitic> parasites = annotationParasiticContext.get(RestController.class);
         System.out.println(parasites);
     }
 }
