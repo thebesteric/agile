@@ -1,13 +1,11 @@
 package io.github.thebesteric.framework.agile.plugins.annotation.scanner.config;
 
-import io.github.thebesteric.framework.agile.commons.util.ClassPathUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationParasiticContext;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationRegister;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener.AnnotationParasiticRegisteredListener;
-import io.github.thebesteric.framework.agile.plugins.annotation.scanner.scan.AnnotationScanner;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -43,21 +42,11 @@ public class AnnotationScannerAutoConfiguration extends AbstractAgileInitializat
             return;
         }
         LoggerPrinter.info(log, "Annotation-scanner-plugin is running");
-        initialize();
-    }
-
-    private void initialize() {
-        String projectPath = ClassPathUtils.getProjectPath();
-        List<String> compilePaths = ClassPathUtils.compilePaths;
-        AnnotationRegister annotationRegister = super.getBean(AnnotationRegister.class);
-        AnnotationParasiticRegisteredListener listener = super.getBean(AnnotationParasiticRegisteredListener.class);
-        AnnotationParasiticContext context = super.getBean(AnnotationParasiticContext.class);
-        new AnnotationScanner(context, annotationRegister, listener).scan(projectPath, compilePaths);
     }
 
     @Bean
-    public AnnotationParasiticContext annotationParasiticContext() {
-        return new AnnotationParasiticContext();
+    public AnnotationParasiticContext annotationParasiticContext(AnnotationRegister annotationRegister, @Nullable AnnotationParasiticRegisteredListener listener) {
+        return new AnnotationParasiticContext(annotationRegister, listener);
     }
 
 

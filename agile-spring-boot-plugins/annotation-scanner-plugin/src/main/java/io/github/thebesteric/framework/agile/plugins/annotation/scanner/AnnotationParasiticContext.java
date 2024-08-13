@@ -1,8 +1,10 @@
 package io.github.thebesteric.framework.agile.plugins.annotation.scanner;
 
+import io.github.thebesteric.framework.agile.commons.util.ClassPathUtils;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.domain.Parasitic;
+import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener.AnnotationParasiticRegisteredListener;
+import io.github.thebesteric.framework.agile.plugins.annotation.scanner.scan.AnnotationScanner;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -18,8 +20,21 @@ import java.util.Map;
  * @since 2024-08-13 13:42:40
  */
 @Getter
-@RequiredArgsConstructor
 public class AnnotationParasiticContext {
+
+    private final AnnotationRegister annotationRegister;
+    private final AnnotationParasiticRegisteredListener listener;
+
+
+    public AnnotationParasiticContext(AnnotationRegister annotationRegister, AnnotationParasiticRegisteredListener listener) {
+        this.annotationRegister = annotationRegister;
+        this.listener = listener;
+        String projectPath = ClassPathUtils.getProjectPath();
+        List<String> compilePaths = ClassPathUtils.compilePaths;
+        // 开始扫描注解
+        new AnnotationScanner(this).scan(projectPath, compilePaths);
+    }
+
 
     /** 存储注解类和对应的宿主集合 */
     private final Map<Class<? extends Annotation>, List<Parasitic>> annotationParasiticMap = new HashMap<>();

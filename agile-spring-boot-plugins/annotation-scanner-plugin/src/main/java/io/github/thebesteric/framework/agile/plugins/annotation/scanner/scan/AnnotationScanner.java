@@ -23,12 +23,10 @@ import java.util.List;
 public class AnnotationScanner implements ClassPathScanner {
 
     private final AnnotationParasiticContext annotationParasiticContext;
-    private final AnnotationRegister annotationRegister;
-    private final AnnotationParasiticRegisteredListener listener;
 
     @Override
     public void scan(String projectPath, List<String> compilePaths) {
-        if (annotationRegister != null) {
+        if (annotationParasiticContext.getAnnotationRegister() != null) {
             ClassPathScanner.super.scan(projectPath, compilePaths);
         }
     }
@@ -39,6 +37,10 @@ public class AnnotationScanner implements ClassPathScanner {
         if (clazz == null) {
             return;
         }
+
+        AnnotationRegister annotationRegister = annotationParasiticContext.getAnnotationRegister();
+        AnnotationParasiticRegisteredListener listener = annotationParasiticContext.getListener();
+
         List<Class<? extends Annotation>> annotationClasses = annotationRegister.getAnnotationClasses();
         for (Class<? extends Annotation> annotationClass : annotationClasses) {
             // 检查类上是否有对应的注解
