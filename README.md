@@ -383,6 +383,57 @@ class DeploymentServiceTest {
     }
 }
 ```
+## 注解扫描插件
+```yaml
+sourceflag:
+  agile:
+    annotation-scanner:
+      enable: true
+      annotation-class-names:
+        - org.springframework.web.bind.annotation.CrossOrigin
+        - org.springframework.web.bind.annotation.RestController
+```
+### 使用方式
+通过`List<Parasitic> parasites = AnnotationParasiticContext.get(RestController.class);`获取注解对应的宿主
+> 注意：注解必须通过`annotation-class-names`属性进行声明，或者通过`@Bean`的方式注册`AnnotationRegister`类
+```java
+@EnableAgile
+@SpringBootApplication
+@Configuration
+@EnableAspectJAutoProxy(exposeProxy = true)
+@EnableTransactionManagement
+public class AgileTestApplication implements CommandLineRunner {
+
+    public static void main(String[] args) {
+        SpringApplication.run(AgileTestApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        List<Parasitic> parasites = AnnotationParasiticContext.get(RestController.class);
+        System.out.println(parasites);
+    }
+}
+```
+若需要监听注解的注册情况，需要实现`AnnotationParasiticRegisteredListener`接口
+```java
+@Bean
+public AnnotationParasiticRegisteredListener listener(){
+    return new AnnotationParasiticRegisteredListener() {
+        @Override
+        public void onClassParasiticRegistered(Parasitic parasitic) {
+            String annotation = parasitic.getAnnotation().annotationType().getName();
+            System.out.println("onClassParasiticRegistered: " + annotation + " - " + parasitic.getClazz().getName());
+        }
+
+        @Override
+        public void onMethodParasiticRegistered(Parasitic parasitic) {
+            String annotation = parasitic.getAnnotation().annotationType().getName();
+            System.out.println("onMethodParasiticRegistered: " + annotation + " - " + parasitic.getClazz().getName() + " - " + parasitic.getMethod().getName());
+        }
+    };
+}
+```
 ## 微信开放平台插件
 ```yaml
 sourceflag:
