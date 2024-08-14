@@ -141,13 +141,13 @@ public class AgileLoggerConfig {
     // @Bean
     public AnnotationRegister annotationRegister() {
         AnnotationRegister annotationRegister = new AnnotationRegister();
-        annotationRegister.register(CrossOrigin.class);
-        annotationRegister.register(RestController.class);
+        annotationRegister.register(CrossOrigin.class, parasitic -> true);
+        annotationRegister.register(RestController.class, parasitic -> true);
         return annotationRegister;
     }
 
     @Bean
-    public AnnotationParasiticRegisteredListener listener(){
+    public AnnotationParasiticRegisteredListener listener() {
         return new AnnotationParasiticRegisteredListener() {
             @Override
             public void onClassParasiticRegistered(Parasitic parasitic) {

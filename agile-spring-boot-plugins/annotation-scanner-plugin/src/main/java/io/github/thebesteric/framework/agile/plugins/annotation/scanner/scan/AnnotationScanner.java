@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 /**
  * AnnotationScanner
@@ -41,15 +44,19 @@ public class AnnotationScanner implements ClassPathScanner {
         AnnotationRegister annotationRegister = annotationParasiticContext.getAnnotationRegister();
         AnnotationParasiticRegisteredListener listener = annotationParasiticContext.getListener();
 
-        List<Class<? extends Annotation>> annotationClasses = annotationRegister.getAnnotationClasses();
+        Map<Class<? extends Annotation>, Function<Parasitic, Boolean>> register = annotationRegister.getRegistry();
+        Set<Class<? extends Annotation>> annotationClasses = register.keySet();
+
         for (Class<? extends Annotation> annotationClass : annotationClasses) {
             // 检查类上是否有对应的注解
             if (clazz.isAnnotationPresent(annotationClass)) {
                 Annotation annotation = clazz.getAnnotation(annotationClass);
                 Parasitic parasitic = Parasitic.of(annotation, clazz);
-                annotationParasiticContext.add(annotationClass, parasitic);
-                if (listener != null) {
-                    listener.onClassParasiticRegistered(parasitic);
+                if (Boolean.TRUE.equals(register.get(annotationClass).apply(parasitic))) {
+                    annotationParasiticContext.add(annotationClass, parasitic);
+                    if (listener != null) {
+                        listener.onClassParasiticRegistered(parasitic);
+                    }
                 }
             }
 
@@ -61,9 +68,11 @@ public class AnnotationScanner implements ClassPathScanner {
                     if (declaredMethod.isAnnotationPresent(annotationClass)) {
                         Annotation annotation = declaredMethod.getAnnotation(annotationClass);
                         Parasitic parasitic = Parasitic.of(annotation, clazz, declaredMethod);
-                        annotationParasiticContext.add(annotationClass, parasitic);
-                        if (listener != null) {
-                            listener.onMethodParasiticRegistered(parasitic);
+                        if (Boolean.TRUE.equals(register.get(annotationClass).apply(parasitic))) {
+                            annotationParasiticContext.add(annotationClass, parasitic);
+                            if (listener != null) {
+                                listener.onMethodParasiticRegistered(parasitic);
+                            }
                         }
                     }
                 }
