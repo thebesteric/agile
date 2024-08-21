@@ -18,16 +18,19 @@ import java.util.Arrays;
  */
 @Getter
 public enum ApproveType implements BaseEnum {
-    ANY(1, "任一：表示审批人中，只需要其中一个完成审批，任务即完成"),
-    ALL(2, "全部：表示审批人中，所有人都需要完成审批，任务才算完成");
+    ANY(1, "或签", "表示审批人中，只需要其中一个完成审批"),
+    ALL(2, "会签", "表示审批人中，所有人都需要完成审批"),
+    SEQ(3, "顺序签", "表示审批人中，所有人按照顺序依次完成审批");
 
     @JsonValue
     @EnumValue
     private final Integer code;
+    private final String name;
     private final String desc;
 
-    ApproveType(Integer code, String desc) {
+    ApproveType(Integer code, String name, String desc) {
         this.code = code;
+        this.name = name;
         this.desc = desc;
     }
 

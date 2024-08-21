@@ -37,8 +37,11 @@ public class TaskApprove extends BaseEntity {
     @EntityColumn(name = "task_inst_id", nullable = false, comment = "任务实例 ID")
     private Integer taskInstanceId;
 
-    @EntityColumn(length = 32, nullable = false, comment = "审批人")
+    @EntityColumn(name = "approver_id", length = 32, nullable = false, comment = "审批人")
     private String approverId;
+
+    @EntityColumn(name = "approver_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
+    private Integer approverSeq;
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批状态")
     private ApproveStatus status = ApproveStatus.IN_PROGRESS;
@@ -55,6 +58,11 @@ public class TaskApprove extends BaseEntity {
         taskApprove.setWorkflowInstanceId(rs.getInt("wf_inst_id"));
         taskApprove.setTaskInstanceId(rs.getInt("task_inst_id"));
         taskApprove.setApproverId(rs.getString("approver_id"));
+        // 解决 rs.getInt("xxx") null 值会返回 0 的问题
+        Object approverSeqObject = rs.getObject("approver_seq");
+        if (approverSeqObject != null) {
+            taskApprove.setApproverSeq((Integer) approverSeqObject);
+        }
         taskApprove.setStatus(ApproveStatus.of(rs.getInt("status")));
         taskApprove.setActive(ActiveStatus.of(rs.getInt("active")));
         taskApprove.setComment(rs.getString("comment"));

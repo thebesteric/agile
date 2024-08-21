@@ -90,7 +90,8 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
      */
     public Page<TaskInstance> findByApproverId(String tenantId, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
         String selectSql = """
-                SELECT i.* FROM awf_task_instance i LEFT JOIN awf_task_approve t ON i.id = t.task_inst_id 
+                SELECT i.* FROM awf_task_instance i 
+                LEFT JOIN awf_task_approve t ON i.id = t.task_inst_id 
                 WHERE i.tenant_id = ? AND t.approver_id = ? AND i.`state` = 1
                 """;
         if (nodeStatuses != null && !nodeStatuses.isEmpty()) {

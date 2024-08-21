@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.no
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
@@ -62,11 +63,16 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         if (existsNodeDefinition != null) {
             throw new DataExistsException("已存在相同的节点定义");
         }
+
         // 创建节点定义
         String insertSql = """
                 INSERT INTO awf_node_definition (`tenant_id`, `wf_def_id`, `name`, `node_type`, `approve_type`, `conditions`, `sequence`, `created_at`, `created_by`, `desc`, `state`, `version`)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """;
+
+        // 审批类型
+        ApproveType approveType = nodeDefinition.getApproveType();
+
         KeyHolder keyHolder = new GeneratedKeyHolder();
         int rowsAffected = this.jdbcTemplate.update(
                 conn -> {
@@ -76,7 +82,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                     ps.setInt(index.incrementAndGet(), nodeDefinition.getWorkflowDefinitionId());
                     ps.setString(index.incrementAndGet(), nodeDefinition.getName());
                     ps.setInt(index.incrementAndGet(), nodeDefinition.getNodeType().getCode());
-                    ps.setInt(index.incrementAndGet(), nodeDefinition.getApproveType().getCode());
+                    ps.setInt(index.incrementAndGet(), approveType.getCode());
                     ps.setString(index.incrementAndGet(), JsonUtils.toJson(nodeDefinition.getConditions()));
                     ps.setInt(index.incrementAndGet(), nodeDefinition.getSequence());
                     ps.setString(index.incrementAndGet(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(nodeDefinition.getCreatedAt()));
@@ -86,6 +92,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                     ps.setInt(index.incrementAndGet(), nodeDefinition.getVersion());
                     return ps;
                 }, keyHolder);
+
         if (rowsAffected > 0) {
             nodeDefinition.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
 
@@ -93,10 +100,11 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
             NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
             for (String approverId : nodeDefinition.getApproverIds()) {
-                NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(approverId).build();
+                NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(approveType, approverId).build();
                 NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
                 assignmentExecutor.save();
             }
+            nodeAssignmentBuilder.resetSeq();
         } else {
             throw new DataIntegrityViolationException("Failed to insert data, no rows affected.");
         }

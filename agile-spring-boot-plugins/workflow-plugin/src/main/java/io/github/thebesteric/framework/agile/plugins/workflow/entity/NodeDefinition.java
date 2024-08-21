@@ -16,7 +16,7 @@ import org.springframework.data.annotation.Transient;
 import java.io.Serial;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -58,7 +58,7 @@ public class NodeDefinition extends BaseEntity {
 
     /** 审批人，存储在 NodeAssignment 表中 */
     @Transient
-    private Set<String> approverIds = new HashSet<>();
+    private Set<String> approverIds = new LinkedHashSet<>();
 
     /**
      * 是否包含审批条件

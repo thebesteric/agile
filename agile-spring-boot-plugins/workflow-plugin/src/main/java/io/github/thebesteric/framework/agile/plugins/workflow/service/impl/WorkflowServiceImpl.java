@@ -252,10 +252,11 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 // 重新添加审批人
                 NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(tenantId, nodeDefinition.getId());
                 for (String approverId : nodeDefinition.getApproverIds()) {
-                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(approverId).build();
+                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(nodeDefinition.getApproveType(), approverId).build();
                     NodeAssignmentExecutor assignmentExecutor = nodeAssignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
                     assignmentExecutor.save();
                 }
+                nodeAssignmentBuilder.resetSeq();
             }
 
             // 更新节点定义

@@ -45,6 +45,11 @@ public class TaskApproveExecutorBuilder extends AbstractExecutorBuilder<TaskAppr
         return this;
     }
 
+    public TaskApproveExecutorBuilder approveSeq(Integer approveSeq) {
+        this.taskApproveExecutor.getTaskApprove().setApproverSeq(approveSeq);
+        return this;
+    }
+
     public TaskApproveExecutorBuilder status(ApproveStatus approveStatus) {
         this.taskApproveExecutor.getTaskApprove().setStatus(approveStatus);
         return this;

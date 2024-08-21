@@ -32,14 +32,22 @@ public class NodeAssignment extends BaseEntity {
     @EntityColumn(name="node_def_id", nullable = false, comment = "节点定义 ID")
     private Integer nodeDefinitionId;
 
-    @EntityColumn(length = 32, nullable = false, comment = "用户 ID")
+    @EntityColumn(name = "user_id", length = 32, nullable = false, comment = "用户 ID")
     private String userId;
+
+    @EntityColumn(name = "user_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
+    private Integer userSeq;
 
     public static NodeAssignment of(ResultSet rs) throws SQLException {
         NodeAssignment nodeAssignment = new NodeAssignment();
         nodeAssignment.setTenantId(rs.getString("tenant_id"));
         nodeAssignment.setNodeDefinitionId(rs.getInt("node_def_id"));
         nodeAssignment.setUserId(rs.getString("user_id"));
+        // 解决 rs.getInt("xxx") null 值会返回 0 的问题
+        Object userSeqObject = rs.getObject("user_seq");
+        if (userSeqObject != null) {
+            nodeAssignment.setUserSeq((Integer) userSeqObject);
+        }
         return of(nodeAssignment, rs);
     }
 }

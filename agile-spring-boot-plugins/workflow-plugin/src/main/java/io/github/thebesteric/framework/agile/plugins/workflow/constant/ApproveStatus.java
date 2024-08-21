@@ -18,6 +18,7 @@ import java.util.Arrays;
  */
 @Getter
 public enum ApproveStatus implements BaseEnum {
+    SUSPEND(0, "挂起（等待进入 IN_PROGRESS 状态，只有顺序审批有这个状态）"),
     IN_PROGRESS(1, "进行中"),
     APPROVED(2, "已同意"),
     REJECTED(3, "已驳回"),

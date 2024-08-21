@@ -101,7 +101,7 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
      */
     public List<NodeAssignment> findByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
         final String selectSql = """
-                SELECT * FROM awf_node_assignment WHERE `tenant_id` = ? AND `node_def_id` = ? AND `state` = 1
+                SELECT * FROM awf_node_assignment WHERE `tenant_id` = ? AND `node_def_id` = ? AND `state` = 1 ORDER BY `user_seq` ASC
                 """;
         RowMapper<NodeAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeAssignment.of(rs);
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, nodeDefinitionId).stream().toList();

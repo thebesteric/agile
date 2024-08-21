@@ -31,6 +31,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractRu
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -157,12 +158,23 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
                     // 创建任务实例审批人
                     if (CollUtil.isNotEmpty(nextNodeAssignments)) {
+                        int i = 0;
                         for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
-                            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.tenantId(tenantId)
-                                    .workflowInstanceId(workflowInstanceId).taskInstanceId(nextTaskInstanceId)
-                                    .approverId(nextNodeAssignment.getUserId()).status(ApproveStatus.IN_PROGRESS)
+                            taskApproveExecutorBuilder
+                                    .tenantId(tenantId)
+                                    .workflowInstanceId(workflowInstanceId)
+                                    .taskInstanceId(nextTaskInstanceId)
+                                    .approverId(nextNodeAssignment.getUserId())
+                                    .approveSeq(nextNodeAssignment.getUserSeq())
+                                    .status(ApproveStatus.IN_PROGRESS)
                                     .active(ActiveStatus.ACTIVE).build();
+                            // 顺序审批，后续审批人需要等待前一个审批人审批完成，后续的审批状态设置为：挂起
+                            if (ApproveType.SEQ == nextNodeDefinition.getApproveType() && i > 0) {
+                                taskApproveExecutorBuilder.status(ApproveStatus.SUSPEND);
+                            }
+                            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
                             taskApproveExecutor.save();
+                            i++;
                         }
                     }
                 }
@@ -183,6 +195,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/7/15 09:44
      */
     private Integer calcTotalCount(ApproveType approveType, Integer assignmentSize) {
+        // 除或牵外，其余均需要审批全部
         return ApproveType.ANY == approveType ? 1 : assignmentSize;
     }
 
@@ -347,11 +360,25 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
                     // 创建任务实例审批人
                     if (CollUtil.isNotEmpty(nextNodeAssignments) && NodeType.END != nextNodeDefinition.getNodeType()) {
+                        int i = 0;
                         for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
-                            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.tenantId(tenantId)
-                                    .workflowInstanceId(nextTaskInstance.getWorkflowInstanceId()).taskInstanceId(nextTaskInstance.getId())
-                                    .approverId(nextNodeAssignment.getUserId()).active(ActiveStatus.ACTIVE).status(ApproveStatus.IN_PROGRESS).build();
+                            taskApproveExecutorBuilder
+                                    .tenantId(tenantId)
+                                    .workflowInstanceId(nextTaskInstance.getWorkflowInstanceId())
+                                    .taskInstanceId(nextTaskInstance.getId())
+                                    .approverId(nextNodeAssignment.getUserId())
+                                    .approveSeq(nextNodeAssignment.getUserSeq())
+                                    .active(ActiveStatus.ACTIVE)
+                                    .status(ApproveStatus.IN_PROGRESS)
+                                    .build();
+
+                            // 顺序审批，后续审批人需要等待前一个审批人审批完成，后续的审批状态设置为：挂起
+                            if (ApproveType.SEQ == nextNodeDefinition.getApproveType() && i > 0) {
+                                taskApproveExecutorBuilder.status(ApproveStatus.SUSPEND);
+                            }
+                            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
                             taskApproveExecutor.save();
+                            i++;
                         }
                     }
 
@@ -391,6 +418,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
             NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(taskInstance.getNodeDefinitionId());
 
+            // 判断是否是顺序审批
+            if (ApproveType.SEQ == nodeDefinition.getApproveType()) {
+                // 获取下一个审批人的状态，并修改审批状态为：IN_PROGRESS
+                List<TaskApprove> taskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
+                if (CollUtil.isNotEmpty(taskApproves)) {
+                    // 获取下一个审批人
+                    TaskApprove nextTaskApprove = taskApproves.stream()
+                            .filter(t -> ApproveStatus.SUSPEND == t.getStatus())
+                            .min(Comparator.comparingInt(TaskApprove::getApproverSeq)).orElse(null);
+                    if (nextTaskApprove != null) {
+                        nextTaskApprove.setStatus(ApproveStatus.IN_PROGRESS);
+                        taskApproveExecutor.updateById(nextTaskApprove);
+                    }
+                }
+            }
 
             List<TaskInstance> nextTaskInstances = null;
             // 已完成审批的人数 approved_count 等于所有需要审批的人数 total_count
