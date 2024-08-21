@@ -35,7 +35,7 @@ class NodeDefinitionTest {
             workflowDefinition = deploymentService.create(workflowDefinition);
         }
 
-        createWorkflow3(tenantId, workflowDefinition);
+        createWorkflow5(tenantId, workflowDefinition);
 
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         workflowService.createRelations(tenantId, workflowDefinition.getId());
@@ -204,6 +204,33 @@ class NodeDefinitionTest {
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
                 .name("人事经理审批").desc("任务节点").conditions(conditions)
                 .approverId("孙七")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+    }
+
+    private void createWorkflow5(String tenantId, WorkflowDefinition workflowDefinition) {
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.SEQ)
+                .approverId("张三").approverId("李四")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("部门经理审批").desc("任务节点")
+                .approverId("王五")
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);

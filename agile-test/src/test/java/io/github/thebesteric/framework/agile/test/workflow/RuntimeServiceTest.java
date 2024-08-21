@@ -9,8 +9,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCond
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.RuntimeService;
+import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.List;
 @SpringBootTest
 public class RuntimeServiceTest {
 
-    @Autowired
+    @Resource
     WorkflowEngine workflowEngine;
 
     @Test
@@ -55,8 +55,8 @@ public class RuntimeServiceTest {
     void approve() {
         String tenantId = "8888";
         // String approverId = "张三";
-        String approverId = "李四";
-        // String approverId = "王五";
+        // String approverId = "李四";
+        String approverId = "王五";
         // String approverId = "赵六";
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
@@ -73,9 +73,9 @@ public class RuntimeServiceTest {
     void reject() {
         String tenantId = "8888";
         // String approverId = "张三";
-        // String approverId = "李四";
+        String approverId = "李四";
         // String approverId = "王五";
-        String approverId = "赵六";
+        // String approverId = "赵六";
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
