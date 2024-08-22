@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsExce
 import io.github.thebesteric.framework.agile.commons.util.NetUtils;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
 import io.github.thebesteric.framework.agile.commons.util.StringUtils;
+import io.github.thebesteric.framework.agile.core.func.SuccessFailureExecutor;
 import io.github.thebesteric.framework.agile.plugins.limiter.RateLimitType;
 import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
 import io.github.thebesteric.framework.agile.plugins.limiter.config.AgileRateLimiterContext;
@@ -13,6 +14,7 @@ import io.github.thebesteric.framework.agile.plugins.limiter.processor.RateLimit
 import io.vavr.control.Try;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.web.context.request.RequestAttributes;
@@ -53,22 +55,36 @@ public class AgileRateLimiterAdvice implements MethodInterceptor {
 
         AtomicReference<Object> result = new AtomicReference<>();
         // 生成 key
-        final String key =  generateKey(rateLimiter, method);
+        final String key = generateKey(rateLimiter, method);
         RateLimiterProcessor rateLimiterProcessor = context.getRateLimiterProcessor();
         int timeout = rateLimiter.timeout();
         int count = rateLimiter.count();
         if (timeout <= 0 || count <= 0) {
             throw new InvalidParamsException("timeout and count must be great than 0");
         }
-        if (rateLimiterProcessor.tryRateLimit(key, timeout, count, rateLimiter.timeUnit())) {
-            Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> ex);
-        } else {
-            String message = context.getProperties().getMessage();
-            if (CharSequenceUtil.isEmpty(message)) {
-                message = rateLimiter.message();
+
+        rateLimiterProcessor.execute(key, timeout, count, rateLimiter.timeUnit(), new SuccessFailureExecutor<>() {
+            @Override
+            @SneakyThrows
+            public void success(Boolean success) {
+                Try.run(() -> result.set(invocation.proceed())).getOrElseThrow(ex -> ex);
             }
-            throw new RateLimitException(message);
-        }
+
+            @Override
+            public void failure(Boolean failure) {
+                String message = rateLimiter.message();
+                if (CharSequenceUtil.isEmpty(message)) {
+                    message = context.getProperties().getMessage();
+                }
+                exception(new RateLimitException(message));
+            }
+
+            @Override
+            @SneakyThrows
+            public void exception(Exception exception) {
+                throw exception;
+            }
+        });
 
         return result.get();
     }

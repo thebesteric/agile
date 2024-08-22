@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.processor;
 
+import io.github.thebesteric.framework.agile.core.func.SuccessFailureExecutor;
+
 import java.util.concurrent.TimeUnit;
 
 public interface IdempotentProcessor {
@@ -11,11 +13,10 @@ public interface IdempotentProcessor {
      * @param value    value
      * @param duration 加锁时长
      * @param timeUnit 时间单位
-     *
-     * @return boolean
+     * @param executor 执行器
      *
      * @author wangweijun
      * @since 2024/5/4 17:28
      */
-    boolean tryLock(String key, Long value, long duration, TimeUnit timeUnit);
+    void execute(String key, Long value, long duration, TimeUnit timeUnit, SuccessFailureExecutor<Boolean, Boolean, Exception> executor);
 }

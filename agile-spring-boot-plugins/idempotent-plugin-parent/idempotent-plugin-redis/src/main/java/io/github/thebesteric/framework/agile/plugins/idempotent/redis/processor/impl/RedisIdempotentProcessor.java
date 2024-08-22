@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.redis.processor.impl;
 
+import io.github.thebesteric.framework.agile.core.func.SuccessFailureExecutor;
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -20,16 +21,19 @@ public class RedisIdempotentProcessor implements IdempotentProcessor {
     private final RedissonClient redissonClient;
 
     @Override
-    public boolean tryLock(String key, Long value, long duration, TimeUnit timeUnit) {
+    public void execute(String key, Long value, long duration, TimeUnit timeUnit, SuccessFailureExecutor<Boolean, Boolean, Exception> executor) {
         RLock lock = redissonClient.getLock(key);
         boolean isLocked = false;
         try {
             isLocked = lock.tryLock();
             if (!isLocked) {
-                return false;
+                executor.failure(false);
+                return;
             }
             lock.lock(duration, timeUnit);
-            return true;
+            executor.success(true);
+        } catch (Exception e) {
+            executor.exception(e);
         } finally {
             if (isLocked && lock.isHeldByCurrentThread()) {
                 lock.unlock();

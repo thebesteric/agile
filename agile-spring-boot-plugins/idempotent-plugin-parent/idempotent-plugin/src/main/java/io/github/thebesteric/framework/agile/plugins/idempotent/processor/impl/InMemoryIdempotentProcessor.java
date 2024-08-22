@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.processor.impl;
 
+import io.github.thebesteric.framework.agile.core.func.SuccessFailureExecutor;
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
 
 import java.util.Date;
@@ -57,28 +58,29 @@ public class InMemoryIdempotentProcessor implements IdempotentProcessor {
      * @param value    value
      * @param duration 加锁时长
      * @param timeUnit 时间单位
-     *
-     * @return boolean
+     * @param executor 执行器
      *
      * @author wangweijun
      * @since 2024/5/4 17:28
      */
     @Override
-    public boolean tryLock(String key, Long value, long duration, TimeUnit timeUnit) {
+    public void execute(String key, Long value, long duration, TimeUnit timeUnit, SuccessFailureExecutor<Boolean, Boolean, Exception> executor) {
         Date expireDate = expireRecords.get(key);
         // 没有记录过期时间的记录
         if (expireDate == null) {
             this.put(key, value, duration, timeUnit);
-            return true;
+            executor.success(true);
+            return;
         }
         // 命中缓存后 返回缓存数据
         if (new Date().before(expireDate)) {
-            return false;
+            executor.failure(false);
+            return;
         }
         // 数据过期移除数据存储和过期记录存储
         this.remove(key);
         // 再次新增缓存数据
         this.put(key, value, duration, timeUnit);
-        return true;
+        executor.success(true);
     }
 }

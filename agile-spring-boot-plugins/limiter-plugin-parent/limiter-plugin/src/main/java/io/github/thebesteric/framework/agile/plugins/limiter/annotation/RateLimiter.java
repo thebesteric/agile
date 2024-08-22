@@ -35,6 +35,6 @@ public @interface RateLimiter {
     String delimiter() default "|";
 
     /** 提示信息，正在执行中的提示 */
-    String message() default "Limited request, please try again later";
+    String message() default "";
 
 }

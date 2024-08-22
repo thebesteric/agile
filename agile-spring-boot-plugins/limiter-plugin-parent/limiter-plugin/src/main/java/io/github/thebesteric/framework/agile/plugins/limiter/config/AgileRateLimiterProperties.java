@@ -14,6 +14,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 @ConfigurationProperties(prefix = AgileConstants.PROPERTIES_PREFIX + ".limiter")
 public class AgileRateLimiterProperties {
+    /** 是否启用 */
     private boolean enable = true;
-    private String message;
+    /** 异常信息 */
+    private String message = "Limited request, please try again later";
 }

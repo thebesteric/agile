@@ -12,6 +12,7 @@ public enum AgilePlugins {
     LOGGER_PLUGIN("logger-plugin", "io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerAutoConfiguration"),
     IDEMPOTENT_PLUGIN("idempotent-plugin", "io.github.thebesteric.framework.agile.plugins.idempotent.config.AgileIdempotentAutoConfiguration"),
     LIMITER_PLUGIN("limiter-plugin", "io.github.thebesteric.framework.agile.plugins.limiter.config.AgileRateLimiterAutoConfiguration"),
+    DISTRIBUTED_LOCKS_PLUGIN("distributed-locks-plugin", "io.github.thebesteric.framework.agile.distributed.locks.config.AgileDistributedLocksAutoConfiguration"),
     DATABASE_PLUGIN("database-plugin", "io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseAutoConfiguration"),
     WORKFLOW_PLUGIN("workflow-plugin", "io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowAutoConfiguration"),
     ANNOTATION_SCANNER_PLUGIN("annotation-scanner-plugin", "io.github.thebesteric.framework.agile.plugins.annotation.scanner.config.AnnotationScannerAutoConfiguration"),

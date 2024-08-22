@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.limiter.redis.processor.impl;
 
+import io.github.thebesteric.framework.agile.core.func.SuccessFailureExecutor;
 import io.github.thebesteric.framework.agile.plugins.limiter.processor.RateLimiterProcessor;
 import io.vavr.control.Try;
 import lombok.RequiredArgsConstructor;
@@ -26,15 +27,20 @@ public class RedisRateLimiterProcessor implements RateLimiterProcessor {
     private static final DefaultRedisScript<Long> script = limitScript();
 
     @Override
-    public boolean tryRateLimit(String key, int timeout, int count, TimeUnit timeUnit) {
+    public void execute(String key, int timeout, int count, TimeUnit timeUnit, SuccessFailureExecutor<Boolean, Boolean, Exception> executor) {
         // 计算出每秒的个数
-        double perSecondCount = (double) count / timeout;
+        long seconds = timeUnit.toSeconds(timeout);
+        double perSecondCount = (double) count / seconds;
         BigDecimal bdResult = BigDecimal.valueOf(perSecondCount);
         bdResult = bdResult.setScale(1, RoundingMode.HALF_UP);
         double finalPerSecondCount = Double.parseDouble(bdResult.toPlainString());
         Try<Long> tryFunc = Try.of(() -> redisTemplate.execute(script, Collections.singletonList(key), 1, finalPerSecondCount));
         // 判断是否超过限流阈值
-        return tryFunc.get() <= perSecondCount;
+        if (tryFunc.get() <= perSecondCount) {
+            executor.success(true);
+            return;
+        }
+        executor.failure(false);
     }
 
     private static DefaultRedisScript<Long> limitScript() {

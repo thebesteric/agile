@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.limiter.processor.impl;
 
 import com.google.common.util.concurrent.RateLimiter;
+import io.github.thebesteric.framework.agile.core.func.SuccessFailureExecutor;
 import io.github.thebesteric.framework.agile.plugins.limiter.processor.RateLimiterProcessor;
 
 import java.math.BigDecimal;
@@ -21,7 +22,7 @@ public class InMemoryRateLimiterProcessor implements RateLimiterProcessor {
     private static final Map<String, RateLimiter> RATE_LIMITERS = new ConcurrentHashMap<>(128);
 
     @Override
-    public boolean tryRateLimit(String key, int timeout, int count, TimeUnit timeUnit) {
+    public void execute(String key, int timeout, int count, TimeUnit timeUnit, SuccessFailureExecutor<Boolean, Boolean, Exception> executor) {
         RateLimiter rateLimiter = RATE_LIMITERS.get(key);
         long seconds = TimeUnit.SECONDS.convert(timeout, timeUnit);
         // 计算出每秒的个数
@@ -33,8 +34,9 @@ public class InMemoryRateLimiterProcessor implements RateLimiterProcessor {
             RATE_LIMITERS.put(key, rateLimiter);
         }
         if (rateLimiter.tryAcquire()) {
-            return true;
+            executor.success(true);
+            return;
         }
-        return false;
+        executor.failure(false);
     }
 }

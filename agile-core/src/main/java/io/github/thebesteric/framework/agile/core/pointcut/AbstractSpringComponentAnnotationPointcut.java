@@ -7,6 +7,7 @@ import org.springframework.aop.ClassFilter;
 import org.springframework.aop.support.JdkRegexpMethodPointcut;
 import org.springframework.lang.NonNull;
 
+import java.io.Serial;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -20,6 +21,8 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 public abstract class AbstractSpringComponentAnnotationPointcut extends JdkRegexpMethodPointcut {
+    @Serial
+    private static final long serialVersionUID = -1341792015044651410L;
 
     protected final List<ClassMatcher> classMatchers;
 
