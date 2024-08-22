@@ -43,9 +43,8 @@ public class AgileRateLimiterAutoConfiguration extends AbstractAgileInitializati
     }
 
     @Bean
-    public AgileRateLimiterContext agileRateLimiterContext(ApplicationContext applicationContext, AgileRateLimiterProperties properties,
-                                                           List<ClassMatcher> classMatchers) {
-        return new AgileRateLimiterContext(applicationContext, properties, classMatchers);
+    public AgileRateLimiterContext agileRateLimiterContext(ApplicationContext applicationContext, AgileRateLimiterProperties properties) {
+        return new AgileRateLimiterContext(applicationContext, properties);
     }
 
     @Bean

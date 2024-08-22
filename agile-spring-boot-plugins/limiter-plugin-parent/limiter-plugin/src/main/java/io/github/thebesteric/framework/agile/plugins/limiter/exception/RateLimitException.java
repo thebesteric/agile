@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.limiter.exception;
 
+import java.io.Serial;
+
 /**
  * RateLimitException
  *
@@ -8,6 +10,9 @@ package io.github.thebesteric.framework.agile.plugins.limiter.exception;
  * @since 2024-05-06 19:00:19
  */
 public class RateLimitException extends RuntimeException {
+    @Serial
+    private static final long serialVersionUID = 3197486896982887488L;
+
     public RateLimitException() {
         super("Rate limit exception");
     }

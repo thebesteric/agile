@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.exception;
 
+import java.io.Serial;
+
 /**
  * IdempotentException
  *
@@ -8,6 +10,9 @@ package io.github.thebesteric.framework.agile.plugins.idempotent.exception;
  * @since 2024-04-30 17:30:19
  */
 public class IdempotentException extends RuntimeException {
+    @Serial
+    private static final long serialVersionUID = -366445751364958694L;
+
     public IdempotentException() {
         super("Idempotent check exception");
     }

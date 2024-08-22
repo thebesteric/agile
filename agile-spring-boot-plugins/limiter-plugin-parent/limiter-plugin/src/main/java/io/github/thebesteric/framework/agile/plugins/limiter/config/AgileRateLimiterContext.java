@@ -2,6 +2,10 @@ package io.github.thebesteric.framework.agile.plugins.limiter.config;
 
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ComponentBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ControllerBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.RepositoryBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ServiceBeanClassMatcher;
 import io.github.thebesteric.framework.agile.plugins.limiter.processor.RateLimiterProcessor;
 import io.github.thebesteric.framework.agile.plugins.limiter.processor.impl.InMemoryRateLimiterProcessor;
 import lombok.Getter;
@@ -27,10 +31,10 @@ public class AgileRateLimiterContext extends AbstractAgileContext {
     private final RateLimiterProcessor rateLimiterProcessor;
 
 
-    public AgileRateLimiterContext(ApplicationContext applicationContext, AgileRateLimiterProperties properties, List<ClassMatcher> classMatchers) {
+    public AgileRateLimiterContext(ApplicationContext applicationContext, AgileRateLimiterProperties properties) {
         super((GenericApplicationContext) applicationContext);
         this.properties = properties;
-        this.classMatchers = classMatchers;
+        this.classMatchers = List.of(new ControllerBeanClassMatcher(), new ComponentBeanClassMatcher(), new ServiceBeanClassMatcher(), new RepositoryBeanClassMatcher());
         this.rateLimiterProcessor = getBeanOrDefault(RateLimiterProcessor.class, new InMemoryRateLimiterProcessor());
     }
 

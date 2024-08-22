@@ -23,7 +23,7 @@ public class AgileRateLimiterPointcut extends AbstractSpringComponentAnnotationP
     }
 
     @Override
-    protected Class<? extends Annotation> matchedAnnotation() {
+    public Class<? extends Annotation> matchedAnnotation() {
         return RateLimiter.class;
     }
 }

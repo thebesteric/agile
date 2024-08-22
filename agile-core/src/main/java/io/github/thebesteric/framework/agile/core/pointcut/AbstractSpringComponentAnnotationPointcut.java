@@ -61,6 +61,6 @@ public abstract class AbstractSpringComponentAnnotationPointcut extends JdkRegex
      * @author wangweijun
      * @since 2024/5/6 17:44
      */
-    abstract protected Class<? extends Annotation> matchedAnnotation();
+    protected abstract Class<? extends Annotation> matchedAnnotation();
 
 }

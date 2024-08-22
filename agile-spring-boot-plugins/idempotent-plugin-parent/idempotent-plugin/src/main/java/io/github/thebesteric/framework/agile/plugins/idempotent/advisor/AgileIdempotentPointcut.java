@@ -23,7 +23,7 @@ public class AgileIdempotentPointcut extends AbstractSpringComponentAnnotationPo
     }
 
     @Override
-    protected Class<? extends Annotation> matchedAnnotation() {
+    public Class<? extends Annotation> matchedAnnotation() {
         return Idempotent.class;
     }
 

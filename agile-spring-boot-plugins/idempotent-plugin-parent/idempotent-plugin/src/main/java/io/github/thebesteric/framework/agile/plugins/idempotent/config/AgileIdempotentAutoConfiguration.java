@@ -3,7 +3,6 @@ package io.github.thebesteric.framework.agile.plugins.idempotent.config;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
-import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
 import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIdempotentAdvice;
 import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIdempotentPointcut;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 /**
  * AgileIdempotentAutoConfiguration
@@ -43,9 +40,8 @@ public class AgileIdempotentAutoConfiguration extends AbstractAgileInitializatio
     }
 
     @Bean
-    public AgileIdempotentContext agileIdempotentContext(ApplicationContext applicationContext, AgileIdempotentProperties properties,
-                                                         List<ClassMatcher> classMatchers) {
-        return new AgileIdempotentContext(applicationContext, properties, classMatchers);
+    public AgileIdempotentContext agileIdempotentContext(ApplicationContext applicationContext, AgileIdempotentProperties properties) {
+        return new AgileIdempotentContext(applicationContext, properties);
     }
 
     @Bean

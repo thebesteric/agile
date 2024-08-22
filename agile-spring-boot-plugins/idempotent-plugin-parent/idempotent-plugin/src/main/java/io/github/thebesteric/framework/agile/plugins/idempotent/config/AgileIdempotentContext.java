@@ -2,6 +2,10 @@ package io.github.thebesteric.framework.agile.plugins.idempotent.config;
 
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ComponentBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ControllerBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.RepositoryBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ServiceBeanClassMatcher;
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.impl.InMemoryIdempotentProcessor;
 import lombok.Getter;
@@ -27,10 +31,10 @@ public class AgileIdempotentContext extends AbstractAgileContext {
     private final IdempotentProcessor idempotentProcessor;
 
 
-    public AgileIdempotentContext(ApplicationContext applicationContext, AgileIdempotentProperties properties, List<ClassMatcher> classMatchers) {
+    public AgileIdempotentContext(ApplicationContext applicationContext, AgileIdempotentProperties properties) {
         super((GenericApplicationContext) applicationContext);
         this.properties = properties;
-        this.classMatchers = classMatchers;
+        this.classMatchers = List.of(new ControllerBeanClassMatcher(), new ComponentBeanClassMatcher(), new ServiceBeanClassMatcher(), new RepositoryBeanClassMatcher());
         this.idempotentProcessor = getBeanOrDefault(IdempotentProcessor.class, new InMemoryIdempotentProcessor());
     }
 
