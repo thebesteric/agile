@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.test.controller;
 
 import io.github.thebesteric.framework.agile.core.domain.R;
+import io.github.thebesteric.framework.agile.distributed.locks.annotation.DistributedLock;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
 import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * HelloController
@@ -65,6 +67,20 @@ public class HelloController {
     @RateLimiter(timeout = 10, count = 10)
     public R<Id2Vo> limit(@RequestBody Id2Vo id2Vo) {
         return R.success(id2Vo);
+    }
+
+    @GetMapping("/lock")
+    @DistributedLock()
+    public R<String> lock() throws InterruptedException {
+        for (int i = 0; i < 2; i++) {
+            update();
+            TimeUnit.SECONDS.sleep(2);
+        }
+        return R.success();
+    }
+
+    private void update() throws InterruptedException {
+        System.out.println("======== update ===========");
     }
 
 }

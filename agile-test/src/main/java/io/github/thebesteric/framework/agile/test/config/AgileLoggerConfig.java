@@ -15,6 +15,8 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationRegister;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.domain.Parasitic;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener.AnnotationParasiticRegisteredListener;
+import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
+import io.github.thebesteric.framework.agile.plugins.idempotent.redis.processor.impl.RedisIdempotentProcessor;
 import io.github.thebesteric.framework.agile.plugins.limiter.processor.RateLimiterProcessor;
 import io.github.thebesteric.framework.agile.plugins.limiter.redis.processor.impl.RedisRateLimiterProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
@@ -25,6 +27,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.imp
 import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.impl.ParameterIgnoreProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.CustomRecorder;
+import org.redisson.api.RedissonClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -128,10 +131,10 @@ public class AgileLoggerConfig {
         };
     }
 
-    // @Bean
-    // public IdempotentProcessor redisIdempotentProcessor(RedissonClient redissonClient) {
-    //     return new RedisIdempotentProcessor(redissonClient);
-    // }
+    @Bean
+    public IdempotentProcessor redisIdempotentProcessor(RedissonClient redissonClient) {
+        return new RedisIdempotentProcessor(redissonClient);
+    }
 
     @Bean
     public RateLimiterProcessor redisRateLimiterProcessor(RedisTemplate<String, Object> redisTemplate) {

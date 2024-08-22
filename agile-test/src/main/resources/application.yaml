@@ -25,6 +25,9 @@ sourceflag:
     limiter:
       enable: true
       message: "接口限流，无法提交"
+    distribute-locks:
+      enable: true
+      message: "分布式锁加锁失败"
     database:
       enable: true
       show-sql: true
