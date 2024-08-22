@@ -32,8 +32,8 @@ public class RedisIdempotentProcessor implements IdempotentProcessor {
             }
             lock.lock(duration, timeUnit);
             executor.success(true);
-        } catch (Exception e) {
-            executor.exception(e);
+        } catch (Exception ex) {
+            executor.exception(ex);
         } finally {
             if (isLocked && lock.isHeldByCurrentThread()) {
                 lock.unlock();
