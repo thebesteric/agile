@@ -52,7 +52,7 @@ public class HelloController {
     }
 
     @GetMapping("/id1")
-    @Idempotent(timeout = 10000)
+    @Idempotent(timeout = 15000)
     public R<String> id1(@IdempotentKey String name, @IdempotentKey Integer age) {
         return R.success(name + "-" + age);
     }
@@ -63,24 +63,17 @@ public class HelloController {
         return R.success(id2Vo);
     }
 
-    @PostMapping("/limit")
+    @GetMapping("/limit")
     @RateLimiter(timeout = 10, count = 10)
-    public R<Id2Vo> limit(@RequestBody Id2Vo id2Vo) {
-        return R.success(id2Vo);
-    }
-
-    @GetMapping("/lock")
-    @DistributedLock()
-    public R<String> lock() throws InterruptedException {
-        for (int i = 0; i < 2; i++) {
-            update();
-            TimeUnit.SECONDS.sleep(2);
-        }
+    public R<Id2Vo> limit() {
         return R.success();
     }
 
-    private void update() throws InterruptedException {
-        System.out.println("======== update ===========");
+    @GetMapping("/lock")
+    @DistributedLock(waitTime = 5, message = "加锁失败咯")
+    public R<String> lock() throws InterruptedException {
+        TimeUnit.SECONDS.sleep(10);
+        return R.success();
     }
 
 }
