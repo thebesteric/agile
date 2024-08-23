@@ -33,6 +33,7 @@ public class AgileDistributedLocksAdvice implements MethodInterceptor {
     @Nullable
     @Override
     public Object invoke(@Nonnull MethodInvocation invocation) throws Throwable {
+
         if (!context.getProperties().isEnable()) {
             // 调用目标方法
             return invocation.proceed();
