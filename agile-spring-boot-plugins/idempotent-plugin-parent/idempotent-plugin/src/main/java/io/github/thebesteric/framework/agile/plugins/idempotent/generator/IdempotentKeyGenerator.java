@@ -2,7 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.idempotent.generator;
 
 import io.github.thebesteric.framework.agile.commons.util.AbstractUtils;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
-import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
+import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIdempotentAdvice;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
 import org.springframework.util.ReflectionUtils;
 
@@ -23,16 +23,19 @@ public class IdempotentKeyGenerator extends AbstractUtils {
     /**
      * 生成幂等 key
      *
-     * @param method 方法
-     * @param args   参数
+     * @param idempotentAnnotationWrapper wrapper
+     * @param method                      方法
+     * @param args                        参数
      *
      * @return String key
      *
      * @author wangweijun
      * @since 2024/4/30 15:19
      */
-    public static String generate(final Method method, final Object[] args) {
-        Idempotent idempotent = method.getAnnotation(Idempotent.class);
+    public static String generate(final AgileIdempotentAdvice.IdempotentAnnotationWrapper idempotentAnnotationWrapper, final Method method, final Object[] args) {
+        String keyPrefix = idempotentAnnotationWrapper.getKeyPrefix();
+        String delimiter = idempotentAnnotationWrapper.getDelimiter();
+
         StringBuilder sb = new StringBuilder();
 
         // 获取方法参数上的 @IdempotentKey 注解
@@ -43,7 +46,7 @@ public class IdempotentKeyGenerator extends AbstractUtils {
                 continue;
             }
             // 拼接连接符 "|" + 参数值
-            sb.append(idempotent.delimiter()).append(args[i]);
+            sb.append(delimiter).append(args[i]);
         }
 
         // 获取方法参数的内的 @IdempotentKey 注解
@@ -63,11 +66,11 @@ public class IdempotentKeyGenerator extends AbstractUtils {
                 }
                 field.setAccessible(true);
                 // 拼接连接符 "|" + 字段值
-                sb.append(idempotent.delimiter()).append(ReflectionUtils.getField(field, object));
+                sb.append(delimiter).append(ReflectionUtils.getField(field, object));
             }
         }
 
         // 返回 key：默认格式为：idempotent|class#method|xxx|yyy
-        return idempotent.keyPrefix() + idempotent.delimiter() + ReflectUtils.methodSignature(method) + sb;
+        return keyPrefix + delimiter + ReflectUtils.methodSignature(method) + sb;
     }
 }
