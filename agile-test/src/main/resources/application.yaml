@@ -22,6 +22,9 @@ sourceflag:
     idempotent:
       enable: true
       message: "接口幂等，无法提交"
+      global-setting:
+        timeout: 5
+        time-unit: seconds
     limiter:
       enable: true
       message: "接口限流，无法提交"

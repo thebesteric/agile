@@ -52,7 +52,7 @@ public class HelloController {
     }
 
     @GetMapping("/id1")
-    @Idempotent(timeout = 15000)
+    @Idempotent(timeout = 15000, message = "id1 idempotent error")
     public R<String> id1(@IdempotentKey String name, @IdempotentKey Integer age) {
         return R.success(name + "-" + age);
     }
@@ -61,6 +61,21 @@ public class HelloController {
     @Idempotent(timeout = 10000)
     public R<Id2Vo> id2(@RequestBody Id2Vo id2Vo) {
         return R.success(id2Vo);
+    }
+
+    @GetMapping("/save")
+    public R<Id2Vo> save() {
+        return R.success();
+    }
+
+    @GetMapping("/updateUser")
+    public R<Id2Vo> updateUser() {
+        return R.success();
+    }
+
+    @GetMapping("/test")
+    public R<Id2Vo> test() {
+        return R.success();
     }
 
     @GetMapping("/limit")
