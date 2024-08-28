@@ -72,8 +72,8 @@ public class RuntimeServiceTest {
     @Test
     void reject() {
         String tenantId = "8888";
-        // String approverId = "张三";
-        String approverId = "李四";
+        String approverId = "张三";
+        // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
         // String approverId = "孙七";
@@ -90,9 +90,9 @@ public class RuntimeServiceTest {
     @Test
     void abandon() {
         String tenantId = "8888";
-        String approverId = "张三";
+        // String approverId = "张三";
         // String approverId = "李四";
-        // String approverId = "王五";
+        String approverId = "王五";
         // String approverId = "赵六";
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
