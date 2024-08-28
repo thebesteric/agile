@@ -419,20 +419,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(taskInstance.getNodeDefinitionId());
 
             // 判断是否是顺序审批
-            if (ApproveType.SEQ == nodeDefinition.getApproveType()) {
-                // 获取下一个审批人的状态，并修改审批状态为：IN_PROGRESS
-                List<TaskApprove> taskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
-                if (CollUtil.isNotEmpty(taskApproves)) {
-                    // 获取下一个审批人
-                    TaskApprove nextTaskApprove = taskApproves.stream()
-                            .filter(t -> ApproveStatus.SUSPEND == t.getStatus())
-                            .min(Comparator.comparingInt(TaskApprove::getApproverSeq)).orElse(null);
-                    if (nextTaskApprove != null) {
-                        nextTaskApprove.setStatus(ApproveStatus.IN_PROGRESS);
-                        taskApproveExecutor.updateById(nextTaskApprove);
-                    }
-                }
-            }
+            checkIfApproveSeqStatus(tenantId, taskInstanceId, nodeDefinition.getApproveType());
 
             List<TaskInstance> nextTaskInstances = null;
             // 已完成审批的人数 approved_count 等于所有需要审批的人数 total_count
@@ -570,6 +557,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 }
             }
 
+            // 判断是否是顺序审批
+            checkIfApproveSeqStatus(tenantId, taskInstanceId, nodeDefinition.getApproveType());
+
             List<TaskInstance> nextTaskInstances = null;
             // 已完成审批的人数 approved_count 等于所有需要审批的人数 total_count，则表示为当前是最后一个审批人
             if (Objects.equals(taskInstance.getApprovedCount(), taskInstance.getTotalCount())) {
@@ -593,6 +583,34 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), null, endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ENDED);
             }
         });
+    }
+
+    /**
+     * 判断是否是顺序审批
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approveType    审批类型
+     *
+     * @author wangweijun
+     * @since 2024/8/28 17:32
+     */
+    private void checkIfApproveSeqStatus(String tenantId, Integer taskInstanceId, ApproveType approveType) {
+        if (ApproveType.SEQ == approveType) {
+            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+            // 获取下一个审批人的状态，并修改审批状态为：IN_PROGRESS
+            List<TaskApprove> taskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
+            if (CollUtil.isNotEmpty(taskApproves)) {
+                // 获取下一个审批人
+                TaskApprove nextTaskApprove = taskApproves.stream()
+                        .filter(t -> ApproveStatus.SUSPEND == t.getStatus())
+                        .min(Comparator.comparingInt(TaskApprove::getApproverSeq)).orElse(null);
+                if (nextTaskApprove != null) {
+                    nextTaskApprove.setStatus(ApproveStatus.IN_PROGRESS);
+                    taskApproveExecutor.updateById(nextTaskApprove);
+                }
+            }
+        }
     }
 
     /**
