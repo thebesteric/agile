@@ -63,10 +63,11 @@ public class EntityClassDomain {
 
         // 生成完整表名
         String tableName;
+        tableNamePrefix = tableNamePrefix == null ? "" : tableNamePrefix.trim();
         if (CharSequenceUtil.isNotEmpty(name)) {
-            tableName = (tableNamePrefix == null ? "" : tableNamePrefix.trim()) + name;
+            tableName = tableNamePrefix + name;
         } else {
-            tableName = CharSequenceUtil.toUnderlineCase(entityClass.getSimpleName());
+            tableName = tableNamePrefix + CharSequenceUtil.toUnderlineCase(entityClass.getSimpleName());
         }
 
         entityClassDomain.tableName = tableName;
