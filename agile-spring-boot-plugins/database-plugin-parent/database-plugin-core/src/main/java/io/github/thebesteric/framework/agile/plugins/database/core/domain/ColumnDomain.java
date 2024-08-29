@@ -1,9 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.database.core.domain;
 
-import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import io.github.thebesteric.framework.agile.core.domain.None;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
@@ -14,10 +12,6 @@ import lombok.experimental.Accessors;
 import org.springframework.data.annotation.Transient;
 
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
 
 /**
  * ColumnDomain
@@ -102,11 +96,11 @@ public class ColumnDomain {
         TableId tableId = field.getAnnotation(TableId.class);
         ColumnDomain domain = new ColumnDomain();
         domain.tableName = tableName;
-        domain.name = columnName(field, column);
-        domain.type = columnType(field, column);
+        domain.name = EntityUtils.getColumnName(field);
+        domain.type = EntityUtils.getColumnType(field);
         domain.fieldName = field.getName();
         domain.fieldType = field.getType();
-        domain.length = fieldLength(field, column);
+        domain.length = fieldLength(field, column, domain.type);
         domain.precision = column != null ? column.precision() : 0;
         domain.primary = column != null ? column.primary() : tableId != null;
         domain.unique = column != null && column.unique();
@@ -163,18 +157,7 @@ public class ColumnDomain {
         return !field.isAnnotationPresent(Transient.class);
     }
 
-    private static String columnName(Field field, EntityColumn column) {
-        if (column != null && CharSequenceUtil.isNotEmpty(column.name())) {
-            return column.name().replace("`", "");
-        }
-        TableField tableField = field.getAnnotation(TableField.class);
-        if (tableField != null && CharSequenceUtil.isNotEmpty(tableField.value())) {
-            return tableField.value().replace("`", "");
-        }
-        return CharSequenceUtil.toUnderlineCase(field.getName());
-    }
-
-    private static Integer fieldLength(Field field, EntityColumn column) {
+    private static Integer fieldLength(Field field, EntityColumn column, EntityColumn.Type columnType) {
         if (column == null && field.getType() == String.class) {
             return 255;
         }
@@ -182,8 +165,7 @@ public class ColumnDomain {
             return 1;
         }
         if (column != null && EntityColumn.Type.DETERMINE == column.type()) {
-            EntityColumn.Type type = columnType(field, column);
-            if (type == EntityColumn.Type.VARCHAR && column.length() == -1) {
+            if (columnType == EntityColumn.Type.VARCHAR && column.length() == -1) {
                 return 255;
             }
             return column.length();
@@ -192,36 +174,6 @@ public class ColumnDomain {
             return column.length();
         }
         return -1;
-    }
-
-    private static EntityColumn.Type columnType(Field field, EntityColumn column) {
-        if (column != null && column.type() != EntityColumn.Type.DETERMINE) {
-            return column.type();
-        }
-
-        Class<?> fieldType = field.getType();
-        if (fieldType == Boolean.class || fieldType == boolean.class || fieldType == Byte.class || fieldType == byte.class) {
-            return EntityColumn.Type.TINY_INT;
-        } else if (fieldType == Short.class || fieldType == short.class) {
-            return EntityColumn.Type.SMALL_INT;
-        } else if (fieldType == Integer.class || fieldType == int.class) {
-            return EntityColumn.Type.INT;
-        } else if (fieldType == Long.class || fieldType == long.class) {
-            return EntityColumn.Type.BIG_INT;
-        } else if (fieldType == Float.class || fieldType == float.class) {
-            return EntityColumn.Type.FLOAT;
-        } else if (fieldType == Double.class || fieldType == double.class) {
-            return EntityColumn.Type.DOUBLE;
-        } else if (fieldType == BigDecimal.class) {
-            return EntityColumn.Type.DECIMAL;
-        } else if (fieldType == Date.class || fieldType == LocalDateTime.class) {
-            return EntityColumn.Type.DATETIME;
-        } else if (fieldType == LocalDate.class) {
-            return EntityColumn.Type.DATE;
-        } else if (fieldType == Byte[].class || fieldType == byte[].class) {
-            return EntityColumn.Type.BLOB;
-        }
-        return EntityColumn.Type.VARCHAR;
     }
 
     public String typeWithLength() {
