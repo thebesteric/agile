@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.test.controller;
 
 import io.github.thebesteric.framework.agile.core.domain.R;
 import io.github.thebesteric.framework.agile.distributed.locks.annotation.DistributedLock;
+import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationParasiticContext;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
 import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +35,17 @@ public class HelloController {
 
     @Autowired
     WorkflowEngine workflowEngine;
+
+    @Autowired
+    AnnotationParasiticContext parasiticContext;
+
+    @GetMapping("/parasitic")
+    public R<Map<String, List<String>>> parasitic() {
+        Map<String, List<String>> map = Map.of(
+                "@CrossOrigin", parasiticContext.get(CrossOrigin.class).stream().map(p -> p.getClazz().getName() + "#" + p.getMethod().getName()).toList(),
+                "@RestController", parasiticContext.get(RestController.class).stream().map(p -> p.getClazz().getName()).toList());
+        return R.success(map);
+    }
 
     @CrossOrigin
     @GetMapping("/foo")

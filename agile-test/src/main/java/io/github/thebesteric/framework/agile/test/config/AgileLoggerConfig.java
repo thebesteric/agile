@@ -136,7 +136,7 @@ public class AgileLoggerConfig {
     //     return new RedisRateLimiterProcessor(redisTemplate);
     // }
 
-    // @Bean
+    @Bean
     public AnnotationRegister annotationRegister() {
         AnnotationRegister annotationRegister = new AnnotationRegister();
         annotationRegister.register(CrossOrigin.class, parasitic -> true);
