@@ -384,6 +384,7 @@ class DeploymentServiceTest {
 }
 ```
 ## 注解扫描插件
+- 配置方式一：通过`sourceflag.agile.annotation-scanner.annotation-class-names`注册
 ```yaml
 sourceflag:
   agile:
@@ -393,9 +394,21 @@ sourceflag:
         - org.springframework.web.bind.annotation.CrossOrigin
         - org.springframework.web.bind.annotation.RestController
 ```
+- 配置方式二：通过`@Bean AnnotationRegister`注册
+> `Function<Parasitic, Boolean> filter` 可以通过返回值来控制当前扫描到的注解是否注册到上下文中
+```java
+@Bean
+public AnnotationRegister annotationRegister() {
+    AnnotationRegister annotationRegister = new AnnotationRegister();
+    annotationRegister.register(CrossOrigin.class, parasitic -> true);
+    annotationRegister.register(RestController.class, parasitic -> true);
+    return annotationRegister;
+}
+```
+> 注意：如果`sourceflag.agile.annotation-scanner.annotation-class-names`与`@Bean AnnotationRegister`同时存在，则`@Bean`方式注册的注解优先级高
 ### 使用方式
 通过`List<Parasitic> parasites = AnnotationParasiticContext.get(RestController.class);`获取注解对应的宿主
-> 注意：注解必须通过`annotation-class-names`属性进行声明，或者通过`@Bean`的方式注册`AnnotationRegister`类
+> 注意：注解可以通过`annotation-class-names`属性进行声明，或者通过`@Bean`的方式注册`AnnotationRegister`类
 ```java
 @EnableAgile
 @SpringBootApplication

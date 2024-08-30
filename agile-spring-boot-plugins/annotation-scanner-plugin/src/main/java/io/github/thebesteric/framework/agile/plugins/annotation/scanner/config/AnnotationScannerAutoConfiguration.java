@@ -59,7 +59,7 @@ public class AnnotationScannerAutoConfiguration extends AbstractAgileInitializat
         List<String> annotationClassNames = properties.getAnnotationClassNames();
         for (String annotationClassName : annotationClassNames) {
             Class<?> annotationClass = Class.forName(annotationClassName);
-            annotationRegister.register((Class<? extends Annotation>) annotationClass, parasitic -> true);
+            annotationRegister.register((Class<? extends Annotation>) annotationClass);
         }
         return annotationRegister;
     }
