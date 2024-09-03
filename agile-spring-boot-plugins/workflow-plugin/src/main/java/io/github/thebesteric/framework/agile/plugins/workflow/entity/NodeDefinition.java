@@ -17,8 +17,10 @@ import org.springframework.data.annotation.Transient;
 import java.io.Serial;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 节点定义表
@@ -59,6 +61,119 @@ public class NodeDefinition extends BaseEntity {
     /** 审批人，存储在 NodeAssignment 表中 */
     @Transient
     private Set<Approver> approvers = new LinkedHashSet<>();
+
+    /**
+     * 是否包含审批条件
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/7/4 13:33
+     */
+    public boolean hasConditions() {
+        return this.conditions != null;
+    }
+
+    /**
+     * 添加审批人
+     *
+     * @param approverIds 审批人 IDs
+     *
+     * @author wangweijun
+     * @since 2024/7/3 10:44
+     */
+    public void addApprovers(String approverId, String... approverIds) {
+        if (approverId != null) {
+            addApprovers(Approver.of(approverId));
+        }
+        if (approverIds != null && approverIds.length > 0) {
+            this.approvers.addAll(Arrays.stream(approverIds).map(Approver::of).collect(Collectors.toSet()));
+        }
+    }
+
+    /**
+     * 添加审批人
+     *
+     * @param approvers 审批人
+     *
+     * @author wangweijun
+     * @since 2024/7/3 10:44
+     */
+    public void addApprovers(Approver approver, Approver... approvers) {
+        if (approver != null) {
+            this.approvers.add(approver);
+        }
+        if (approvers != null && approvers.length > 0) {
+            this.approvers.addAll(Set.of(approvers));
+        }
+    }
+
+    /**
+     * 移除审批人
+     *
+     * @param approverIds 审批人 IDs
+     *
+     * @author wangweijun
+     * @since 2024/7/3 10:44
+     */
+    public void removeApprovers(String approverId, String... approverIds) {
+        this.approvers.remove(Approver.of(approverId));
+        if (approverIds != null && approverIds.length > 0) {
+            Arrays.stream(approverIds).map(Approver::of).forEach(this.approvers::remove);
+        }
+    }
+
+    /**
+     * 移除审批人
+     *
+     * @param approvers 审批人
+     *
+     * @author wangweijun
+     * @since 2024/7/3 10:44
+     */
+    public void removeApprovers(Approver approver, Approver... approvers) {
+        this.approvers.remove(approver);
+        if (approvers != null && approvers.length > 0) {
+            Arrays.asList(approvers).forEach(this.approvers::remove);
+        }
+    }
+
+    /**
+     * 替换审批人
+     *
+     * @param oldApproverId 原审批人
+     * @param newApproverId 新审批人
+     *
+     * @author wangweijun
+     * @since 2024/7/12 14:10
+     */
+    public void replaceApprover(String oldApproverId, String newApproverId) {
+        this.replaceApprover(Approver.of(oldApproverId), Approver.of(newApproverId));
+    }
+
+    /**
+     * 替换审批人
+     *
+     * @param oldApprover 原审批人
+     * @param newApprover 新审批人
+     *
+     * @author wangweijun
+     * @since 2024/7/12 14:10
+     */
+    public void replaceApprover(Approver oldApprover, Approver newApprover) {
+        this.approvers.remove(oldApprover);
+        this.approvers.add(newApprover);
+    }
+
+    /**
+     * 清空审批人
+     *
+     * @author wangweijun
+     * @since 2024/7/3 13:38
+     */
+    public void clearApprovers() {
+        this.approvers.clear();
+    }
 
     public static NodeDefinition of(ResultSet rs) throws SQLException {
         NodeDefinition nodeDefinition = new NodeDefinition();
