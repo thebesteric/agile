@@ -3,10 +3,7 @@ package io.github.thebesteric.framework.agile.test.workflow;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.Condition;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
@@ -32,7 +29,7 @@ class WorkflowHelperTest {
     private WorkflowEngine workflowEngine;
 
     String tenantId = "8888";
-    String workflowKey = "QJ-M";
+    String workflowKey = "QJ-M-1";
 
     /**
      * 创建流程定义
@@ -42,7 +39,7 @@ class WorkflowHelperTest {
         DeploymentServiceHelper deploymentServiceHelper = new WorkflowHelper(workflowEngine).getDeploymentServiceHelper();
         deploymentServiceHelper.setCurrentUser("admin");
         // 创建流程定义
-        deploymentServiceHelper.deploy(tenantId, "请假流程", workflowKey, "日常办公流程");
+        deploymentServiceHelper.deploy(tenantId, "请假流程-1", workflowKey, "日常办公流程");
         WorkflowDefinition workflowDefinition = deploymentServiceHelper.get(tenantId, workflowKey);
         System.out.println(workflowDefinition);
     }
@@ -66,10 +63,10 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow4(tenantId, workflowDefinition);
+        createWorkflow2(tenantId, workflowDefinition);
     }
 
-    private void createWorkflow4(String tenantId, WorkflowDefinition workflowDefinition) {
+    private void createWorkflow1(String tenantId, WorkflowDefinition workflowDefinition) {
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
                 .name("请假流程开始").desc("开始节点").build();
@@ -118,6 +115,33 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
     }
 
+    private void createWorkflow2(String tenantId, WorkflowDefinition workflowDefinition) {
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ANY)
+                .approver(Approver.of("张三", "张三姓名")).approver(Approver.of("李四", "李四姓名"))
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
+                .approver(Approver.of("王五", "王五姓名"))
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+    }
+
     /**
      * 发布流程
      */
@@ -134,7 +158,7 @@ class WorkflowHelperTest {
     }
 
     /**
-     * 发布流程
+     * 启动流程
      */
     @Test
     void start() {
@@ -161,8 +185,8 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        String approverId = "张三";
-        // String approverId = "李四";
+        // String approverId = "张三";
+        String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
         // String approverId = "孙七";
