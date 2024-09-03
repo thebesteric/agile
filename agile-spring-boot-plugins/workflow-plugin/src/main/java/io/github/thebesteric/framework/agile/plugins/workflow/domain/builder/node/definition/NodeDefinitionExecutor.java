@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.commons.exception.DataExistsExcepti
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
@@ -28,6 +29,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -99,8 +101,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             // 设置节点审批人
             NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
             NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
-            for (String approverId : nodeDefinition.getApproverIds()) {
-                NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(approveType, approverId).build();
+            for (Approver approver : nodeDefinition.getApprovers()) {
+                NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(approveType, approver.getId(), approver.getDesc()).build();
                 NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
                 assignmentExecutor.save();
             }
@@ -344,7 +346,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         // 设置审批人集合
         for (NodeDefinition toNodeDefinition : toNodeDefinitions) {
             List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, toNodeDefinition.getId());
-            toNodeDefinition.setApproverIds(nodeAssignments.stream().map(NodeAssignment::getUserId).collect(Collectors.toSet()));
+            Set<Approver> approvers = nodeAssignments.stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
+            toNodeDefinition.setApprovers(approvers);
         }
         return toNodeDefinitions;
     }

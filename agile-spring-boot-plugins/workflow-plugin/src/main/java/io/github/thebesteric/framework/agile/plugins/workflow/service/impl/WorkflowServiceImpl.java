@@ -10,6 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkfl
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.PublishStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
@@ -119,8 +120,8 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         // 获取节点审批人
         NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
         List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
-        Set<String> approverIds = nodeAssignments.stream().map(NodeAssignment::getUserId).collect(Collectors.toSet());
-        nodeDefinition.setApproverIds(approverIds);
+        Set<Approver> approvers = nodeAssignments.stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
+        nodeDefinition.setApprovers(approvers);
         return nodeDefinition;
     }
 
@@ -243,16 +244,17 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 获取原有的审批人
             List<NodeAssignment> oldNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, oldNodeDefinition.getId());
-            Set<String> oldApproverIds = oldNodeAssignments.stream().map(NodeAssignment::getUserId).collect(Collectors.toSet());
+            Set<Approver> oldApprovers = oldNodeAssignments.stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
 
             // 审批人不同
-            if (!nodeDefinition.getApproverIds().containsAll(oldApproverIds)) {
+            if (!nodeDefinition.getApprovers().containsAll(oldApprovers)) {
                 // 删除原有的审批人
                 nodeAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinition.getId());
                 // 重新添加审批人
                 NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(tenantId, nodeDefinition.getId());
-                for (String approverId : nodeDefinition.getApproverIds()) {
-                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(nodeDefinition.getApproveType(), approverId).build();
+
+                for (Approver approver : nodeDefinition.getApprovers()) {
+                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(nodeDefinition.getApproveType(), approver.getId(), approver.getDesc()).build();
                     NodeAssignmentExecutor assignmentExecutor = nodeAssignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
                     assignmentExecutor.save();
                 }

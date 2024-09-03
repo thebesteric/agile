@@ -351,7 +351,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         nextNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinitionId);
                         // 更新下个节点状态为：进行中，并更新节点审批人数量
                         taskInstanceExecutorBuilder.tenantId(tenantId)
-                                .status(NodeStatus.IN_PROGRESS).totalCount(nextNodeAssignments.size()).approvedCount(0);
+                                .status(NodeStatus.IN_PROGRESS)
+                                // 总审批人数：或签 => 总审批人数为 1，其他 => 总审批人数为节点审批人数量
+                                .totalCount(ApproveType.ANY == nextNodeDefinition.getApproveType() ? 1 : nextNodeAssignments.size())
+                                .approvedCount(0);
                     }
 
                     // 保存任务节点

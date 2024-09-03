@@ -2,12 +2,16 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.no
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
+import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * NodeDefinitionBuilder
@@ -71,12 +75,23 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
     }
 
     public NodeDefinitionBuilder approverId(String approverId) {
-        this.nodeDefinition.getApproverIds().add(approverId);
-        return this;
+        return approver(Approver.of(approverId));
     }
 
     public NodeDefinitionBuilder approverIds(List<String> approverIds) {
-        approverIds.forEach(this::approverId);
+        Assert.notEmpty(approverIds, "approverIds cannot be empty");
+        Set<Approver> approvers = approverIds.stream().map(Approver::of).collect(Collectors.toSet());
+        return this.approvers(approvers);
+    }
+
+    public NodeDefinitionBuilder approver(Approver approver) {
+        this.nodeDefinition.getApprovers().add(approver);
+        return this;
+    }
+
+    public NodeDefinitionBuilder approvers(Set<Approver> approvers) {
+        Assert.notEmpty(approvers, "approvers cannot be empty");
+        this.nodeDefinition.setApprovers(approvers);
         return this;
     }
 

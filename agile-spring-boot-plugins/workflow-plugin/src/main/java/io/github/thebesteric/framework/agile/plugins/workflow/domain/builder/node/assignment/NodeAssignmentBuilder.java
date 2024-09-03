@@ -30,8 +30,9 @@ public class NodeAssignmentBuilder extends AbstractBuilder<NodeAssignment> {
         return builder;
     }
 
-    public NodeAssignmentBuilder userId(ApproveType approveType, String userId) {
+    public NodeAssignmentBuilder userId(ApproveType approveType, String userId, String desc) {
         this.nodeAssignment.setUserId(userId);
+        this.nodeAssignment.setDesc(desc);
         if (ApproveType.SEQ == approveType) {
             this.nodeAssignment.setUserSeq(seq.getAndIncrement());
         }
