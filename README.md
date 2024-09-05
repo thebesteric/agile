@@ -125,6 +125,21 @@ public IdempotentProcessor redisIdempotentProcessor(RedissonClient redissonClien
     return new RedisIdempotentProcessor(redissonClient);
 }
 ```
+### 自定义幂等类匹配
+如果没有定义幂等匹配类的话，默认会对 @Controller、@RestController、@Service、@Component、@Repository 等注解的类进行匹配  
+如果需要自定义匹配，则可以使用 `@Bean` 注解，名称必须为 `idempotentCustomClassMatcher`，自定义后，幂等匹配类则不会进行匹配
+```java
+@Bean("idempotentCustomBeanClassMatcher")
+public List<ClassMatcher> idempotentCustomBeanClassMatcher() {
+    return List.of(new ClassMatcher() {
+        @Override
+        public boolean matcher(Class<?> clazz) {
+            // 判断逻辑
+            return true;
+        }
+    });
+}
+```
 ## 限流插件
 主要作用：进行接口限流，同时支持 IP 地址限流
 ### 使用方式
