@@ -4,9 +4,15 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.core.generator.DefaultIdGenerator;
 import io.github.thebesteric.framework.agile.core.generator.IdGenerator;
 import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ComponentBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ControllerBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.RepositoryBeanClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ServiceBeanClassMatcher;
 import io.github.thebesteric.framework.agile.core.matcher.method.MethodMatcher;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogMode;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.RequestIgnoreProcessor;
+import io.github.thebesteric.framework.agile.plugins.logger.processor.matcher.AgileLoggerOnClassMatcher;
+import io.github.thebesteric.framework.agile.plugins.logger.processor.matcher.AgileLoggerOnMethodMatcher;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.LogRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.RequestLoggerProcessor;
@@ -48,13 +54,12 @@ public class AgileLoggerContext extends AbstractAgileContext {
     private final ResponseSuccessDefineProcessor responseSuccessDefineProcessor;
     private final String contextPath;
 
-    public AgileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders,
-                              List<ClassMatcher> classMatchers, List<MethodMatcher> methodMatchers, List<RequestIgnoreProcessor> requestIgnoreProcessors) {
+    public AgileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders, List<RequestIgnoreProcessor> requestIgnoreProcessors) {
         super((GenericApplicationContext) applicationContext);
         this.properties = properties;
         this.recorders = recorders;
-        this.classMatchers = classMatchers;
-        this.methodMatchers = methodMatchers;
+        this.classMatchers = List.of(new ControllerBeanClassMatcher(), new ServiceBeanClassMatcher(), new ComponentBeanClassMatcher(), new RepositoryBeanClassMatcher());
+        this.methodMatchers = List.of(new AgileLoggerOnMethodMatcher(), new AgileLoggerOnClassMatcher());
         this.requestIgnoreProcessors = requestIgnoreProcessors;
         this.currentRecorder = initCurrentRecorder(properties);
         this.requestLoggerProcessor = getBeanOrDefault(RequestLoggerProcessor.class, new DefaultRequestLoggerProcessor());

@@ -12,6 +12,8 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
+import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ControllerBeanClassMatcher;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationRegister;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.domain.Parasitic;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener.AnnotationParasiticRegisteredListener;
@@ -38,6 +40,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -135,6 +138,11 @@ public class AgileLoggerConfig {
     // public RateLimiterProcessor redisRateLimiterProcessor(RedisTemplate<String, Object> redisTemplate) {
     //     return new RedisRateLimiterProcessor(redisTemplate);
     // }
+
+    @Bean
+    public List<ClassMatcher> idempotentCustomBeanClassMatcher() {
+        return List.of(new ControllerBeanClassMatcher());
+    }
 
     @Bean
     public AnnotationRegister annotationRegister() {

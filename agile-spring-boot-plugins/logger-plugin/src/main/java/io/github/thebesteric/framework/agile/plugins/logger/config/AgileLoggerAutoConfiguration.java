@@ -3,12 +3,6 @@ package io.github.thebesteric.framework.agile.plugins.logger.config;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
-import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
-import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ComponentBeanClassMatcher;
-import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ControllerBeanClassMatcher;
-import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.RepositoryBeanClassMatcher;
-import io.github.thebesteric.framework.agile.core.matcher.clazz.impl.ServiceBeanClassMatcher;
-import io.github.thebesteric.framework.agile.core.matcher.method.MethodMatcher;
 import io.github.thebesteric.framework.agile.core.scaner.ClassPathScanner;
 import io.github.thebesteric.framework.agile.plugins.logger.advisor.AgileLoggerAdvice;
 import io.github.thebesteric.framework.agile.plugins.logger.advisor.AgileLoggerPointcut;
@@ -16,8 +10,6 @@ import io.github.thebesteric.framework.agile.plugins.logger.filter.AgileLoggerFi
 import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.RequestIgnoreProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.mapping.MappingProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.mapping.impl.*;
-import io.github.thebesteric.framework.agile.plugins.logger.processor.matcher.AgileLoggerOnClassMatcher;
-import io.github.thebesteric.framework.agile.plugins.logger.processor.matcher.AgileLoggerOnMethodMatcher;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.LogRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.StdoutRecorder;
@@ -71,8 +63,8 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
 
     @Bean
     public AgileLoggerContext agileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders,
-                                                 List<ClassMatcher> classMatchers, List<MethodMatcher> methodMatchers, List<RequestIgnoreProcessor> requestIgnoreProcessors) {
-        return new AgileLoggerContext(applicationContext, properties, recorders, classMatchers, methodMatchers, requestIgnoreProcessors);
+                                                 List<RequestIgnoreProcessor> requestIgnoreProcessors) {
+        return new AgileLoggerContext(applicationContext, properties, recorders, requestIgnoreProcessors);
     }
 
     @Bean
@@ -115,39 +107,6 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
         @Bean
         public Recorder stdoutRecorder(AgileLoggerProperties properties) {
             return new StdoutRecorder(properties);
-        }
-    }
-
-    @Configuration
-    public static class MatcherConfig {
-        @Bean
-        public ClassMatcher controllerBeanClassMatcher() {
-            return new ControllerBeanClassMatcher();
-        }
-
-        @Bean
-        public ClassMatcher serviceBeanClassMatcher() {
-            return new ServiceBeanClassMatcher();
-        }
-
-        @Bean
-        public ClassMatcher repositoryBeanClassMatcher() {
-            return new RepositoryBeanClassMatcher();
-        }
-
-        @Bean
-        public ClassMatcher componentBeanClassMatcher() {
-            return new ComponentBeanClassMatcher();
-        }
-
-        @Bean
-        public MethodMatcher agileLoggerOnMethodMatcher() {
-            return new AgileLoggerOnMethodMatcher();
-        }
-
-        @Bean
-        public MethodMatcher agileLoggerOnClassMatcher() {
-            return new AgileLoggerOnClassMatcher();
         }
     }
 
