@@ -140,7 +140,7 @@ public class AgileLoggerConfig {
     // }
 
     @Bean
-    public List<ClassMatcher> idempotentCustomBeanClassMatcher() {
+    public List<ClassMatcher> idempotentCustomClassMatcher() {
         return List.of(new ControllerBeanClassMatcher());
     }
 
