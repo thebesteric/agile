@@ -56,7 +56,7 @@ class DeploymentServiceTest {
     void update() {
         String tenantId = "8888-1";
         DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        WorkflowDefinition workflowDefinition = deploymentService.get(tenantId, "test-key");
+        WorkflowDefinition workflowDefinition = deploymentService.getByKey(tenantId, "test-key");
         workflowDefinition.setTenantId("8888");
         workflowDefinition.setKey("test-key");
         workflowDefinition.setName("测试流程");

@@ -18,7 +18,7 @@ class NodeRelationTest {
     void create() {
         String tenantId = "8888";
         DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        WorkflowDefinition workflow = deploymentService.get(tenantId, "test-key");
+        WorkflowDefinition workflow = deploymentService.getByKey(tenantId, "test-key");
 
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         workflowService.createRelations(tenantId, workflow.getId());

@@ -167,7 +167,12 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
 
         // 组装值
         List<Object> args = entityParams.getValue();
-        String values = args.stream().map(arg -> "'" + arg.toString() + "'").collect(Collectors.joining(","));
+        String values = args.stream().map(arg -> {
+            if (arg instanceof Boolean) {
+                arg = (boolean) arg ? 1 : 0;
+            }
+            return "'" + arg.toString() + "'";
+        }).collect(Collectors.joining(","));
 
         // 执行 SQL
         String insertSql = """
@@ -273,6 +278,9 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
         String selectSql = this.queryToSelectSql(query);
         return this.jdbcTemplate.query(selectSql, rs -> {
             try {
+                if (!rs.next()) {
+                    return null;
+                }
                 return (T) type.getMethod("of", ResultSet.class).invoke(null, rs);
             } catch (Exception e) {
                 throw new ExecuteErrorException(e.getMessage(), e);

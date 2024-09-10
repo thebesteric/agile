@@ -45,7 +45,7 @@ public class RuntimeServiceTest {
         String requesterId = "eric";
         workflowEngine.setCurrentUser(requesterId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        List<WorkflowInstance> workflowInstances = runtimeService.findWorkflowInstances("1", requesterId, WorkflowStatus.IN_PROGRESS);
+        List<WorkflowInstance> workflowInstances = runtimeService.findWorkflowInstancesByRequestId("1", requesterId, WorkflowStatus.IN_PROGRESS);
         for (WorkflowInstance workflowInstance : workflowInstances) {
             runtimeService.cancel(tenantId, workflowInstance.getId());
         }

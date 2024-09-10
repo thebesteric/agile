@@ -10,9 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDef
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * 流程定义帮助类
@@ -64,7 +62,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/8 16:01
      */
     public NodeDefinition createNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                     NodeType nodeType, ApproveType approveType, List<String> approverIds, Conditions conditions, String desc) {
+                                     NodeType nodeType, ApproveType approveType, Set<String> approverIds, Conditions conditions, String desc) {
         String tenantId = workflowDefinition.getTenantId();
         Integer workflowDefinitionId = workflowDefinition.getId();
         NodeDefinitionBuilder nodeDefinitionBuilder = NodeDefinitionBuilder.builderNode(tenantId, workflowDefinitionId, nodeType, sequence)
@@ -104,7 +102,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/8 16:01
      */
     public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, List<String> approverIds, Conditions conditions, String desc) {
+                                         ApproveType approveType, Set<String> approverIds, Conditions conditions, String desc) {
         return this.createNode(workflowDefinition, name, sequence, NodeType.TASK, approveType, approverIds, conditions, desc);
     }
 
@@ -124,7 +122,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/8 16:01
      */
     public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, List<String> approverIds, Conditions conditions) {
+                                         ApproveType approveType, Set<String> approverIds, Conditions conditions) {
         return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverIds, conditions, null);
     }
 
@@ -144,7 +142,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/8 16:01
      */
     public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, List<String> approverIds, String desc) {
+                                         ApproveType approveType, Set<String> approverIds, String desc) {
         return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverIds, null, desc);
     }
 
@@ -163,7 +161,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/8 16:01
      */
     public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, List<String> approverIds) {
+                                         ApproveType approveType, Set<String> approverIds) {
         return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverIds, null, null);
     }
 
@@ -185,7 +183,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      */
     public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
                                          ApproveType approveType, String approverId, Conditions conditions, String desc) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, List.of(approverId), conditions, desc);
+        return this.createTaskNode(workflowDefinition, name, sequence, approveType, Set.of(approverId), conditions, desc);
     }
 
     /**
@@ -205,7 +203,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      */
     public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
                                          ApproveType approveType, String approverId, Conditions conditions) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, List.of(approverId), conditions);
+        return this.createTaskNode(workflowDefinition, name, sequence, approveType, Set.of(approverId), conditions);
     }
 
     /**
@@ -409,6 +407,68 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 获取所有任务节点
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<NodeDefinition>
+     *
+     * @author wangweijun
+     * @since 2024/9/9 13:13
+     */
+    public List<NodeDefinition> findTaskNodes(String tenantId, Integer workflowDefinitionId) {
+        List<NodeDefinition> nodes = this.workflowService.getNodes(tenantId, workflowDefinitionId);
+        return nodes.stream().filter(node -> node.getNodeType() == NodeType.TASK).toList();
+    }
+
+    /**
+     * 获取第一个任务节点
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<NodeDefinition>
+     *
+     * @author wangweijun
+     * @since 2024/9/9 13:13
+     */
+    public NodeDefinition getFirstTaskNode(String tenantId, Integer workflowDefinitionId) {
+        List<NodeDefinition> taskNodes = findTaskNodes(tenantId, workflowDefinitionId);
+        return taskNodes.stream().min(Comparator.comparingDouble(NodeDefinition::getSequence)).orElse(null);
+    }
+
+    /**
+     * 获取最后一个任务节点
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<NodeDefinition>
+     *
+     * @author wangweijun
+     * @since 2024/9/9 13:13
+     */
+    public NodeDefinition getEndTaskNode(String tenantId, Integer workflowDefinitionId) {
+        List<NodeDefinition> taskNodes = findTaskNodes(tenantId, workflowDefinitionId);
+        return taskNodes.stream().max(Comparator.comparingDouble(NodeDefinition::getSequence)).orElse(null);
+    }
+
+    /**
+     * 更新节点定义
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @author wangweijun
+     * @since 2024/9/6 15:08
+     */
+    public void updateNode(String tenantId, Integer nodeDefinitionId) {
+        NodeDefinition nodeDefinition = getNode(tenantId, nodeDefinitionId);
+        this.updateNode(nodeDefinition);
+    }
+
+    /**
      * 更新节点定义
      *
      * @param nodeDefinition 节点定义
@@ -416,8 +476,65 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/11 21:32
      */
-    public void update(NodeDefinition nodeDefinition) {
+    public void updateNode(NodeDefinition nodeDefinition) {
         this.workflowService.updateNode(nodeDefinition);
+    }
+
+    /**
+     * 删除节点定义
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @author wangweijun
+     * @since 2024/9/6 15:13
+     */
+    public void deleteNode(String tenantId, Integer nodeDefinitionId) {
+        this.workflowService.deleteNode(tenantId, nodeDefinitionId);
+    }
+
+    /**
+     * 删除节点定义
+     *
+     * @param nodeDefinition 节点定义
+     *
+     * @author wangweijun
+     * @since 2024/9/6 15:13
+     */
+    public void deleteNode(NodeDefinition nodeDefinition) {
+        this.deleteNode(nodeDefinition.getTenantId(), nodeDefinition.getId());
+    }
+
+    /**
+     * 插入节点定义
+     *
+     * @param nodeDefinition     节点定义
+     * @param prevNodeDefinition 上一个节点定义
+     * @param nextNodeDefinition 下一个节点定义
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/6 16:48
+     */
+    public NodeDefinition insertNode(NodeDefinition nodeDefinition, NodeDefinition prevNodeDefinition, NodeDefinition nextNodeDefinition) {
+        return this.workflowService.insertNode(nodeDefinition, prevNodeDefinition.getId(), nextNodeDefinition.getId());
+    }
+
+    /**
+     * 插入节点定义
+     *
+     * @param nodeDefinition       节点定义
+     * @param prevNodeDefinitionId 上一个节点定义 ID
+     * @param nextNodeDefinitionId 下一个节点定义 ID
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/6 16:48
+     */
+    public NodeDefinition insertNode(NodeDefinition nodeDefinition, Integer prevNodeDefinitionId, Integer nextNodeDefinitionId) {
+        return this.workflowService.insertNode(nodeDefinition, prevNodeDefinitionId, nextNodeDefinitionId);
     }
 
     /**

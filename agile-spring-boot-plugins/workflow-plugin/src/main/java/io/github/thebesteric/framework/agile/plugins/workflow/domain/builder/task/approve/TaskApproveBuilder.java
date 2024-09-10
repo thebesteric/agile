@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve;
 
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskApprove;
@@ -41,6 +42,11 @@ public class TaskApproveBuilder extends AbstractBuilder<TaskApprove> {
 
     public TaskApproveBuilder approverId(String approverId) {
         this.taskApprove.setApproverId(approverId);
+        return this;
+    }
+
+    public TaskApproveBuilder active(ActiveStatus activeStatus) {
+        this.taskApprove.setActive(activeStatus);
         return this;
     }
 

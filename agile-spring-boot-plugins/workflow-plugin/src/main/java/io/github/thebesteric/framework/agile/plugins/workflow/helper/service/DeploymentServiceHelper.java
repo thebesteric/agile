@@ -106,8 +106,23 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/8 16:26
      */
-    public WorkflowDefinition get(String tenantId, String key) {
-        return this.deploymentService.get(tenantId, key);
+    public WorkflowDefinition getByKey(String tenantId, String key) {
+        return this.deploymentService.getByKey(tenantId, key);
+    }
+
+    /**
+     * 获取流程定义
+     *
+     * @param tenantId 租户 ID
+     * @param id       id
+     *
+     * @return WorkflowDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/10 17:23
+     */
+    public WorkflowDefinition getById(String tenantId, Integer id) {
+        return this.deploymentService.getById(tenantId, id);
     }
 
     /**

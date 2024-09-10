@@ -1,36 +1,30 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition;
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
-import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -46,11 +40,13 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
 
     private NodeDefinition nodeDefinition;
     private final NodeAssignmentExecutor nodeAssignmentExecutor;
+    private final WorkflowDefinitionExecutor workflowDefinitionExecutor;
 
     public NodeDefinitionExecutor(JdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
         this.nodeDefinition = new NodeDefinition();
         nodeAssignmentExecutor = new NodeAssignmentExecutor(jdbcTemplate);
+        workflowDefinitionExecutor = new WorkflowDefinitionExecutor(jdbcTemplate);
     }
 
     /**
@@ -67,49 +63,35 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         }
 
         // 创建节点定义
-        String insertSql = """
-                INSERT INTO awf_node_definition (`tenant_id`, `wf_def_id`, `name`, `node_type`, `approve_type`, `conditions`, `sequence`, `created_at`, `created_by`, `desc`, `state`, `version`)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """;
+        nodeDefinition = super.save(nodeDefinition);
 
-        // 审批类型
-        ApproveType approveType = nodeDefinition.getApproveType();
+        Integer workflowDefinitionId = nodeDefinition.getWorkflowDefinitionId();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        int rowsAffected = this.jdbcTemplate.update(
-                conn -> {
-                    AtomicInteger index = new AtomicInteger(0);
-                    PreparedStatement ps = conn.prepareStatement(insertSql, new String[]{"id"});
-                    ps.setString(index.incrementAndGet(), nodeDefinition.getTenantId());
-                    ps.setInt(index.incrementAndGet(), nodeDefinition.getWorkflowDefinitionId());
-                    ps.setString(index.incrementAndGet(), nodeDefinition.getName());
-                    ps.setInt(index.incrementAndGet(), nodeDefinition.getNodeType().getCode());
-                    ps.setInt(index.incrementAndGet(), approveType.getCode());
-                    ps.setString(index.incrementAndGet(), JsonUtils.toJson(nodeDefinition.getConditions()));
-                    ps.setInt(index.incrementAndGet(), nodeDefinition.getSequence());
-                    ps.setString(index.incrementAndGet(), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(nodeDefinition.getCreatedAt()));
-                    ps.setString(index.incrementAndGet(), nodeDefinition.getCreatedBy());
-                    ps.setString(index.incrementAndGet(), nodeDefinition.getDesc());
-                    ps.setInt(index.incrementAndGet(), 1);
-                    ps.setInt(index.incrementAndGet(), nodeDefinition.getVersion());
-                    return ps;
-                }, keyHolder);
+        // 获取节点审批人
+        Set<Approver> approvers = nodeDefinition.getApprovers();
+        NodeType nodeType = nodeDefinition.getNodeType();
 
-        if (rowsAffected > 0) {
-            nodeDefinition.setId(Objects.requireNonNull(keyHolder.getKey()).intValue());
-
-            // 设置节点审批人
-            NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
-            NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
-            for (Approver approver : nodeDefinition.getApprovers()) {
-                NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(approveType, approver.getId(), approver.getDesc()).build();
-                NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
-                assignmentExecutor.save();
+        // 节点定义不是开始或结束节点，非自动审批条件下，审批人为空的情况
+        if (nodeType != NodeType.START && nodeType != NodeType.END && !workflowDefinition.isAllowEmptyAutoApprove() && approvers.isEmpty()) {
+            // 默认审批人为空
+            if (workflowDefinition.getWhenEmptyApprovers().isEmpty()) {
+                throw new WorkflowException("非自动审批条件下，审批人不能为空");
             }
-            nodeAssignmentBuilder.resetSeq();
-        } else {
-            throw new DataIntegrityViolationException("Failed to insert data, no rows affected.");
+            // 设置审批人为流程定义的默认审批人
+            approvers = workflowDefinition.getWhenEmptyApprovers();
         }
+
+        // 设置节点审批人
+        NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
+        NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
+        for (Approver approver : approvers) {
+            NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(nodeDefinition.getApproveType(), approver.getId(), approver.getDesc()).build();
+            NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
+            assignmentExecutor.save();
+        }
+        nodeAssignmentBuilder.resetSeq();
+
         return nodeDefinition;
     }
 
@@ -155,7 +137,12 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         final String selectSql = """
                 SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `name` = ? AND `state` = 1 AND `tenant_id` = ?
                 """;
-        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> NodeDefinition.of(rs), workflowDefinitionId, name, tenantId)).getOrNull();
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
+            NodeDefinition nd = NodeDefinition.of(rs);
+            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setApprovers(approvers);
+            return nd;
+        }, workflowDefinitionId, name, tenantId)).getOrNull();
     }
 
     /**
@@ -167,7 +154,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      * @since 2024/6/18 17:44
      */
     public NodeDefinition getById() {
-        return getById(nodeDefinition.getTenantId(), nodeDefinition.getId());
+        return this.getById(nodeDefinition.getTenantId(), nodeDefinition.getId());
     }
 
     /**
@@ -182,7 +169,12 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         final String selectSql = """
                 SELECT * FROM awf_node_definition WHERE `id` = ? AND `tenant_id` = ?
                 """;
-        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> NodeDefinition.of(rs), id, tenantId)).getOrNull();
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
+            NodeDefinition nd = NodeDefinition.of(rs);
+            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setApprovers(approvers);
+            return nd;
+        }, id, tenantId)).getOrNull();
     }
 
     /**
@@ -207,30 +199,15 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      */
     public List<NodeDefinition> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
         final String selectSql = """
-                SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `state` = 1 AND `tenant_id` = ?
+                SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `state` = 1 AND `tenant_id` = ? order by `sequence` ASC
                 """;
         RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);
-        return jdbcTemplate.query(selectSql, rowMapper, workflowDefinitionId, tenantId).stream().toList();
-    }
-
-    /**
-     * 根据流程定义 ID 和 sequence 获取节点定义集合
-     *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 节点定义 ID
-     * @param sequence             排序值
-     *
-     * @return List<NodeDefinition>
-     *
-     * @author wangweijun
-     * @since 2024/7/4 13:24
-     */
-    public List<NodeDefinition> findByWorkflowDefinitionIdAndSequence(String tenantId, Integer workflowDefinitionId, Integer sequence) {
-        final String selectSql = """
-                SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `state` = 1 AND `tenant_id` = ? AND `sequence` = ?
-                """;
-        RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);
-        return jdbcTemplate.query(selectSql, rowMapper, workflowDefinitionId, tenantId, sequence).stream().toList();
+        List<NodeDefinition> nodeDefinitions = jdbcTemplate.query(selectSql, rowMapper, workflowDefinitionId, tenantId).stream().toList();
+        nodeDefinitions.forEach(nd -> {
+            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setApprovers(approvers);
+        });
+        return nodeDefinitions;
     }
 
     /**
@@ -260,7 +237,12 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         final String selectSql = """
                 SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `node_type` = %s AND `tenant_id` = ?
                 """.formatted(NodeType.START.getCode());
-        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> NodeDefinition.of(rs), workflowDefinitionId, tenantId)).getOrNull();
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
+            NodeDefinition nd = NodeDefinition.of(rs);
+            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setApprovers(approvers);
+            return nd;
+        }, workflowDefinitionId, tenantId)).getOrNull();
     }
 
     /**
@@ -290,7 +272,12 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         final String selectSql = """
                 SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `node_type` = %s AND `tenant_id` = ?
                 """.formatted(NodeType.END.getCode());
-        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> NodeDefinition.of(rs), workflowDefinitionId, tenantId)).getOrNull();
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
+            NodeDefinition nd = NodeDefinition.of(rs);
+            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setApprovers(approvers);
+            return nd;
+        }, workflowDefinitionId, tenantId)).getOrNull();
     }
 
     /**
@@ -318,10 +305,15 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      */
     public List<NodeDefinition> findTaskNodes(String tenantId, Integer workflowDefinitionId) {
         final String selectSql = """
-                SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `node_type` = %s AND `tenant_id` = ?
+                SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `node_type` = %s AND `tenant_id` = ? ORDER BY `sequence` ASC
                 """.formatted(NodeType.TASK.getCode());
         RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);
-        return jdbcTemplate.query(selectSql, rowMapper, workflowDefinitionId, tenantId).stream().toList();
+        List<NodeDefinition> nodeDefinitions = jdbcTemplate.query(selectSql, rowMapper, workflowDefinitionId, tenantId).stream().toList();
+        nodeDefinitions.forEach(nd -> {
+            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setApprovers(approvers);
+        });
+        return nodeDefinitions;
     }
 
     /**
@@ -345,8 +337,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         List<NodeDefinition> toNodeDefinitions = jdbcTemplate.query(selectSql, rowMapper, fromNodeDefinitionId, tenantId).stream().toList();
         // 设置审批人集合
         for (NodeDefinition toNodeDefinition : toNodeDefinitions) {
-            List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, toNodeDefinition.getId());
-            Set<Approver> approvers = nodeAssignments.stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
+            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, toNodeDefinition.getId());
             toNodeDefinition.setApprovers(approvers);
         }
         return toNodeDefinitions;
@@ -373,5 +364,21 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                 DELETE FROM awf_node_definition WHERE `id` = ? AND `tenant_id` = ?
                 """;
         return this.jdbcTemplate.update(deleteSql, id, tenantId) > 0;
+    }
+
+    /**
+     * 根据节点定义 ID 查找节点审批人
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return Set<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/9/6 14:45
+     */
+    public Set<Approver> findApproversByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
+        return nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId)
+                .stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
     }
 }

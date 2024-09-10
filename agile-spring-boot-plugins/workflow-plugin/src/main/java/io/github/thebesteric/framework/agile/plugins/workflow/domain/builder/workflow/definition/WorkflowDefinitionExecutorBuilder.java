@@ -30,7 +30,11 @@ public class WorkflowDefinitionExecutorBuilder extends AbstractExecutorBuilder<W
 
     public WorkflowDefinitionExecutorBuilder key(String key) {
         this.workflowDefinitionExecutor.getWorkflowDefinition().setKey(key);
-        this.workflowDefinitionExecutor.getWorkflowDefinition().setName(key);
+        return this;
+    }
+
+    public WorkflowDefinitionExecutorBuilder id(Integer id) {
+        this.workflowDefinitionExecutor.getWorkflowDefinition().setId(id);
         return this;
     }
 

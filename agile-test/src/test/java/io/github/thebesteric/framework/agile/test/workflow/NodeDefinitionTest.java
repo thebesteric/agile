@@ -29,7 +29,7 @@ class NodeDefinitionTest {
         String tenantId = "8888";
         workflowEngine.setCurrentUser("admin");
         DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        WorkflowDefinition workflowDefinition = deploymentService.get(tenantId, "test-key");
+        WorkflowDefinition workflowDefinition = deploymentService.getByKey(tenantId, "test-key");
         if (workflowDefinition == null) {
             workflowDefinition = WorkflowDefinitionBuilder.builder().tenantId(tenantId).key("test-key").name("测试流程").type("测试").desc("这是一个测试流程").build();
             workflowDefinition = deploymentService.create(workflowDefinition);
@@ -302,12 +302,12 @@ class NodeDefinitionTest {
         // 设置节点审批人
         // nodeDefinition.removeApproverId("测试审批人");
 
-        nodeDefinition.setSequence(1);
+        nodeDefinition.setSequence(1.0);
         workflowService.updateNode(nodeDefinition);
 
         List<NodeDefinition> nodeDefinitions = workflowService.getNodes(tenantId, List.of(2, 3));
         for (NodeDefinition definition : nodeDefinitions) {
-            definition.setSequence(2);
+            definition.setSequence(2.0);
             workflowService.updateNode(definition);
         }
 

@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -33,6 +34,18 @@ public class Approver implements Serializable {
         approver.setId(id);
         approver.setDesc(desc);
         return approver;
+    }
+
+    /**
+     * 是否未设置指定审批人
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/9/9 13:40
+     */
+    public boolean isUnSettingAssignmentApprover() {
+        return this.id.startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && this.id.endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX);
     }
 
     @Override

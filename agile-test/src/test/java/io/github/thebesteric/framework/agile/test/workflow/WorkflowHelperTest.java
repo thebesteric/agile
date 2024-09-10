@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.WorkflowHelper;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * WorkflowHelperTest
@@ -39,8 +41,16 @@ class WorkflowHelperTest {
         DeploymentServiceHelper deploymentServiceHelper = new WorkflowHelper(workflowEngine).getDeploymentServiceHelper();
         deploymentServiceHelper.setCurrentUser("admin");
         // 创建流程定义
-        deploymentServiceHelper.deploy(tenantId, "请假流程-1", workflowKey, "日常办公流程");
-        WorkflowDefinition workflowDefinition = deploymentServiceHelper.get(tenantId, workflowKey);
+        WorkflowDefinitionBuilder builder = WorkflowDefinitionBuilder.builder()
+                .tenantId(tenantId)
+                .key(workflowKey)
+                .name("请假流程-1")
+                // 是否允许节点审批人为空的时候，自动通过
+                .allowEmptyAutoApprove(false)
+                // 当节点审批人为空的时候，使用的默认审批人
+                .whenEmptyApprovers(Set.of(Approver.of("admin", "系统管理员"), Approver.of("admin-1", "系统管理员-1")))
+                .type("日常办公流程");
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.deploy(builder);
         System.out.println(workflowDefinition);
     }
 
@@ -51,7 +61,7 @@ class WorkflowHelperTest {
     void createNode() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
-        WorkflowDefinition workflowDefinition = deploymentServiceHelper.get(tenantId, workflowKey);
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.getByKey(tenantId, workflowKey);
 
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
         workflowServiceHelper.setCurrentUser("admin");
@@ -63,7 +73,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow2(tenantId, workflowDefinition);
+        createWorkflow4(tenantId, workflowDefinition);
     }
 
     private void createWorkflow1(String tenantId, WorkflowDefinition workflowDefinition) {
@@ -122,14 +132,77 @@ class WorkflowHelperTest {
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
-        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
-                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ANY)
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ALL)
                 .approver(Approver.of("张三", "张三姓名")).approver(Approver.of("李四", "李四姓名"))
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
+                .approver(Approver.of("王五", "王五姓名"))
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
+                .name("总经理审批").desc("任务节点").approveType(ApproveType.ANY)
+                .approver(Approver.of("赵六", "赵六姓名"))
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+    }
+
+    /**
+     * 动态审批
+     */
+    private void createWorkflow3(String tenantId, WorkflowDefinition workflowDefinition) {
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ALL)
+                .assignmentApprovers(2) // 预设 2 个审批人
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
+                .assignmentApprovers(1) // 预设 1 个审批人
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+    }
+
+    private void createWorkflow4(String tenantId, WorkflowDefinition workflowDefinition) {
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ANY)
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
                 .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
                 .approver(Approver.of("王五", "王五姓名"))
                 .build();
@@ -149,7 +222,7 @@ class WorkflowHelperTest {
     void publish() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
-        WorkflowDefinition workflowDefinition = deploymentServiceHelper.get(tenantId, workflowKey);
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.getByKey(tenantId, workflowKey);
 
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
         workflowServiceHelper.setCurrentUser("admin");
@@ -165,11 +238,21 @@ class WorkflowHelperTest {
         String userId = "eric";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
-        WorkflowDefinition workflowDefinition = deploymentServiceHelper.get(tenantId, workflowKey);
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.getByKey(tenantId, workflowKey);
 
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(userId);
         // runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天");
+
+        WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
+        NodeDefinition firstTaskNode = workflowServiceHelper.getFirstTaskNode(tenantId, workflowDefinition.getId());
+        if (firstTaskNode.isUnSettingAssignmentApprovers()) {
+            System.out.println("需要指定审批人数量：" + firstTaskNode.getApprovers());
+            List<Approver> approvers = List.of(Approver.of("张三"), Approver.of("李四"));
+            runtimeServiceHelper.dynamicAssignmentApprovers(tenantId, firstTaskNode.getId(), approvers);
+            System.out.println("审批人设置完毕：" + approvers);
+        }
+
 
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
@@ -185,8 +268,11 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
+        String approverId = "admin";
+        // String approverId = "admin-1";
         // String approverId = "张三";
-        String approverId = "李四";
+        // String approverId = "李四";
+        // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "赵六";
         // String approverId = "孙七";
@@ -208,6 +294,43 @@ class WorkflowHelperTest {
             RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
             List<WorkflowRepository> attachments = repositoryServiceHelper.findAttachments(taskInstance);
             attachments.forEach(System.out::println);
+
+            // 当前生效的任务实例
+            Integer workflowInstanceId = taskInstance.getWorkflowInstanceId();
+            TaskInstance inCurrentlyEffectTaskInstance = runtimeServiceHelper.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
+            if (inCurrentlyEffectTaskInstance != null) {
+                Integer nodeDefinitionId = inCurrentlyEffectTaskInstance.getNodeDefinitionId();
+                NodeDefinition nodeDefinition = workflowHelper.getWorkflowServiceHelper().getNode(tenantId, nodeDefinitionId);
+                // 检查是否有为设置的审批人
+                if (nodeDefinition.isUnSettingAssignmentApprovers()) {
+                    Set<Approver> approvers = nodeDefinition.getApprovers();
+                    System.out.println(approvers);
+                    runtimeServiceHelper.dynamicAssignmentApprovers(tenantId, nodeDefinition.getId(), Approver.of("王五"));
+                }
+            }
+        });
+    }
+
+
+    /**
+     * 审批-撤回
+     */
+    @Test
+    void redo() {
+        // String approverId = "张三";
+        String approverId = "李四";
+        // String approverId = "王五";
+        // String approverId = "赵六";
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        runtimeServiceHelper.setCurrentUser(approverId);
+
+        // 查找待审批待实例
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, approverId, null, ApproveStatus.APPROVED, 1, 10);
+        List<TaskInstance> taskInstances = page.getRecords();
+
+        taskInstances.forEach(taskInstance -> {
+            runtimeServiceHelper.redo(taskInstance, approverId, "审批撤回");
         });
     }
 
@@ -216,9 +339,9 @@ class WorkflowHelperTest {
      */
     @Test
     void reject() {
-        String approverId = "张三";
+        // String approverId = "张三";
         // String approverId = "李四";
-        // String approverId = "王五";
+        String approverId = "王五";
         // String approverId = "赵六";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
@@ -266,7 +389,7 @@ class WorkflowHelperTest {
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(requesterId);
 
-        Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstances(tenantId, requesterId, WorkflowStatus.IN_PROGRESS, 1, 10);
+        Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, requesterId, WorkflowStatus.IN_PROGRESS, 1, 10);
         List<WorkflowInstance> workflowInstances = page.getRecords();
         workflowInstances.forEach(workflowInstance -> {
             runtimeServiceHelper.cancel(workflowInstance);
@@ -296,14 +419,39 @@ class WorkflowHelperTest {
         // nodeDefinition.setDesc("任务节点");
         // nodeDefinition.removeApprovers("测试审批人");
 
-        nodeDefinition.setSequence(2);
-        workflowServiceHelper.update(nodeDefinition);
+        nodeDefinition.setSequence(2.0);
+        workflowServiceHelper.updateNode(nodeDefinition);
 
         List<NodeDefinition> nodeDefinitions = workflowServiceHelper.getNodes(tenantId, 2);
         for (NodeDefinition definition : nodeDefinitions) {
-            definition.setSequence(1);
-            workflowServiceHelper.update(definition);
+            definition.setSequence(1.0);
+            workflowServiceHelper.updateNode(definition);
         }
+    }
+
+    /**
+     * 插入节点
+     */
+    @Test
+    void insertNode() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
+
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, 1)
+                .name("新插入的节点").approver(Approver.of("小明", "李小明")).build();
+
+        workflowServiceHelper.insertNode(nodeDefinition, 2, 3);
+    }
+
+    /**
+     * 删除节点
+     */
+    @Test
+    void deleteNode() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
+
+        workflowServiceHelper.deleteNode(tenantId, 4);
     }
 
 
@@ -342,6 +490,36 @@ class WorkflowHelperTest {
 
         affect = repositoryServiceHelper.clearAttachmentsByWorkflowDefinition(tenantId, 1);
         System.out.println(affect);
+
+    }
+
+    @Test
+    void findWorkflowInstancesByApprover() {
+        String approverId = "admin";
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        runtimeServiceHelper.setCurrentUser(approverId);
+
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+
+        Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByApproverId(tenantId, approverId, WorkflowStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        List<WorkflowInstance> workflowInstances = page.getRecords();
+        workflowInstances.forEach(workflowInstance -> {
+            WorkflowDefinition workflowDefinition = deploymentServiceHelper.getById(tenantId, workflowInstance.getWorkflowDefinitionId());
+            System.out.printf("当前流程: %s, 当前实例 ID：%s\n", workflowDefinition.getName(), workflowInstance.getId());
+        });
+    }
+
+    @Test
+    void updateApprover() {
+        String approverId = "admin";
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        runtimeServiceHelper.setCurrentUser(approverId);
+
+
+        runtimeServiceHelper.updateApprover(tenantId, "admin", "test");
+
 
     }
 

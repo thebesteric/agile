@@ -104,102 +104,44 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     @Override
     public NodeDefinition createNode(NodeDefinition nodeDefinition) {
         NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.nodeDefinition(nodeDefinition).build();
+
+        // 查找所属流程定义
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
+
+        // 将流程定义设置为未发布
+        if (workflowDefinition.isPublished()) {
+            workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
+            workflowDefinitionExecutor.updateById(workflowDefinition);
+        }
+
         return executor.save();
     }
 
     /**
-     * 获取节点定义
+     * 插入节点定义
      *
-     * @param tenantId         租户 ID
-     * @param nodeDefinitionId 节点定义 ID
+     * @param nodeDefinition       节点定义
+     * @param prevNodeDefinitionId 上一个节点定义 ID
+     * @param nextNodeDefinitionId 下一个节点定义 ID
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/6 16:48
      */
     @Override
-    public NodeDefinition getNode(String tenantId, Integer nodeDefinitionId) {
-        // 获取节点定义
-        NodeDefinition nodeDefinition = nodeDefinitionExecutorBuilder.build().getById(tenantId, nodeDefinitionId);
-        // 获取节点审批人
-        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
-        List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
-        Set<Approver> approvers = nodeAssignments.stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
-        nodeDefinition.setApprovers(approvers);
-        return nodeDefinition;
-    }
-
-    /**
-     * 获取节点定义
-     *
-     * @param tenantId          租户 ID
-     * @param nodeDefinitionIds 节点定义 IDs
-     */
-    @Override
-    public List<NodeDefinition> getNodes(String tenantId, List<Integer> nodeDefinitionIds) {
-        List<NodeDefinition> nodeDefinitions = new ArrayList<>();
-        for (Integer nodeDefinitionId : nodeDefinitionIds) {
-            NodeDefinition nodeDefinition = this.getNode(tenantId, nodeDefinitionId);
-            nodeDefinitions.add(nodeDefinition);
-        }
-        return nodeDefinitions;
-    }
-
-    /**
-     * 获取开始节点
-     *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 ID
-     */
-    @Override
-    public NodeDefinition getStartNode(String tenantId, Integer workflowDefinitionId) {
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
-        return executor.getStartNode();
-    }
-
-    /**
-     * 获取结束节点
-     *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 ID
-     */
-    @Override
-    public NodeDefinition getEndNode(String tenantId, Integer workflowDefinitionId) {
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
-        return executor.getEndNode();
-    }
-
-    /**
-     * 获取任务节点集合
-     *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 ID
-     */
-    @Override
-    public List<NodeDefinition> findTaskNodes(String tenantId, Integer workflowDefinitionId) {
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
-        List<NodeDefinition> taskNodes = executor.findTaskNodes();
-        taskNodes = taskNodes.stream().sorted(Comparator.comparingInt(NodeDefinition::getSequence)).toList();
-        return taskNodes;
-    }
-
-    /**
-     * 获取节点定义集合
-     *
-     * @param tenantId             租户 ID
-     * @param fromNodeDefinitionId 起始节点定义 ID
-     */
-    @Override
-    public List<NodeDefinition> findToTaskNodesByFromNodeId(String tenantId, Integer fromNodeDefinitionId) {
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.build();
-        return executor.findToTaskNodesByFromNodeId(tenantId, fromNodeDefinitionId);
-    }
-
-    /**
-     * 获取节点定义集合
-     *
-     * @param workflowDefinitionId 流程定义 ID
-     */
-    @Override
-    public List<NodeDefinition> getNodes(String tenantId, Integer workflowDefinitionId) {
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.workflowDefinitionId(workflowDefinitionId).build();
-        return executor.findByWorkflowDefinitionId();
+    public NodeDefinition insertNode(NodeDefinition nodeDefinition, Integer prevNodeDefinitionId, Integer nextNodeDefinitionId) {
+        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.nodeDefinition(nodeDefinition).build();
+        // 查找前置节点
+        NodeDefinition prevNodeDefinition = executor.getById(nodeDefinition.getTenantId(), prevNodeDefinitionId);
+        // 查找后置节点
+        NodeDefinition nextNodeDefinition = executor.getById(nodeDefinition.getTenantId(), nextNodeDefinitionId);
+        // 计算 sequence
+        double sequence = (prevNodeDefinition.getSequence() + nextNodeDefinition.getSequence()) / 2;
+        nodeDefinition.setSequence(sequence);
+        // 创建节点
+        return createNode(nodeDefinition);
     }
 
     /**
@@ -211,7 +153,6 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     public void updateNode(NodeDefinition nodeDefinition) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
-
             if (NodeType.START == nodeDefinition.getNodeType() || NodeType.END == nodeDefinition.getNodeType()) {
                 throw new WorkflowException("节点更新修改失败: 无法修改开始节点或结束节点");
             }
@@ -280,8 +221,119 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      */
     @Override
     public boolean deleteNode(String tenantId, Integer nodeDefinitionId) {
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.id(nodeDefinitionId).build();
+        NodeDefinition nodeDefinition = getNode(tenantId, nodeDefinitionId);
+
+        // 判断是否是开始或结束节点
+        if (NodeType.START == nodeDefinition.getNodeType() || NodeType.END == nodeDefinition.getNodeType()) {
+            throw new WorkflowException("节点删除失败: 无法删除开始节点或结束节点");
+        }
+
+        // 获取任务节点
+        List<NodeDefinition> taskNodes = findTaskNodes(tenantId, nodeDefinition.getWorkflowDefinitionId());
+        if (taskNodes.size() <= 1) {
+            throw new WorkflowException("节点删除失败: 节点定义必须至少存在一个任务节点");
+        }
+
+        // 查找所属流程定义
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
+
+        // 将流程定义设置为未发布
+        if (workflowDefinition.isPublished()) {
+            workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
+            workflowDefinitionExecutor.updateById(workflowDefinition);
+        }
+
+        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).id(nodeDefinitionId).build();
         return executor.deleteById();
+    }
+
+    /**
+     * 获取节点定义
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     */
+    @Override
+    public NodeDefinition getNode(String tenantId, Integer nodeDefinitionId) {
+        // 获取节点定义
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        return nodeDefinitionExecutor.getById(tenantId, nodeDefinitionId);
+    }
+
+    /**
+     * 获取节点定义
+     *
+     * @param tenantId          租户 ID
+     * @param nodeDefinitionIds 节点定义 IDs
+     */
+    @Override
+    public List<NodeDefinition> getNodes(String tenantId, List<Integer> nodeDefinitionIds) {
+        List<NodeDefinition> nodeDefinitions = new ArrayList<>();
+        for (Integer nodeDefinitionId : nodeDefinitionIds) {
+            NodeDefinition nodeDefinition = this.getNode(tenantId, nodeDefinitionId);
+            nodeDefinitions.add(nodeDefinition);
+        }
+        return nodeDefinitions;
+    }
+
+    /**
+     * 获取开始节点
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    @Override
+    public NodeDefinition getStartNode(String tenantId, Integer workflowDefinitionId) {
+        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
+        return executor.getStartNode();
+    }
+
+    /**
+     * 获取结束节点
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    @Override
+    public NodeDefinition getEndNode(String tenantId, Integer workflowDefinitionId) {
+        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
+        return executor.getEndNode();
+    }
+
+    /**
+     * 获取任务节点集合
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    @Override
+    public List<NodeDefinition> findTaskNodes(String tenantId, Integer workflowDefinitionId) {
+        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
+        return executor.findTaskNodes();
+    }
+
+    /**
+     * 获取节点定义集合
+     *
+     * @param tenantId             租户 ID
+     * @param fromNodeDefinitionId 起始节点定义 ID
+     */
+    @Override
+    public List<NodeDefinition> findToTaskNodesByFromNodeId(String tenantId, Integer fromNodeDefinitionId) {
+        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.build();
+        return executor.findToTaskNodesByFromNodeId(tenantId, fromNodeDefinitionId);
+    }
+
+    /**
+     * 获取节点定义集合
+     *
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    @Override
+    public List<NodeDefinition> getNodes(String tenantId, Integer workflowDefinitionId) {
+        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
+        return executor.findByWorkflowDefinitionId();
     }
 
     /**
@@ -314,19 +366,21 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             NodeDefinition endNode = this.getEndNode(tenantId, workflowDefinitionId);
 
             // taskNodes 按 sequence 分组
-            Map<Integer, List<NodeDefinition>> taskNodesGroups = taskNodes.stream().collect(Collectors.groupingBy(NodeDefinition::getSequence));
+            Map<Double, List<NodeDefinition>> taskNodesGroups = taskNodes.stream().collect(Collectors.groupingBy(NodeDefinition::getSequence));
+            // 创建一个 TreeMap 来保证 sequence 的顺序在 map 中是按照升序排列的
+            TreeMap<Double, List<NodeDefinition>> sortedTaskNodesGroups = new TreeMap<>(taskNodesGroups);
 
             // 顺序节点
             List<NodeDefinition> fromNodes = List.of(startNode);
-            for (Map.Entry<Integer, List<NodeDefinition>> entry : taskNodesGroups.entrySet()) {
-                Integer sequence = entry.getKey();
+            for (Map.Entry<Double, List<NodeDefinition>> entry : sortedTaskNodesGroups.entrySet()) {
+                Double sequence = entry.getKey();
                 List<NodeDefinition> nodeDefinitions = entry.getValue();
                 this.createRelations(tenantId, workflowDefinitionId, fromNodes, nodeDefinitions, sequence);
                 fromNodes = nodeDefinitions;
             }
 
             // 逆向节点
-            int sequence = 1;
+            double sequence = 1;
             for (NodeDefinition taskNode : taskNodes) {
                 NodeRelation rejectNodeRelation = NodeRelationBuilder.builder(tenantId, workflowDefinitionId).fromNode(taskNode).toNode(endNode).sequence(sequence).build();
                 this.createRelation(rejectNodeRelation);
@@ -340,7 +394,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         }, true);
     }
 
-    private void createRelations(String tenantId, Integer workflowDefinitionId, List<NodeDefinition> fromNodes, List<NodeDefinition> toNodes, Integer sequence) {
+    private void createRelations(String tenantId, Integer workflowDefinitionId, List<NodeDefinition> fromNodes, List<NodeDefinition> toNodes, Double sequence) {
         for (NodeDefinition fromNode : fromNodes) {
             for (NodeDefinition toNode : toNodes) {
                 NodeRelation rejectNodeRelation = NodeRelationBuilder.builder(tenantId, workflowDefinitionId).fromNode(fromNode).toNode(toNode).sequence(sequence).build();

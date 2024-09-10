@@ -49,7 +49,20 @@ public interface DeploymentService {
      * @author wangweijun
      * @since 2024/6/17 15:26
      */
-    WorkflowDefinition get(String tenantId, String key);
+    WorkflowDefinition getByKey(String tenantId, String key);
+
+    /**
+     * 获取流程定义
+     *
+     * @param tenantId 租户
+     * @param id       id
+     *
+     * @return WorkflowDefinition
+     *
+     * @author wangweijun
+     * @since 2024/6/17 15:26
+     */
+    WorkflowDefinition getById(String tenantId, Integer id);
 
     /**
      * 获取流程定义列表

@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
@@ -61,7 +62,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
 
 
     /**
-     * 根据发起人 ID 查询流程实例
+     * 查找流程实例：根据发起人
      *
      * @param tenantId         租户 ID
      * @param requesterId      发起人 ID
@@ -96,7 +97,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
     }
 
     /**
-     * 根据发起人 ID 查询流程实例
+     * 查找流程实例：根据发起人
      *
      * @param tenantId       租户 ID
      * @param requesterId    发起人 ID
@@ -109,6 +110,51 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      */
     public Page<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, WorkflowStatus workflowStatus) {
         return findByRequesterId(tenantId, requesterId, workflowStatus == null ? null : List.of(workflowStatus), 1, Integer.MAX_VALUE);
+    }
+
+    /**
+     * 查找流程实例：根据审批人
+     *
+     * @param tenantId         租户 ID
+     * @param approverId       审批人 ID
+     * @param workflowStatuses 流程状态
+     * @param approveStatuses  审批状态
+     * @param page             当前页
+     * @param pageSize         每页显示数量
+     *
+     * @return Page<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/10 17:40
+     */
+    public Page<WorkflowInstance> findByApproverId(String tenantId, String approverId, List<WorkflowStatus> workflowStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+        String selectSql = """
+                SELECT DISTINCT wi.* FROM `awf_wf_instance` wi
+                    LEFT JOIN `awf_wf_definition` wd ON wi.`wf_def_id` = wd.`id`
+                    LEFT JOIN `awf_node_definition` nd ON nd.`wf_def_id` = wd.`id`
+                    LEFT JOIN `awf_task_instance` ti ON ti.`node_def_id` = nd.`id`
+                    LEFT JOIN `awf_node_assignment` na ON na.`node_def_id` = nd.`id`
+                    LEFT JOIN `awf_task_approve` ta ON ta.`task_inst_id` = ti.`id`
+                WHERE wi.`tenant_id` = ? and wi.`state` = 1  and na.`user_id` = ?
+                """;
+        if (workflowStatuses != null && !workflowStatuses.isEmpty()) {
+            String codes = workflowStatuses.stream().map(WorkflowStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));
+            selectSql += " AND wi.`status` in (" + codes + ")";
+        }
+
+        if (approveStatuses != null && !approveStatuses.isEmpty()) {
+            String codes = approveStatuses.stream().map(ApproveStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));
+            selectSql += " AND ta.`status` in (" + codes + ")";
+        }
+
+        String countSql = "SELECT COUNT(*) FROM (" + selectSql + ") AS t";
+        Integer count = this.jdbcTemplate.queryForObject(countSql, Integer.class, tenantId, approverId);
+
+        selectSql += " ORDER BY wi.`id` DESC LIMIT ? OFFSET ?";
+        Integer offset = (page - 1) * pageSize;
+        List<WorkflowInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, approverId, pageSize, offset);
+
+        return Page.of(page, pageSize, count == null ? 0 : count, records);
     }
 
     /**

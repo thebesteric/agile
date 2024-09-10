@@ -55,12 +55,19 @@ public class NodeDefinition extends BaseEntity {
     @EntityColumn(type = EntityColumn.Type.JSON, comment = "条件定义")
     private Conditions conditions;
 
-    @EntityColumn(nullable = false, comment = "排序")
-    private Integer sequence;
+    @EntityColumn(nullable = false, length = 12, precision = 2, comment = "排序")
+    private Double sequence;
+
+    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是动态指定审批人")
+    private boolean dynamicAssignment = false;
 
     /** 审批人，存储在 NodeAssignment 表中 */
     @Transient
     private Set<Approver> approvers = new LinkedHashSet<>();
+
+    public boolean isUnSettingAssignmentApprovers() {
+        return this.dynamicAssignment && this.approvers.stream().anyMatch(Approver::isUnSettingAssignmentApprover);
+    }
 
     /**
      * 是否包含审批条件
@@ -186,7 +193,8 @@ public class NodeDefinition extends BaseEntity {
         if (CharSequenceUtil.isNotEmpty(conditionStr)) {
             nodeDefinition.setConditions(JSONUtil.toBean(conditionStr, Conditions.class));
         }
-        nodeDefinition.setSequence(rs.getInt("sequence"));
+        nodeDefinition.setSequence(rs.getDouble("sequence"));
+        nodeDefinition.setDynamicAssignment(rs.getInt("dynamic_assignment") != 0);
         return of(nodeDefinition, rs);
     }
 }

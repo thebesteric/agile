@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -51,6 +52,18 @@ public class TaskApprove extends BaseEntity {
 
     @EntityColumn(length = 255, comment = "审批意见")
     private String comment;
+
+    /**
+     * 是否未设置指定审批人
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/9/9 16:19
+     */
+    public boolean isUnSettingApprover() {
+        return this.approverId.startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && this.approverId.endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX);
+    }
 
     public static TaskApprove of(ResultSet rs) throws SQLException {
         TaskApprove taskApprove = new TaskApprove();

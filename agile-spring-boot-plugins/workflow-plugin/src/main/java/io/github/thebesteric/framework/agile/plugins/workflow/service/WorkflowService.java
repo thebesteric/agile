@@ -66,6 +66,41 @@ public interface WorkflowService {
     NodeDefinition createNode(NodeDefinition nodeDefinition);
 
     /**
+     * 插入节点定义
+     *
+     * @param nodeDefinition       节点定义
+     * @param prevNodeDefinitionId 上一个节点定义 ID
+     * @param nextNodeDefinitionId 下一个节点定义 ID
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/6 16:48
+     */
+    NodeDefinition insertNode(NodeDefinition nodeDefinition, Integer prevNodeDefinitionId, Integer nextNodeDefinitionId);
+
+    /**
+     * 更新节点定义
+     *
+     * @param nodeDefinition 节点定义
+     *
+     * @author wangweijun
+     * @since 2024/6/18 16:52
+     */
+    void updateNode(NodeDefinition nodeDefinition);
+
+    /**
+     * 删除节点定义
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @author wangweijun
+     * @since 2024/6/19 09:49
+     */
+    boolean deleteNode(String tenantId, Integer nodeDefinitionId);
+
+    /**
      * 获取节点定义
      *
      * @param tenantId         租户 ID
@@ -155,27 +190,6 @@ public interface WorkflowService {
      * @since 2024/6/24 16:00
      */
     List<NodeDefinition> findToTaskNodesByFromNodeId(String tenantId, Integer fromNodeDefinitionId);
-
-    /**
-     * 更新节点定义
-     *
-     * @param nodeDefinition 节点定义
-     *
-     * @author wangweijun
-     * @since 2024/6/18 16:52
-     */
-    void updateNode(NodeDefinition nodeDefinition);
-
-    /**
-     * 删除节点定义
-     *
-     * @param tenantId         租户 ID
-     * @param nodeDefinitionId 节点定义 ID
-     *
-     * @author wangweijun
-     * @since 2024/6/19 09:49
-     */
-    boolean deleteNode(String tenantId, Integer nodeDefinitionId);
 
     /**
      * 创建节点关系

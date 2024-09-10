@@ -64,7 +64,7 @@ public class NodeRelationBuilder extends AbstractBuilder<NodeRelation> {
         return this;
     }
 
-    public NodeRelationBuilder sequence(Integer sequence) {
+    public NodeRelationBuilder sequence(Double sequence) {
         this.nodeRelation.setSequence(sequence);
         return this;
     }
@@ -84,7 +84,7 @@ public class NodeRelationBuilder extends AbstractBuilder<NodeRelation> {
         String tenantId = nodeRelation.getTenantId();
         Integer fromNodeId = nodeRelation.getFromNodeId();
         Integer toNodeId = nodeRelation.getToNodeId();
-        Integer sequence = nodeRelation.getSequence();
+        Double sequence = nodeRelation.getSequence();
         if (tenantId ==null || workflowDefinitionId == null || fromNodeId == null || toNodeId == null || sequence == null) {
             throw new InvalidParamsException("tenantId，workflowDefinitionId, fromNodeId, toNodeId, sequence cannot be null");
         }

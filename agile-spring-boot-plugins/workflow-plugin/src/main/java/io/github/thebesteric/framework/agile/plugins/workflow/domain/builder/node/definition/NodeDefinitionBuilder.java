@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.no
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
@@ -9,7 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinit
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import org.springframework.util.Assert;
 
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
         this.nodeDefinition = nodeDefinition;
     }
 
-    public static NodeDefinitionBuilder builderNode(String tenantId, Integer workflowDefinitionId, NodeType nodeType, Integer sequence) {
+    public static NodeDefinitionBuilder builderNode(String tenantId, Integer workflowDefinitionId, NodeType nodeType, double sequence) {
         NodeDefinitionBuilder builder = new NodeDefinitionBuilder(new NodeDefinition());
         builder.nodeDefinition.setTenantId(tenantId);
         builder.nodeDefinition.setWorkflowDefinitionId(workflowDefinitionId);
@@ -45,8 +46,12 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
         return builderNode(tenantId, workflowDefinitionId, NodeType.END, Integer.MAX_VALUE);
     }
 
-    public static NodeDefinitionBuilder builderTaskNode(String tenantId, Integer workflowDefinitionId, Integer sequence) {
+    public static NodeDefinitionBuilder builderTaskNode(String tenantId, Integer workflowDefinitionId, double sequence) {
         return builderNode(tenantId, workflowDefinitionId, NodeType.TASK, sequence);
+    }
+
+    public static NodeDefinitionBuilder builderTaskNode(String tenantId, Integer workflowDefinitionId) {
+        return builderTaskNode(tenantId, workflowDefinitionId, 0);
     }
 
     public NodeDefinitionBuilder name(String name) {
@@ -78,20 +83,43 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
         return approver(Approver.of(approverId));
     }
 
-    public NodeDefinitionBuilder approverIds(List<String> approverIds) {
+    public NodeDefinitionBuilder approverIds(Set<String> approverIds) {
         Assert.notEmpty(approverIds, "approverIds cannot be empty");
         Set<Approver> approvers = approverIds.stream().map(Approver::of).collect(Collectors.toSet());
         return this.approvers(approvers);
     }
 
     public NodeDefinitionBuilder approver(Approver approver) {
+        // 判断是否是动态指定审批人
+        if (this.nodeDefinition.isDynamicAssignment()) {
+            this.nodeDefinition.setDynamicAssignment(false);
+            Set<Approver> approvers = this.nodeDefinition.getApprovers();
+            Set<Approver> dynamicAssignmentApprovers = approvers.stream().filter(i -> i.getId().startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX)).collect(Collectors.toSet());
+            // 删除所有动态指定的审批人
+            if (!dynamicAssignmentApprovers.isEmpty()) {
+                approvers.removeAll(dynamicAssignmentApprovers);
+            }
+        }
         this.nodeDefinition.getApprovers().add(approver);
         return this;
     }
 
     public NodeDefinitionBuilder approvers(Set<Approver> approvers) {
         Assert.notEmpty(approvers, "approvers cannot be empty");
-        this.nodeDefinition.setApprovers(approvers);
+        // 判断是否是动态指定审批人
+        if (this.nodeDefinition.isDynamicAssignment()) {
+            this.nodeDefinition.setDynamicAssignment(false);
+        }
+        this.nodeDefinition.setApprovers(new LinkedHashSet<>(approvers));
+        return this;
+    }
+
+    public NodeDefinitionBuilder assignmentApprovers(int approverNum) {
+        this.nodeDefinition.getApprovers().clear();
+        for (int i = 0; i < approverNum; i++) {
+            this.nodeDefinition.getApprovers().add(Approver.of(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(i)));
+        }
+        this.nodeDefinition.setDynamicAssignment(true);
         return this;
     }
 
@@ -104,4 +132,5 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
         }
         return super.build(this.nodeDefinition);
     }
+
 }

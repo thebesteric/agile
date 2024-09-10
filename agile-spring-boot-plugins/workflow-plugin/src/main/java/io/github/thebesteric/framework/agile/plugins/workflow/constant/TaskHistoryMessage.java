@@ -21,10 +21,15 @@ public enum TaskHistoryMessage {
     INSTANCE_ENDED("审批流程结束"),
     INSTANCE_APPROVED("审批通过"),
     INSTANCE_REJECTED("审批驳回"),
+    INSTANCE_REDO("审批撤回"),
     INSTANCE_ABANDONED("审批弃权"),
     INSTANCE_CANCELED("审批取消"),
     INSTANCE_SUBMIT_FORM("提交审批"),
-    INSTANCE_CUSTOM("%s");
+
+    NODE_ASSIGNMENT_CHANGED("用户任务关联表变更"),
+    TASK_APPROVE_CHANGED("任务审批人变更"),
+
+    CUSTOM("%s");
 
     private final String template;
 
@@ -47,7 +52,7 @@ public enum TaskHistoryMessage {
     }
 
     public static TaskHistoryMessage custom(String message) {
-        return TaskHistoryMessage.INSTANCE_CUSTOM.message(message);
+        return TaskHistoryMessage.CUSTOM.message(message);
     }
 
     @Override

@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
+import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutor;
@@ -50,8 +51,11 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public WorkflowDefinition create(WorkflowDefinition workflowDefinition) {
-        WorkflowDefinitionExecutor query = this.workflowDefinitionExecutorBuilder.workflowDefinition(workflowDefinition).build();
-        return query.save();
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        return jdbcTemplateHelper.executeInTransaction(() -> {
+            WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.workflowDefinition(workflowDefinition).build();
+            return executor.save();
+        });
     }
 
     /**
@@ -65,8 +69,8 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void delete(String tenantId, String key) {
-        WorkflowDefinitionExecutor query = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
-        query.deleteByTenantAndKey();
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
+        executor.deleteByTenantAndKey();
     }
 
     /**
@@ -76,9 +80,21 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @param key      key
      */
     @Override
-    public WorkflowDefinition get(String tenantId, String key) {
-        WorkflowDefinitionExecutor query = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
-        return query.getByTenantAndKey();
+    public WorkflowDefinition getByKey(String tenantId, String key) {
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
+        return executor.getByTenantAndKey();
+    }
+
+    /**
+     * 获取流程定义
+     *
+     * @param tenantId 租户
+     * @param id       id
+     */
+    @Override
+    public WorkflowDefinition getById(String tenantId, Integer id) {
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        return executor.getById(id);
     }
 
     /**
@@ -88,8 +104,8 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public List<WorkflowDefinition> find(String tenantId) {
-        WorkflowDefinitionExecutor query = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).build();
-        return query.findByTenantId();
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).build();
+        return executor.findByTenantId();
     }
 
     /**

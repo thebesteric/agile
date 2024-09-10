@@ -39,8 +39,8 @@ public class NodeRelation extends BaseEntity {
     @EntityColumn(name = "to_node_id", nullable = false, comment = "目标节点 ID")
     private Integer toNodeId;
 
-    @EntityColumn(nullable = false, comment = "节点顺序")
-    private Integer sequence;
+    @EntityColumn(nullable = false, length = 12, precision = 2, comment = "节点顺序")
+    private Double sequence;
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "活动状态")
     private ActiveStatus active = ActiveStatus.ACTIVE;
@@ -52,7 +52,7 @@ public class NodeRelation extends BaseEntity {
         nodeRelation.setWorkflowDefinitionId(rs.getInt("wf_def_id"));
         nodeRelation.setFromNodeId(rs.getInt("from_node_id"));
         nodeRelation.setToNodeId(rs.getInt("to_node_id"));
-        nodeRelation.setSequence(rs.getInt("sequence"));
+        nodeRelation.setSequence(rs.getDouble("sequence"));
         nodeRelation.setActive(ActiveStatus.of(rs.getInt("active")));
         return of(nodeRelation, rs);
     }

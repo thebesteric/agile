@@ -91,11 +91,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      * @since 2024/6/24 20:12
      */
     public List<TaskApprove> findByTaskInstanceId(String tenantId, Integer taskInstanceId) {
-        final String selectSql = """
-                SELECT * FROM awf_task_approve WHERE `tenant_id` = ? AND `task_inst_id` = ? AND `state` = 1 AND `active` = 1
-                """;
-        RowMapper<TaskApprove> rowMapper = (ResultSet rs, int rowNum) -> TaskApprove.of(rs);
-        return jdbcTemplate.query(selectSql, rowMapper, tenantId, taskInstanceId).stream().toList();
+        return this.findByTaskInstanceId(tenantId, taskInstanceId, null);
     }
 
     /**
@@ -109,11 +105,17 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      * @author wangweijun
      * @since 2024/6/24 20:12
      */
-    public List<TaskApprove> findByTaskInstanceIdAndActiveStatus(String tenantId, Integer taskInstanceId, ActiveStatus activeStatus) {
-        final String selectSql = """
-                SELECT * FROM awf_task_approve WHERE `tenant_id` = ? AND `task_inst_id` = ? AND `active` = ? AND `state` = 1
+    public List<TaskApprove> findByTaskInstanceId(String tenantId, Integer taskInstanceId, ActiveStatus activeStatus) {
+        String selectSql = """
+                SELECT * FROM awf_task_approve WHERE `tenant_id` = ? AND `task_inst_id` = ? AND `state` = 1
                 """;
+        if (activeStatus != null) {
+            selectSql += " AND `active` = ?";
+        }
         RowMapper<TaskApprove> rowMapper = (ResultSet rs, int rowNum) -> TaskApprove.of(rs);
+        if (activeStatus == null) {
+            return jdbcTemplate.query(selectSql, rowMapper, tenantId, taskInstanceId).stream().toList();
+        }
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, taskInstanceId, activeStatus.getCode()).stream().toList();
     }
 
@@ -121,7 +123,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      * 根据任务实例 ID 查询审批信息
      *
      * @param tenantId           租户 ID
-     * @param workflowInstanceId 任务实例 ID
+     * @param workflowInstanceId 流程实例 ID
      *
      * @return List<TaskApprove>
      *

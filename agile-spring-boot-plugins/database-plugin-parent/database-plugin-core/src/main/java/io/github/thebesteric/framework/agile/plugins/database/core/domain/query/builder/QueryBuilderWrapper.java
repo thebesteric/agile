@@ -81,148 +81,268 @@ public class QueryBuilderWrapper {
         }
 
         public QueryBuilderWrapper.Builder<T> eq(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.EQUAL, value, toUnderline));
-            return this;
+            return this.eq(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> eq(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.eq(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> eq(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.EQUAL, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> eq(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.eq(fieldName, value);
+                this.eq(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> ne(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.NOT_EQUAL, value, toUnderline));
-            return this;
+            return this.ne(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> ne(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.ne(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> ne(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.NOT_EQUAL, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> ne(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.ne(fieldName, value);
+                this.ne(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> gt(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.GREATER_THAN, value, toUnderline));
-            return this;
+            return this.gt(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> gt(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.gt(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> gt(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.GREATER_THAN, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> gt(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.gt(fieldName, value);
+                this.gt(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> lt(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.LESS_THAN, value, toUnderline));
-            return this;
+            return this.lt(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> lt(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.lt(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> lt(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.LESS_THAN, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> lt(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.lt(fieldName, value);
+                this.lt(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> gte(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.GREATER_THAN_OR_EQUAL, value, toUnderline));
-            return this;
+            return this.gte(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> gte(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.gte(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> gte(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.GREATER_THAN_OR_EQUAL, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> gte(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.gte(fieldName, value);
+                this.gte(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> lte(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.LESS_THAN_OR_EQUAL, value, toUnderline));
-            return this;
+            return this.lte(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> lte(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.lte(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> lte(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.LESS_THAN_OR_EQUAL, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> lte(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.lte(fieldName, value);
+                this.lte(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> like(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.LIKE, value, toUnderline));
-            return this;
+            return this.like(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> like(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.like(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> like(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.LIKE, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> like(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.like(fieldName, value);
+                this.like(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> notLike(String key, Object value) {
-            queryParams.add(QueryParam.of(key, QueryOperator.NOT_LIKE, value, toUnderline));
-            return this;
+            return this.notLike(true, key, value);
         }
 
         public QueryBuilderWrapper.Builder<T> notLike(MapWrapper.SFunction<T, ?> getter, Object value) {
+            return this.notLike(true, getter, value);
+        }
+
+        public QueryBuilderWrapper.Builder<T> notLike(boolean flag, String key, Object value) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.NOT_LIKE, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> notLike(boolean flag, MapWrapper.SFunction<T, ?> getter, Object value) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.notLike(fieldName, value);
+                this.notLike(flag, fieldName, value);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> in(String key, List<Object> values) {
-            queryParams.add(QueryParam.of(key, QueryOperator.IN, values, toUnderline));
-            return this;
+            return this.in(true, key, values);
         }
 
         public QueryBuilderWrapper.Builder<T> in(MapWrapper.SFunction<T, ?> getter, List<Object> values) {
+            return this.in(true, getter, values);
+        }
+
+        public QueryBuilderWrapper.Builder<T> in(boolean flag, String key, List<Object> values) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.IN, values, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> in(boolean flag, MapWrapper.SFunction<T, ?> getter, List<Object> values) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.in(fieldName, values);
+                this.in(flag, fieldName, values);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> notIn(String key, List<Object> values) {
-            queryParams.add(QueryParam.of(key, QueryOperator.NOT_IN, values, toUnderline));
-            return this;
+            return this.notIn(true, key, values);
         }
 
         public QueryBuilderWrapper.Builder<T> notIn(MapWrapper.SFunction<T, ?> getter, List<Object> values) {
+            return this.notIn(true, getter, values);
+        }
+
+        public QueryBuilderWrapper.Builder<T> notIn(boolean flag, String key, List<Object> values) {
+            if (flag) {
+                queryParams.add(QueryParam.of(key, QueryOperator.NOT_IN, values, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> notIn(boolean flag, MapWrapper.SFunction<T, ?> getter, List<Object> values) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.notIn(fieldName, values);
+                this.notIn(flag, fieldName, values);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> between(String key, Object left, Object right) {
-            Pair<Object, Object> value = Pair.of(left, right);
-            queryParams.add(QueryParam.of(key, QueryOperator.BETWEEN, value, toUnderline));
-            return this;
+            return this.between(true, key, left, right);
         }
 
         public QueryBuilderWrapper.Builder<T> between(MapWrapper.SFunction<T, ?> getter, Object left, Object right) {
+            return this.between(true, getter, left, right);
+        }
+
+        public QueryBuilderWrapper.Builder<T> between(boolean flag, String key, Object left, Object right) {
+            if (flag) {
+                Pair<Object, Object> value = Pair.of(left, right);
+                queryParams.add(QueryParam.of(key, QueryOperator.BETWEEN, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> between(boolean flag, MapWrapper.SFunction<T, ?> getter, Object left, Object right) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.between(fieldName, left, right);
+                this.between(flag, fieldName, left, right);
             });
         }
 
         public QueryBuilderWrapper.Builder<T> notBetween(String key, Object left, Object right) {
-            Pair<Object, Object> value = Pair.of(left, right);
-            queryParams.add(QueryParam.of(key, QueryOperator.NOT_BETWEEN, value, toUnderline));
-            return this;
+            return this.notBetween(true, key, left, right);
         }
 
         public QueryBuilderWrapper.Builder<T> notBetween(MapWrapper.SFunction<T, ?> getter, Object left, Object right) {
+            return this.notBetween(true, getter, left, right);
+        }
+
+        public QueryBuilderWrapper.Builder<T> notBetween(boolean flag, String key, Object left, Object right) {
+            if (flag) {
+                Pair<Object, Object> value = Pair.of(left, right);
+                queryParams.add(QueryParam.of(key, QueryOperator.NOT_BETWEEN, value, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> notBetween(boolean flag, MapWrapper.SFunction<T, ?> getter, Object left, Object right) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.notBetween(fieldName, left, right);
+                this.notBetween(flag, fieldName, left, right);
             });
         }
 
@@ -235,14 +355,24 @@ public class QueryBuilderWrapper {
         }
 
         public QueryBuilderWrapper.Builder<T> orderBy(String key, OrderByOperator orderByOperator) {
-            orderByParams.add(OrderByParam.of(key, orderByOperator, toUnderline));
-            return this;
+            return this.orderBy(true, key, orderByOperator);
         }
 
         public QueryBuilderWrapper.Builder<T> orderBy(MapWrapper.SFunction<T, ?> getter, OrderByOperator orderByOperator) {
+            return this.orderBy(true, getter, orderByOperator);
+        }
+
+        public QueryBuilderWrapper.Builder<T> orderBy(boolean flag, String key, OrderByOperator orderByOperator) {
+            if (flag) {
+                orderByParams.add(OrderByParam.of(key, orderByOperator, toUnderline));
+            }
+            return this;
+        }
+
+        public QueryBuilderWrapper.Builder<T> orderBy(boolean flag, MapWrapper.SFunction<T, ?> getter, OrderByOperator orderByOperator) {
             return tryWith(() -> {
                 String fieldName = getFieldName(getter);
-                this.orderBy(fieldName, orderByOperator);
+                this.orderBy(flag, fieldName, orderByOperator);
             });
         }
 
