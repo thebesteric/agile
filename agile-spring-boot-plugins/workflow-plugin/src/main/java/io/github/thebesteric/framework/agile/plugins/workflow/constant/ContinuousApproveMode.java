@@ -10,7 +10,7 @@ import lombok.Getter;
 import java.util.Arrays;
 
 /**
- * 自动审批类型
+ * 连续审批类型（同一个审批人重复审批同一项目时）
  * <p>
  * APPROVE_ALL: 每个节点都需要审批：A:manual-B:manual-A:manual-A:manual-B:manual-A:manual<br />
  * APPROVE_FIRST：仅首个节点需要审批，其余自动同意：A:manual-B:manual-A:auto-A:auto-B:manual-A:auto<br />
@@ -21,10 +21,10 @@ import java.util.Arrays;
  * @since 2024-07-11 14:08:54
  */
 @Getter
-public enum AutoApproveType implements BaseEnum {
-    APPROVE_ALL(1, "每个节点都需要审批"),
-    APPROVE_FIRST(2, "仅首个节点需要审批，其余自动同意"),
-    APPROVE_SAME(3, "仅连续审批时自动同意");
+public enum ContinuousApproveMode implements BaseEnum {
+    APPROVE_ALL(1, "同一个审批人重复审批同一项目时，每个节点都需要审批"),
+    APPROVE_FIRST(2, "同一个审批人重复审批同一项目时，仅首个节点需要审批，其余自动同意"),
+    APPROVE_CONTINUOUS(3, "同一个审批人重复审批同一项目时，仅连续审批时自动同意");
 
 
     @JsonValue
@@ -32,13 +32,13 @@ public enum AutoApproveType implements BaseEnum {
     private final Integer code;
     private final String desc;
 
-    AutoApproveType(Integer code, String desc) {
+    ContinuousApproveMode(Integer code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
     @JsonCreator
-    public static AutoApproveType of(Integer code) {
-        return Arrays.stream(AutoApproveType.values()).filter(i -> ObjectUtil.equals(i.getCode(), code)).findFirst().orElse(null);
+    public static ContinuousApproveMode of(Integer code) {
+        return Arrays.stream(ContinuousApproveMode.values()).filter(i -> ObjectUtil.equals(i.getCode(), code)).findFirst().orElse(null);
     }
 }

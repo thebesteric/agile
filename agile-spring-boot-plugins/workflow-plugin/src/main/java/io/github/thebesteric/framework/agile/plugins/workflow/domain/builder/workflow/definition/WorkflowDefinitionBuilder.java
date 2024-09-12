@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wo
 
 import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
@@ -55,8 +56,23 @@ public class WorkflowDefinitionBuilder extends AbstractBuilder<WorkflowDefinitio
         return this;
     }
 
+    public WorkflowDefinitionBuilder continuousApproveMode(ContinuousApproveMode continuousApproveMode) {
+        this.workflowDefinition.setContinuousApproveMode(continuousApproveMode);
+        return this;
+    }
+
     public WorkflowDefinitionBuilder allowEmptyAutoApprove(boolean allowAutoApprove) {
         this.workflowDefinition.setAllowEmptyAutoApprove(allowAutoApprove);
+        return this;
+    }
+
+    public WorkflowDefinitionBuilder allowRedo(boolean allowRedo) {
+        this.workflowDefinition.setAllowRedo(allowRedo);
+        return this;
+    }
+
+    public WorkflowDefinitionBuilder requiredComment(boolean requiredComment) {
+        this.workflowDefinition.setRequiredComment(requiredComment);
         return this;
     }
 

@@ -76,24 +76,28 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
     /**
      * 根据审批人 ID 和 节点状态 查询任务实例
      *
-     * @param tenantId        租户 ID
-     * @param approverId      审批人 ID
-     * @param nodeStatuses    节点状态
-     * @param approveStatuses 审批人审批状态
-     * @param page            当前页
-     * @param pageSize        每页数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatuses       节点状态
+     * @param approveStatuses    审批人审批状态
+     * @param page               当前页
+     * @param pageSize           每页数量
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:03
      */
-    public Page<TaskInstance> findByApproverId(String tenantId, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+    public Page<TaskInstance> findByApproverId(String tenantId, Integer workflowInstanceId, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT i.* FROM awf_task_instance i 
                 LEFT JOIN awf_task_approve t ON i.id = t.task_inst_id 
                 WHERE i.tenant_id = ? AND t.approver_id = ? AND i.`state` = 1
                 """;
+        if (workflowInstanceId != null) {
+            selectSql += " AND i.`wf_inst_id` = " + workflowInstanceId;
+        }
         if (nodeStatuses != null && !nodeStatuses.isEmpty()) {
             String codes = nodeStatuses.stream().map(NodeStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));
             selectSql += " AND i.`status` in (" + codes + ")";
@@ -116,35 +120,37 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
     /**
      * 根据审批人 ID 和 节点状态 查询任务实例
      *
-     * @param tenantId      租户 ID
-     * @param approverId    审批人 ID
-     * @param nodeStatus    节点状态
-     * @param approveStatus 审批人审批状态
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatus         节点状态
+     * @param approveStatus      审批人审批状态
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:03
      */
-    public List<TaskInstance> findByApproverId(String tenantId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
+    public List<TaskInstance> findByApproverId(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
         List<NodeStatus> nodeStatuses = nodeStatus == null ? null : List.of(nodeStatus);
         List<ApproveStatus> approveStatuses = approveStatus == null ? null : List.of(approveStatus);
-        return this.findByApproverId(tenantId, approverId, nodeStatuses, approveStatuses, 1, Integer.MAX_VALUE).getRecords();
+        return this.findByApproverId(tenantId, workflowInstanceId, approverId, nodeStatuses, approveStatuses, 1, Integer.MAX_VALUE).getRecords();
     }
 
     /**
      * 根据审批人 ID 查询任务实例
      *
-     * @param tenantId   租户 ID
-     * @param approverId 审批人 ID
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:03
      */
-    public List<TaskInstance> findByApproverId(String tenantId, String approverId) {
-        return this.findByApproverId(tenantId, approverId, null, null);
+    public List<TaskInstance> findByApproverId(String tenantId, Integer workflowInstanceId, String approverId) {
+        return this.findByApproverId(tenantId, workflowInstanceId, approverId, null, null);
     }
 
     /**

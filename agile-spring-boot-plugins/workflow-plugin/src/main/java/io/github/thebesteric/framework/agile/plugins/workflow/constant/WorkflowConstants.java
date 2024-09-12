@@ -19,4 +19,5 @@ public final class WorkflowConstants extends AbstractUtils {
 
     /** 系统审批人 */
     public static final String AUTO_APPROVER = "{SYSTEM:AUTO}";
+    public static final String AUTO_APPROVER_COMMENT = "系统自动同意";
 }

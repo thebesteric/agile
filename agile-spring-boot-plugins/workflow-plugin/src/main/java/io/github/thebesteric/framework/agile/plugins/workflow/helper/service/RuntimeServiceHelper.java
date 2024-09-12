@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatu
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
@@ -109,37 +110,39 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     /**
      * 查找审批实例
      *
-     * @param tenantId      租户 ID
-     * @param approverId    审批人
-     * @param nodeStatus    节点状态
-     * @param approveStatus 审批状态
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人
+     * @param nodeStatus         节点状态
+     * @param approveStatus      审批状态
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/7/9 16:06
      */
-    public List<TaskInstance> findTaskInstances(String tenantId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
-        return this.findTaskInstances(tenantId, approverId, nodeStatus, approveStatus, 1, Integer.MAX_VALUE).getRecords();
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, approverId, nodeStatus, approveStatus, 1, Integer.MAX_VALUE).getRecords();
     }
 
     /**
      * 查找审批实例
      *
-     * @param tenantId      租户 ID
-     * @param approverId    审批人
-     * @param nodeStatus    节点状态
-     * @param approveStatus 审批状态
-     * @param page          当前页
-     * @param pageSize      每页显示数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人
+     * @param nodeStatus         节点状态
+     * @param approveStatus      审批状态
+     * @param page               当前页
+     * @param pageSize           每页显示数量
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/7/9 16:06
      */
-    public Page<TaskInstance> findTaskInstances(String tenantId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize) {
-        return this.runtimeService.findTaskInstances(tenantId, approverId, nodeStatus, approveStatus, page, pageSize);
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize) {
+        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, approverId, nodeStatus, approveStatus, page, pageSize);
     }
 
     /**
@@ -439,16 +442,29 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     /**
      * 更新审批人（未审批状态下）
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param sourceApproverId   原审批人
-     * @param targetApproverId   新审批人
+     * @param taskInstance     任务实例
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    public void updateApprover(String tenantId, Integer workflowInstanceId, String sourceApproverId, String targetApproverId) {
-        this.runtimeService.updateApprover(tenantId, workflowInstanceId, sourceApproverId, targetApproverId);
+    public void updateApprover(TaskInstance taskInstance, String sourceApproverId, String targetApproverId) {
+        this.runtimeService.updateApprover(taskInstance, sourceApproverId, targetApproverId);
+    }
+
+    /**
+     * 更新审批人（未审批状态下）
+     *
+     * @param workflowInstance 流程实例
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    public void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, String targetApproverId) {
+        this.runtimeService.updateApprover(workflowInstance, sourceApproverId, targetApproverId);
     }
 
     /**
@@ -463,5 +479,67 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      */
     public void updateApprover(String tenantId, String sourceApproverId, String targetApproverId) {
         this.runtimeService.updateApprover(tenantId, sourceApproverId, targetApproverId);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId) {
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId) {
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param currentUserId      当前用户 ID
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String currentUserId) {
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, currentUserId);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param currentUserId        当前用户 ID
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String currentUserId) {
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, currentUserId);
     }
 }

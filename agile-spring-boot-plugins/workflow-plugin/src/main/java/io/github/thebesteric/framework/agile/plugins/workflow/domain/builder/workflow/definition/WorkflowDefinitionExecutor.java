@@ -3,10 +3,14 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wo
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance.TaskInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.assignment.WorkflowAssignmentBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.assignment.WorkflowAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,11 +36,15 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
 
     private WorkflowDefinition workflowDefinition;
     private final WorkflowAssignmentExecutor workflowAssignmentExecutor;
+    private final TaskInstanceExecutor taskInstanceExecutor;
+    private final WorkflowInstanceExecutor workflowInstanceExecutor;
 
     public WorkflowDefinitionExecutor(JdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
         this.workflowDefinition = new WorkflowDefinition();
         this.workflowAssignmentExecutor = new WorkflowAssignmentExecutor(jdbcTemplate);
+        this.taskInstanceExecutor = new TaskInstanceExecutor(jdbcTemplate);
+        this.workflowInstanceExecutor = new WorkflowInstanceExecutor(jdbcTemplate);
     }
 
     /**
@@ -67,6 +75,24 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
             });
         }
         return workflowDefinition;
+    }
+
+    /**
+     * 根据任务实例 ID 获取流程定义
+     *
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return WorkflowDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/12 10:25
+     */
+    public WorkflowDefinition getByTaskInstanceId(Integer taskInstanceId) {
+        TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+        Integer workflowInstanceId = taskInstance.getWorkflowInstanceId();
+        WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
+        Integer workflowDefinitionId = workflowInstance.getWorkflowDefinitionId();
+        return getById(workflowDefinitionId);
     }
 
     /**

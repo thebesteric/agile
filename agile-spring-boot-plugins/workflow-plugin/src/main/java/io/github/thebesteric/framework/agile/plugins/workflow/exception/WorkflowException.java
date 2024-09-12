@@ -28,4 +28,8 @@ public class WorkflowException extends RuntimeException {
     public WorkflowException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    public static void throwWorkflowInstanceNotFoundException() {
+        throw new WorkflowException("流程实例不存在");
+    }
 }

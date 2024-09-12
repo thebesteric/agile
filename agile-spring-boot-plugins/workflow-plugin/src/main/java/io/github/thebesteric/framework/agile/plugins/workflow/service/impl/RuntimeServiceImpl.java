@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidDataException;
+import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
@@ -29,10 +30,12 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wor
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractRuntimeService;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.*;
@@ -167,7 +170,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     TaskInstance nextTaskInstance = taskInstanceExecutor.save();
                     Integer nextTaskInstanceId = nextTaskInstance.getId();
 
-                    // 创建任务实例审批人
+                    // 存在审批人：创建任务实例审批人
                     if (CollUtil.isNotEmpty(nextNodeAssignments)) {
                         int i = 0;
                         for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
@@ -188,13 +191,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             i++;
                         }
                     }
-                    // 没有审批人，则自动同意
+                    // 没有审批人: 允许自动同意，则自动同意
                     else if (workflowDefinition.isAllowEmptyAutoApprove()) {
-                        this.approve(tenantId, nextTaskInstanceId, WorkflowConstants.AUTO_APPROVER, "自动同意");
+                        this.approve(tenantId, nextTaskInstanceId, WorkflowConstants.AUTO_APPROVER, WorkflowConstants.AUTO_APPROVER_COMMENT);
                     }
                     // 其他未知情况
                     else {
-                        throw new WorkflowException("未知异常");
+                        throw new WorkflowException("未知异常，请联系系统管理员");
                     }
                 }
             }
@@ -280,11 +283,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId           租户 ID
      * @param prevTaskInstanceId 上一个节点实例 ID
+     * @param approverId         当前审批人 ID
      *
      * @return 返回下一个审批节点
      */
     @Override
-    public List<TaskInstance> next(String tenantId, Integer prevTaskInstanceId) {
+    public List<TaskInstance> next(String tenantId, Integer prevTaskInstanceId, String approverId) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
             NodeRelationExecutor nodeRelationExecutor = nodeRelationExecutorBuilder.build();
@@ -341,16 +345,17 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             if (!nodeRelations.isEmpty()) {
                 for (NodeRelation nodeRelation : nodeRelations) {
-                    // 判断节点关系是否是逆向条件
-                    Integer toNodeId = nodeRelation.getToNodeId();
-                    NodeDefinition toNodeDefinition = nodeDefinitionExecutor.getById(toNodeId);
-                    if (nodeRelations.size() > 1 && NodeType.END == toNodeDefinition.getNodeType()) {
-                        continue;
-                    }
 
                     // 下一个节点定义
                     Integer nextNodeDefinitionId = nodeRelation.getFromNodeId();
                     NodeDefinition nextNodeDefinition = nodeDefinitionExecutor.getById(nextNodeDefinitionId);
+
+                    // 判断节点关系是否是逆向条件
+                    Integer toNodeId = nodeRelation.getToNodeId();
+                    NodeDefinition toNodeDefinition = nodeDefinitionExecutor.getById(toNodeId);
+                    if (nodeRelations.size() > 1 && NodeType.END == toNodeDefinition.getNodeType() && !nextNodeDefinition.hasConditions()) {
+                        continue;
+                    }
 
                     // 审批条件判断
                     Conditions conditions = nextNodeDefinition.getConditions();
@@ -394,7 +399,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
                     // 如果允许自动审批，并且没有审批人，则自动审批
                     if (workflowDefinition.isAllowEmptyAutoApprove() && nextNodeAssignments.isEmpty()) {
-                        this.approve(tenantId, nextTaskInstance.getId(), WorkflowConstants.AUTO_APPROVER, "自动同意");
+                        this.approve(tenantId, nextTaskInstance.getId(), WorkflowConstants.AUTO_APPROVER, WorkflowConstants.AUTO_APPROVER_COMMENT);
                     }
 
                     // 创建任务实例审批人
@@ -418,6 +423,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
                             taskApproveExecutor.save();
                             i++;
+
+                            // 判断连续审批模式
+                            ContinuousApproveMode continuousApproveMode = workflowDefinition.getContinuousApproveMode();
+                            this.continuousApproveModeProcess(tenantId, nextTaskInstance, approverId, nextNodeAssignment.getUserId(), continuousApproveMode);
                         }
                     }
 
@@ -426,6 +435,50 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             }
             return nextTaskInstances;
         });
+    }
+
+    /**
+     * 连续审批模式处理
+     *
+     * @param tenantId              租户 ID
+     * @param nextTaskInstance      下一个审批节点
+     * @param approverId            当前审批人 ID
+     * @param nextApproverId        下一个审批人 ID
+     * @param continuousApproveMode 连续审批模式
+     *
+     * @author wangweijun
+     * @since 2024/9/11 11:46
+     */
+    private void continuousApproveModeProcess(String tenantId, TaskInstance nextTaskInstance,
+                                              String approverId, String nextApproverId,
+                                              ContinuousApproveMode continuousApproveMode) {
+
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+
+        // 获取该流程实例下已经完成审批和即将要审批的审批人
+        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, nextTaskInstance.getWorkflowInstanceId(), null);
+
+        // 下一个审批人的审批情况
+        Optional<TaskApprove> nextApproverIdApproveOptional = taskApproves.stream()
+                .filter(approve -> nextApproverId.equals(approve.getApproverId()) && ApproveStatus.APPROVED == approve.getStatus()).findAny();
+
+        switch (continuousApproveMode) {
+            case APPROVE_FIRST:
+                // 下个审批人已经存在审批的节点，则自动审批
+                if (nextApproverIdApproveOptional.isPresent()) {
+                    this.approve(tenantId, nextTaskInstance.getId(), nextApproverId, WorkflowConstants.AUTO_APPROVER_COMMENT);
+                }
+                break;
+            case APPROVE_CONTINUOUS:
+                // 下个审批人已经存在审批的节点，且已审批的节点的审批人和下一个节点的审批人是同一个人，则自动审批
+                if (nextApproverIdApproveOptional.isPresent() && approverId.equals(nextApproverId)) {
+                    this.approve(tenantId, nextTaskInstance.getId(), nextApproverId, WorkflowConstants.AUTO_APPROVER_COMMENT);
+                }
+                break;
+            case APPROVE_ALL:
+            default:
+                break;
+        }
     }
 
     /**
@@ -440,6 +493,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     public void approve(String tenantId, Integer taskInstanceId, String approverId, String comment) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
+
+            // 检查审批意见是否必填
+            checkIfRequiredComment(taskInstanceId, comment);
 
             // 修改当前 TaskInstance 的 approved_count 数量
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
@@ -488,14 +544,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     List<TaskApprove> otherActiveTaskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
                     otherActiveTaskApproves.forEach(otherActiveTaskApprove -> {
                         // 将其他审批人节点设置为 SKIP，表示跳过
-                        otherActiveTaskApprove.setStatus(ApproveStatus.SKIPPED);
-                        otherActiveTaskApprove.setActive(ActiveStatus.INACTIVE);
+                        otherActiveTaskApprove.convertToApproveStatusSkip();
                         taskApproveExecutor.updateById(otherActiveTaskApprove);
                     });
                 }
                 taskInstance.setStatus(NodeStatus.COMPLETED);
                 // 指向下一个审批节点
-                nextTaskInstances = this.next(tenantId, taskInstance.getId());
+                nextTaskInstances = this.next(tenantId, taskInstance.getId(), approverId);
             }
             taskInstanceExecutor.updateById(taskInstance);
 
@@ -528,6 +583,16 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
 
+            WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+            WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getByTaskInstanceId(taskInstanceId);
+            // 检查是否允许撤回
+            if (!workflowDefinition.isAllowRedo()) {
+                throw new WorkflowException("流程定义不允许撤回");
+            }
+
+            // 检查审批意见是否必填
+            checkIfRequiredComment(taskInstanceId, comment);
+
             // 当前审批节点
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
             TaskInstance currTaskInstance = taskInstanceExecutor.getById(taskInstanceId);
@@ -540,7 +605,28 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 throw new WorkflowException("流程实例已经完成审批，无法撤回");
             }
 
-            // 下一个审批节点集合
+            // 判断当前审批节点是否是多人审批模式
+            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+            List<TaskApprove> currTaskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
+            // 过滤掉当前审批人的审批节点
+            currTaskApproves = new ArrayList<>(currTaskApproves);
+            currTaskApproves.removeIf(currTaskApprove -> approverId.equals(currTaskApprove.getApproverId()));
+            if (!currTaskApproves.isEmpty()) {
+                for (TaskApprove currTaskApprove : currTaskApproves) {
+                    // 如果存在其他节点完成审批（非进行中状态），则无法撤回
+                    if (ApproveStatus.IN_PROGRESS != currTaskApprove.getStatus() && ActiveStatus.ACTIVE == currTaskApprove.getActive()) {
+                        throw new WorkflowException("已存在其他节点完成审批，无法撤回");
+                    }
+                }
+                // 还原其他审批节点
+                currTaskApproves.forEach(taskApprove -> {
+                    taskApprove.convertToApproveStatusInProgress();
+                    taskApproveExecutor.updateById(taskApprove);
+                });
+            }
+
+
+            // 下一个任务实例节点集合
             List<TaskInstance> nextTaskInstances;
             Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
                     .eq(TaskInstance::getTenantId, tenantId)
@@ -552,7 +638,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
 
             // 如果存在其他的审批人节点，将其他审批人节点设置为 SUSPEND，表示挂起
-            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
             if (!nextTaskInstances.isEmpty()) {
                 for (TaskInstance nextTaskInstance : nextTaskInstances) {
                     // 表示已经到下一个审批流程（实例）：非同一流程多人审批的情况
@@ -586,9 +671,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     .eq(TaskApprove::getApproverId, approverId)
                     .eq(TaskApprove::getState, 1).build();
             TaskApprove currTaskApprove = taskApproveExecutor.get(query);
-            currTaskApprove.setActive(ActiveStatus.ACTIVE);
-            currTaskApprove.setStatus(ApproveStatus.IN_PROGRESS);
-            currTaskApprove.setComment(comment);
+            currTaskApprove.convertToApproveStatusInProgress(comment);
             taskApproveExecutor.updateById(currTaskApprove);
 
             // 修改当前 TaskInstance 的 approved_count 数量，并将 status 设置为 IN_PROGRESS
@@ -618,6 +701,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     public void reject(String tenantId, Integer taskInstanceId, String approverId, String comment) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
+
+            // 检查审批意见是否必填
+            checkIfRequiredComment(taskInstanceId, comment);
+
             // 更新 TaskApprove 的 comment，并将状态设置为：已驳回
             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
             TaskApprove taskApprove = taskApproveExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstanceId, approverId);
@@ -629,8 +716,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 找到所有未进行审批的审批人节点，并将其状态设置为：已失效
             List<TaskApprove> activeTaskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
             activeTaskApproves.forEach(activeTaskApprove -> {
-                activeTaskApprove.setStatus(ApproveStatus.SKIPPED);
-                activeTaskApprove.setActive(ActiveStatus.INACTIVE);
+                activeTaskApprove.convertToApproveStatusSkip();
                 taskApproveExecutor.updateById(activeTaskApprove);
             });
 
@@ -682,6 +768,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     public void abandon(String tenantId, Integer taskInstanceId, String approverId, String comment) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
+
+            // 检查审批意见是否必填
+            checkIfRequiredComment(taskInstanceId, comment);
+
             // 更新 TaskApprove 的 comment，并将状态设置为：已弃权
             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
             TaskApprove taskApprove = taskApproveExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstanceId, approverId);
@@ -717,7 +807,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             if (Objects.equals(taskInstance.getApprovedCount(), taskInstance.getTotalCount())) {
                 if (hasApproved) {
                     // 进入下一个审批流程
-                    nextTaskInstances = this.next(tenantId, taskInstanceId);
+                    nextTaskInstances = this.next(tenantId, taskInstanceId, approverId);
                 } else {
                     // 最后一个审批人，无法放弃审批
                     throw new WorkflowException("最后一个审批人无法放弃审批");
@@ -738,35 +828,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
-     * 判断是否是顺序审批
-     *
-     * @param tenantId       租户 ID
-     * @param taskInstanceId 任务实例 ID
-     * @param approveType    审批类型
-     *
-     * @author wangweijun
-     * @since 2024/8/28 17:32
-     */
-    private void checkIfApproveSeqStatus(String tenantId, Integer taskInstanceId, ApproveType approveType) {
-        if (ApproveType.SEQ == approveType) {
-            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
-            // 获取下一个审批人的状态，并修改审批状态为：IN_PROGRESS
-            List<TaskApprove> taskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
-            if (CollUtil.isNotEmpty(taskApproves)) {
-                // 获取下一个审批人
-                TaskApprove nextTaskApprove = taskApproves.stream()
-                        .filter(t -> ApproveStatus.SUSPEND == t.getStatus())
-                        .min(Comparator.comparingInt(TaskApprove::getApproverSeq)).orElse(null);
-                if (nextTaskApprove != null) {
-                    nextTaskApprove.setStatus(ApproveStatus.IN_PROGRESS);
-                    taskApproveExecutor.updateById(nextTaskApprove);
-                }
-            }
-        }
-    }
-
-    /**
-     * 取消
+     * 取消（针对提交人）
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
@@ -777,23 +839,22 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
         if (WorkflowStatus.IN_PROGRESS != workflowInstance.getStatus()) {
-            throw new WorkflowException("The workflow instance status is not in progress: %s", workflowInstance.getStatus().getDesc());
+            throw new WorkflowException("流程实例已结束: %s", workflowInstance.getStatus().getDesc());
         }
 
         // 获取该流程下所有的审批人
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
-        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
+        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId, null);
         // 查看是否已经有人参与了审批
         TaskApprove taskApprove = taskApproves.stream().filter(i -> ApproveStatus.IN_PROGRESS != i.getStatus()).findFirst().orElse(null);
         if (taskApprove != null) {
-            throw new WorkflowException("The workflow instance has been approved by: %s", taskApprove.getApproverId());
+            throw new WorkflowException("流程实例已被审批: %s", taskApprove.getApproverId());
         }
 
         // 未审批的审批人节点：设置为已失效
         List<TaskApprove> inProgressApproves = taskApproves.stream().filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus()).toList();
         inProgressApproves.forEach(inProgressApprove -> {
-            inProgressApprove.setStatus(ApproveStatus.SKIPPED);
-            inProgressApprove.setActive(ActiveStatus.INACTIVE);
+            inProgressApprove.convertToApproveStatusSkip();
             taskApproveExecutor.updateById(inProgressApprove);
         });
 
@@ -825,78 +886,83 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     /**
      * 查询审批任务
      *
-     * @param tenantId 租户 ID
-     * @param page     当前页
-     * @param pageSize 每页显示数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param page               当前页
+     * @param pageSize           每页显示数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer page, Integer pageSize) {
-        return this.findTaskInstances(tenantId, null, page, pageSize);
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, null, page, pageSize);
     }
 
     /**
      * 查询审批任务
      *
-     * @param tenantId   租户 ID
-     * @param approverId 审批人 ID
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
      *
      * @return List<TaskInstance>
      */
     @Override
-    public List<TaskInstance> findTaskInstances(String tenantId, String approverId) {
-        return this.findTaskInstances(tenantId, approverId, null, null, 1, Integer.MAX_VALUE).getRecords();
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, approverId, null, null, 1, Integer.MAX_VALUE).getRecords();
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId   租户 ID
-     * @param approverId 审批人 ID
-     * @param page       当前页
-     * @param pageSize   每页显示数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param page               当前页
+     * @param pageSize           每页显示数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, String approverId, Integer page, Integer pageSize) {
-        return this.findTaskInstances(tenantId, approverId, null, null, page, pageSize);
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, Integer page, Integer pageSize) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, approverId, null, null, page, pageSize);
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId      租户 ID
-     * @param approverId    审批人 ID
-     * @param nodeStatus    节点状态
-     * @param approveStatus 审批人审批状态
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatus         节点状态
+     * @param approveStatus      审批人审批状态
      *
      * @return List<TaskInstance>
      */
     @Override
-    public List<TaskInstance> findTaskInstances(String tenantId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
-        return this.findTaskInstances(tenantId, approverId, nodeStatus, approveStatus, 1, Integer.MAX_VALUE).getRecords();
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, approverId, nodeStatus, approveStatus, 1, Integer.MAX_VALUE).getRecords();
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId      租户 ID
-     * @param approverId    审批人 ID
-     * @param nodeStatus    节点状态
-     * @param approveStatus 审批人审批状态
-     * @param page          页码
-     * @param pageSize      每页数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatus         节点状态
+     * @param approveStatus      审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize) {
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize) {
         TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
         List<NodeStatus> nodeStatuses = nodeStatus == null ? null : List.of(nodeStatus);
         List<ApproveStatus> approveStatuses = approveStatus == null ? null : List.of(approveStatus);
-        return taskInstanceExecutor.findByApproverId(tenantId, approverId, nodeStatuses, approveStatuses, page, pageSize);
+        return taskInstanceExecutor.findByApproverId(tenantId, workflowInstanceId, approverId, nodeStatuses, approveStatuses, page, pageSize);
     }
 
     /**
@@ -1054,6 +1120,119 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
+     * 获取流程审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    @Override
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId) {
+        return getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param currentUserId      当前用户 ID
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    @Override
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String currentUserId) {
+        // 流程实例
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
+        if (workflowInstance == null) {
+            WorkflowException.throwWorkflowInstanceNotFoundException();
+        }
+        // 流程定义
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowInstance.getWorkflowDefinitionId());
+
+        // 任务实例
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+
+        // 节点定义
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
+
+        List<Pair<NodeDefinition, TaskInstance>> nodeDefAndTasks = new ArrayList<>();
+        for (NodeDefinition nodeDefinition : nodeDefinitions) {
+            TaskInstance taskInstance = taskInstanceExecutor.getByWorkflowInstanceIdAndNodeDefinitionId(tenantId, workflowInstanceId, nodeDefinition.getId());
+            nodeDefAndTasks.add(Pair.of(nodeDefinition, taskInstance));
+        }
+
+        // 审批人
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
+
+        // 节点审批人
+        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+        List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByWorkflowInstanceId(tenantId, workflowInstanceId);
+
+        // 返回 WorkflowInstanceApproveRecords
+        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, nodeAssignments, currentUserId);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    @Override
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId) {
+        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param currentUserId        当前用户 ID
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    @Override
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String currentUserId) {
+        // 流程定义
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
+        if (workflowDefinition == null) {
+            throw new WorkflowException("流程定义不存在");
+        }
+
+        List<WorkflowInstanceApproveRecords> recordsList = new ArrayList<>();
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        List<WorkflowInstance> workflowInstances = workflowInstanceExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId);
+        for (WorkflowInstance workflowInstance : workflowInstances) {
+            WorkflowInstanceApproveRecords records = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), currentUserId);
+            recordsList.add(records);
+        }
+
+        return recordsList;
+    }
+
+    /**
      * 动态设置审批人
      *
      * @param tenantId         租户 ID
@@ -1125,24 +1304,71 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public void updateApprover(String tenantId, String sourceApproverId, String targetApproverId) {
-        this.updateApprover(tenantId, null, sourceApproverId, targetApproverId);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+
+            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+            Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
+                    .eq(TaskInstance::getTenantId, tenantId)
+                    .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
+                    .eq(TaskInstance::getState, 1)
+                    .build();
+            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            List<TaskInstance> taskInstances = taskInstancePage.getRecords();
+            if (taskInstances.isEmpty()) {
+                WorkflowException.throwWorkflowInstanceNotFoundException();
+            }
+
+            // 执行更新
+            doUpdateApprover(tenantId, taskInstances, sourceApproverId, targetApproverId);
+        });
     }
 
     /**
      * 更新审批人（未审批状态下）
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param sourceApproverId   原审批人
-     * @param targetApproverId   新审批人
+     * @param taskInstance     任务实例
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/12 11:21
+     */
+    @Override
+    public void updateApprover(TaskInstance taskInstance, String sourceApproverId, String targetApproverId) {
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+
+            String tenantId = taskInstance.getTenantId();
+
+            NodeStatus nodeStatus = taskInstance.getStatus();
+            if (nodeStatus != NodeStatus.IN_PROGRESS) {
+                throw new WorkflowException("节点状态异常，当前节点状态：%s", nodeStatus.getDesc());
+            }
+
+            // 执行更新
+            doUpdateApprover(tenantId, Collections.singletonList(taskInstance), sourceApproverId, targetApproverId);
+        });
+    }
+
+    /**
+     * 更新审批人（未审批状态下）
+     *
+     * @param workflowInstance 流程实例
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
     @Override
-    public void updateApprover(String tenantId, Integer workflowInstanceId, String sourceApproverId, String targetApproverId) {
+    public void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, String targetApproverId) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
+
+            String tenantId = workflowInstance.getTenantId();
+            Integer workflowInstanceId = workflowInstance.getId();
+
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
             Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
                     .eq(TaskInstance::getTenantId, tenantId)
@@ -1153,59 +1379,120 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
             List<TaskInstance> taskInstances = taskInstancePage.getRecords();
             if (taskInstances.isEmpty()) {
-                throw new WorkflowException("流程实例不存在");
+                WorkflowException.throwWorkflowInstanceNotFoundException();
             }
 
-            NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
-            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
-
-            for (TaskInstance taskInstance : taskInstances) {
-                Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
-                // 查询用户任务关联表
-                query = QueryBuilderWrapper.createLambda(NodeAssignment.class)
-                        .eq(NodeAssignment::getTenantId, tenantId)
-                        .eq(NodeAssignment::getNodeDefinitionId, nodeDefinitionId)
-                        .eq(NodeAssignment::getUserId, sourceApproverId)
-                        .eq(NodeAssignment::getState, 1)
-                        .build();
-                Page<NodeAssignment> nodeAssignmentPage = nodeAssignmentExecutor.find(query);
-                List<NodeAssignment> nodeAssignments = nodeAssignmentPage.getRecords();
-                if (CollectionUtils.isNotEmpty(nodeAssignments)) {
-                    for (NodeAssignment nodeAssignment : nodeAssignments) {
-                        // 设置为目标值
-                        nodeAssignment.setUserId(targetApproverId);
-                        // 更新
-                        nodeAssignmentExecutor.updateById(nodeAssignment);
-                        // 记录日志
-                        String message = String.format("用户任务关联表 ID: %s, 原审批人: %s，现审批人: %s", nodeAssignment.getId(), sourceApproverId, targetApproverId);
-                        recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.NODE_ASSIGNMENT_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
-                    }
-                }
-
-                // 查询审批人
-                query = QueryBuilderWrapper.createLambda(TaskApprove.class)
-                        .eq(TaskApprove::getTenantId, tenantId)
-                        .eq(TaskApprove::getWorkflowInstanceId, taskInstance.getWorkflowInstanceId())
-                        .eq(TaskApprove::getTaskInstanceId, taskInstance.getId())
-                        .eq(TaskApprove::getApproverId, sourceApproverId)
-                        .eq(TaskApprove::getStatus, ApproveStatus.IN_PROGRESS.getCode())
-                        .eq(TaskApprove::getActive, ActiveStatus.ACTIVE.getCode())
-                        .eq(TaskApprove::getState, 1)
-                        .build();
-                Page<TaskApprove> taskApprovePage = taskApproveExecutor.find(query);
-                List<TaskApprove> taskApproves = taskApprovePage.getRecords();
-                if (CollectionUtils.isNotEmpty(taskApproves)) {
-                    for (TaskApprove taskApprove : taskApproves) {
-                        // 设置为目标值
-                        taskApprove.setApproverId(targetApproverId);
-                        // 更新
-                        taskApproveExecutor.updateById(taskApprove);
-                        // 记录日志
-                        String message = String.format("任务实例审批表 ID: %s, 原审批人: %s, 现审批人: %s", taskApprove.getId(), sourceApproverId, targetApproverId);
-                        recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.TASK_APPROVE_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
-                    }
-                }
-            }
+            // 执行更新
+            doUpdateApprover(tenantId, taskInstances, sourceApproverId, targetApproverId);
         });
+    }
+
+    /**
+     * doUpdateApprover
+     *
+     * @param tenantId         租户 ID
+     * @param taskInstances    流程实例列表
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/12 11:10
+     */
+    private void doUpdateApprover(String tenantId, List<TaskInstance> taskInstances, String sourceApproverId, String targetApproverId) {
+        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+
+        for (TaskInstance taskInstance : taskInstances) {
+            Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+            // 查询用户任务关联表
+            Query query = QueryBuilderWrapper.createLambda(NodeAssignment.class)
+                    .eq(NodeAssignment::getTenantId, tenantId)
+                    .eq(NodeAssignment::getNodeDefinitionId, nodeDefinitionId)
+                    .eq(NodeAssignment::getUserId, sourceApproverId)
+                    .eq(NodeAssignment::getState, 1)
+                    .build();
+            Page<NodeAssignment> nodeAssignmentPage = nodeAssignmentExecutor.find(query);
+            List<NodeAssignment> nodeAssignments = nodeAssignmentPage.getRecords();
+            if (CollectionUtils.isNotEmpty(nodeAssignments)) {
+                for (NodeAssignment nodeAssignment : nodeAssignments) {
+                    // 设置为目标值
+                    nodeAssignment.setUserId(targetApproverId);
+                    // 更新
+                    nodeAssignmentExecutor.updateById(nodeAssignment);
+                    // 记录日志
+                    String message = String.format("用户任务关联表 ID: %s, 原审批人: %s，现审批人: %s", nodeAssignment.getId(), sourceApproverId, targetApproverId);
+                    recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.NODE_ASSIGNMENT_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
+                }
+            }
+
+            // 查询审批人
+            query = QueryBuilderWrapper.createLambda(TaskApprove.class)
+                    .eq(TaskApprove::getTenantId, tenantId)
+                    .eq(TaskApprove::getWorkflowInstanceId, taskInstance.getWorkflowInstanceId())
+                    .eq(TaskApprove::getTaskInstanceId, taskInstance.getId())
+                    .eq(TaskApprove::getApproverId, sourceApproverId)
+                    .eq(TaskApprove::getStatus, ApproveStatus.IN_PROGRESS.getCode())
+                    .eq(TaskApprove::getActive, ActiveStatus.ACTIVE.getCode())
+                    .eq(TaskApprove::getState, 1)
+                    .build();
+            Page<TaskApprove> taskApprovePage = taskApproveExecutor.find(query);
+            List<TaskApprove> taskApproves = taskApprovePage.getRecords();
+            if (CollectionUtils.isNotEmpty(taskApproves)) {
+                for (TaskApprove taskApprove : taskApproves) {
+                    // 设置为目标值
+                    taskApprove.setApproverId(targetApproverId);
+                    // 更新
+                    taskApproveExecutor.updateById(taskApprove);
+                    // 记录日志
+                    String message = String.format("任务实例审批表 ID: %s, 原审批人: %s, 现审批人: %s", taskApprove.getId(), sourceApproverId, targetApproverId);
+                    recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.TASK_APPROVE_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
+                }
+            }
+        }
+    }
+
+    /**
+     * 检查是否是顺序审批
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approveType    审批类型
+     *
+     * @author wangweijun
+     * @since 2024/8/28 17:32
+     */
+    private void checkIfApproveSeqStatus(String tenantId, Integer taskInstanceId, ApproveType approveType) {
+        if (ApproveType.SEQ == approveType) {
+            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+            // 获取下一个审批人的状态，并修改审批状态为：IN_PROGRESS
+            List<TaskApprove> taskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
+            if (CollUtil.isNotEmpty(taskApproves)) {
+                // 获取下一个审批人
+                TaskApprove nextTaskApprove = taskApproves.stream()
+                        .filter(t -> ApproveStatus.SUSPEND == t.getStatus())
+                        .min(Comparator.comparingInt(TaskApprove::getApproverSeq)).orElse(null);
+                if (nextTaskApprove != null) {
+                    nextTaskApprove.convertToApproveStatusInProgress();
+                    taskApproveExecutor.updateById(nextTaskApprove);
+                }
+            }
+        }
+    }
+
+    /**
+     * 检查审批意见是否必填
+     *
+     * @param taskInstanceId 任务实例 ID
+     * @param comment        审批意见
+     *
+     * @author wangweijun
+     * @since 2024/9/12 10:34
+     */
+    private void checkIfRequiredComment(Integer taskInstanceId, String comment) {
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getByTaskInstanceId(taskInstanceId);
+        if (StringUtils.isBlank(comment) && workflowDefinition.isRequiredComment()) {
+            throw new WorkflowException("审批意见不能为空");
+        }
     }
 }

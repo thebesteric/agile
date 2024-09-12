@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowS
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 
@@ -93,13 +94,14 @@ public interface RuntimeService {
      *
      * @param tenantId           租户 ID
      * @param fromTaskInstanceId 当前任务实例 ID
+     * @param approverId         当前审批人 ID
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/24 19:43
      */
-    List<TaskInstance> next(String tenantId, Integer fromTaskInstanceId);
+    List<TaskInstance> next(String tenantId, Integer fromTaskInstanceId, String approverId);
 
     /**
      * 审批-同意
@@ -167,76 +169,81 @@ public interface RuntimeService {
     /**
      * 查询审批任务
      *
-     * @param tenantId      租户 ID
-     * @param approverId    审批人 ID
-     * @param nodeStatus    节点状态
-     * @param approveStatus 审批人审批状态
-     * @param page          页码
-     * @param pageSize      每页大小
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatus         节点状态
+     * @param approveStatus      审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页大小
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId      租户 ID
-     * @param approverId    审批人 ID
-     * @param nodeStatus    节点状态
-     * @param approveStatus 审批人审批状态
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatus         节点状态
+     * @param approveStatus      审批人审批状态
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    List<TaskInstance> findTaskInstances(String tenantId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus);
+    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId 租户 ID
-     * @param page     当前页
-     * @param pageSize 每页显示数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param page               当前页
+     * @param pageSize           每页显示数量
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId   租户 ID
-     * @param approverId 审批人 ID
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    List<TaskInstance> findTaskInstances(String tenantId, String approverId);
+    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId   租户 ID
-     * @param approverId 审批人 ID
-     * @param page       当前页
-     * @param pageSize   每页显示数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approverId         审批人 ID
+     * @param page               当前页
+     * @param pageSize           每页显示数量
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, String approverId, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, Integer page, Integer pageSize);
 
     /**
      * 获取当前流程实例下正在进行的审批节点
@@ -342,6 +349,61 @@ public interface RuntimeService {
      */
     Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize);
 
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param currentUserId      当前用户 ID
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String currentUserId);
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param currentUserId        当前用户 ID
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String currentUserId);
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId);
+
     /**
      * 动态设置审批人
      *
@@ -357,22 +419,33 @@ public interface RuntimeService {
     /**
      * 更新审批人（未审批状态下）
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param sourceApproverId   原审批人
-     * @param targetApproverId   新审批人
+     * @param taskInstance     任务实例
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateApprover(String tenantId, Integer workflowInstanceId, String sourceApproverId, String targetApproverId);
+    void updateApprover(TaskInstance taskInstance, String sourceApproverId, String targetApproverId);
 
     /**
      * 更新审批人（未审批状态下）
      *
-     * @param tenantId           租户 ID
-     * @param sourceApproverId   原审批人
-     * @param targetApproverId   新审批人
+     * @param workflowInstance 流程实例
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, String targetApproverId);
+
+    /**
+     * 更新审批人（未审批状态下）
+     *
+     * @param tenantId         租户 ID
+     * @param sourceApproverId 原审批人
+     * @param targetApproverId 新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36

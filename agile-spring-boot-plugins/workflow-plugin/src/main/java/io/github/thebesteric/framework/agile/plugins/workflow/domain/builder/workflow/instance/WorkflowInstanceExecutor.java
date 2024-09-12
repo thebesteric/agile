@@ -1,6 +1,8 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
@@ -113,6 +115,22 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
     }
 
     /**
+     * 根据发起人 ID 查询流程实例
+     *
+     * @param tenantId    租户 ID
+     * @param requesterId 发起人 ID
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/6/27 12:40
+     */
+    public List<WorkflowInstance> findByRequesterId(String tenantId, String requesterId) {
+        Page<WorkflowInstance> page = findByRequesterId(tenantId, requesterId, null);
+        return page.getRecords();
+    }
+
+    /**
      * 查找流程实例：根据审批人
      *
      * @param tenantId         租户 ID
@@ -158,18 +176,40 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
     }
 
     /**
-     * 根据发起人 ID 查询流程实例
+     * 查找流程实例：根据流程定义 ID
      *
-     * @param tenantId    租户 ID
-     * @param requesterId 发起人 ID
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
      *
      * @return List<WorkflowInstance>
      *
      * @author wangweijun
-     * @since 2024/6/27 12:40
+     * @since 2024/9/12 15:34
      */
-    public List<WorkflowInstance> findByRequesterId(String tenantId, String requesterId) {
-        Page<WorkflowInstance> page = findByRequesterId(tenantId, requesterId, null);
-        return page.getRecords();
+    public List<WorkflowInstance> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
+        return this.findByWorkflowDefinitionId(tenantId, workflowDefinitionId, 1, Integer.MAX_VALUE).getRecords();
     }
+
+    /**
+     * 查找流程实例：根据流程定义 ID
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param page                 当前页
+     * @param pageSize             每页显示数量
+     *
+     * @return Page<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 15:34
+     */
+    public Page<WorkflowInstance> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+        Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
+                .eq(WorkflowInstance::getTenantId, tenantId)
+                .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
+                .page(page, pageSize)
+                .build();
+        return this.find(query);
+    }
+
 }

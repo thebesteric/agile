@@ -108,6 +108,30 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
     }
 
     /**
+     * 根据流程实例 ID 查找所有审批人
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<NodeAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 15:15
+     */
+    public List<NodeAssignment> findByWorkflowInstanceId(String tenantId, Integer workflowInstanceId) {
+        final String selectSql = """
+                SELECT na.* FROM awf_node_assignment na
+                    LEFT JOIN awf_node_definition nd ON nd.`id` = na.`node_def_id`
+                    LEFT JOIN awf_wf_definition wd ON wd.`id` = nd.`wf_def_id`
+                    LEFT JOIN awf_wf_instance wi ON wi.`wf_def_id` = wd.`id`
+                WHERE wi.`tenant_id` = ? AND wi.`id` = ?
+                """;
+        RowMapper<NodeAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeAssignment.of(rs);
+        return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowInstanceId).stream().toList();
+    }
+
+
+    /**
      * 根据节点定义 ID 删除所有审批人
      *
      * @param tenantId         租户 ID

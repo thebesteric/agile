@@ -114,7 +114,7 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
         return this;
     }
 
-    public NodeDefinitionBuilder assignmentApprovers(int approverNum) {
+    public NodeDefinitionBuilder dynamicAssignmentApprovers(int approverNum) {
         this.nodeDefinition.getApprovers().clear();
         for (int i = 0; i < approverNum; i++) {
             this.nodeDefinition.getApprovers().add(Approver.of(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(i)));

@@ -22,7 +22,7 @@ public class TaskInstanceTest {
     @Test
     void findTaskInstances() {
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        System.out.println(runtimeService.findTaskInstances("8888", "张三", null, null, 1, 10));
+        System.out.println(runtimeService.findTaskInstances("8888", null, "张三", null, null, 1, 10));
     }
 
 }

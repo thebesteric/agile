@@ -350,7 +350,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
         String whereClause = getWhereClause(query.getQueryParams());
         String orderByClause = getOrderByClause(query.getOrderByParams());
         String selectSql = """
-                SELECT * FROM %s t
+                SELECT * FROM %s _inner
                 """.formatted(tableName);
         if (CharSequenceUtil.isNotEmpty(whereClause)) {
             selectSql += " WHERE " + whereClause;
@@ -358,7 +358,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
         if (CharSequenceUtil.isNotEmpty(orderByClause)) {
             selectSql += " ORDER BY " + orderByClause;
         }
-        return "SELECT COUNT(*) FROM (" + selectSql + ")";
+        return "SELECT COUNT(*) FROM (" + selectSql + ") _outer";
     }
 
     /**

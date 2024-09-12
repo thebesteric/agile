@@ -65,6 +65,42 @@ public class TaskApprove extends BaseEntity {
         return this.approverId.startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && this.approverId.endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX);
     }
 
+    /**
+     * 将审批实例设置为：进行中
+     *
+     * @author wangweijun
+     * @since 2024/9/11 18:36
+     */
+    public void convertToApproveStatusInProgress() {
+        this.convertToApproveStatusInProgress(null);
+    }
+
+    /**
+     * 将审批实例设置为：进行中
+     *
+     * @param comment 审批意见
+     *
+     * @author wangweijun
+     * @since 2024/9/11 18:39
+     */
+    public void convertToApproveStatusInProgress(String comment) {
+        this.setStatus(ApproveStatus.IN_PROGRESS);
+        this.setActive(ActiveStatus.ACTIVE);
+        this.setComment(comment);
+    }
+
+    /**
+     * 将审批实例设置为：跳过
+     *
+     * @author wangweijun
+     * @since 2024/9/11 18:31
+     */
+    public void convertToApproveStatusSkip() {
+        this.setStatus(ApproveStatus.SKIPPED);
+        this.setActive(ActiveStatus.INACTIVE);
+        this.setComment(null);
+    }
+
     public static TaskApprove of(ResultSet rs) throws SQLException {
         TaskApprove taskApprove = new TaskApprove();
         taskApprove.setTenantId(rs.getString("tenant_id"));
