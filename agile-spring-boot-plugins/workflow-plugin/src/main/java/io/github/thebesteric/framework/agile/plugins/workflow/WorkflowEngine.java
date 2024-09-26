@@ -40,8 +40,8 @@ public class WorkflowEngine {
 
     private static final List<Class<? extends BaseEntity>> ENTITY_CLASSES = List.of(
             WorkflowDefinition.class, WorkflowInstance.class, WorkflowRepository.class, WorkflowAssignment.class,
-            NodeDefinition.class, NodeAssignment.class, NodeRelation.class,
-            TaskInstance.class, TaskApprove.class, TaskHistory.class
+            NodeDefinition.class, NodeAssignment.class, NodeRelation.class, NodeRoleAssignment.class,
+            TaskInstance.class, TaskApprove.class, TaskHistory.class, TaskRoleApproveRecord.class
     );
 
     public WorkflowEngine(AgileWorkflowContext context) {

@@ -33,8 +33,8 @@ public class WorkflowAssignmentExecutorBuilder extends AbstractExecutorBuilder<W
         return this;
     }
 
-    public WorkflowAssignmentExecutorBuilder userId(String userId) {
-        workflowAssignmentExecutor.getWorkflowAssignment().setUserId(userId);
+    public WorkflowAssignmentExecutorBuilder approverId(String approverId) {
+        workflowAssignmentExecutor.getWorkflowAssignment().setApproverId(approverId);
         return this;
     }
 

@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
+
 /**
  * TaskInstanceTest
  *
@@ -22,7 +24,7 @@ public class TaskInstanceTest {
     @Test
     void findTaskInstances() {
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        System.out.println(runtimeService.findTaskInstances("8888", null, "张三", null, null, 1, 10));
+        System.out.println(runtimeService.findTaskInstances("8888", null, null, "张三", new ArrayList<>(), new ArrayList<>(), 1, 10));
     }
 
 }

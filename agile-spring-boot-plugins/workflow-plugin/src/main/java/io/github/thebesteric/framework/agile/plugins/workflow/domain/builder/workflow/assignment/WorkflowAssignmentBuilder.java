@@ -30,15 +30,15 @@ public class WorkflowAssignmentBuilder extends AbstractBuilder<WorkflowAssignmen
         return builder;
     }
 
-    public WorkflowAssignmentBuilder userId(String userId, String desc) {
-        return this.userId(null, userId, desc);
+    public WorkflowAssignmentBuilder approverId(String userId, String desc) {
+        return this.approverId(null, userId, desc);
     }
 
-    public WorkflowAssignmentBuilder userId(ApproveType approveType, String userId, String desc) {
-        this.workflowAssignment.setUserId(userId);
+    public WorkflowAssignmentBuilder approverId(ApproveType approveType, String approverId, String desc) {
+        this.workflowAssignment.setApproverId(approverId);
         this.workflowAssignment.setDesc(desc);
         if (ApproveType.SEQ == approveType) {
-            this.workflowAssignment.setUserSeq(seq.getAndIncrement());
+            this.workflowAssignment.setApproverSeq(seq.getAndIncrement());
         }
         return this;
     }

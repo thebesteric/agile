@@ -7,9 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.PublishStatus;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
@@ -185,7 +183,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 获取原有的审批人
             List<NodeAssignment> oldNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, oldNodeDefinition.getId());
-            Set<Approver> oldApprovers = oldNodeAssignments.stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
+            Set<Approver> oldApprovers = oldNodeAssignments.stream().map(assignment -> Approver.of(assignment.getApproverId(), assignment.getDesc())).collect(Collectors.toSet());
 
             // 审批人不同
             if (!nodeDefinition.getApprovers().containsAll(oldApprovers)) {
@@ -193,9 +191,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 nodeAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinition.getId());
                 // 重新添加审批人
                 NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(tenantId, nodeDefinition.getId());
-
+                ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
+                ApproveType approveType = nodeDefinition.getApproveType();
                 for (Approver approver : nodeDefinition.getApprovers()) {
-                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(nodeDefinition.getApproveType(), approver.getId(), approver.getDesc()).build();
+                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverId(approverIdType, approveType, approver.getId(), approver.getDesc()).build();
                     NodeAssignmentExecutor assignmentExecutor = nodeAssignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
                     assignmentExecutor.save();
                 }

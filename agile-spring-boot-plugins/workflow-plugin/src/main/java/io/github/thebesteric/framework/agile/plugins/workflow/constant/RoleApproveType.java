@@ -9,18 +9,12 @@ import lombok.Getter;
 
 import java.util.Arrays;
 
-/**
- * 审批类型
- *
- * @author wangweijun
- * @version v1.0
- * @since 2024-06-11 21:28:54
- */
 @Getter
-public enum ApproveType implements BaseEnum {
-    ANY(1, "或签", "表示审批人中，只需要其中一个完成审批"),
-    ALL(2, "会签", "表示审批人中，所有人都需要完成审批"),
-    SEQ(3, "顺签", "表示审批人中，所有人按照顺序依次完成审批");
+public enum RoleApproveType implements BaseEnum {
+
+    ANY(1, "或签", "表示角多个角色中，其中一个角色审核通过即可"),
+    ALL(2, "会签", "表示角多个角色中，每个角色都需要完成审批"),
+    SEQ(3, "顺签", "表示角多个角色中，每个角色按照顺序依次完成审批");
 
     @JsonValue
     @EnumValue
@@ -28,14 +22,15 @@ public enum ApproveType implements BaseEnum {
     private final String name;
     private final String desc;
 
-    ApproveType(Integer code, String name, String desc) {
+    RoleApproveType(Integer code, String name, String desc) {
         this.code = code;
         this.name = name;
         this.desc = desc;
     }
 
     @JsonCreator
-    public static ApproveType of(Integer code) {
-        return Arrays.stream(ApproveType.values()).filter(i -> ObjectUtil.equals(i.getCode(), code)).findFirst().orElse(null);
+    public static RoleApproveType of(Integer code) {
+        return Arrays.stream(RoleApproveType.values()).filter(i -> ObjectUtil.equals(i.getCode(), code)).findFirst().orElse(null);
     }
+
 }

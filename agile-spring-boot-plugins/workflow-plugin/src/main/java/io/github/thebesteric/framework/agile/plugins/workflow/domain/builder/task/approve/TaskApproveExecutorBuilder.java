@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.ta
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproverIdType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskApprove;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -23,6 +24,11 @@ public class TaskApproveExecutorBuilder extends AbstractExecutorBuilder<TaskAppr
 
     public static TaskApproveExecutorBuilder builder(JdbcTemplate jdbcTemplate) {
         return new TaskApproveExecutorBuilder(jdbcTemplate);
+    }
+
+    public TaskApproveExecutorBuilder newEntity() {
+        this.taskApproveExecutor.setTaskApprove(new TaskApprove());
+        return this;
     }
 
     public TaskApproveExecutorBuilder tenantId(String tenantId) {
@@ -47,6 +53,11 @@ public class TaskApproveExecutorBuilder extends AbstractExecutorBuilder<TaskAppr
 
     public TaskApproveExecutorBuilder approveSeq(Integer approveSeq) {
         this.taskApproveExecutor.getTaskApprove().setApproverSeq(approveSeq);
+        return this;
+    }
+
+    public TaskApproveExecutorBuilder approverIdType(ApproverIdType approverIdType) {
+        this.taskApproveExecutor.getTaskApprove().setApproverIdType(approverIdType);
         return this;
     }
 

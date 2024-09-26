@@ -1,15 +1,15 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition;
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
@@ -24,7 +24,9 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import java.sql.ResultSet;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -39,14 +41,10 @@ import java.util.stream.Collectors;
 public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
 
     private NodeDefinition nodeDefinition;
-    private final NodeAssignmentExecutor nodeAssignmentExecutor;
-    private final WorkflowDefinitionExecutor workflowDefinitionExecutor;
 
     public NodeDefinitionExecutor(JdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
         this.nodeDefinition = new NodeDefinition();
-        nodeAssignmentExecutor = new NodeAssignmentExecutor(jdbcTemplate);
-        workflowDefinitionExecutor = new WorkflowDefinitionExecutor(jdbcTemplate);
     }
 
     /**
@@ -61,10 +59,10 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         if (existsNodeDefinition != null) {
             throw new DataExistsException("已存在相同的节点定义");
         }
-
         // 创建节点定义
         nodeDefinition = super.save(nodeDefinition);
 
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = new WorkflowDefinitionExecutor(jdbcTemplate);
         Integer workflowDefinitionId = nodeDefinition.getWorkflowDefinitionId();
         WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
 
@@ -78,15 +76,66 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             if (workflowDefinition.getWhenEmptyApprovers().isEmpty()) {
                 throw new WorkflowException("非自动审批条件下，审批人不能为空");
             }
-            // 设置审批人为流程定义的默认审批人
-            approvers = workflowDefinition.getWhenEmptyApprovers();
+            // 不是角色审批节点，设置审批人为流程定义的默认审批人
+            if (!nodeDefinition.isRoleApprove()) {
+                approvers = workflowDefinition.getWhenEmptyApprovers();
+            }
+        }
+
+        // 角色审批
+        if (nodeDefinition.isRoleApprove()) {
+            // 记录角色用户对应关系
+            Set<RoleApprover> roleApprovers = nodeDefinition.getRoleApprovers();
+            NodeRoleAssignmentExecutorBuilder nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
+
+            // 按角色分组并保存
+            Map<String, List<RoleApprover>> approversByRoleId = roleApprovers.stream().collect(Collectors.groupingBy(RoleApprover::getRoleId));
+
+            for (Map.Entry<String, List<RoleApprover>> entry : approversByRoleId.entrySet()) {
+                List<RoleApprover> list = entry.getValue();
+                NodeRoleAssignmentBuilder nodeRoleAssignmentBuilder = NodeRoleAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
+                AtomicInteger userSeq = NodeRoleAssignmentBuilder.userSeq;
+                AtomicInteger roleSeq = NodeRoleAssignmentBuilder.roleSeq;
+                // 角色的顺序
+                int roleSeqValue = roleSeq.getAndIncrement();
+                for (RoleApprover roleApprover : list) {
+                    // 角色用户的顺序
+                    int userSeqValue = userSeq.getAndIncrement();
+                    NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentBuilder
+                            .userId(userSeqValue, roleApprover.getUserId(), roleApprover.getUserDesc())
+                            .roleId(roleSeqValue, roleApprover.getRoleId(), roleApprover.getRoleDesc())
+                            .build();
+                    NodeRoleAssignmentExecutor nodeRoleUserAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.nodeRoleUserAssignment(nodeRoleAssignment).build();
+                    nodeRoleUserAssignmentExecutor.save();
+                }
+                // 如果角色审批是：ANY，则需要保证每个角色用户都有自己的顺序
+                if (RoleApproveType.ANY == nodeDefinition.getRoleApproveType()) {
+                    NodeRoleAssignmentBuilder.resetUserSeq();
+                    NodeRoleAssignmentBuilder.resetRoleSeq();
+                }
+                // 如果角色审批是：ALL，则需要保证所有角色用户都有统一的顺序
+                else if (RoleApproveType.ALL == nodeDefinition.getRoleApproveType()) {
+                    NodeRoleAssignmentBuilder.resetRoleSeq();
+                }
+                // 如果角色审批是：SEQ，则需要保证每个角色和每个角色用户都有自己的顺序
+                else if (RoleApproveType.SEQ == nodeDefinition.getRoleApproveType()) {
+                    NodeRoleAssignmentBuilder.resetUserSeq();
+                }
+            }
+            NodeRoleAssignmentBuilder.resetSeq();
+
+
+            // 将 approvers 设置为角色用户
+            approvers = roleApprovers.stream().map(roleApprover -> Approver.of(roleApprover.getRoleId(), roleApprover.getRoleDesc())).collect(Collectors.toSet());
         }
 
         // 设置节点审批人
+        ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
+        ApproveType approveType = nodeDefinition.getApproveType();
         NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
         NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
         for (Approver approver : approvers) {
-            NodeAssignment nodeAssignment = nodeAssignmentBuilder.userId(nodeDefinition.getApproveType(), approver.getId(), approver.getDesc()).build();
+            NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverId(approverIdType, approveType, approver.getId(), approver.getDesc()).build();
             NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
             assignmentExecutor.save();
         }
@@ -378,7 +427,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      * @since 2024/9/6 14:45
      */
     public Set<Approver> findApproversByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
+        NodeAssignmentExecutor nodeAssignmentExecutor = new NodeAssignmentExecutor(jdbcTemplate);
         return nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId)
-                .stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
+                .stream().map(assignment -> Approver.of(assignment.getApproverId(), assignment.getDesc())).collect(Collectors.toSet());
     }
 }

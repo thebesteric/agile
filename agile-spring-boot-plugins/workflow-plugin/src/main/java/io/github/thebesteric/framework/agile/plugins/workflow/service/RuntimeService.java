@@ -94,66 +94,71 @@ public interface RuntimeService {
      *
      * @param tenantId           租户 ID
      * @param fromTaskInstanceId 当前任务实例 ID
-     * @param approverId         当前审批人 ID
+     * @param roleId             角色 ID
+     * @param userId             用户 ID
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/24 19:43
      */
-    List<TaskInstance> next(String tenantId, Integer fromTaskInstanceId, String approverId);
+    List<TaskInstance> next(String tenantId, Integer fromTaskInstanceId, String roleId, String userId);
 
     /**
      * 审批-同意
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
-     * @param approverId     审批人 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
      * @param comment        审批意见
      *
      * @author wangweijun
      * @since 2024/6/24 19:43
      */
-    void approve(String tenantId, Integer taskInstanceId, String approverId, String comment);
+    void approve(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
      * 审批-撤销
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
-     * @param approverId     审批人 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
      * @param comment        审批意见
      *
      * @author wangweijun
      * @since 2024/9/6 10:18
      */
-    void redo(String tenantId, Integer taskInstanceId, String approverId, String comment);
+    void redo(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
      * 审批-驳回
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
-     * @param approverId     审批人 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
      * @param comment        审批意见
      *
      * @author wangweijun
      * @since 2024/6/24 19:43
      */
-    void reject(String tenantId, Integer taskInstanceId, String approverId, String comment);
+    void reject(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
      * 弃权
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
-     * @param approverId     审批人 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
      * @param comment        审批意见
      *
      * @author wangweijun
      * @since 2024/6/24 19:43
      */
-    void abandon(String tenantId, Integer taskInstanceId, String approverId, String comment);
+    void abandon(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
      * 取消流程
@@ -171,6 +176,7 @@ public interface RuntimeService {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
      * @param approverId         审批人 ID
      * @param nodeStatus         节点状态
      * @param approveStatus      审批人审批状态
@@ -182,13 +188,71 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatuses       节点状态
+     * @param approveStatus      审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页大小
+     *
+     * @return Page<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/23 19:49
+     */
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, Integer page, Integer pageSize);
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatus         节点状态
+     * @param approveStatuses    审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页大小
+     *
+     * @return Page<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/23 19:49
+     */
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize);
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param roleIds            审批人角色 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatuses       节点状态
+     * @param approveStatuses    审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页大小
+     *
+     * @return Page<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/23 19:49
+     */
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize);
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
      * @param approverId         审批人 ID
      * @param nodeStatus         节点状态
      * @param approveStatus      审批人审批状态
@@ -198,7 +262,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus);
+    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus);
 
     /**
      * 查询审批任务
@@ -220,6 +284,7 @@ public interface RuntimeService {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
      * @param approverId         审批人 ID
      *
      * @return List<TaskInstance>
@@ -227,13 +292,14 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId);
+    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId);
 
     /**
      * 查询审批任务
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
      * @param approverId         审批人 ID
      * @param page               当前页
      * @param pageSize           每页显示数量
@@ -243,7 +309,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, Integer page, Integer pageSize);
 
     /**
      * 获取当前流程实例下正在进行的审批节点

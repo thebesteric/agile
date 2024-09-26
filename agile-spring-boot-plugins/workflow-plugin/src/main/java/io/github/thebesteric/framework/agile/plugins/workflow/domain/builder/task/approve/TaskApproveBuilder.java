@@ -62,11 +62,12 @@ public class TaskApproveBuilder extends AbstractBuilder<TaskApprove> {
 
     public TaskApprove build() {
         String tenantId = this.taskApprove.getTenantId();
+        Integer workflowInstanceId = this.taskApprove.getWorkflowInstanceId();
         Integer taskInstanceId = this.taskApprove.getTaskInstanceId();
         String approverId = this.taskApprove.getApproverId();
         ApproveStatus status = this.taskApprove.getStatus();
-        if (tenantId == null || taskInstanceId == null || approverId == null || status == null) {
-            throw new InvalidParamsException("tenantId, taskInstanceId, approverId, status cannot be null or empty");
+        if (tenantId == null || workflowInstanceId == null || taskInstanceId == null || approverId == null || status == null) {
+            throw new InvalidParamsException("tenantId, workflowInstanceId, taskInstanceId, approverId, status cannot be null or empty");
         }
         return super.build(this.taskApprove);
     }

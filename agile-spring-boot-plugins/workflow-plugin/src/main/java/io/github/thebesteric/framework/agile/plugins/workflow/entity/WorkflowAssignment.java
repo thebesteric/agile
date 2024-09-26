@@ -32,21 +32,21 @@ public class WorkflowAssignment extends BaseEntity {
     @EntityColumn(name="wf_def_id", nullable = false, comment = "流程定义 ID")
     private Integer workflowDefinitionId;
 
-    @EntityColumn(name = "user_id", length = 32, nullable = false, comment = "用户 ID")
-    private String userId;
+    @EntityColumn(name = "approver_id", length = 32, nullable = false, comment = "用户 ID")
+    private String approverId;
 
-    @EntityColumn(name = "user_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
-    private Integer userSeq;
+    @EntityColumn(name = "approver_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
+    private Integer approverSeq;
 
     public static WorkflowAssignment of(ResultSet rs) throws SQLException {
         WorkflowAssignment nodeAssignment = new WorkflowAssignment();
         nodeAssignment.setTenantId(rs.getString("tenant_id"));
         nodeAssignment.setWorkflowDefinitionId(rs.getInt("wf_def_id"));
-        nodeAssignment.setUserId(rs.getString("user_id"));
+        nodeAssignment.setApproverId(rs.getString("approver_id"));
         // 解决 rs.getInt("xxx") null 值会返回 0 的问题
-        Object userSeqObject = rs.getObject("user_seq");
+        Object userSeqObject = rs.getObject("approver_seq");
         if (userSeqObject != null) {
-            nodeAssignment.setUserSeq((Integer) userSeqObject);
+            nodeAssignment.setApproverSeq((Integer) userSeqObject);
         }
         return of(nodeAssignment, rs);
     }

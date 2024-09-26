@@ -34,7 +34,7 @@ public class NodeAssignmentExecutorBuilder extends AbstractExecutorBuilder<NodeA
     }
 
     public NodeAssignmentExecutorBuilder userId(String userId) {
-        nodeAssignmentExecutor.getNodeAssignment().setUserId(userId);
+        nodeAssignmentExecutor.getNodeAssignment().setApproverId(userId);
         return this;
     }
 

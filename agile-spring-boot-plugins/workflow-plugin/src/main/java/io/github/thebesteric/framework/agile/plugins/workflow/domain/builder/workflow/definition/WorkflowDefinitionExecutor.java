@@ -69,7 +69,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
             whenEmptyApprovers.forEach(approver -> {
                 WorkflowAssignment workflowAssignment = WorkflowAssignmentBuilder
                         .builder(workflowDefinition.getTenantId(), workflowDefinition.getId())
-                        .userId(approver.getId(), approver.getDesc())
+                        .approverId(approver.getId(), approver.getDesc())
                         .build();
                 workflowAssignmentExecutor.save(workflowAssignment);
             });
@@ -256,7 +256,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
      */
     public Set<Approver> findApproversByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
         return workflowAssignmentExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId)
-                .stream().map(assignment -> Approver.of(assignment.getUserId(), assignment.getDesc())).collect(Collectors.toSet());
+                .stream().map(assignment -> Approver.of(assignment.getApproverId(), assignment.getDesc())).collect(Collectors.toSet());
     }
 
     /**

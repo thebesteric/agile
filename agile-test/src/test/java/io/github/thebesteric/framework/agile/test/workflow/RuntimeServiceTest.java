@@ -53,6 +53,7 @@ public class RuntimeServiceTest {
 
     @Test
     void approve() {
+        String roleId = null;
         String tenantId = "8888";
         // String approverId = "张三";
         // String approverId = "李四";
@@ -61,16 +62,17 @@ public class RuntimeServiceTest {
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
         if (!taskInstances.isEmpty()) {
             for (TaskInstance taskInstance : taskInstances) {
-                runtimeService.approve(tenantId, taskInstance.getId(), approverId, "同意");
+                runtimeService.approve(tenantId, taskInstance.getId(), roleId, approverId, "同意");
             }
         }
     }
 
     @Test
     void reject() {
+        String roleId = null;
         String tenantId = "8888";
         String approverId = "张三";
         // String approverId = "李四";
@@ -79,16 +81,17 @@ public class RuntimeServiceTest {
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
         if (!taskInstances.isEmpty()) {
             for (TaskInstance taskInstance : taskInstances) {
-                runtimeService.reject(tenantId, taskInstance.getId(), approverId, "不同意");
+                runtimeService.reject(tenantId, taskInstance.getId(), roleId, approverId, "不同意");
             }
         }
     }
 
     @Test
     void abandon() {
+        String roleId = null;
         String tenantId = "8888";
         // String approverId = "张三";
         // String approverId = "李四";
@@ -97,10 +100,10 @@ public class RuntimeServiceTest {
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
         if (!taskInstances.isEmpty()) {
             for (TaskInstance taskInstance : taskInstances) {
-                runtimeService.abandon(tenantId, taskInstance.getId(), approverId, "弃权");
+                runtimeService.abandon(tenantId, taskInstance.getId(), roleId, approverId, "弃权");
             }
         }
     }

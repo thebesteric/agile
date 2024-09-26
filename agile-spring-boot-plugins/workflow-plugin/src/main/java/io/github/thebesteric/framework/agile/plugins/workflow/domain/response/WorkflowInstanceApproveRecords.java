@@ -122,17 +122,17 @@ public class WorkflowInstanceApproveRecords {
         /** 审批人 ID */
         private Integer id;
         /** 审批人 */
-        private String userId;
+        private String approverId;
         /** 审批顺序 */
-        private Integer seq;
+        private Integer approverSeq;
         /** 创建时间 */
         private Date createdAt;
 
         public static NodeAssignmentResponse of(NodeAssignment nodeAssignment) {
             NodeAssignmentResponse response = new NodeAssignmentResponse();
             response.id = nodeAssignment.getId();
-            response.userId = nodeAssignment.getUserId();
-            response.seq = nodeAssignment.getUserSeq();
+            response.approverId = nodeAssignment.getApproverId();
+            response.approverSeq = nodeAssignment.getApproverSeq();
             response.createdAt = nodeAssignment.getCreatedAt();
             return response;
         }

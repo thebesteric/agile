@@ -107,9 +107,11 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
     public void updateById(T entity) {
         entity.setUpdatedAt(new Date());
         entity.setVersion(entity.getVersion() + 1);
-        if (entity.getUpdatedAt() == null) {
+        if (entity.getUpdatedBy() == null || entity.getId() != null) {
             entity.setUpdatedBy(AgileWorkflowContext.getCurrentUser());
         }
+
+
         // 获取实体类对应的字段和值
         Pair<List<ColumnDomain>, List<Object>> entityParams = getEntityParams(entity);
 
@@ -145,10 +147,10 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
     public T save(T entity) {
         entity.setUpdatedAt(null);
         entity.setUpdatedBy(null);
-        if (entity.getCreatedAt() == null) {
+        if (entity.getCreatedAt() == null && entity.getId() == null) {
             entity.setCreatedAt(new Date());
         }
-        if (entity.getCreatedBy() == null) {
+        if (entity.getCreatedBy() == null || entity.getId() == null) {
             entity.setCreatedBy(AgileWorkflowContext.getCurrentUser());
         }
         // 获取实体类对应的字段和值
@@ -171,7 +173,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
             if (arg instanceof Boolean) {
                 arg = (boolean) arg ? 1 : 0;
             }
-            return "'" + arg.toString() + "'";
+            return arg == null ? null : "'" + arg + "'";
         }).collect(Collectors.joining(","));
 
         // 执行 SQL
@@ -497,6 +499,10 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
                             value = DateUtils.formatToDateTime(date);
                         }
                         updateParams.put(columnDomain, value);
+                    } else {
+                        if (columnDomain.isNullable()) {
+                            updateParams.put(columnDomain, null);
+                        }
                     }
                 } catch (IllegalAccessException e) {
                     LoggerPrinter.error(log, e.getMessage(), e);

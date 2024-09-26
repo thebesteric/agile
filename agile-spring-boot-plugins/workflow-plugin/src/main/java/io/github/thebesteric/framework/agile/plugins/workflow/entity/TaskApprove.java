@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproverIdType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
@@ -38,11 +39,14 @@ public class TaskApprove extends BaseEntity {
     @EntityColumn(name = "task_inst_id", nullable = false, comment = "任务实例 ID")
     private Integer taskInstanceId;
 
-    @EntityColumn(name = "approver_id", length = 32, nullable = false, comment = "审批人")
+    @EntityColumn(name = "approver_id", length = 32, nullable = false, comment = "审批人 ID")
     private String approverId;
 
     @EntityColumn(name = "approver_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
     private Integer approverSeq;
+
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批人 ID 类型")
+    private ApproverIdType approverIdType = ApproverIdType.USER;
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批状态")
     private ApproveStatus status = ApproveStatus.IN_PROGRESS;
@@ -95,10 +99,44 @@ public class TaskApprove extends BaseEntity {
      * @author wangweijun
      * @since 2024/9/11 18:31
      */
-    public void convertToApproveStatusSkip() {
+    public void convertToApproveStatusSkipped() {
         this.setStatus(ApproveStatus.SKIPPED);
         this.setActive(ActiveStatus.INACTIVE);
         this.setComment(null);
+    }
+
+    /**
+     * 将审批实例设置为：已同意
+     *
+     * @author wangweijun
+     * @since 2024/9/18 16:49
+     */
+    public void convertToApproveStatusApproved() {
+        this.convertToApproveStatusApproved(null);
+    }
+
+    /**
+     * 将审批实例设置为：已同意
+     *
+     * @author wangweijun
+     * @since 2024/9/18 16:49
+     */
+    public void convertToApproveStatusApproved(String comment) {
+        this.setStatus(ApproveStatus.APPROVED);
+        this.setActive(ActiveStatus.INACTIVE);
+        this.setComment(comment);
+    }
+
+    /**
+     * 将审批实例设置为：已弃权
+     *
+     * @author wangweijun
+     * @since 2024/9/25 12:08
+     */
+    public void convertToApproveStatusAbandoned(String comment) {
+        this.setStatus(ApproveStatus.ABANDONED);
+        this.setActive(ActiveStatus.INACTIVE);
+        this.setComment(comment);
     }
 
     public static TaskApprove of(ResultSet rs) throws SQLException {
@@ -112,6 +150,7 @@ public class TaskApprove extends BaseEntity {
         if (approverSeqObject != null) {
             taskApprove.setApproverSeq((Integer) approverSeqObject);
         }
+        taskApprove.setApproverIdType(ApproverIdType.of(rs.getInt("approver_id_type")));
         taskApprove.setStatus(ApproveStatus.of(rs.getInt("status")));
         taskApprove.setActive(ActiveStatus.of(rs.getInt("active")));
         taskApprove.setComment(rs.getString("comment"));

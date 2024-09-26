@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproverIdType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
 
@@ -30,11 +31,12 @@ public class NodeAssignmentBuilder extends AbstractBuilder<NodeAssignment> {
         return builder;
     }
 
-    public NodeAssignmentBuilder userId(ApproveType approveType, String userId, String desc) {
-        this.nodeAssignment.setUserId(userId);
+    public NodeAssignmentBuilder approverId(ApproverIdType approverIdType, ApproveType approveType, String approverId, String desc) {
+        this.nodeAssignment.setApproverIdType(approverIdType);
+        this.nodeAssignment.setApproverId(approverId);
         this.nodeAssignment.setDesc(desc);
         if (ApproveType.SEQ == approveType) {
-            this.nodeAssignment.setUserSeq(seq.getAndIncrement());
+            this.nodeAssignment.setApproverSeq(seq.getAndIncrement());
         }
         return this;
     }

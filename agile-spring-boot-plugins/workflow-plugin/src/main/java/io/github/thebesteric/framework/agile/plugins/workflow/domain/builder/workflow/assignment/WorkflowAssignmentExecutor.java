@@ -38,7 +38,7 @@ public class WorkflowAssignmentExecutor extends AbstractExecutor<WorkflowAssignm
      */
     public WorkflowAssignment save() {
         // 检查是否有已存在的流程定义
-        WorkflowAssignment existsWorkflowAssignment = this.getByWorkflowDefinitionIdAndUserId();
+        WorkflowAssignment existsWorkflowAssignment = this.getByWorkflowDefinitionIdAndApproverId();
         if (existsWorkflowAssignment != null) {
             throw new DataExistsException("已存在相同的流程审批人");
         }
@@ -53,8 +53,8 @@ public class WorkflowAssignmentExecutor extends AbstractExecutor<WorkflowAssignm
      * @author wangweijun
      * @since 2024/9/10 12:06
      */
-    public WorkflowAssignment getByWorkflowDefinitionIdAndUserId() {
-        return this.getByWorkflowDefinitionIdAndUserId(workflowAssignment.getTenantId(), workflowAssignment.getWorkflowDefinitionId(), workflowAssignment.getUserId());
+    public WorkflowAssignment getByWorkflowDefinitionIdAndApproverId() {
+        return this.getByWorkflowDefinitionIdAndApproverId(workflowAssignment.getTenantId(), workflowAssignment.getWorkflowDefinitionId(), workflowAssignment.getApproverId());
     }
 
     /**
@@ -62,18 +62,18 @@ public class WorkflowAssignmentExecutor extends AbstractExecutor<WorkflowAssignm
      *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
-     * @param userId               用户 ID
+     * @param approverId           审批人 ID
      *
      * @return WorkflowAssignment
      *
      * @author wangweijun
      * @since 2024/9/10 12:06
      */
-    public WorkflowAssignment getByWorkflowDefinitionIdAndUserId(String tenantId, Integer workflowDefinitionId, String userId) {
+    public WorkflowAssignment getByWorkflowDefinitionIdAndApproverId(String tenantId, Integer workflowDefinitionId, String approverId) {
         final String selectSql = """
-                SELECT * FROM awf_wf_assignment WHERE `tenant_id` = ? AND `wf_def_id` = ? AND `user_id` = ? AND `state` = 1
+                SELECT * FROM awf_wf_assignment WHERE `tenant_id` = ? AND `wf_def_id` = ? AND `approver_id` = ? AND `state` = 1
                 """;
-        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> WorkflowAssignment.of(rs), tenantId, workflowDefinitionId, userId)).getOrNull();
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> WorkflowAssignment.of(rs), tenantId, workflowDefinitionId, approverId)).getOrNull();
     }
 
     /**
@@ -101,7 +101,7 @@ public class WorkflowAssignmentExecutor extends AbstractExecutor<WorkflowAssignm
      */
     public List<WorkflowAssignment> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
         final String selectSql = """
-                SELECT * FROM awf_wf_assignment WHERE `tenant_id` = ? AND `wf_def_id` = ? AND `state` = 1 ORDER BY `user_seq` ASC
+                SELECT * FROM awf_wf_assignment WHERE `tenant_id` = ? AND `wf_def_id` = ? AND `state` = 1 ORDER BY `approver_seq` ASC
                 """;
         RowMapper<WorkflowAssignment> rowMapper = (ResultSet rs, int rowNum) -> WorkflowAssignment.of(rs);
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowDefinitionId).stream().toList();

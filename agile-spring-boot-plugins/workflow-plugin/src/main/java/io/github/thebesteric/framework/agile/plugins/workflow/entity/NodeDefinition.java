@@ -6,8 +6,11 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.RoleApproveType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.RoleUserApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -61,9 +64,22 @@ public class NodeDefinition extends BaseEntity {
     @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是动态指定审批人")
     private boolean dynamicAssignment = false;
 
+    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是角色审批节点")
+    private boolean roleApprove = false;
+
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "角色用户审批类型")
+    private RoleUserApproveType roleUserApproveType = RoleUserApproveType.ANY;
+
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "角色审批类型")
+    private RoleApproveType roleApproveType = RoleApproveType.ANY;
+
     /** 审批人，存储在 NodeAssignment 表中 */
     @Transient
     private Set<Approver> approvers = new LinkedHashSet<>();
+
+    /** 角色审批人，存储在 NodeRoleUserAssignment 表中 */
+    @Transient
+    private Set<RoleApprover> roleApprovers = new LinkedHashSet<>();
 
     public boolean isUnSettingAssignmentApprovers() {
         return this.dynamicAssignment && this.approvers.stream().anyMatch(Approver::isUnSettingAssignmentApprover);
@@ -194,7 +210,10 @@ public class NodeDefinition extends BaseEntity {
             nodeDefinition.setConditions(JSONUtil.toBean(conditionStr, Conditions.class));
         }
         nodeDefinition.setSequence(rs.getDouble("sequence"));
-        nodeDefinition.setDynamicAssignment(rs.getInt("dynamic_assignment") != 0);
+        nodeDefinition.setDynamicAssignment(rs.getInt("dynamic_assignment") == 1);
+        nodeDefinition.setRoleApprove(rs.getInt("role_approve") == 1);
+        nodeDefinition.setRoleUserApproveType(RoleUserApproveType.of(rs.getInt("role_user_approve_type")));
+        nodeDefinition.setRoleApproveType(RoleApproveType.of(rs.getInt("role_approve_type")));
         return of(nodeDefinition, rs);
     }
 }

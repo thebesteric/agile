@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.entity;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproverIdType;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,7 +22,7 @@ import java.sql.SQLException;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Data
-@EntityClass(value = "awf_node_assignment", comment = "用户任务关联表")
+@EntityClass(value = "awf_node_assignment", comment = "节点用户定义表")
 public class NodeAssignment extends BaseEntity {
     @Serial
     private static final long serialVersionUID = -7417403195737955414L;
@@ -32,22 +33,26 @@ public class NodeAssignment extends BaseEntity {
     @EntityColumn(name="node_def_id", nullable = false, comment = "节点定义 ID")
     private Integer nodeDefinitionId;
 
-    @EntityColumn(name = "user_id", length = 32, nullable = false, comment = "用户 ID")
-    private String userId;
+    @EntityColumn(name = "approver_id", length = 32, nullable = false, comment = "审批人 ID")
+    private String approverId;
 
-    @EntityColumn(name = "user_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
-    private Integer userSeq;
+    @EntityColumn(name = "approver_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
+    private Integer approverSeq;
+
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批人 ID 类型")
+    private ApproverIdType approverIdType = ApproverIdType.USER;
 
     public static NodeAssignment of(ResultSet rs) throws SQLException {
         NodeAssignment nodeAssignment = new NodeAssignment();
         nodeAssignment.setTenantId(rs.getString("tenant_id"));
         nodeAssignment.setNodeDefinitionId(rs.getInt("node_def_id"));
-        nodeAssignment.setUserId(rs.getString("user_id"));
+        nodeAssignment.setApproverId(rs.getString("approver_id"));
         // 解决 rs.getInt("xxx") null 值会返回 0 的问题
-        Object userSeqObject = rs.getObject("user_seq");
-        if (userSeqObject != null) {
-            nodeAssignment.setUserSeq((Integer) userSeqObject);
+        Object approverSeqObject = rs.getObject("approver_seq");
+        if (approverSeqObject != null) {
+            nodeAssignment.setApproverSeq((Integer) approverSeqObject);
         }
+        nodeAssignment.setApproverIdType(ApproverIdType.of(rs.getInt("approver_id_type")));
         return of(nodeAssignment, rs);
     }
 }

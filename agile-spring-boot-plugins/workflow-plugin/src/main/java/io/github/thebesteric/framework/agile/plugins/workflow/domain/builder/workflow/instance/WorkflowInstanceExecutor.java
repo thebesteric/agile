@@ -153,7 +153,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
                     LEFT JOIN `awf_task_instance` ti ON ti.`node_def_id` = nd.`id`
                     LEFT JOIN `awf_node_assignment` na ON na.`node_def_id` = nd.`id`
                     LEFT JOIN `awf_task_approve` ta ON ta.`task_inst_id` = ti.`id`
-                WHERE wi.`tenant_id` = ? and wi.`state` = 1  and na.`user_id` = ?
+                WHERE wi.`tenant_id` = ? and wi.`state` = 1  and na.`approver_id` = ?
                 """;
         if (workflowStatuses != null && !workflowStatuses.isEmpty()) {
             String codes = workflowStatuses.stream().map(WorkflowStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));

@@ -112,6 +112,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
      * @param approverId         审批人
      * @param nodeStatus         节点状态
      * @param approveStatus      审批状态
@@ -121,8 +122,8 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/9 16:06
      */
-    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
-        return this.findTaskInstances(tenantId, workflowInstanceId, approverId, nodeStatus, approveStatus, 1, Integer.MAX_VALUE).getRecords();
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, roleId, approverId, nodeStatus, approveStatus, 1, Integer.MAX_VALUE).getRecords();
     }
 
     /**
@@ -130,7 +131,8 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
-     * @param approverId         审批人
+     * @param roleId             审批人角色 ID
+     * @param approverId         审批人 ID
      * @param nodeStatus         节点状态
      * @param approveStatus      审批状态
      * @param page               当前页
@@ -141,8 +143,72 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/9 16:06
      */
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize) {
-        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, approverId, nodeStatus, approveStatus, page, pageSize);
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize) {
+        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, roleId, approverId, nodeStatus, approveStatus, page, pageSize);
+    }
+
+
+    /**
+     * 查找审批实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatuses       节点状态
+     * @param approveStatus      审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页大小
+     *
+     * @return Page<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/23 19:49
+     */
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, Integer page, Integer pageSize) {
+        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, roleId, approverId, nodeStatuses, approveStatus, page, pageSize);
+    }
+
+    /**
+     * 查找审批实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param roleId             审批人角色 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatus         节点状态
+     * @param approveStatuses    审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页大小
+     *
+     * @return Page<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/23 19:49
+     */
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, roleId, approverId, nodeStatus, approveStatuses, page, pageSize);
+    }
+
+    /**
+     * 查找审批实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param roleIds            审批人 ID
+     * @param approverId         审批人 ID
+     * @param nodeStatuses       节点状态
+     * @param approveStatuses    审批人审批状态
+     * @param page               页码
+     * @param pageSize           每页大小
+     *
+     * @return Page<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/9/23 19:49
+     */
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, page, pageSize);
     }
 
     /**
@@ -302,14 +368,29 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * 审批-同意
      *
      * @param taskInstance 任务实例
-     * @param approverId   审批人
+     * @param userId       用户 ID
      * @param comment      审批意见
      *
      * @author wangweijun
      * @since 2024/7/9 16:31
      */
-    public void approve(TaskInstance taskInstance, String approverId, String comment) {
-        this.approve(taskInstance.getTenantId(), taskInstance.getId(), approverId, comment);
+    public void approve(TaskInstance taskInstance, String userId, String comment) {
+        this.approve(taskInstance.getTenantId(), taskInstance.getId(), null, userId, comment);
+    }
+
+    /**
+     * 审批-同意
+     *
+     * @param taskInstance 任务实例
+     * @param roleId       角色 ID
+     * @param userId       用户 ID
+     * @param comment      审批意见
+     *
+     * @author wangweijun
+     * @since 2024/7/9 16:31
+     */
+    public void approve(TaskInstance taskInstance, String roleId, String userId, String comment) {
+        this.approve(taskInstance.getTenantId(), taskInstance.getId(), roleId, userId, comment);
     }
 
     /**
@@ -317,14 +398,15 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
-     * @param approverId     审批人
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
      * @param comment        审批意见
      *
      * @author wangweijun
      * @since 2024/7/9 16:31
      */
-    public void approve(String tenantId, Integer taskInstanceId, String approverId, String comment) {
-        this.runtimeService.approve(tenantId, taskInstanceId, approverId, comment);
+    public void approve(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment) {
+        this.runtimeService.approve(tenantId, taskInstanceId, roleId, userId, comment);
     }
 
     /**
@@ -344,6 +426,21 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     /**
      * 审批-撤回
      *
+     * @param taskInstance 任务实例
+     * @param roleId       角色 ID
+     * @param userId       用户 ID
+     * @param comment      审批意见
+     *
+     * @author wangweijun
+     * @since 2024/9/6 10:18
+     */
+    public void redo(TaskInstance taskInstance, String roleId, String userId, String comment) {
+        this.redo(taskInstance.getTenantId(), taskInstance.getId(), roleId, userId, comment);
+    }
+
+    /**
+     * 审批-撤回
+     *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
      * @param approverId     审批人 ID
@@ -353,21 +450,52 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/6 10:18
      */
     public void redo(String tenantId, Integer taskInstanceId, String approverId, String comment) {
-        this.runtimeService.redo(tenantId, taskInstanceId, approverId, comment);
+        this.redo(tenantId, taskInstanceId, null, approverId, comment);
+    }
+
+    /**
+     * 审批-撤回
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
+     * @param comment        审批意见
+     *
+     * @author wangweijun
+     * @since 2024/9/6 10:18
+     */
+    public void redo(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment) {
+        this.runtimeService.redo(tenantId, taskInstanceId, roleId, userId, comment);
     }
 
     /**
      * 审批-拒绝
      *
      * @param taskInstance 任务实例
-     * @param approverId   审批人
+     * @param userId       用户 ID
      * @param comment      审批意见
      *
      * @author wangweijun
      * @since 2024/7/10 13:37
      */
-    public void reject(TaskInstance taskInstance, String approverId, String comment) {
-        this.runtimeService.reject(taskInstance.getTenantId(), taskInstance.getId(), approverId, comment);
+    public void reject(TaskInstance taskInstance, String userId, String comment) {
+        this.reject(taskInstance.getTenantId(), taskInstance.getId(), null, userId, comment);
+    }
+
+    /**
+     * 审批-拒绝
+     *
+     * @param taskInstance 任务实例
+     * @param roleId       角色 ID
+     * @param userId       用户 ID
+     * @param comment      审批意见
+     *
+     * @author wangweijun
+     * @since 2024/7/10 13:37
+     */
+    public void reject(TaskInstance taskInstance, String roleId, String userId, String comment) {
+        this.reject(taskInstance.getTenantId(), taskInstance.getId(), roleId, userId, comment);
     }
 
     /**
@@ -375,28 +503,44 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
-     * @param approverId     审批人
+     * @param userId         用户 ID
      * @param comment        审批意见
      *
      * @author wangweijun
      * @since 2024/7/10 13:37
      */
-    public void reject(String tenantId, Integer taskInstanceId, String approverId, String comment) {
-        this.runtimeService.reject(tenantId, taskInstanceId, approverId, comment);
+    public void reject(String tenantId, Integer taskInstanceId, String userId, String comment) {
+        this.reject(tenantId, taskInstanceId, null, userId, comment);
+    }
+
+    /**
+     * 审批-拒绝
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
+     * @param comment        审批意见
+     *
+     * @author wangweijun
+     * @since 2024/7/10 13:37
+     */
+    public void reject(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment) {
+        this.runtimeService.reject(tenantId, taskInstanceId, roleId, userId, comment);
     }
 
     /**
      * 审批-放弃
      *
      * @param taskInstance 任务实例
-     * @param approverId   审批人
+     * @param userId       用户 ID
      * @param comment      审批意见
      *
      * @author wangweijun
      * @since 2024/7/10 17:40
      */
-    public void abandon(TaskInstance taskInstance, String approverId, String comment) {
-        this.abandon(taskInstance.getTenantId(), taskInstance.getId(), approverId, comment);
+    public void abandon(TaskInstance taskInstance, String userId, String comment) {
+        this.abandon(taskInstance.getTenantId(), taskInstance.getId(), null, userId, comment);
     }
 
     /**
@@ -404,14 +548,45 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
-     * @param approverId     审批人
+     * @param userId         用户 ID
      * @param comment        审批意见
      *
      * @author wangweijun
      * @since 2024/7/10 17:40
      */
-    public void abandon(String tenantId, Integer taskInstanceId, String approverId, String comment) {
-        this.runtimeService.abandon(tenantId, taskInstanceId, approverId, comment);
+    public void abandon(String tenantId, Integer taskInstanceId, String userId, String comment) {
+        this.abandon(tenantId, taskInstanceId, null, userId, comment);
+    }
+
+    /**
+     * 审批-放弃
+     *
+     * @param taskInstance 任务实例
+     * @param roleId       角色 ID
+     * @param userId       用户 ID
+     * @param comment      审批意见
+     *
+     * @author wangweijun
+     * @since 2024/7/10 17:40
+     */
+    public void abandon(TaskInstance taskInstance, String roleId, String userId, String comment) {
+        this.abandon(taskInstance.getTenantId(), taskInstance.getId(), roleId, userId, comment);
+    }
+
+    /**
+     * 审批-放弃
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
+     * @param comment        审批意见
+     *
+     * @author wangweijun
+     * @since 2024/7/10 17:40
+     */
+    public void abandon(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment) {
+        this.runtimeService.abandon(tenantId, taskInstanceId, roleId, userId, comment);
     }
 
     /**

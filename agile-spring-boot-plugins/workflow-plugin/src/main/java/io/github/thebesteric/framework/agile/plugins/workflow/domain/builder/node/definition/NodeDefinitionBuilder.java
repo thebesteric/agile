@@ -1,16 +1,16 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition;
 
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import org.springframework.util.Assert;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -123,14 +123,49 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
         return this;
     }
 
+    public NodeDefinitionBuilder roleApprove(boolean roleApprove) {
+        this.nodeDefinition.setRoleApprove(roleApprove);
+        return this;
+    }
+
+    public NodeDefinitionBuilder roleApproveType(RoleApproveType roleApproveType) {
+        this.nodeDefinition.setRoleApproveType(roleApproveType);
+        return this;
+    }
+
+    public NodeDefinitionBuilder roleUserApproveType(RoleUserApproveType roleUserApproveType) {
+        this.nodeDefinition.setRoleUserApproveType(roleUserApproveType);
+        return this;
+    }
+
+    public NodeDefinitionBuilder roleApprover(RoleApprover roleApprover) {
+        this.nodeDefinition.getRoleApprovers().add(roleApprover);
+        return this;
+    }
+
+    public NodeDefinitionBuilder roleApprovers(Set<RoleApprover> roleApprovers) {
+        this.nodeDefinition.setRoleApprovers(roleApprovers);
+        return this;
+    }
+
+    public NodeDefinitionBuilder roleApprovers(List<Set<RoleApprover>> roleApprovers) {
+        Set<RoleApprover> sets = new LinkedHashSet<>();
+        for (Set<RoleApprover> roleApproverSet : roleApprovers) {
+            sets.addAll(roleApproverSet);
+        }
+        this.nodeDefinition.setRoleApprovers(sets);
+        return this;
+    }
+
     public NodeDefinition build() {
         String tenantId = this.nodeDefinition.getTenantId();
         Integer workflowDefinitionId = this.nodeDefinition.getWorkflowDefinitionId();
         NodeType nodeType = this.nodeDefinition.getNodeType();
-        if (tenantId == null || workflowDefinitionId == null || nodeType == null) {
-            throw new WorkflowException("workflowDefinitionId, nodeType cannot be null");
+        RoleApproveType roleApproveType = this.nodeDefinition.getRoleApproveType();
+        RoleUserApproveType roleUserApproveType = this.nodeDefinition.getRoleUserApproveType();
+        if (tenantId == null || workflowDefinitionId == null || nodeType == null || roleApproveType == null || roleUserApproveType == null) {
+            throw new WorkflowException("workflowDefinitionId, nodeType, roleApproveType, roleUserApproveType cannot be null");
         }
         return super.build(this.nodeDefinition);
     }
-
 }

@@ -16,8 +16,7 @@ import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * WorkflowHelperTest
@@ -52,7 +51,7 @@ class WorkflowHelperTest {
                 .allowEmptyAutoApprove(false)
                 // 当节点审批人为空的时候，使用的默认审批人
                 .whenEmptyApprovers(Set.of(Approver.of("admin", "系统管理员"), Approver.of("admin-1", "系统管理员-1")))
-                .allowRedo(false)
+                .allowRedo(true)
                 .requiredComment(true)
                 .type("日常办公流程");
         WorkflowDefinition workflowDefinition = deploymentServiceHelper.deploy(builder);
@@ -78,7 +77,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow1(tenantId, workflowDefinition);
+        createWorkflow6(tenantId, workflowDefinition);
     }
 
     private void createWorkflow1(String tenantId, WorkflowDefinition workflowDefinition) {
@@ -261,6 +260,61 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
     }
 
+    private void createWorkflow6(String tenantId, WorkflowDefinition workflowDefinition) {
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+
+        Set<Approver> groupSet = new LinkedHashSet<>();
+        groupSet.add(Approver.of("grouper-1", "组长1"));
+        groupSet.add(Approver.of("grouper-2", "组长2"));
+        groupSet.add(Approver.of("grouper-3", "组长3"));
+
+        Set<Approver> manageSet = new LinkedHashSet<>();
+        manageSet.add(Approver.of("manager-1", "经理1"));
+        manageSet.add(Approver.of("manager-2", "经理2"));
+
+        Set<Approver> majorSet = new LinkedHashSet<>();
+        majorSet.add(Approver.of("major-1", "总监1"));
+        majorSet.add(Approver.of("major-2", "总监2"));
+
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点")
+                .roleApprove(true)
+                .roleApproveType(RoleApproveType.SEQ)
+                .roleUserApproveType(RoleUserApproveType.ALL)
+                .roleApprovers(List.of(RoleApprover.of("组长", groupSet), RoleApprover.of("经理", manageSet)))
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("总监审批").desc("任务节点")
+                .roleApprove(true)
+                .roleApproveType(RoleApproveType.ANY)
+                .roleUserApproveType(RoleUserApproveType.SEQ)
+                .roleApprovers(List.of(RoleApprover.of("总监", majorSet)))
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
+                .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
+                .approverId("张三")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点").build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+    }
+
     /**
      * 发布流程
      */
@@ -309,31 +363,56 @@ class WorkflowHelperTest {
         repositoryServiceHelper.addAttachment(workflowInstance, "123456", "test.txt", "txt", "/attachment/test.txt");
     }
 
+    @Test
+    void combo() {
+        deploy();
+        createNode();
+        publish();
+        start();
+    }
+
     /**
      * 审批-同意
      */
     @Test
     void approve() {
-        // String approverId = "admin";
-        // String approverId = "admin-1";
+        String roleId = null;
         String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "赵六";
         // String approverId = "孙七";
+        // String approverId = "admin";
+        // String approverId = "admin-1";
+
+        // String roleId = "经理";
+        // String approverId = "manager-1";
+        // String approverId = "manager-2";
+
+        // String roleId = "组长";
+        // String approverId = "grouper-1";
+        // String approverId = "grouper-2";
+        // String approverId = "grouper-3";
+
+        // String roleId = "总监";
+        // String approverId = "major-1";
+        // String approverId = "major-2";
+
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
+        // int i = 1/0;
+
         taskInstances.forEach(taskInstance -> {
             String comment = "同意";
-            runtimeServiceHelper.approve(taskInstance, approverId, comment);
+            runtimeServiceHelper.approve(taskInstance, roleId, approverId, comment);
             System.out.println(approverId + ": " + comment);
 
             // 查看附件
@@ -363,20 +442,30 @@ class WorkflowHelperTest {
      */
     @Test
     void redo() {
-        String approverId = "张三";
+        // String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
+
+        // String roleId = "经理";
+        // String approverId = "manager-1";
+        // String approverId = "manager-2";
+        String roleId = "组长";
+        // String approverId = "grouper-1";
+        String approverId = "grouper-2";
+        // String approverId = "grouper-3";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 1, approverId, null, ApproveStatus.APPROVED, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 1, List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
 
+        // int i = 1/0;
+
         taskInstances.forEach(taskInstance -> {
-            runtimeServiceHelper.redo(taskInstance, approverId, "审批撤回");
+            runtimeServiceHelper.redo(taskInstance, roleId, approverId, "审批撤回");
         });
     }
 
@@ -385,43 +474,67 @@ class WorkflowHelperTest {
      */
     @Test
     void reject() {
+        // String roleId = null;
         // String approverId = "张三";
         // String approverId = "李四";
-        String approverId = "王五";
+        // String approverId = "王五";
         // String approverId = "赵六";
+
+        String roleId = "经理";
+        String approverId = "manager-1";
+        // String approverId = "manager-2";
+
+        // String roleId = "组长";
+        // String approverId = "grouper-1";
+        // String approverId = "grouper-2";
+        // String approverId = "grouper-3";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
+        // int i = 1/0;
+
         taskInstances.forEach(taskInstance -> {
-            runtimeServiceHelper.reject(taskInstance, approverId, "不同意");
+            runtimeServiceHelper.reject(taskInstance, roleId, approverId, "不同意");
         });
     }
 
     /**
-     * 审批-拒绝
+     * 审批-放弃
      */
     @Test
     void abandon() {
-        String approverId = "张三";
+
+
+        // String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
+        // String approverId = "赵六";
+
+        // String roleId = "经理";
+        // String approverId = "manager-1";
+        // String approverId = "manager-2";
+        String roleId = "组长";
+        // String approverId = "grouper-1";
+        String approverId = "grouper-2";
+        // String approverId = "grouper-3";
+
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
         taskInstances.forEach(taskInstance -> {
-            runtimeServiceHelper.abandon(taskInstance, approverId, "放弃审批");
+            runtimeServiceHelper.abandon(taskInstance, roleId, approverId, "放弃审批");
         });
     }
 

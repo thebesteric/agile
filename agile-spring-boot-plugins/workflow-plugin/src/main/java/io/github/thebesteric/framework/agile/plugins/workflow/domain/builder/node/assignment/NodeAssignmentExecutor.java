@@ -38,7 +38,7 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
      */
     public NodeAssignment save() {
         // 检查是否有已存在的节点定义
-        NodeAssignment existsNodeAssignment = this.getByNodeDefinitionIdAndUserId();
+        NodeAssignment existsNodeAssignment = this.getByNodeDefinitionIdAndApproverId();
         if (existsNodeAssignment != null) {
             throw new DataExistsException("已存在相同的节点审批人");
         }
@@ -53,8 +53,8 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
      * @author wangweijun
      * @since 2024/6/20 09:56
      */
-    public NodeAssignment getByNodeDefinitionIdAndUserId() {
-        return this.getByNodeDefinitionIdAndUserId(nodeAssignment.getTenantId(), nodeAssignment.getNodeDefinitionId(), nodeAssignment.getUserId());
+    public NodeAssignment getByNodeDefinitionIdAndApproverId() {
+        return this.getByNodeDefinitionIdAndApproverId(nodeAssignment.getTenantId(), nodeAssignment.getNodeDefinitionId(), nodeAssignment.getApproverId());
     }
 
     /**
@@ -62,18 +62,18 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
      *
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
-     * @param userId           用户 ID
+     * @param approverId       审批人 ID
      *
      * @return NodeAssignment
      *
      * @author wangweijun
      * @since 2024/6/20 09:58
      */
-    public NodeAssignment getByNodeDefinitionIdAndUserId(String tenantId, Integer nodeDefinitionId, String userId) {
+    public NodeAssignment getByNodeDefinitionIdAndApproverId(String tenantId, Integer nodeDefinitionId, String approverId) {
         final String selectSql = """
-                SELECT * FROM awf_node_assignment WHERE `tenant_id` = ? AND `node_def_id` = ? AND `user_id` = ? AND `state` = 1
+                SELECT * FROM awf_node_assignment WHERE `tenant_id` = ? AND `node_def_id` = ? AND `approver_id` = ? AND `state` = 1
                 """;
-        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> NodeAssignment.of(rs), tenantId, nodeDefinitionId, userId)).getOrNull();
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> NodeAssignment.of(rs), tenantId, nodeDefinitionId, approverId)).getOrNull();
     }
 
     /**
@@ -101,7 +101,7 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
      */
     public List<NodeAssignment> findByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
         final String selectSql = """
-                SELECT * FROM awf_node_assignment WHERE `tenant_id` = ? AND `node_def_id` = ? AND `state` = 1 ORDER BY `user_seq` ASC
+                SELECT * FROM awf_node_assignment WHERE `tenant_id` = ? AND `node_def_id` = ? AND `state` = 1 ORDER BY `approver_seq` ASC
                 """;
         RowMapper<NodeAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeAssignment.of(rs);
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, nodeDefinitionId).stream().toList();
