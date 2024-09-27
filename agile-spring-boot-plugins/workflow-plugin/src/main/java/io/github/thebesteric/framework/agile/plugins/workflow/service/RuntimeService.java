@@ -325,6 +325,19 @@ public interface RuntimeService {
     TaskInstance getInCurrentlyEffectTaskInstance(String tenantId, Integer workflowInstanceId);
 
     /**
+     * 根据任务实例 ID 查找任务实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return TaskInstance
+     *
+     * @author wangweijun
+     * @since 2024/9/27 14:55
+     */
+    TaskInstance getTaskInstance(String tenantId, Integer taskInstanceId);
+
+    /**
      * 查找流程实例：根据发起人
      *
      * @param tenantId    租户 ID

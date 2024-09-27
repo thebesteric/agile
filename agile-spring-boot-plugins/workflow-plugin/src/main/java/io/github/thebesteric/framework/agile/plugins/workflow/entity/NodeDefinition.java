@@ -81,6 +81,14 @@ public class NodeDefinition extends BaseEntity {
     @Transient
     private Set<RoleApprover> roleApprovers = new LinkedHashSet<>();
 
+    /**
+     * 是否时动态指定审批人节点，并且没有设置动态审批人
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/9/27 15:13
+     */
     public boolean isUnSettingAssignmentApprovers() {
         return this.dynamicAssignment && this.approvers.stream().anyMatch(Approver::isUnSettingAssignmentApprover);
     }
@@ -95,6 +103,18 @@ public class NodeDefinition extends BaseEntity {
      */
     public boolean hasConditions() {
         return this.conditions != null;
+    }
+
+    /**
+     * 是否是用户审批节点
+     *
+
+     * @return boolean
+     * @author wangweijun
+     * @since 2024/9/27 15:55
+     */
+    public boolean isUserApprove() {
+        return !this.isRoleApprove();
     }
 
     /**

@@ -8,11 +8,13 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowS
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.RuntimeService;
+import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 
 import java.util.List;
 
@@ -227,6 +229,42 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 获取当前流程实例下正在进行的节点定义
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/27 15:16
+     */
+    public NodeDefinition getInCurrentlyEffectNodeDefinition(String tenantId, Integer workflowInstanceId) {
+        TaskInstance inCurrentlyEffectTaskInstance = this.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
+        if (inCurrentlyEffectTaskInstance != null) {
+            Integer nodeDefinitionId = inCurrentlyEffectTaskInstance.getNodeDefinitionId();
+            WorkflowService workflowService = this.workflowEngine.getWorkflowService();
+            return workflowService.getNode(tenantId, nodeDefinitionId);
+        }
+        return null;
+    }
+
+    /**
+     * 根据任务实例 ID 查找任务实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return TaskInstance
+     *
+     * @author wangweijun
+     * @since 2024/9/27 14:55
+     */
+    public TaskInstance getTaskInstance(String tenantId, Integer taskInstanceId) {
+        return this.runtimeService.getTaskInstance(tenantId, taskInstanceId);
+    }
+
+    /**
      * 查找流程实例：根据发起人
      *
      * @param tenantId    租户 ID
@@ -337,6 +375,22 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 下个任务实例节点是不是未完成设置的动态审批节点
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/9/27 15:25
+     */
+    public boolean nextIsUnSettingDynamicAssignmentApproverTaskInstance(String tenantId, Integer workflowInstanceId) {
+        NodeDefinition inCurrentlyEffectNodeDefinition = this.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
+        return inCurrentlyEffectNodeDefinition != null && inCurrentlyEffectNodeDefinition.isUnSettingAssignmentApprovers();
+    }
+
+    /**
      * 动态设置审批人
      *
      * @param tenantId         租户 ID
@@ -346,7 +400,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/9/9 13:58
      */
-    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Approver approver) {
+    public void dynamicAssignmentApprover(String tenantId, Integer nodeDefinitionId, Approver approver) {
         this.dynamicAssignmentApprovers(tenantId, nodeDefinitionId, List.of(approver));
     }
 

@@ -162,7 +162,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             .filter(nodeAssignment -> nodeAssignment.getApproverId().startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX)).findAny();
                     // 存在动态指定审批人，且待审批人未配置
                     if (nextNodeDefinition.isDynamicAssignment() && anyDynamicAssignmentApprover.isPresent()) {
-                        throw new WorkflowException("指定审批人节点，不允许创建审批实例，请先设置审批人");
+                        throw new WorkflowException("动态审批节点，请先设置审批人");
                     }
 
                     // 保存任务节点
@@ -210,8 +210,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         throw new WorkflowException("未知异常，请联系系统管理员");
                     }
 
+                    // 审批人列表为空
                     if (taskApproves.isEmpty()) {
-                        throw new WorkflowException("任务实例审批表不能为空");
+                        // 获取当流程实例的默认审批人
+                        Set<Approver> whenEmptyApprovers = workflowDefinition.getWhenEmptyApprovers();
+                        // 实例的默认审批人为空，且不允许空节点自动审核
+                        if (CollectionUtils.isEmpty(whenEmptyApprovers) && !workflowDefinition.isAllowEmptyAutoApprove()) {
+                            throw new WorkflowException("任务实例审批表不能为空");
+                        }
                     }
 
                     // 判断是否是角色审批
@@ -1346,8 +1352,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 }
 
                 // 判断是否需要还原其他审批节点
+                ApproveType approveType = nodeDefinition.getApproveType();
                 RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
-                if (RoleApproveType.ANY == roleApproveType) {
+
+                // 节点属于：用户审批 且 用户审批类型为 ANY  或属于：角色审批 且 角色审批类型为 ANY
+                if ((nodeDefinition.isUserApprove() && ApproveType.ANY == approveType) || (nodeDefinition.isRoleApprove() && RoleApproveType.ANY == roleApproveType)) {
                     currTaskApproves.forEach(taskApprove -> {
                         taskApprove.convertToApproveStatusInProgress();
                         taskApproveExecutor.updateById(taskApprove);
@@ -1387,6 +1396,20 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                                 taskApproveExecutor.deleteById(taskApproveId);
                             }
                         }
+
+                        // 判断是否是动态审批节点
+                        NodeDefinition nextNodeDefinition = nodeDefinitionExecutor.getById(nextTaskInstance.getNodeDefinitionId());
+                        // 如果是动态审批节点，则更新为未设置的动态审批人
+                        if (nextNodeDefinition.isDynamicAssignment()) {
+                            NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+                            List<NodeAssignment> dynamicApprovers = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinition.getId());
+                            for (int i = 0; i < dynamicApprovers.size(); i++) {
+                                NodeAssignment dynamicApprover = dynamicApprovers.get(i);
+                                dynamicApprover.setApproverId(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(i));
+                                nodeAssignmentExecutor.updateById(dynamicApprover);
+                            }
+                        }
+
                         // 删除下一个审批节点
                         taskInstanceExecutor.deleteById(nextTaskInstance.getId());
                     }
@@ -2426,6 +2449,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     public TaskInstance getInCurrentlyEffectTaskInstance(String tenantId, Integer workflowInstanceId) {
         TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
         return taskInstanceExecutor.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 根据 ID 查找任务实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return TaskInstance
+     */
+    @Override
+    public TaskInstance getTaskInstance(String tenantId, Integer taskInstanceId) {
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+        return taskInstance != null && tenantId.equals(taskInstance.getTenantId()) ? taskInstance : null;
     }
 
     /**
