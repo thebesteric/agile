@@ -13,6 +13,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstanc
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -96,7 +97,9 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
      */
     public Page<TaskInstance> findByApproverId(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
         String roleIdStrs = null;
-        if (roleIds == null || roleIds.isEmpty()) {
+
+        if (CollectionUtils.isNotEmpty(roleIds)) {
+            List<String> supposeRoleIds = null;
             String selectRoleSql = """
                     SELECT distinct nro.* FROM awf_node_role_assignment nro
                     LEFT JOIN awf_node_definition nd ON nd.id = nro.node_def_id
@@ -114,10 +117,18 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
             }
             List<NodeRoleAssignment> nodeRoleAssignment = this.jdbcTemplate.query(selectRoleSql, (rs, rowNum) -> NodeRoleAssignment.of(rs), tenantId, approverId);
             if (!nodeRoleAssignment.isEmpty()) {
-                roleIdStrs = nodeRoleAssignment.stream().map(i -> "'" + i.getRoleId() + "'").collect(Collectors.joining(","));
+                supposeRoleIds = nodeRoleAssignment.stream().map(NodeRoleAssignment::getRoleId).toList();
             }
-        } else {
-            roleIdStrs = roleIds.stream().map(i -> "'" + i + "'").collect(Collectors.joining(","));
+
+            // 是否推断出角色信息
+            if (CollectionUtils.isNotEmpty(supposeRoleIds)) {
+                // 获取交集
+                List<String> intersectionRoleIds = supposeRoleIds.stream().filter(roleIds::contains).toList();
+                if (CollectionUtils.isNotEmpty(intersectionRoleIds)) {
+                    roleIds = intersectionRoleIds;
+                    roleIdStrs = roleIds.stream().map(i -> "'" + i + "'").collect(Collectors.joining(","));
+                }
+            }
         }
 
         String selectSql = """

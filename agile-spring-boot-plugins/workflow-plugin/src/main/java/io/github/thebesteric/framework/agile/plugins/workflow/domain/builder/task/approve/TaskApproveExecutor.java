@@ -14,6 +14,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.exception.Workflow
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -87,7 +88,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
         NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(taskInstance.getNodeDefinitionId());
 
         // 判断是否属于角色审批
-        if (nodeDefinition.isRoleApprove() && roleId != null) {
+        if (nodeDefinition.isRoleApprove() && StringUtils.isNotEmpty(roleId)) {
             NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = new NodeRoleAssignmentExecutor(jdbcTemplate);
             NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinition.getId(), roleId, userId);
             if (nodeRoleAssignment == null) {
