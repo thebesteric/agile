@@ -648,7 +648,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 获取该流程实例下已经完成审批和即将要审批的审批人
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, nextTaskInstance.getWorkflowInstanceId(), null);
 
-        // 下一个审批人的审批情况
+        // 下一个审批人的审批情况（下一个审批人在之前的审批记录中是否存在，并且是通过审核的）
         Optional<TaskApprove> nextApproverIdApproveOptional = taskApproves.stream()
                 .filter(approve -> nextApproverId.equals(approve.getApproverId()) && ApproveStatus.APPROVED == approve.getStatus()).findAny();
 
@@ -797,8 +797,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             if (nextTaskInstances == null && taskInstance.isCompleted()) {
                 // 创建结束节点实例
                 NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, nodeDefinition.getWorkflowDefinitionId());
-                taskInstanceExecutor = taskInstanceExecutorBuilder.tenantId(tenantId).workflowInstanceId(taskInstance.getWorkflowInstanceId())
-                        .nodeDefinitionId(endNodeDefinition.getId()).status(NodeStatus.COMPLETED).build();
+                taskInstanceExecutor = taskInstanceExecutorBuilder.newInstance()
+                        .tenantId(tenantId)
+                        .workflowInstanceId(taskInstance.getWorkflowInstanceId())
+                        .nodeDefinitionId(endNodeDefinition.getId())
+                        .status(NodeStatus.COMPLETED)
+                        .build();
                 taskInstanceExecutor.save();
                 // 记录流程日志（审批结束）
                 recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ENDED);

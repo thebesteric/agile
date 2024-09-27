@@ -24,6 +24,11 @@ public class TaskInstanceExecutorBuilder extends AbstractExecutorBuilder<TaskIns
         return new TaskInstanceExecutorBuilder(jdbcTemplate);
     }
 
+    public TaskInstanceExecutorBuilder newInstance() {
+        this.taskInstanceExecutor.setTaskInstance(new TaskInstance());
+        return this;
+    }
+
     public TaskInstanceExecutorBuilder tenantId(String tenantId) {
         this.taskInstanceExecutor.getTaskInstance().setTenantId(tenantId);
         return this;
