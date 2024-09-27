@@ -46,7 +46,7 @@ public class WorkflowDefinition extends BaseEntity {
     @EntityColumn(length = 32, comment = "流程类型（用于类型分类）")
     private String type = "default";
 
-    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "连续审批方式")
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "连续审批方式：默认每个节点都需要审批")
     private ContinuousApproveMode continuousApproveMode = ContinuousApproveMode.APPROVE_ALL;
 
     @EntityColumn(nullable = false, defaultExpression = "0", comment = "审批人为空时，是否允许自动审批")
