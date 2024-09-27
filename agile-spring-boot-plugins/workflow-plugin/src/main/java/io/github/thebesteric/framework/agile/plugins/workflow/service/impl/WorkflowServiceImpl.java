@@ -26,6 +26,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.exception.Workflow
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowInstanceInProgressException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractWorkflowService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.*;
@@ -363,6 +364,14 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             NodeDefinition startNode = this.getStartNode(tenantId, workflowDefinitionId);
             List<NodeDefinition> taskNodes = this.findTaskNodes(tenantId, workflowDefinitionId);
             NodeDefinition endNode = this.getEndNode(tenantId, workflowDefinitionId);
+
+            if (startNode == null || endNode == null) {
+                throw new WorkflowException("未查询到开始节点或结束节点，请确认是否配置了开始节点和结束节点");
+            }
+
+            if (CollectionUtils.isEmpty(taskNodes)) {
+                throw new WorkflowException("未查询到任何任务节点，请确认是否配置了任务节点");
+            }
 
             // taskNodes 按 sequence 分组
             Map<Double, List<NodeDefinition>> taskNodesGroups = taskNodes.stream().collect(Collectors.groupingBy(NodeDefinition::getSequence));
