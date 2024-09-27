@@ -1486,8 +1486,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
         // 角色审核记录
         TaskRoleApproveRecord taskRoleApproveRecord = null;
-        // 判断撤回条件是否满足：角色审批为 ALL，角色用户审批为 ALL
-        if (RoleApproveType.ALL == roleApproveType && RoleUserApproveType.ALL == roleUserApproveType) {
+        // 判断撤回条件是否满足：角色审批为 ALL 或 SEQ，角色用户审批为 ALL
+        if (RoleApproveType.ANY != roleApproveType && RoleUserApproveType.ALL == roleUserApproveType) {
             // 获取当前角色的审批用户
             taskRoleApproveRecord = taskRoleApproveRecordsByRole.stream()
                     .filter(i -> ApproveStatus.APPROVED.equals(i.getStatus()) || ApproveStatus.ABANDONED.equals(i.getStatus()))
