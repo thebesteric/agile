@@ -745,15 +745,16 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
-     * @param currentUserId      当前用户 ID
+     * @param curRoleId          当前角色 ID
+     * @param curUserId          当前用户 ID
      *
      * @return WorkflowInstanceApproveRecords
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String currentUserId) {
-        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, currentUserId);
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String curRoleId, String curUserId) {
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, curRoleId, curUserId);
     }
 
     /**
@@ -761,14 +762,15 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
-     * @param currentUserId        当前用户 ID
+     * @param curRoleId            当前角色 ID
+     * @param curUserId            当前用户 ID
      *
      * @return List<WorkflowInstanceApproveRecords>
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String currentUserId) {
-        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, currentUserId);
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String curRoleId, String curUserId) {
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleId, curUserId);
     }
 }

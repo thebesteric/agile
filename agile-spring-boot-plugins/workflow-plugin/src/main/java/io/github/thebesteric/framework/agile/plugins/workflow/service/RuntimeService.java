@@ -434,14 +434,15 @@ public interface RuntimeService {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
-     * @param currentUserId      当前用户 ID
+     * @param curRoleId          当前角色 ID
+     * @param curUserId          当前用户 ID
      *
      * @return WorkflowInstanceApproveRecords
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String currentUserId);
+    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String curRoleId, String curUserId);
 
     /**
      * 获取流程审批记录
@@ -461,14 +462,15 @@ public interface RuntimeService {
      *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
-     * @param currentUserId        当前用户 ID
+     * @param curRoleId            当前角色 ID
+     * @param curUserId            当前用户 ID
      *
      * @return List<WorkflowInstanceApproveRecords>
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String currentUserId);
+    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String curRoleId, String curUserId);
 
     /**
      * 获取流程审批记录

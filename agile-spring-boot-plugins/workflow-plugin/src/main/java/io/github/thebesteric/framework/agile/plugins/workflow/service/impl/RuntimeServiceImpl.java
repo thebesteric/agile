@@ -2646,7 +2646,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId) {
-        return getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, null);
+        return this.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, null, null);
     }
 
     /**
@@ -2654,7 +2654,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
-     * @param currentUserId      当前用户 ID
+     * @param curRoleId          当前角色 ID
+     * @param curUserId          当前用户 ID
      *
      * @return WorkflowInstanceApproveRecords
      *
@@ -2662,7 +2663,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/12 13:42
      */
     @Override
-    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String currentUserId) {
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String curRoleId, String curUserId) {
         // 流程实例
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
@@ -2694,8 +2695,31 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
         List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByWorkflowInstanceId(tenantId, workflowInstanceId);
 
+        // 审批记录与角色审批记录对应表
+        TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+        Map<TaskApprove, List<TaskRoleApproveRecord>> taskApproveAndRoleApproveRecordsMap = new HashMap<>();
+        // 角色审批记录与角色用户对应表
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+        Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap = new HashMap<>();
+
+        for (TaskApprove taskApprove : taskApproves) {
+            Integer taskInstanceId = taskApprove.getTaskInstanceId();
+            TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+            Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+            NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(nodeDefinitionId);
+            List<TaskRoleApproveRecord> taskRoleApproveRecords = null;
+            if (nodeDefinition.isRoleApprove()) {
+                taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndRoleId(tenantId, taskInstanceId, taskApprove.getApproverId());
+                taskRoleApproveRecords.forEach(taskRoleApproveRecord -> {
+                    NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getById(taskRoleApproveRecord.getNodeRoleAssignmentId());
+                    taskRoleRecordAndNodeRoleAssignmentMap.put(taskRoleApproveRecord, nodeRoleAssignment);
+                });
+            }
+            taskApproveAndRoleApproveRecordsMap.put(taskApprove, taskRoleApproveRecords);
+        }
+
         // 返回 WorkflowInstanceApproveRecords
-        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, nodeAssignments, currentUserId);
+        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeAssignments, curRoleId, curUserId);
     }
 
     /**
@@ -2711,7 +2735,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId) {
-        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, null);
+        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, null, null);
     }
 
     /**
@@ -2719,7 +2743,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
-     * @param currentUserId        当前用户 ID
+     * @param curRoleId            当前角色 ID
+     * @param curUserId            当前用户 ID
      *
      * @return List<WorkflowInstanceApproveRecords>
      *
@@ -2727,7 +2752,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/12 13:42
      */
     @Override
-    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String currentUserId) {
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String curRoleId, String curUserId) {
         // 流程定义
         WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
         WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
@@ -2739,7 +2764,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         List<WorkflowInstance> workflowInstances = workflowInstanceExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId);
         for (WorkflowInstance workflowInstance : workflowInstances) {
-            WorkflowInstanceApproveRecords records = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), currentUserId);
+            WorkflowInstanceApproveRecords records = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), curRoleId, curUserId);
             recordsList.add(records);
         }
 

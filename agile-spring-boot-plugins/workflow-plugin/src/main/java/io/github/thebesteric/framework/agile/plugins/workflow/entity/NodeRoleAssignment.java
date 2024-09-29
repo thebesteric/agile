@@ -6,6 +6,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEn
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serial;
 import java.sql.ResultSet;
@@ -70,4 +72,16 @@ public class NodeRoleAssignment extends BaseEntity {
         return of(nodeRoleAssignment, rs);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NodeRoleAssignment that = (NodeRoleAssignment) o;
+        return new EqualsBuilder().appendSuper(super.equals(o)).append(tenantId, that.tenantId).append(nodeDefinitionId, that.nodeDefinitionId).append(roleId, that.roleId).append(userId, that.userId).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(tenantId).append(nodeDefinitionId).append(roleId).append(userId).toHashCode();
+    }
 }

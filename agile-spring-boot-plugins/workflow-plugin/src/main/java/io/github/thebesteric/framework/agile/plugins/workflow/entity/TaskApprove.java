@@ -10,6 +10,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEn
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serial;
 import java.sql.ResultSet;
@@ -155,5 +157,18 @@ public class TaskApprove extends BaseEntity {
         taskApprove.setActive(ActiveStatus.of(rs.getInt("active")));
         taskApprove.setComment(rs.getString("comment"));
         return of(taskApprove, rs);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaskApprove that = (TaskApprove) o;
+        return new EqualsBuilder().appendSuper(super.equals(o)).append(tenantId, that.tenantId).append(workflowInstanceId, that.workflowInstanceId).append(taskInstanceId, that.taskInstanceId).append(approverId, that.approverId).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(tenantId).append(workflowInstanceId).append(taskInstanceId).append(approverId).toHashCode();
     }
 }
