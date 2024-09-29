@@ -202,7 +202,7 @@ public class WorkflowInstanceApproveRecords {
             response.comment = taskApprove.getComment();
             response.approveStatus = taskApprove.getStatus();
             response.createdAt = taskApprove.getCreatedAt();
-            response.setSelf(curUserId != null && curUserId.equals(taskApprove.getApproverId()));
+            response.isSelf = nodeDefinition.isUserApprove() && curUserId != null && curUserId.equals(taskApprove.getApproverId());
             response.setRoleApprove(nodeDefinition.isRoleApprove());
             if (taskRoleApproveRecords != null) {
                 response.taskRoleApproveRecordResponses = taskRoleApproveRecords.stream().map(taskRoleApproveRecord -> {
