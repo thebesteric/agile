@@ -62,7 +62,7 @@ public class WorkflowDefinition extends BaseEntity {
     private PublishStatus publish = PublishStatus.UNPUBLISHED;
 
     @EntityColumn(comment = "发布日期")
-    protected Date publishedAt;
+    private Date publishedAt;
 
     /** 审批人（当节点审批人为空，且 allowEmptyAutoApprove 为 false 时生效），存储在 WorkflowAssignment 表中 */
     @Transient

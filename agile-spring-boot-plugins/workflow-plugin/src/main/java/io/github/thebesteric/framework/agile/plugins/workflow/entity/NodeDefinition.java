@@ -12,15 +12,16 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.data.annotation.Transient;
 
 import java.io.Serial;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -108,8 +109,8 @@ public class NodeDefinition extends BaseEntity {
     /**
      * 是否是用户审批节点
      *
-
      * @return boolean
+     *
      * @author wangweijun
      * @since 2024/9/27 15:55
      */
@@ -120,19 +121,15 @@ public class NodeDefinition extends BaseEntity {
     /**
      * 添加审批人
      *
-     * @param approverIds 审批人 IDs
+     * @param approver 审批人
      *
      * @author wangweijun
-     * @since 2024/7/3 10:44
+     * @since 2024/9/29 16:45
      */
-    public void addApprovers(String approverId, String... approverIds) {
-        if (approverId != null) {
-            addApprovers(Approver.of(approverId));
-        }
-        if (approverIds != null && approverIds.length > 0) {
-            this.approvers.addAll(Arrays.stream(approverIds).map(Approver::of).collect(Collectors.toSet()));
-        }
+    public void addApprover(Approver approver) {
+        this.addApprovers(Set.of(approver));
     }
+
 
     /**
      * 添加审批人
@@ -140,30 +137,25 @@ public class NodeDefinition extends BaseEntity {
      * @param approvers 审批人
      *
      * @author wangweijun
-     * @since 2024/7/3 10:44
+     * @since 2024/9/29 16:45
      */
-    public void addApprovers(Approver approver, Approver... approvers) {
-        if (approver != null) {
-            this.approvers.add(approver);
+    public void addApprovers(Set<Approver> approvers) {
+        if (this.isRoleApprove()) {
+            this.throwUserApproveUpdateApproverException();
         }
-        if (approvers != null && approvers.length > 0) {
-            this.approvers.addAll(Set.of(approvers));
-        }
+        this.approvers.addAll(approvers);
     }
 
     /**
      * 移除审批人
      *
-     * @param approverIds 审批人 IDs
+     * @param approver 审批人
      *
      * @author wangweijun
      * @since 2024/7/3 10:44
      */
-    public void removeApprovers(String approverId, String... approverIds) {
-        this.approvers.remove(Approver.of(approverId));
-        if (approverIds != null && approverIds.length > 0) {
-            Arrays.stream(approverIds).map(Approver::of).forEach(this.approvers::remove);
-        }
+    public void removeApprover(Approver approver) {
+        this.removeApprovers(Set.of(approver));
     }
 
     /**
@@ -174,24 +166,17 @@ public class NodeDefinition extends BaseEntity {
      * @author wangweijun
      * @since 2024/7/3 10:44
      */
-    public void removeApprovers(Approver approver, Approver... approvers) {
-        this.approvers.remove(approver);
-        if (approvers != null && approvers.length > 0) {
-            Arrays.asList(approvers).forEach(this.approvers::remove);
+    public void removeApprovers(Set<Approver> approvers) {
+        if (this.isRoleApprove()) {
+            this.throwUserApproveUpdateApproverException();
         }
-    }
-
-    /**
-     * 替换审批人
-     *
-     * @param oldApproverId 原审批人
-     * @param newApproverId 新审批人
-     *
-     * @author wangweijun
-     * @since 2024/7/12 14:10
-     */
-    public void replaceApprover(String oldApproverId, String newApproverId) {
-        this.replaceApprover(Approver.of(oldApproverId), Approver.of(newApproverId));
+        if (CollectionUtils.isNotEmpty(approvers)) {
+            Set<Approver> unContainsApprovers = approvers.stream().filter(approver -> !this.approvers.contains(approver)).collect(Collectors.toSet());
+            if (CollectionUtils.isNotEmpty(unContainsApprovers)) {
+                throw new WorkflowException("未查询到审批人: %s", unContainsApprovers);
+            }
+            approvers.forEach(this.approvers::remove);
+        }
     }
 
     /**
@@ -204,6 +189,12 @@ public class NodeDefinition extends BaseEntity {
      * @since 2024/7/12 14:10
      */
     public void replaceApprover(Approver oldApprover, Approver newApprover) {
+        if (this.isRoleApprove()) {
+            this.throwUserApproveUpdateApproverException();
+        }
+        if (!approvers.contains(oldApprover)) {
+            throw new WorkflowException("未查询到审批人: %s", oldApprover);
+        }
         this.approvers.remove(oldApprover);
         this.approvers.add(newApprover);
     }
@@ -215,7 +206,111 @@ public class NodeDefinition extends BaseEntity {
      * @since 2024/7/3 13:38
      */
     public void clearApprovers() {
+        if (this.isRoleApprove()) {
+            this.throwUserApproveUpdateApproverException();
+        }
         this.approvers.clear();
+    }
+
+    /**
+     * 添加角色审批人
+     *
+     * @param roleApprover 角色审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/29 16:45
+     */
+    public void addRoleApprover(RoleApprover roleApprover) {
+        this.addRoleApprovers(Set.of(roleApprover));
+    }
+
+    /**
+     * 添加角色审批人
+     *
+     * @param roleApprovers 角色审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/29 16:45
+     */
+    public void addRoleApprovers(Set<RoleApprover> roleApprovers) {
+        if (this.isUserApprove()) {
+            this.throwRoleApproveUpdateApproverException();
+        }
+        this.roleApprovers.addAll(roleApprovers);
+    }
+
+    /**
+     * 移除角色审批人
+     *
+     * @param roleApprovers 角色审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/29 17:04
+     */
+    public void removeRoleApprovers(Set<RoleApprover> roleApprovers) {
+        if (this.isUserApprove()) {
+            this.throwRoleApproveUpdateApproverException();
+        }
+        if (CollectionUtils.isNotEmpty(roleApprovers)) {
+            Set<RoleApprover> unContainsRoleApprovers = roleApprovers.stream().filter(approver -> !this.roleApprovers.contains(approver)).collect(Collectors.toSet());
+            if (CollectionUtils.isNotEmpty(unContainsRoleApprovers)) {
+                throw new WorkflowException("未查询到角色审批人: %s", unContainsRoleApprovers);
+            }
+            roleApprovers.forEach(this.roleApprovers::remove);
+        }
+    }
+
+    /**
+     * 移除角色审批人
+     *
+     * @param roleApprover 角色审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/29 17:04
+     */
+    public void removeRoleApprover(RoleApprover roleApprover) {
+        this.removeRoleApprovers(Set.of(roleApprover));
+    }
+
+    /**
+     * 替换角色审批人
+     *
+     * @param oldRoleApprover 原角色审批人
+     * @param newRoleApprover 新角色审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/29 17:04
+     */
+    public void replaceRoleApprover(RoleApprover oldRoleApprover, RoleApprover newRoleApprover) {
+        if (this.isUserApprove()) {
+            this.throwRoleApproveUpdateApproverException();
+        }
+        if (!roleApprovers.contains(oldRoleApprover)) {
+            throw new WorkflowException("未查询到角色审批人: %s", oldRoleApprover);
+        }
+        this.roleApprovers.remove(oldRoleApprover);
+        this.roleApprovers.add(newRoleApprover);
+    }
+
+    /**
+     * 清空角色审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/29 17:07
+     */
+    public void clearRoleApprovers() {
+        if (this.isUserApprove()) {
+            this.throwRoleApproveUpdateApproverException();
+        }
+        this.roleApprovers.clear();
+    }
+
+    private void throwUserApproveUpdateApproverException() {
+        throw new WorkflowException("角色审批节点不允许修改用户审批人");
+    }
+
+    private void throwRoleApproveUpdateApproverException() {
+        throw new WorkflowException("用户审批节点不允许修改角色审批人");
     }
 
     public static NodeDefinition of(ResultSet rs) throws SQLException {

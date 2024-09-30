@@ -21,12 +21,18 @@ public class Condition implements Serializable {
     private String key;
     private String value;
     private Operator operator;
+    private String desc;
 
     public static Condition of(String key, String value, Operator operator) {
+        return of(key, value, operator, "%s %s %s".formatted(key, operator.getValue(), value));
+    }
+
+    public static Condition of(String key, String value, Operator operator, String desc) {
         Condition condition = new Condition();
         condition.setKey(key);
         condition.setValue(value);
         condition.setOperator(operator);
+        condition.setDesc(desc);
         return condition;
     }
 }

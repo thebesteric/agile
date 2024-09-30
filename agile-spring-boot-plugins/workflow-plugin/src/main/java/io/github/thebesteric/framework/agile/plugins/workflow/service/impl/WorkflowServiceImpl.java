@@ -156,6 +156,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 throw new WorkflowException("节点更新修改失败: 无法修改开始节点或结束节点");
             }
 
+            if (nodeDefinition.getSequence() >= Integer.MAX_VALUE || nodeDefinition.getSequence() <= Integer.MIN_VALUE) {
+                throw new WorkflowException("节点更新修改失败: 节点顺序不能大于等于 %s 或小于等于 %s", Integer.MAX_VALUE, Integer.MIN_VALUE);
+            }
+
             // 租户 ID
             String tenantId = nodeDefinition.getTenantId();
 

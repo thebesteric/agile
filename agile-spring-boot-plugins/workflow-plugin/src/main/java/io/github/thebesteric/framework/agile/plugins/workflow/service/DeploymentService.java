@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 
 import java.util.List;
@@ -103,7 +104,7 @@ public interface DeploymentService {
     /**
      * 启用
      *
-     * @param tenantId 租户
+     * @param tenantId 租户 ID
      * @param key      key
      *
      * @author wangweijun
@@ -120,5 +121,18 @@ public interface DeploymentService {
      * @since 2024/6/18 14:18
      */
     void update(WorkflowDefinition workflowDefinition);
+
+    /**
+     * 获取流程定义流程图
+     *
+     * @param tenantId           租户 ID
+     * @param workflowDefinition 流程定义
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/9/29 18:29
+     */
+    WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, WorkflowDefinition workflowDefinition);
 
 }

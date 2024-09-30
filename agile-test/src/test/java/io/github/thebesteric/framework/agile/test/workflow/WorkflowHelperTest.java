@@ -8,6 +8,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.WorkflowHelper;
@@ -81,7 +82,7 @@ class WorkflowHelperTest {
         createWorkflow6(tenantId, workflowDefinition);
     }
 
-    /** 多节点案例。*/
+    /** 多节点案例。 */
     private void createWorkflow1(String tenantId, WorkflowDefinition workflowDefinition) {
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
@@ -125,7 +126,7 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         Conditions conditions = Conditions.defaultConditions();
-        conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN));
+        conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN, "请假日期小于 3 天"));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门主管审批").desc("任务节点").conditions(conditions).approveType(ApproveType.ANY)
                 .approverId("张三").approverId("李四")
@@ -134,7 +135,7 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         conditions = Conditions.defaultConditions();
-        conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL));
+        conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于等于 3 天"));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门经理审批").desc("任务节点").conditions(conditions)
                 .approverId("王五")
@@ -142,9 +143,16 @@ class WorkflowHelperTest {
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
-        conditions = Conditions.defaultConditions();
-        conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("部门总监审批").desc("任务节点")
+                .approverId("哈哈")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN, "请假日期小于 3 天"));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("人事主管审批").desc("任务节点").conditions(conditions)
                 .approverId("赵六")
                 .build();
@@ -152,8 +160,8 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         conditions = Conditions.defaultConditions();
-        conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL));
-        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+        conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于等于 3 天"));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("人事经理审批").desc("任务节点").conditions(conditions)
                 .approverId("孙七")
                 .build();
@@ -448,9 +456,10 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        String roleId = null;
-        String approverId = "张三";
-        // String approverId = "李四";
+        String roleId = "xxx";
+        // String approverId = "张三";
+        // String approverId = "张三-1";
+        String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
@@ -549,14 +558,14 @@ class WorkflowHelperTest {
      */
     @Test
     void reject() {
-        // String roleId = null;
-        // String approverId = "张三";
+        String roleId = null;
+        String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
 
-        String roleId = "经理";
-        String approverId = "manager-1";
+        // String roleId = "经理";
+        // String approverId = "manager-1";
         // String approverId = "manager-2";
 
         // String roleId = "组长";
@@ -639,8 +648,14 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         TaskHistoryServiceHelper taskHistoryServiceHelper = workflowHelper.getTaskHistoryServiceHelper();
 
-        Page<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, 5, null, 1, 10);
+        Page<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, 1, 1, null, 1, 20);
         taskHistories.getRecords().forEach(System.out::println);
+    }
+
+    @Test
+    void publishAndStart() {
+        publish();
+        start();
     }
 
     @Test
@@ -648,19 +663,17 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
 
-        NodeDefinition nodeDefinition = workflowServiceHelper.getNode(tenantId, 3);
-        // nodeDefinition.setName("部门经理审批");
-        // nodeDefinition.setDesc("任务节点");
-        // nodeDefinition.removeApprovers("测试审批人");
+        NodeDefinition nodeDefinition2 = workflowServiceHelper.getNode(tenantId, 2);
+        nodeDefinition2.setName("部门经理审批-1");
+        nodeDefinition2.setDesc("任务节点-1");
+        nodeDefinition2.removeApprover(Approver.of("张三"));
+        nodeDefinition2.addApprover(Approver.of("张三-1"));
+        nodeDefinition2.setSequence(3.0);
+        workflowServiceHelper.updateNode(nodeDefinition2);
 
-        nodeDefinition.setSequence(2.0);
-        workflowServiceHelper.updateNode(nodeDefinition);
-
-        List<NodeDefinition> nodeDefinitions = workflowServiceHelper.getNodes(tenantId, 2);
-        for (NodeDefinition definition : nodeDefinitions) {
-            definition.setSequence(1.0);
-            workflowServiceHelper.updateNode(definition);
-        }
+        NodeDefinition nodeDefinition3 = workflowServiceHelper.getNode(tenantId, 4);
+        nodeDefinition3.setSequence(1.0);
+        workflowServiceHelper.updateNode(nodeDefinition3);
     }
 
     /**
@@ -759,10 +772,19 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
-        WorkflowInstanceApproveRecords workflowInstanceApproveRecords = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 1, "经理", "manager-1");
-
+        List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, "经理", "manager-1");
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
+    }
+
+    @Test
+    void workflowDefinitionFlowSchema() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+
+        WorkflowDefinitionFlowSchema workflowDefinitionFlowSchema = deploymentServiceHelper.getWorkflowDefinitionFlowSchema(tenantId, 1);
+        System.out.println("===============================");
+        System.out.println(JsonUtils.toJson(workflowDefinitionFlowSchema));
     }
 
 }

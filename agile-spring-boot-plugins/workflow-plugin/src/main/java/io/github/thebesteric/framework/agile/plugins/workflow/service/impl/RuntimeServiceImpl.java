@@ -2681,19 +2681,28 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
         List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
 
+        // 节点审批人
+        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+        List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByWorkflowInstanceId(tenantId, workflowInstanceId);
+
+        // 节点定义与节点审批人的对应关系
+        Map<NodeDefinition, NodeAssignment> nodeDefAndNodeAssignmentMap = new HashMap<>();
+
         List<Pair<NodeDefinition, TaskInstance>> nodeDefAndTasks = new ArrayList<>();
         for (NodeDefinition nodeDefinition : nodeDefinitions) {
             TaskInstance taskInstance = taskInstanceExecutor.getByWorkflowInstanceIdAndNodeDefinitionId(tenantId, workflowInstanceId, nodeDefinition.getId());
             nodeDefAndTasks.add(Pair.of(nodeDefinition, taskInstance));
+
+            // 封装：节点定义与节点审批人的对应关系
+            Optional<NodeAssignment> nodeAssignmentOptional = nodeAssignments.stream().filter(nodeAssignment -> nodeDefinition.getId().equals(nodeAssignment.getNodeDefinitionId())).findFirst();
+            nodeAssignmentOptional.ifPresent(assignment -> nodeDefAndNodeAssignmentMap.put(nodeDefinition, assignment));
         }
 
         // 审批人
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
 
-        // 节点审批人
-        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
-        List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByWorkflowInstanceId(tenantId, workflowInstanceId);
+
 
         // 审批记录与角色审批记录对应表
         TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
@@ -2719,7 +2728,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         }
 
         // 返回 WorkflowInstanceApproveRecords
-        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeAssignments, curRoleId, curUserId);
+        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, nodeDefAndNodeAssignmentMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeAssignments, curRoleId, curUserId);
     }
 
     /**

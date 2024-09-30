@@ -7,6 +7,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEn
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serial;
 import java.sql.ResultSet;
@@ -66,5 +68,18 @@ public class TaskInstance extends BaseEntity {
      */
     public boolean isCompleted() {
         return NodeStatus.COMPLETED == this.status;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaskInstance that = (TaskInstance) o;
+        return new EqualsBuilder().appendSuper(super.equals(o)).append(tenantId, that.tenantId).append(workflowInstanceId, that.workflowInstanceId).append(nodeDefinitionId, that.nodeDefinitionId).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(tenantId).append(workflowInstanceId).append(nodeDefinitionId).toHashCode();
     }
 }

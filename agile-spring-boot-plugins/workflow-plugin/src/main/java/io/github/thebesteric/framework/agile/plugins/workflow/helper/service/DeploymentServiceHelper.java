@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
@@ -188,4 +189,35 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
         this.deploymentService.enable(tenantId, key);
     }
 
+    /**
+     * 获取流程定义流程图
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/9/29 18:31
+     */
+    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinition workflowDefinition = getById(tenantId, workflowDefinitionId);
+        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition);
+    }
+
+    /**
+     * 获取流程定义流程图
+     *
+     * @param tenantId 租户 ID
+     * @param key      流程唯一标识
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/9/29 18:31
+     */
+    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, String key) {
+        WorkflowDefinition workflowDefinition = getByKey(tenantId, key);
+        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition);
+    }
 }

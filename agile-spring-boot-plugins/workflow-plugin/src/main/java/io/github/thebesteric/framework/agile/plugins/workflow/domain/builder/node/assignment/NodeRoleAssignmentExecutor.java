@@ -137,6 +137,28 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowInstanceId).stream().toList();
     }
 
+    /**
+     * 根据流程定义 ID 查找所有审批人
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<NodeRoleUserAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/9/13 09:59
+     */
+    public List<NodeRoleAssignment> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
+        final String selectSql = """
+                SELECT na.* FROM awf_node_role_assignment na
+                    LEFT JOIN awf_node_definition nd ON nd.`id` = na.`node_def_id`
+                    LEFT JOIN awf_wf_definition wd ON wd.`id` = nd.`wf_def_id`
+                WHERE wd.`tenant_id` = ? AND wd.`id` = ?
+                """;
+        RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
+        return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowDefinitionId).stream().toList();
+    }
+
 
     /**
      * 根据节点定义 ID 删除所有审批人

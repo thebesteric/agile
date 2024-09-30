@@ -1,7 +1,10 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation;
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRelation;
 import io.vavr.control.Try;
@@ -134,6 +137,26 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
                 """;
         RowMapper<NodeRelation> rowMapper = (ResultSet rs, int rowNum) -> NodeRelation.of(rs);
         return this.jdbcTemplate.query(selectSql, rowMapper, tenantId, toNodeId).stream().toList();
+    }
+
+    /**
+     * 根据流程定义 ID 查询节点关系
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<NodeRelation>
+     *
+     * @author wangweijun
+     * @since 2024/9/30 14:51
+     */
+    public List<NodeRelation> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
+        Query query = QueryBuilderWrapper.createLambda(NodeRelation.class)
+                .eq(NodeRelation::getTenantId, tenantId)
+                .eq(NodeRelation::getWorkflowDefinitionId, workflowDefinitionId)
+                .eq(NodeRelation::getActive, ActiveStatus.ACTIVE.getCode())
+                .eq(NodeRelation::getState, 1).build();
+        return find(query).getRecords();
     }
 
     /**

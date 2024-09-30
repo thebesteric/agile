@@ -8,12 +8,20 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowInstanceInProgressException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractDeploymentService;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,12 +39,20 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
 
     private final WorkflowDefinitionExecutorBuilder workflowDefinitionExecutorBuilder;
     private final WorkflowInstanceExecutorBuilder workflowInstanceExecutorBuilder;
+    private final NodeDefinitionExecutorBuilder nodeDefinitionExecutorBuilder;
+    private final NodeRelationExecutorBuilder nodeRelationExecutorBuilder;
+    private final NodeAssignmentExecutorBuilder nodeAssignmentExecutorBuilder;
+    private final NodeRoleAssignmentExecutorBuilder nodeRoleAssignmentExecutorBuilder;
 
     public DeploymentServiceImpl(AgileWorkflowContext context) {
         super(context);
         JdbcTemplate jdbcTemplate = context.getJdbcTemplateHelper().getJdbcTemplate();
         this.workflowDefinitionExecutorBuilder = WorkflowDefinitionExecutorBuilder.builder(jdbcTemplate);
         this.workflowInstanceExecutorBuilder = WorkflowInstanceExecutorBuilder.builder(jdbcTemplate);
+        this.nodeDefinitionExecutorBuilder = NodeDefinitionExecutorBuilder.builder(jdbcTemplate);
+        this.nodeRelationExecutorBuilder = NodeRelationExecutorBuilder.builder(jdbcTemplate);
+        this.nodeAssignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
+        this.nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
     }
 
     /**
@@ -165,6 +181,36 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
             throw new WorkflowInstanceInProgressException();
         }
         this.workflowDefinitionExecutorBuilder.build().updateById(workflowDefinition);
+    }
+
+    /**
+     * 获取流程定义流程图
+     *
+     * @param tenantId           租户 ID
+     * @param workflowDefinition 流程定义
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/9/29 18:29
+     */
+    @Override
+    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, WorkflowDefinition workflowDefinition) {
+        // 获取节点定义
+        NodeDefinitionExecutor nodeDefinitionExecutor = this.nodeDefinitionExecutorBuilder.build();
+        List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
+        // 获取节点关系
+        NodeRelationExecutor nodeRelationExecutor = this.nodeRelationExecutorBuilder.build();
+        List<NodeRelation> nodeRelations = nodeRelationExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
+        // 获取审批人
+        NodeAssignmentExecutor nodeAssignmentExecutor = this.nodeAssignmentExecutorBuilder.build();
+        List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
+        // 获取角色审批人
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = this.nodeRoleAssignmentExecutorBuilder.build();
+        List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
+
+        // 封装
+        return WorkflowDefinitionFlowSchema.of(workflowDefinition, nodeDefinitions, nodeRelations, nodeAssignments, nodeRoleAssignments);
     }
 
 }

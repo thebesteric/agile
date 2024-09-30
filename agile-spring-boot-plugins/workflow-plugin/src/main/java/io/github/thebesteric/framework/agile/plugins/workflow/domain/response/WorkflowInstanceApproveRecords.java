@@ -2,7 +2,6 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import lombok.Data;
 
@@ -21,7 +20,7 @@ import java.util.Map;
 @Data
 public class WorkflowInstanceApproveRecords {
     /** 流程实例 ID */
-    private Integer id;
+    private Integer workflowInstanceId;
     /** 流程定义 */
     private WorkflowDefinitionResponse workflowDefinition;
     /** 流程节点 */
@@ -36,6 +35,7 @@ public class WorkflowInstanceApproveRecords {
      * @param workflowInstance                       流程实例
      * @param nodeDefAndTasks                        节点定义与流程实例对应关系
      * @param taskApproves                           审批任务
+     * @param nodeDefAndNodeAssignmentMap            节点定义与节点审批人的对应关系
      * @param taskApproveAndRoleApproveRecordsMap    审批任务与角色审批记录对应关系
      * @param taskRoleRecordAndNodeRoleAssignmentMap 角色审批记录与角色用户对应关系
      * @param nodeAssignments                        节点审批人
@@ -50,13 +50,14 @@ public class WorkflowInstanceApproveRecords {
     public static WorkflowInstanceApproveRecords of(WorkflowDefinition workflowDefinition, WorkflowInstance workflowInstance,
                                                     List<Pair<NodeDefinition, TaskInstance>> nodeDefAndTasks,
                                                     List<TaskApprove> taskApproves,
+                                                    Map<NodeDefinition, NodeAssignment> nodeDefAndNodeAssignmentMap,
                                                     Map<TaskApprove, List<TaskRoleApproveRecord>> taskApproveAndRoleApproveRecordsMap,
                                                     Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
                                                     List<NodeAssignment> nodeAssignments,
                                                     String curRoleId, String curUserId) {
 
         WorkflowInstanceApproveRecords records = new WorkflowInstanceApproveRecords();
-        records.setId(workflowInstance.getId());
+        records.setWorkflowInstanceId(workflowInstance.getId());
         records.setCreatedAt(workflowInstance.getCreatedAt());
 
         // 封装流程定义
@@ -86,7 +87,7 @@ public class WorkflowInstanceApproveRecords {
             NodeDefinitionResponse nodeDefinitionResponse = new NodeDefinitionResponse();
             nodeDefinitionResponse.setId(nodeDefinition.getId());
             nodeDefinitionResponse.setName(nodeDefinition.getName());
-            nodeDefinitionResponse.setNodeType(nodeDefinition.getNodeType());
+            nodeDefinitionResponse.setNodeType(nodeDefinition.getNodeType().toMap());
             nodeDefinitionResponse.setCreatedAt(nodeDefinition.getCreatedAt());
             nodeDefinitionResponse.setTaskInstanceResponse(taskInstanceResponse);
 
@@ -100,8 +101,9 @@ public class WorkflowInstanceApproveRecords {
                 List<TaskApprove> currTaskApproves = taskApproves.stream().filter(approve -> taskInstance.getId().equals(approve.getTaskInstanceId())).toList();
                 if (!currTaskApproves.isEmpty()) {
                     List<TaskApproveResponse> taskApproveResponses = currTaskApproves.stream().map(taskApprove -> {
+                        NodeAssignment nodeAssignment = nodeDefAndNodeAssignmentMap.get(nodeDefinition);
                         List<TaskRoleApproveRecord> taskRoleApproveRecords = taskApproveAndRoleApproveRecordsMap.get(taskApprove);
-                        return TaskApproveResponse.of(nodeDefinition, taskApprove, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleId, curUserId);
+                        return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleId, curUserId);
                     }).toList();
                     taskInstanceResponse.setTaskApproveResponses(taskApproveResponses);
                 }
@@ -133,7 +135,7 @@ public class WorkflowInstanceApproveRecords {
         /** 节点名称 */
         private String name;
         /** 节点类型 */
-        private NodeType nodeType;
+        private Map<String, Object> nodeType;
         /** 节点实例 */
         private TaskInstanceResponse taskInstanceResponse;
         /** 审批人 */
@@ -148,6 +150,8 @@ public class WorkflowInstanceApproveRecords {
         private Integer id;
         /** 审批人 */
         private String approverId;
+        /** 审批人备注 */
+        private String approverDesc;
         /** 审批顺序 */
         private Integer approverSeq;
         /** 创建时间 */
@@ -157,6 +161,7 @@ public class WorkflowInstanceApproveRecords {
             NodeAssignmentResponse response = new NodeAssignmentResponse();
             response.id = nodeAssignment.getId();
             response.approverId = nodeAssignment.getApproverId();
+            response.approverDesc = nodeAssignment.getDesc();
             response.approverSeq = nodeAssignment.getApproverSeq();
             response.createdAt = nodeAssignment.getCreatedAt();
             return response;
@@ -179,12 +184,14 @@ public class WorkflowInstanceApproveRecords {
 
     @Data
     public static class TaskApproveResponse {
-        /** 审核人 */
-        private String approver;
+        /** 审核人 ID（根据 roleApprove 来对应 NodeAssignment 或 NodeRoleAssignment 中的 ID） */
+        private String userId;
+        /** 审批记录 ID */
+        private String approverId;
         /** 审核意见 */
         private String comment;
         /** 审核结果 */
-        private ApproveStatus approveStatus;
+        private Map<String, Object> approveStatus;
 
         /** 是否时角色审批 */
         private boolean roleApprove;
@@ -196,11 +203,16 @@ public class WorkflowInstanceApproveRecords {
         /** 创建时间 */
         private Date createdAt;
 
-        public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap, String curRoleId, String curUserId) {
+        public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment, List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap, String curRoleId, String curUserId) {
             TaskApproveResponse response = new TaskApproveResponse();
-            response.approver = taskApprove.getApproverId();
+            if (nodeDefinition.isUserApprove()) {
+                response.userId = nodeAssignment.getId().toString();
+            } else {
+                response.userId = taskApprove.getApproverId();
+            }
+            response.approverId = taskApprove.getApproverId();
             response.comment = taskApprove.getComment();
-            response.approveStatus = taskApprove.getStatus();
+            response.approveStatus = taskApprove.getStatus().toMap();
             response.createdAt = taskApprove.getCreatedAt();
             response.isSelf = nodeDefinition.isUserApprove() && curUserId != null && curUserId.equals(taskApprove.getApproverId());
             response.setRoleApprove(nodeDefinition.isRoleApprove());
@@ -220,14 +232,18 @@ public class WorkflowInstanceApproveRecords {
         private Integer taskRoleApproveRecordId;
         /** 角色用户 ID */
         private Integer nodeRoleAssignmentId;
-        /** 审核人角色 ID */
+        /** 角色 ID */
         private String roleId;
-        /** 审核人角色描述 */
+        /** 角色顺序 */
+        private Integer roleSeq;
+        /** 角色描述 */
         private String roleDesc;
         /** 审核人 ID */
-        private String approverId;
+        private String userId;
+        /** 审核人顺序 */
+        private Integer userSeq;
         /** 审核人描述 */
-        private String approverDesc;
+        private String userDesc;
         /** 审核意见 */
         private String comment;
         /** 审核结果 */
@@ -242,9 +258,11 @@ public class WorkflowInstanceApproveRecords {
             response.taskRoleApproveRecordId = taskRoleApproveRecord.getId();
             response.nodeRoleAssignmentId = nodeRoleAssignment.getId();
             response.roleId = nodeRoleAssignment.getRoleId();
+            response.roleSeq = nodeRoleAssignment.getRoleSeq();
             response.roleDesc = nodeRoleAssignment.getRoleDesc();
-            response.approverId = nodeRoleAssignment.getUserId();
-            response.approverDesc = nodeRoleAssignment.getUserDesc();
+            response.userId = nodeRoleAssignment.getUserId();
+            response.userSeq = nodeRoleAssignment.getUserSeq();
+            response.userDesc = nodeRoleAssignment.getUserDesc();
             response.comment = taskRoleApproveRecord.getComment();
             response.approveStatus = taskRoleApproveRecord.getStatus();
             response.createdAt = taskRoleApproveRecord.getCreatedAt();

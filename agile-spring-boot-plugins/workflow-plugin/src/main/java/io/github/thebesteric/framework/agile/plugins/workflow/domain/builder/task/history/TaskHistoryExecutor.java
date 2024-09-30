@@ -73,7 +73,7 @@ public class TaskHistoryExecutor extends AbstractExecutor<TaskHistory> {
         String countSql = "SELECT COUNT(*) FROM (" + selectSql + ") AS t";
         Integer count = this.jdbcTemplate.queryForObject(countSql, Integer.class, tenantId);
 
-        selectSql += " ORDER BY `created_at` DESC LIMIT ? OFFSET ?";
+        selectSql += " ORDER BY h.`id` DESC, h.`created_at` DESC LIMIT ? OFFSET ?";
         Integer offset = (page - 1) * pageSize;
         List<TaskHistory> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> TaskHistory.of(rs), tenantId, pageSize, offset);
 
