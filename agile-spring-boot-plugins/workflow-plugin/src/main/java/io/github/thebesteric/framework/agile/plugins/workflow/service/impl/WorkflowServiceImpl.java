@@ -102,11 +102,27 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      */
     @Override
     public NodeDefinition createNode(NodeDefinition nodeDefinition) {
+        // 校验节点是否合法
+        if (NodeType.TASK == nodeDefinition.getNodeType()) {
+            if (nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(nodeDefinition.getRoleApprovers())) {
+                throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
+            }
+            if (nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
+                throw new WorkflowException("用户审批节点: 审批用户不能为空");
+            }
+            if (nodeDefinition.getSequence() >= Integer.MAX_VALUE || nodeDefinition.getSequence() <= Integer.MIN_VALUE) {
+                throw new WorkflowException("节点更新修改失败: 节点顺序不能大于等于 %s 或小于等于 %s", Integer.MAX_VALUE, Integer.MIN_VALUE);
+            }
+        }
+
         NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.nodeDefinition(nodeDefinition).build();
 
         // 查找所属流程定义
         WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
         WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
+
+        // 检查当前流程定义是否有正在进行的实例
+        checkWorkflowDefinitionHasIsInProgressInstance(nodeDefinition.getTenantId(), workflowDefinition.getId());
 
         // 将流程定义设置为未发布
         if (workflowDefinition.isPublished()) {
@@ -140,7 +156,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         double sequence = (prevNodeDefinition.getSequence() + nextNodeDefinition.getSequence()) / 2;
         nodeDefinition.setSequence(sequence);
         // 创建节点
-        return createNode(nodeDefinition);
+        return this.createNode(nodeDefinition);
     }
 
     /**
@@ -152,6 +168,16 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     public void updateNode(NodeDefinition nodeDefinition) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
+            // 校验节点是否合法
+            if (NodeType.TASK == nodeDefinition.getNodeType()) {
+                if (nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(nodeDefinition.getRoleApprovers())) {
+                    throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
+                }
+                if (nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
+                    throw new WorkflowException("用户审批节点: 审批用户不能为空");
+                }
+            }
+
             if (NodeType.START == nodeDefinition.getNodeType() || NodeType.END == nodeDefinition.getNodeType()) {
                 throw new WorkflowException("节点更新修改失败: 无法修改开始节点或结束节点");
             }
@@ -169,19 +195,9 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 查找所属流程定义
             WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
-            Integer workflowDefinitionId = workflowDefinition.getId();
 
-            // 查找所属流程实例，是否正在进行中
-            WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
-            Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
-                    .eq(WorkflowInstance::getTenantId, tenantId)
-                    .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
-                    .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
-                    .eq(WorkflowInstance::getState, 1).build();
-            Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
-            if (CollUtil.isNotEmpty(page.getRecords())) {
-                throw new WorkflowInstanceInProgressException();
-            }
+            // 检查当前流程定义是否有正在进行的实例
+            checkWorkflowDefinitionHasIsInProgressInstance(tenantId, workflowDefinition.getId());
 
             // 获取原有的节点定义
             NodeDefinition oldNodeDefinition = nodeDefinitionExecutor.getById(nodeDefinition.getId());
@@ -225,31 +241,60 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      */
     @Override
     public boolean deleteNode(String tenantId, Integer nodeDefinitionId) {
-        NodeDefinition nodeDefinition = getNode(tenantId, nodeDefinitionId);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        return jdbcTemplateHelper.executeInTransaction(() -> {
+            NodeDefinition nodeDefinition = getNode(tenantId, nodeDefinitionId);
 
-        // 判断是否是开始或结束节点
-        if (NodeType.START == nodeDefinition.getNodeType() || NodeType.END == nodeDefinition.getNodeType()) {
-            throw new WorkflowException("节点删除失败: 无法删除开始节点或结束节点");
+            // 判断是否是开始或结束节点
+            if (NodeType.START == nodeDefinition.getNodeType() || NodeType.END == nodeDefinition.getNodeType()) {
+                throw new WorkflowException("节点删除失败: 无法删除开始节点或结束节点");
+            }
+
+            // 获取任务节点
+            List<NodeDefinition> taskNodes = findTaskNodes(tenantId, nodeDefinition.getWorkflowDefinitionId());
+            if (CollectionUtils.isEmpty(taskNodes)) {
+                throw new WorkflowException("节点删除失败: 节点定义必须至少存在一个任务节点");
+            }
+
+            // 查找所属流程定义
+            WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+            WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
+
+            // 检查当前流程定义是否有正在进行的实例
+            checkWorkflowDefinitionHasIsInProgressInstance(tenantId, workflowDefinition.getId());
+
+            // 将流程定义设置为未发布
+            if (workflowDefinition.isPublished()) {
+                workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
+                workflowDefinitionExecutor.updateById(workflowDefinition);
+            }
+
+            NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).id(nodeDefinitionId).build();
+            return executor.deleteById();
+        });
+    }
+
+    /**
+     * 检查当前流程定义是否有正在进行的实例
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @author wangweijun
+     * @since 2024/9/30 17:29
+     */
+    private void checkWorkflowDefinitionHasIsInProgressInstance(String tenantId, Integer workflowDefinitionId) {
+        // 查找所属流程实例，是否正在进行中
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
+                .eq(WorkflowInstance::getTenantId, tenantId)
+                .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
+                .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
+                .eq(WorkflowInstance::getState, 1).build();
+        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+        if (CollUtil.isNotEmpty(page.getRecords())) {
+            throw new WorkflowInstanceInProgressException();
         }
-
-        // 获取任务节点
-        List<NodeDefinition> taskNodes = findTaskNodes(tenantId, nodeDefinition.getWorkflowDefinitionId());
-        if (taskNodes.size() <= 1) {
-            throw new WorkflowException("节点删除失败: 节点定义必须至少存在一个任务节点");
-        }
-
-        // 查找所属流程定义
-        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
-        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
-
-        // 将流程定义设置为未发布
-        if (workflowDefinition.isPublished()) {
-            workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
-            workflowDefinitionExecutor.updateById(workflowDefinition);
-        }
-
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).id(nodeDefinitionId).build();
-        return executor.deleteById();
     }
 
     /**
