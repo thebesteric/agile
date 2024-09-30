@@ -32,6 +32,9 @@ public class WorkflowRepository extends BaseEntity {
     @EntityColumn(name = "wf_inst_id", nullable = false, comment = "流程实例 ID")
     private Integer workflowInstanceId;
 
+    @EntityColumn(name = "attachment_type", length = 64, comment = "附件类型")
+    private String attachmentType;
+
     @EntityColumn(name = "attachment_id", length = 64, nullable = false, comment = "附件 ID")
     private String attachmentId;
 
@@ -51,6 +54,7 @@ public class WorkflowRepository extends BaseEntity {
         WorkflowRepository workflowInstance = new WorkflowRepository();
         workflowInstance.setTenantId(rs.getString("tenant_id"));
         workflowInstance.setWorkflowInstanceId(rs.getInt("wf_inst_id"));
+        workflowInstance.setAttachmentType(rs.getString("attachment_type"));
         workflowInstance.setAttachmentId(rs.getString("attachment_id"));
         workflowInstance.setAttachmentName(rs.getString("attachment_name"));
         workflowInstance.setAttachmentSuffix(rs.getString("attachment_suffix"));

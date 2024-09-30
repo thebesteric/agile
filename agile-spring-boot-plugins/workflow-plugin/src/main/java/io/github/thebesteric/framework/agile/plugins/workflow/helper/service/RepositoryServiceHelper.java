@@ -32,15 +32,16 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      * 添加附件
      *
      * @param workflowInstance  流程实例
+     * @param attachmentType    附件类型
      * @param attachmentId      附件 ID
      * @param attachmentName    附件名称
      * @param attachmentSuffix  附件后缀
      * @param attachmentUri     附件 URI
      * @param attachmentContent 附件内容
      */
-    public void addAttachment(WorkflowInstance workflowInstance, String attachmentId, String attachmentName, String attachmentSuffix, String attachmentUri, byte[] attachmentContent) {
+    public void addAttachment(WorkflowInstance workflowInstance, String attachmentType, String attachmentId, String attachmentName, String attachmentSuffix, String attachmentUri, byte[] attachmentContent) {
         WorkflowRepositoryBuilder builder = WorkflowRepositoryBuilder.builder(workflowInstance.getTenantId(), workflowInstance.getId())
-                .attachmentId(attachmentId).attachmentName(attachmentName).attachmentSuffix(attachmentSuffix)
+                .attachmentType(attachmentType).attachmentId(attachmentId).attachmentName(attachmentName).attachmentSuffix(attachmentSuffix)
                 .attachmentUri(attachmentUri).attachmentContent(attachmentContent);
         this.addAttachment(builder);
     }
@@ -49,26 +50,28 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      * 添加附件
      *
      * @param workflowInstance 流程实例
+     * @param attachmentType   附件类型
      * @param attachmentId     附件 ID
      * @param attachmentName   附件名称
      * @param attachmentSuffix 附件后缀
      * @param attachmentUri    附件 URI
      */
-    public void addAttachment(WorkflowInstance workflowInstance, String attachmentId, String attachmentName, String attachmentSuffix, String attachmentUri) {
-        this.addAttachment(workflowInstance, attachmentId, attachmentName, attachmentSuffix, attachmentUri, null);
+    public void addAttachment(WorkflowInstance workflowInstance, String attachmentType, String attachmentId, String attachmentName, String attachmentSuffix, String attachmentUri) {
+        this.addAttachment(workflowInstance, attachmentType, attachmentId, attachmentName, attachmentSuffix, attachmentUri, null);
     }
 
     /**
      * 添加附件
      *
      * @param workflowInstance  流程实例
+     * @param attachmentType    附件类型
      * @param attachmentId      附件 ID
      * @param attachmentName    附件名称
      * @param attachmentSuffix  附件后缀
      * @param attachmentContent 附件内容
      */
-    public void addAttachment(WorkflowInstance workflowInstance, String attachmentId, String attachmentName, String attachmentSuffix, byte[] attachmentContent) {
-        this.addAttachment(workflowInstance, attachmentId, attachmentName, attachmentSuffix, null, attachmentContent);
+    public void addAttachment(WorkflowInstance workflowInstance, String attachmentType, String attachmentId, String attachmentName, String attachmentSuffix, byte[] attachmentContent) {
+        this.addAttachment(workflowInstance, attachmentType, attachmentId, attachmentName, attachmentSuffix, null, attachmentContent);
     }
 
 

@@ -26,6 +26,11 @@ public class WorkflowRepositoryBuilder extends AbstractBuilder<WorkflowRepositor
         return builder;
     }
 
+    public WorkflowRepositoryBuilder attachmentType(String attachmentType) {
+        this.workflowRepository.setAttachmentType(attachmentType);
+        return this;
+    }
+
     public WorkflowRepositoryBuilder attachmentId(String attachmentId) {
         this.workflowRepository.setAttachmentId(attachmentId);
         return this;

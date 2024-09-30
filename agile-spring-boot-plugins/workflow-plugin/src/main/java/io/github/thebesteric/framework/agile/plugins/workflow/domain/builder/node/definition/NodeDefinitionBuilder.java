@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprove
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.util.Assert;
 
 import java.util.LinkedHashSet;
@@ -158,6 +159,14 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
     }
 
     public NodeDefinition build() {
+        if (NodeType.TASK == this.nodeDefinition.getNodeType()) {
+            if (this.nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(this.nodeDefinition.getRoleApprovers())) {
+                throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
+            }
+            if (this.nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(this.nodeDefinition.getApprovers())) {
+                throw new WorkflowException("用户审批节点: 审批用户不能为空");
+            }
+        }
         String tenantId = this.nodeDefinition.getTenantId();
         Integer workflowDefinitionId = this.nodeDefinition.getWorkflowDefinitionId();
         NodeType nodeType = this.nodeDefinition.getNodeType();
