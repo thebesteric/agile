@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinitionHistory;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
 
@@ -219,5 +220,55 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
     public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, String key) {
         WorkflowDefinition workflowDefinition = getByKey(tenantId, key);
         return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition);
+    }
+
+    /**
+     * 根据流程定义 key 获取流程定义历史记录列表（分页）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     * @param page                  当前页
+     * @param pageSize              每页显示数量
+     *
+     * @return Page<WorkflowDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 13:15
+     */
+    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize) {
+        return this.deploymentService.findHistoriesByWorkflowDefinitionKey(tenantId, workflowDefinitionKey, page, pageSize);
+    }
+
+    /**
+     * 根据流程定义 ID 获取流程定义历史记录列表（分页）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param page                 当前页
+     * @param pageSize             每页显示数量
+     *
+     * @return Page<WorkflowDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 13:15
+     */
+    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+        return this.deploymentService.findHistoriesByWorkflowDefinitionId(tenantId, workflowDefinitionId, page, pageSize);
+    }
+
+    /**
+     * 获取所有流程定义历史记录列表（分页）
+     *
+     * @param tenantId 租户 ID
+     * @param page     当前页
+     * @param pageSize 每页显示数量
+     *
+     * @return Page<WorkflowDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 13:41
+     */
+    public Page<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize) {
+        return this.deploymentService.findHistories(tenantId, page, pageSize);
     }
 }

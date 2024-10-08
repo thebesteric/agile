@@ -15,8 +15,8 @@ public class Pager {
     private Integer pageSize;
 
     private Pager(Integer page, Integer pageSize) {
-        this.page = page;
-        this.pageSize = pageSize;
+        this.page = page == null || page <= 1 ? 1 : page;
+        this.pageSize = pageSize == null || pageSize < 1 ? Integer.MAX_VALUE : pageSize;
     }
 
     public static Pager of(Integer page, Integer pageSize) {

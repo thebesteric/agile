@@ -41,9 +41,10 @@ public class Page<T> {
         this.size = size;
         this.total = total;
         this.records = records == null ? new ArrayList<>() : records;
+        this.pages = this.calcPages();
     }
 
-    public long getPages() {
+    private long calcPages() {
         if (this.getSize() == 0L) {
             return 0L;
         } else {
@@ -60,7 +61,7 @@ public class Page<T> {
     }
 
     public boolean hasNext() {
-        return this.current < this.getPages();
+        return this.current < this.pages;
     }
 
     public static <T extends Serializable> Page<T> of(long current, long size, long total, List<T> records) {

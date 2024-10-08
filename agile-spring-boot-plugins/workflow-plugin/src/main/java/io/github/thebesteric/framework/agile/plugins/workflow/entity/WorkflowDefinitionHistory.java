@@ -49,11 +49,11 @@ public class WorkflowDefinitionHistory extends BaseEntity {
         history.setTenantId(rs.getString("tenant_id"));
         history.setWorkflowDefinitionId(rs.getInt("wf_def_id"));
         history.setDmlOperator(DMLOperator.of(rs.getInt("dml_operator")));
-        String beforeStr = rs.getString("_before");
+        String beforeStr = rs.getString("before_obj");
         if (CharSequenceUtil.isNotEmpty(beforeStr)) {
             history.setBeforeObj(JSONUtil.toBean(beforeStr, WorkflowDefinition.class));
         }
-        String afterStr = rs.getString("_current");
+        String afterStr = rs.getString("current_obj");
         if (CharSequenceUtil.isNotEmpty(afterStr)) {
             history.setCurrentObj(JSONUtil.toBean(afterStr, WorkflowDefinition.class));
         }

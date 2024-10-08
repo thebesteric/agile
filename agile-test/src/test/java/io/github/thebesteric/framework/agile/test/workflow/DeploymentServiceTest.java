@@ -1,8 +1,10 @@
 package io.github.thebesteric.framework.agile.test.workflow;
 
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinitionHistory;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +67,15 @@ class DeploymentServiceTest {
         workflowDefinition.setName("测试流程");
         workflowDefinition.setDesc("这是一个测试流程");
         deploymentService.update(workflowDefinition);
+    }
+
+    @Test
+    void history() {
+        DeploymentService deploymentService = workflowEngine.getDeploymentService();
+        Page<WorkflowDefinitionHistory> page = deploymentService.findHistories(tenantId, 1, 2);
+        for (WorkflowDefinitionHistory history : page.getRecords()) {
+            System.out.println(history);
+        }
     }
 
 }

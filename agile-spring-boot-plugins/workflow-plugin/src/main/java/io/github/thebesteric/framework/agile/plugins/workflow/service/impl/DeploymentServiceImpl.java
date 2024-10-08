@@ -30,6 +30,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.exception.Workflow
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractDeploymentService;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -307,5 +308,78 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
                 .eq(WorkflowInstance::getState, 1).build();
         Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
         return page.getRecords();
+    }
+
+    /**
+     * 根据流程定义 key 获取流程定义历史记录列表（分页）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     * @param page                  当前页
+     * @param pageSize              每页显示数量
+     *
+     * @return List<WorkflowDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 13:15
+     */
+    @Override
+    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize) {
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                .eq(WorkflowDefinition::getTenantId, tenantId)
+                .eq(WorkflowDefinition::getKey, workflowDefinitionKey)
+                .build();
+        WorkflowDefinition workflowDefinition = executor.get(query);
+        if (workflowDefinition == null) {
+            return Page.of(Collections.emptyList());
+        }
+        return this.findHistoriesByWorkflowDefinitionId(tenantId, workflowDefinition.getId(), page, pageSize);
+    }
+
+    /**
+     * 根据流程定义 ID 获取流程定义历史记录列表（分页）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param page                 当前页
+     * @param pageSize             每页显示数量
+     *
+     * @return List<WorkflowDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 13:15
+     */
+    @Override
+    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+        WorkflowDefinitionHistoryExecutor executor = workflowDefinitionHistoryExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinitionHistory.class)
+                .eq(WorkflowDefinitionHistory::getTenantId, tenantId)
+                .eq(WorkflowDefinitionHistory::getWorkflowDefinitionId, workflowDefinitionId)
+                .page(page, pageSize)
+                .build();
+        return executor.find(query);
+    }
+
+    /**
+     * 获取所有流程定义历史记录列表（分页）
+     *
+     * @param tenantId 租户 ID
+     * @param page     当前页
+     * @param pageSize 每页显示数量
+     *
+     * @return Page<WorkflowDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 13:41
+     */
+    @Override
+    public Page<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize) {
+        WorkflowDefinitionHistoryExecutor executor = workflowDefinitionHistoryExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinitionHistory.class)
+                .eq(WorkflowDefinitionHistory::getTenantId, tenantId)
+                .page(page, pageSize)
+                .build();
+        return executor.find(query);
     }
 }
