@@ -18,7 +18,10 @@ import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * WorkflowHelperTest
@@ -79,7 +82,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow6(tenantId, workflowDefinition);
+        createWorkflow1(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -440,7 +443,7 @@ class WorkflowHelperTest {
 
         // 添加附件
         RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
-        repositoryServiceHelper.addAttachment(workflowInstance, "123456", "test.txt", "txt", "/attachment/test.txt");
+        repositoryServiceHelper.addAttachment(workflowInstance, "文本", "123456", "test.txt", "txt", "/attachment/test.txt");
     }
 
     @Test
@@ -457,9 +460,9 @@ class WorkflowHelperTest {
     @Test
     void approve() {
         String roleId = "xxx";
-        // String approverId = "张三";
+        String approverId = "张三";
         // String approverId = "张三-1";
-        String approverId = "李四";
+        // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
@@ -558,8 +561,8 @@ class WorkflowHelperTest {
      */
     @Test
     void reject() {
-        String roleId = null;
-        String approverId = "张三";
+        // String roleId = null;
+        // String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
@@ -568,8 +571,8 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        // String roleId = "组长";
-        // String approverId = "grouper-1";
+        String roleId = "组长";
+        String approverId = "grouper-1";
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -674,6 +677,15 @@ class WorkflowHelperTest {
         NodeDefinition nodeDefinition3 = workflowServiceHelper.getNode(tenantId, 4);
         nodeDefinition3.setSequence(1.0);
         workflowServiceHelper.updateNode(nodeDefinition3);
+
+        // NodeDefinition nodeDefinition2 = workflowServiceHelper.getNode(tenantId, 2);
+        // nodeDefinition2.setRoleApprove(false);
+        // nodeDefinition2.getApprovers().clear();
+        // nodeDefinition2.setApprovers(Set.of(Approver.of("小明", "李小明")));
+        // nodeDefinition2.setApproveType(ApproveType.ANY);
+        // nodeDefinition2.setName("部门主管审批-1");
+        // nodeDefinition2.setDesc("任务节点-1");
+        // workflowServiceHelper.updateNode(nodeDefinition2);
     }
 
     /**
@@ -709,34 +721,6 @@ class WorkflowHelperTest {
 
         List<WorkflowRepository> attachments = repositoryServiceHelper.findAttachmentsByWorkflowDefinitionId(tenantId, 1);
         attachments.forEach(System.out::println);
-        System.out.println("===");
-
-        Page<WorkflowRepository> page = repositoryServiceHelper.findAttachmentsByWorkflowDefinitionId(tenantId, 1, 2, 2);
-        System.out.println(page);
-        System.out.println("===");
-
-        attachments = repositoryServiceHelper.findAttachmentsByWorkflowInstanceId(tenantId, 8);
-        attachments.forEach(System.out::println);
-        System.out.println("===");
-
-        page = repositoryServiceHelper.findAttachmentsByWorkflowInstanceId(tenantId, 8, 1, 2);
-        System.out.println(page);
-        System.out.println("===");
-
-        attachments = repositoryServiceHelper.findAttachmentsByTaskInstanceId(tenantId, 23);
-        attachments.forEach(System.out::println);
-        System.out.println("===");
-
-        page = repositoryServiceHelper.findAttachmentsByTaskInstanceId(tenantId, 24, 1, 2);
-        System.out.println(page);
-        System.out.println("===");
-
-        Integer affect = repositoryServiceHelper.clearAttachmentsByWorkflowInstance(tenantId, 8);
-        System.out.println(affect);
-        System.out.println("===");
-
-        affect = repositoryServiceHelper.clearAttachmentsByWorkflowDefinition(tenantId, 1);
-        System.out.println(affect);
 
     }
 

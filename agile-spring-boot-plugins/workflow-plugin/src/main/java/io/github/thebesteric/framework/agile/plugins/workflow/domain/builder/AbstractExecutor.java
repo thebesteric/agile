@@ -214,7 +214,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
     /**
      * 根据 ID 删除数据
      *
-     * @param id
+     * @param id 主键 ID
      *
      * @return 删除的行数
      *
@@ -262,6 +262,21 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
             deleteSql += " WHERE " + whereClause;
         }
         return this.jdbcTemplate.update(deleteSql);
+    }
+
+    /**
+     * 根据实体类 ID 删除对象
+     *
+     * @param t 实体类
+     *
+     * @return int
+     *
+     * @author wangweijun
+     * @since 2024/10/8 10:25
+     */
+    public int delete(T t) {
+        Integer id = t.getId();
+        return this.deleteById(id);
     }
 
     /**

@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.DMLOperator;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
@@ -18,6 +19,9 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.nod
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history.WorkflowDefinitionHistoryBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history.WorkflowDefinitionHistoryExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history.WorkflowDefinitionHistoryExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
@@ -39,6 +43,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
 
     private final WorkflowDefinitionExecutorBuilder workflowDefinitionExecutorBuilder;
     private final WorkflowInstanceExecutorBuilder workflowInstanceExecutorBuilder;
+    private final WorkflowDefinitionHistoryExecutorBuilder workflowDefinitionHistoryExecutorBuilder;
     private final NodeDefinitionExecutorBuilder nodeDefinitionExecutorBuilder;
     private final NodeRelationExecutorBuilder nodeRelationExecutorBuilder;
     private final NodeAssignmentExecutorBuilder nodeAssignmentExecutorBuilder;
@@ -53,6 +58,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
         this.nodeRelationExecutorBuilder = NodeRelationExecutorBuilder.builder(jdbcTemplate);
         this.nodeAssignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
         this.nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
+        this.workflowDefinitionHistoryExecutorBuilder = WorkflowDefinitionHistoryExecutorBuilder.builder(jdbcTemplate);
     }
 
     /**
@@ -70,7 +76,10 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
             WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.workflowDefinition(workflowDefinition).build();
-            return executor.save();
+            executor.save();
+            // 记录日志
+            this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.INSERT, null, workflowDefinition);
+            return workflowDefinition;
         });
     }
 
@@ -85,8 +94,17 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void delete(String tenantId, String key) {
-        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
-        executor.deleteByTenantAndKey();
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                .eq(WorkflowDefinition::getTenantId, tenantId)
+                .eq(WorkflowDefinition::getKey, key).build();
+        WorkflowDefinition workflowDefinition = executor.get(query);
+        // 检查是否有正在进行的流程实例
+        this.throwExceptionWhenWorkflowDefinitionHasInProcessInstances(workflowDefinition);
+        // 删除流程定义
+        executor.delete(workflowDefinition);
+        // 记录日志
+        this.recordWorkflowDefinitionHistory(tenantId, workflowDefinition.getId(), DMLOperator.DELETE, workflowDefinition, null);
     }
 
     /**
@@ -147,8 +165,17 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void disable(String tenantId, String key) {
-        WorkflowDefinitionExecutor query = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
-        query.disable();
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                .eq(WorkflowDefinition::getTenantId, tenantId)
+                .eq(WorkflowDefinition::getKey, key).build();
+        WorkflowDefinition workflowDefinition = executor.get(query);
+        if (workflowDefinition.getState() == 0) {
+            return;
+        }
+        workflowDefinition.setState(0);
+        this.update(workflowDefinition);
+
     }
 
     /**
@@ -159,8 +186,16 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void enable(String tenantId, String key) {
-        WorkflowDefinitionExecutor query = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
-        query.enable();
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                .eq(WorkflowDefinition::getTenantId, tenantId)
+                .eq(WorkflowDefinition::getKey, key).build();
+        WorkflowDefinition workflowDefinition = executor.get(query);
+        if (workflowDefinition.getState() == 1) {
+            return;
+        }
+        workflowDefinition.setState(1);
+        this.update(workflowDefinition);
     }
 
     /**
@@ -170,17 +205,16 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void update(WorkflowDefinition workflowDefinition) {
-        WorkflowInstanceExecutor workflowInstanceExecutor = this.workflowInstanceExecutorBuilder.build();
-        Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
-                .eq(WorkflowInstance::getTenantId, workflowDefinition.getTenantId())
-                .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinition.getId())
-                .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
-                .eq(WorkflowInstance::getState, 1).build();
-        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
-        if (CollUtil.isNotEmpty(page.getRecords())) {
-            throw new WorkflowInstanceInProgressException();
-        }
-        this.workflowDefinitionExecutorBuilder.build().updateById(workflowDefinition);
+        // 检查是否有正在进行的流程实例
+        this.throwExceptionWhenWorkflowDefinitionHasInProcessInstances(workflowDefinition);
+
+        // 更新流程定义
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition beforeObj = executor.getById(workflowDefinition.getId());
+        executor.updateById(workflowDefinition);
+
+        // 记录日志
+        this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.UPDATE, beforeObj, workflowDefinition);
     }
 
     /**
@@ -213,4 +247,65 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
         return WorkflowDefinitionFlowSchema.of(workflowDefinition, nodeDefinitions, nodeRelations, nodeAssignments, nodeRoleAssignments);
     }
 
+    /**
+     * 记录日志
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param dmlOperator          操作
+     * @param beforeObj            之前数据
+     * @param currentObj           当前数据
+     *
+     * @author wangweijun
+     * @since 2024/10/8 10:15
+     */
+    private void recordWorkflowDefinitionHistory(String tenantId, Integer workflowDefinitionId, DMLOperator dmlOperator, WorkflowDefinition beforeObj, WorkflowDefinition currentObj) {
+        WorkflowDefinitionHistory history = WorkflowDefinitionHistoryBuilder.builder()
+                .tenantId(tenantId)
+                .workflowDefinitionId(workflowDefinitionId)
+                .dmlOperator(dmlOperator)
+                .beforeObj(beforeObj)
+                .currentObj(currentObj)
+                .build();
+        WorkflowDefinitionHistoryExecutor historyExecutor = workflowDefinitionHistoryExecutorBuilder.build();
+        historyExecutor.save(history);
+    }
+
+    /**
+     * 如果有正在进行的流程实例则抛出异常
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @author wangweijun
+     * @since 2024/10/8 11:38
+     */
+    private void throwExceptionWhenWorkflowDefinitionHasInProcessInstances(WorkflowDefinition workflowDefinition) {
+        // 检查是否有正在进行的流程实例
+        List<WorkflowInstance> workflowInstances = this.findWorkflowDefinitionHasInProcessInstances(workflowDefinition);
+        if (CollUtil.isNotEmpty(workflowInstances)) {
+            throw new WorkflowInstanceInProgressException();
+        }
+    }
+
+    /**
+     * 获取正在进行的流程实例
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 11:51
+     */
+    private List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(WorkflowDefinition workflowDefinition) {
+        // 检查是否有正在进行的流程实例
+        WorkflowInstanceExecutor workflowInstanceExecutor = this.workflowInstanceExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
+                .eq(WorkflowInstance::getTenantId, workflowDefinition.getTenantId())
+                .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinition.getId())
+                .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
+                .eq(WorkflowInstance::getState, 1).build();
+        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+        return page.getRecords();
+    }
 }
