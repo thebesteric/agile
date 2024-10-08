@@ -2,12 +2,14 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.OrderByOperator;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.DMLOperator;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.PublishStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
@@ -19,9 +21,9 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.nod
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutorBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history.WorkflowDefinitionHistoryBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history.WorkflowDefinitionHistoryExecutor;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history.WorkflowDefinitionHistoryExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.history.WorkflowDefinitionHistoryBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.history.WorkflowDefinitionHistoryExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.history.WorkflowDefinitionHistoryExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
@@ -79,7 +81,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
             WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.workflowDefinition(workflowDefinition).build();
             executor.save();
             // 记录日志
-            this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.INSERT, null, workflowDefinition);
+            this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.INSERT, null, workflowDefinition, "流程创建");
             return workflowDefinition;
         });
     }
@@ -105,7 +107,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
         // 删除流程定义
         executor.delete(workflowDefinition);
         // 记录日志
-        this.recordWorkflowDefinitionHistory(tenantId, workflowDefinition.getId(), DMLOperator.DELETE, workflowDefinition, null);
+        this.recordWorkflowDefinitionHistory(tenantId, workflowDefinition.getId(), DMLOperator.DELETE, workflowDefinition, null, "流程删除");
     }
 
     /**
@@ -175,7 +177,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
             return;
         }
         workflowDefinition.setState(0);
-        this.update(workflowDefinition);
+        this.update(workflowDefinition, "流程禁用");
 
     }
 
@@ -196,7 +198,41 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
             return;
         }
         workflowDefinition.setState(1);
-        this.update(workflowDefinition);
+        this.update(workflowDefinition, "流程启用");
+    }
+
+    /**
+     * 发布
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @author wangweijun
+     * @since 2024/10/8 15:14
+     */
+    @Override
+    public void publish(WorkflowDefinition workflowDefinition) {
+        if (workflowDefinition.isPublished()) {
+            return;
+        }
+        workflowDefinition.setPublish(PublishStatus.PUBLISHED);
+        this.update(workflowDefinition, "流程发布");
+    }
+
+    /**
+     * 取消发布
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @author wangweijun
+     * @since 2024/10/8 15:14
+     */
+    @Override
+    public void unPublish(WorkflowDefinition workflowDefinition) {
+        if (!workflowDefinition.isPublished()) {
+            return;
+        }
+        workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
+        this.update(workflowDefinition, "流程取消发布");
     }
 
     /**
@@ -206,6 +242,17 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void update(WorkflowDefinition workflowDefinition) {
+        this.update(workflowDefinition, "流程更新");
+    }
+
+    /**
+     * 更新流程定义
+     *
+     * @param workflowDefinition 流程定义
+     * @param desc               更新描述
+     */
+    @Override
+    public void update(WorkflowDefinition workflowDefinition, String desc) {
         // 检查是否有正在进行的流程实例
         this.throwExceptionWhenWorkflowDefinitionHasInProcessInstances(workflowDefinition);
 
@@ -215,7 +262,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
         executor.updateById(workflowDefinition);
 
         // 记录日志
-        this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.UPDATE, beforeObj, workflowDefinition);
+        this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.UPDATE, beforeObj, workflowDefinition, desc);
     }
 
     /**
@@ -256,17 +303,19 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @param dmlOperator          操作
      * @param beforeObj            之前数据
      * @param currentObj           当前数据
+     * @param desc                 描述
      *
      * @author wangweijun
      * @since 2024/10/8 10:15
      */
-    private void recordWorkflowDefinitionHistory(String tenantId, Integer workflowDefinitionId, DMLOperator dmlOperator, WorkflowDefinition beforeObj, WorkflowDefinition currentObj) {
+    public void recordWorkflowDefinitionHistory(String tenantId, Integer workflowDefinitionId, DMLOperator dmlOperator, WorkflowDefinition beforeObj, WorkflowDefinition currentObj, String desc) {
         WorkflowDefinitionHistory history = WorkflowDefinitionHistoryBuilder.builder()
                 .tenantId(tenantId)
                 .workflowDefinitionId(workflowDefinitionId)
                 .dmlOperator(dmlOperator)
                 .beforeObj(beforeObj)
                 .currentObj(currentObj)
+                .desc(desc)
                 .build();
         WorkflowDefinitionHistoryExecutor historyExecutor = workflowDefinitionHistoryExecutorBuilder.build();
         historyExecutor.save(history);
@@ -282,8 +331,8 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     private void throwExceptionWhenWorkflowDefinitionHasInProcessInstances(WorkflowDefinition workflowDefinition) {
         // 检查是否有正在进行的流程实例
-        List<WorkflowInstance> workflowInstances = this.findWorkflowDefinitionHasInProcessInstances(workflowDefinition);
-        if (CollUtil.isNotEmpty(workflowInstances)) {
+        List<WorkflowInstance> inProcessWorkflowInstances = this.findWorkflowDefinitionHasInProcessInstances(workflowDefinition);
+        if (CollUtil.isNotEmpty(inProcessWorkflowInstances)) {
             throw new WorkflowInstanceInProgressException();
         }
     }
@@ -352,10 +401,11 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
-        WorkflowDefinitionHistoryExecutor executor = workflowDefinitionHistoryExecutorBuilder.build();
+        WorkflowDefinitionHistoryExecutor executor = this.workflowDefinitionHistoryExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinitionHistory.class)
                 .eq(WorkflowDefinitionHistory::getTenantId, tenantId)
                 .eq(WorkflowDefinitionHistory::getWorkflowDefinitionId, workflowDefinitionId)
+                .orderBy(WorkflowDefinitionHistory::getId, OrderByOperator.DESC)
                 .page(page, pageSize)
                 .build();
         return executor.find(query);
@@ -375,11 +425,33 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public Page<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize) {
-        WorkflowDefinitionHistoryExecutor executor = workflowDefinitionHistoryExecutorBuilder.build();
+        WorkflowDefinitionHistoryExecutor executor = this.workflowDefinitionHistoryExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinitionHistory.class)
                 .eq(WorkflowDefinitionHistory::getTenantId, tenantId)
+                .orderBy(WorkflowDefinitionHistory::getId, OrderByOperator.DESC)
                 .page(page, pageSize)
                 .build();
         return executor.find(query);
+    }
+
+    /**
+     * 获取流程定义历史记录
+     *
+     * @param tenantId                    租户 ID
+     * @param workflowDefinitionHistoryId 流程定义历史记录 ID
+     *
+     * @return WorkflowDefinitionHistory
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:03
+     */
+    @Override
+    public WorkflowDefinitionHistory getHistory(String tenantId, Integer workflowDefinitionHistoryId) {
+        WorkflowDefinitionHistoryExecutor executor = this.workflowDefinitionHistoryExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinitionHistory.class)
+                .eq(WorkflowDefinitionHistory::getTenantId, tenantId)
+                .eq(WorkflowDefinitionHistory::getId, workflowDefinitionHistoryId)
+                .build();
+        return executor.get(query);
     }
 }

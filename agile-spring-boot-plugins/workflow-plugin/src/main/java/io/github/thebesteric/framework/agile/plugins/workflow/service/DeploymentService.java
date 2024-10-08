@@ -114,6 +114,26 @@ public interface DeploymentService {
     void enable(String tenantId, String key);
 
     /**
+     * 发布
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @author wangweijun
+     * @since 2024/10/8 15:14
+     */
+    void publish(WorkflowDefinition workflowDefinition);
+
+    /**
+     * 取消发布
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @author wangweijun
+     * @since 2024/10/8 15:14
+     */
+    void unPublish(WorkflowDefinition workflowDefinition);
+
+    /**
      * 更新
      *
      * @param workflowDefinition 需要更新的流程定义
@@ -122,6 +142,17 @@ public interface DeploymentService {
      * @since 2024/6/18 14:18
      */
     void update(WorkflowDefinition workflowDefinition);
+
+    /**
+     * 更新
+     *
+     * @param workflowDefinition 需要更新的流程定义
+     * @param desc               更新描述
+     *
+     * @author wangweijun
+     * @since 2024/10/08 15:35
+     */
+    void update(WorkflowDefinition workflowDefinition, String desc);
 
     /**
      * 获取流程定义流程图
@@ -179,4 +210,17 @@ public interface DeploymentService {
      * @since 2024/10/8 13:41
      */
     Page<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize);
+
+    /**
+     * 获取流程定义历史记录
+     *
+     * @param tenantId                    租户 ID
+     * @param workflowDefinitionHistoryId 流程定义历史记录 ID
+     *
+     * @return WorkflowDefinitionHistory
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:03
+     */
+    WorkflowDefinitionHistory getHistory(String tenantId, Integer workflowDefinitionHistoryId);
 }

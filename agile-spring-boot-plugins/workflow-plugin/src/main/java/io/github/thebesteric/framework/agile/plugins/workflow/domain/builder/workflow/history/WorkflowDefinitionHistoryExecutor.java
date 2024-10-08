@@ -1,4 +1,4 @@
-package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history;
+package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.history;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinitionHistory;

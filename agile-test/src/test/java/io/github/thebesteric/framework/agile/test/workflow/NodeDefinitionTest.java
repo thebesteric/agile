@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.test.workflow;
 
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.Operator;
@@ -8,6 +9,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinitionHistory;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
@@ -320,5 +322,13 @@ class NodeDefinitionTest {
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         boolean rowsAffected = workflowService.deleteNode(tenantId, 3);
         Assertions.assertTrue(rowsAffected);
+    }
+
+    @Test
+    void history() {
+        String tenantId = "8888";
+        WorkflowService workflowService = workflowEngine.getWorkflowService();
+        Page<NodeDefinitionHistory> page = workflowService.findNodeHistoriesByWorkflowDefinitionId(tenantId, 1, 1, 10);
+        page.getRecords().forEach(System.out::println);
     }
 }

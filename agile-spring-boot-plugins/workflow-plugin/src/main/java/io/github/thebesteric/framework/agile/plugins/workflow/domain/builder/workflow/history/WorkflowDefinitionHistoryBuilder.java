@@ -1,4 +1,4 @@
-package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history;
+package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.history;
 
 import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
@@ -48,6 +48,11 @@ public class WorkflowDefinitionHistoryBuilder extends AbstractBuilder<WorkflowDe
 
     public WorkflowDefinitionHistoryBuilder currentObj(WorkflowDefinition current) {
         this.workflowDefinitionHistory.setCurrentObj(current);
+        return this;
+    }
+
+    public WorkflowDefinitionHistoryBuilder desc(String desc) {
+        this.workflowDefinitionHistory.setDesc(desc);
         return this;
     }
 

@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinitionHistory;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 
@@ -201,4 +202,61 @@ public interface WorkflowService {
      * @since 2024/6/19 10:30
      */
     void createRelations(String tenantId, Integer workflowDefinitionId);
+
+    /**
+     * 根据租户 ID 查找节点历史记录（分页）
+     *
+     * @param tenantId 租户 ID
+     * @param page     当前页
+     * @param pageSize 每页显示数量
+     *
+     * @return Page<NodeDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 15:59
+     */
+    Page<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize);
+
+    /**
+     * 根据节点定义 ID 查找节点历史记录（分页）
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     * @param page             当前页
+     * @param pageSize         每页显示数量
+     *
+     * @return Page<NodeDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:00
+     */
+    Page<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize);
+
+    /**
+     * 根据流程定义 ID 查找节点历史记录（分页）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param page                 当前页
+     * @param pageSize             每页显示数量
+     *
+     * @return Page<NodeDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:00
+     */
+    Page<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize);
+
+    /**
+     * 获取流程定义历史记录
+     *
+     * @param tenantId                租户 ID
+     * @param nodeDefinitionHistoryId 流程定义历史记录 ID
+     *
+     * @return NodeDefinitionHistory
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:02
+     */
+    NodeDefinitionHistory getNodeDefinitionHistory(String tenantId, Integer nodeDefinitionHistoryId);
 }

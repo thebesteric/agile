@@ -1,4 +1,4 @@
-package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.history;
+package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.history;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinitionHistory;
@@ -24,7 +24,7 @@ public class WorkflowDefinitionHistoryExecutorBuilder extends AbstractExecutorBu
     }
 
     public WorkflowDefinitionHistoryExecutor build() {
-        super.setDefaultEntityAttrs(workflowDefinitionHistoryExecutor.getWorkflowDefinitionHistory());
-        return workflowDefinitionHistoryExecutor;
+        super.setDefaultEntityAttrs(this.workflowDefinitionHistoryExecutor.getWorkflowDefinitionHistory());
+        return this.workflowDefinitionHistoryExecutor;
     }
 }

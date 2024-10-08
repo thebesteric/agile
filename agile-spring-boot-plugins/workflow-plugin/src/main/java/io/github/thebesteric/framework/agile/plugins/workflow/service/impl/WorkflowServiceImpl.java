@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.OrderByOperator;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
@@ -14,6 +15,9 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.nod
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.history.NodeDefinitionHistoryBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.history.NodeDefinitionHistoryExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.history.NodeDefinitionHistoryExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutorBuilder;
@@ -25,8 +29,10 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowInstanceInProgressException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractWorkflowService;
+import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.*;
@@ -45,8 +51,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     private final NodeDefinitionExecutorBuilder nodeDefinitionExecutorBuilder;
     private final NodeRelationExecutorBuilder nodeRelationExecutorBuilder;
     private final NodeAssignmentExecutorBuilder nodeAssignmentExecutorBuilder;
+    private final NodeDefinitionHistoryExecutorBuilder nodeDefinitionHistoryExecutorBuilder;
     private final WorkflowInstanceExecutorBuilder workflowInstanceExecutorBuilder;
     private final WorkflowDefinitionExecutorBuilder workflowDefinitionExecutorBuilder;
+    private final DeploymentService deploymentService;
 
     public WorkflowServiceImpl(AgileWorkflowContext context) {
         super(context);
@@ -54,8 +62,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         nodeDefinitionExecutorBuilder = NodeDefinitionExecutorBuilder.builder(jdbcTemplate);
         nodeRelationExecutorBuilder = NodeRelationExecutorBuilder.builder(jdbcTemplate);
         nodeAssignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
+        nodeDefinitionHistoryExecutorBuilder = NodeDefinitionHistoryExecutorBuilder.builder(jdbcTemplate);
         workflowInstanceExecutorBuilder = WorkflowInstanceExecutorBuilder.builder(jdbcTemplate);
         workflowDefinitionExecutorBuilder = WorkflowDefinitionExecutorBuilder.builder(jdbcTemplate);
+        deploymentService = new DeploymentServiceImpl(context);
     }
 
     /**
@@ -102,35 +112,36 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      */
     @Override
     public NodeDefinition createNode(NodeDefinition nodeDefinition) {
-        // 校验节点是否合法
-        if (NodeType.TASK == nodeDefinition.getNodeType()) {
-            if (nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(nodeDefinition.getRoleApprovers())) {
-                throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        return jdbcTemplateHelper.executeInTransaction(() -> {
+            // 校验节点是否合法
+            if (NodeType.TASK == nodeDefinition.getNodeType()) {
+                if (nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(nodeDefinition.getRoleApprovers())) {
+                    throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
+                }
+                if (nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
+                    throw new WorkflowException("用户审批节点: 审批用户不能为空");
+                }
+                if (nodeDefinition.getSequence() >= Integer.MAX_VALUE || nodeDefinition.getSequence() <= Integer.MIN_VALUE) {
+                    throw new WorkflowException("节点更新修改失败: 节点顺序不能大于等于 %s 或小于等于 %s", Integer.MAX_VALUE, Integer.MIN_VALUE);
+                }
             }
-            if (nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
-                throw new WorkflowException("用户审批节点: 审批用户不能为空");
+            // 查找所属流程定义
+            WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+            WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
+            // 检查当前流程定义是否有正在进行的实例
+            throwExceptionWhenWorkflowDefinitionHasInProcessInstances(nodeDefinition.getTenantId(), workflowDefinition.getId());
+            // 将流程定义设置为未发布
+            if (workflowDefinition.isPublished()) {
+                this.deploymentService.unPublish(workflowDefinition);
             }
-            if (nodeDefinition.getSequence() >= Integer.MAX_VALUE || nodeDefinition.getSequence() <= Integer.MIN_VALUE) {
-                throw new WorkflowException("节点更新修改失败: 节点顺序不能大于等于 %s 或小于等于 %s", Integer.MAX_VALUE, Integer.MIN_VALUE);
-            }
-        }
-
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.nodeDefinition(nodeDefinition).build();
-
-        // 查找所属流程定义
-        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
-        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
-
-        // 检查当前流程定义是否有正在进行的实例
-        checkWorkflowDefinitionHasIsInProgressInstance(nodeDefinition.getTenantId(), workflowDefinition.getId());
-
-        // 将流程定义设置为未发布
-        if (workflowDefinition.isPublished()) {
-            workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
-            workflowDefinitionExecutor.updateById(workflowDefinition);
-        }
-
-        return executor.save();
+            // 保存
+            NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.nodeDefinition(nodeDefinition).build();
+            executor.save();
+            // 记录日志
+            this.recordNodeDefinitionHistory(nodeDefinition.getTenantId(), nodeDefinition.getId(), DMLOperator.INSERT, null, nodeDefinition, "节点创建");
+            return nodeDefinition;
+        });
     }
 
     /**
@@ -186,6 +197,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 throw new WorkflowException("节点更新修改失败: 节点顺序不能大于等于 %s 或小于等于 %s", Integer.MAX_VALUE, Integer.MIN_VALUE);
             }
 
+            // 记录之前的节点定义
+            NodeDefinition beforeNodeDefinition = new NodeDefinition();
+            BeanUtils.copyProperties(nodeDefinition, beforeNodeDefinition);
+
             // 租户 ID
             String tenantId = nodeDefinition.getTenantId();
 
@@ -197,7 +212,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
 
             // 检查当前流程定义是否有正在进行的实例
-            checkWorkflowDefinitionHasIsInProgressInstance(tenantId, workflowDefinition.getId());
+            throwExceptionWhenWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinition.getId());
 
             // 获取原有的节点定义
             NodeDefinition oldNodeDefinition = nodeDefinitionExecutor.getById(nodeDefinition.getId());
@@ -227,9 +242,11 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 将流程定义设置为未发布
             if (workflowDefinition.isPublished()) {
-                workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
-                workflowDefinitionExecutor.updateById(workflowDefinition);
+                this.deploymentService.unPublish(workflowDefinition);
             }
+
+            // 记录日志
+            this.recordNodeDefinitionHistory(beforeNodeDefinition.getTenantId(), beforeNodeDefinition.getId(), DMLOperator.UPDATE, beforeNodeDefinition, nodeDefinition, "节点更新");
         });
     }
 
@@ -261,16 +278,21 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
 
             // 检查当前流程定义是否有正在进行的实例
-            checkWorkflowDefinitionHasIsInProgressInstance(tenantId, workflowDefinition.getId());
+            throwExceptionWhenWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinition.getId());
 
             // 将流程定义设置为未发布
             if (workflowDefinition.isPublished()) {
-                workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
-                workflowDefinitionExecutor.updateById(workflowDefinition);
+                this.deploymentService.unPublish(workflowDefinition);
             }
 
             NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).id(nodeDefinitionId).build();
-            return executor.deleteById();
+            boolean isDeleted = executor.deleteById();
+
+
+            // 记录日志
+            this.recordNodeDefinitionHistory(tenantId, nodeDefinitionId, DMLOperator.DELETE, nodeDefinition, null, "节点删除");
+
+            return isDeleted;
         });
     }
 
@@ -283,18 +305,35 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @author wangweijun
      * @since 2024/9/30 17:29
      */
-    private void checkWorkflowDefinitionHasIsInProgressInstance(String tenantId, Integer workflowDefinitionId) {
-        // 查找所属流程实例，是否正在进行中
-        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+    private void throwExceptionWhenWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId) {
+        // 检查是否有正在进行的流程实例
+        List<WorkflowInstance> inProcessWorkflowInstances = this.findWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinitionId);
+        if (CollUtil.isNotEmpty(inProcessWorkflowInstances)) {
+            throw new WorkflowInstanceInProgressException();
+        }
+    }
+
+    /**
+     * 获取正在进行的流程实例
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 11:51
+     */
+    private List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId) {
+        // 检查是否有正在进行的流程实例
+        WorkflowInstanceExecutor workflowInstanceExecutor = this.workflowInstanceExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
                 .eq(WorkflowInstance::getTenantId, tenantId)
                 .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
                 .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
                 .eq(WorkflowInstance::getState, 1).build();
         Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
-        if (CollUtil.isNotEmpty(page.getRecords())) {
-            throw new WorkflowInstanceInProgressException();
-        }
+        return page.getRecords();
     }
 
     /**
@@ -400,6 +439,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
             WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
 
+            // 记录流程定义变更之前的状态
+            WorkflowDefinition beforeObj = new WorkflowDefinition();
+            BeanUtils.copyProperties(workflowDefinition, beforeObj);
+
             // 查看是否已经发布
             if (workflowDefinition.isPublished()) {
                 LoggerPrinter.debug(log, "流程定义已发布，无需重复发布: {}", workflowDefinitionId);
@@ -445,12 +488,24 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             }
 
             // 将流程定义设置为发布状态
-            workflowDefinition.setPublish(PublishStatus.PUBLISHED);
-            workflowDefinitionExecutor.updateById(workflowDefinition);
+            this.deploymentService.publish(workflowDefinition);
 
         }, true);
     }
 
+
+    /**
+     * 创建节点关系
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param fromNodes            来自节点
+     * @param toNodes              去往节点
+     * @param sequence             节点顺序
+     *
+     * @author wangweijun
+     * @since 2024/10/8 14:33
+     */
     private void createRelations(String tenantId, Integer workflowDefinitionId, List<NodeDefinition> fromNodes, List<NodeDefinition> toNodes, Double sequence) {
         for (NodeDefinition fromNode : fromNodes) {
             for (NodeDefinition toNode : toNodes) {
@@ -460,13 +515,143 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         }
     }
 
+    /**
+     * 创建节点关系
+     *
+     * @param nodeRelation 节点关系
+     *
+     * @author wangweijun
+     * @since 2024/10/8 14:33
+     */
     private void createRelation(NodeRelation nodeRelation) {
         NodeRelationExecutor executor = nodeRelationExecutorBuilder.nodeRelation(nodeRelation).build();
         executor.save();
     }
 
+    /**
+     * 使节点关系失效
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @author wangweijun
+     * @since 2024/10/8 14:35
+     */
     private void inactiveRelations(String tenantId, Integer workflowDefinitionId) {
         NodeRelationExecutor executor = nodeRelationExecutorBuilder.build();
         executor.inactiveByWorkflowDefinitionId(tenantId, workflowDefinitionId);
+    }
+
+    /**
+     * 记录日志
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     * @param dmlOperator      操作
+     * @param beforeObj        之前数据
+     * @param currentObj       当前数据
+     *
+     * @author wangweijun
+     * @since 2024/10/8 10:15
+     */
+    private void recordNodeDefinitionHistory(String tenantId, Integer nodeDefinitionId, DMLOperator dmlOperator, NodeDefinition beforeObj, NodeDefinition currentObj, String desc) {
+        NodeDefinitionHistory history = NodeDefinitionHistoryBuilder.builder()
+                .tenantId(tenantId)
+                .nodeDefinitionId(nodeDefinitionId)
+                .dmlOperator(dmlOperator)
+                .beforeObj(beforeObj)
+                .currentObj(currentObj)
+                .desc(desc)
+                .build();
+        NodeDefinitionHistoryExecutor historyExecutor = this.nodeDefinitionHistoryExecutorBuilder.build();
+        historyExecutor.save(history);
+    }
+
+    /**
+     * 获取节点定义历史记录
+     *
+     * @param tenantId                租户 ID
+     * @param nodeDefinitionHistoryId 节点定义历史记录 ID
+     *
+     * @return NodeDefinitionHistory
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:07
+     */
+    @Override
+    public NodeDefinitionHistory getNodeDefinitionHistory(String tenantId, Integer nodeDefinitionHistoryId) {
+        NodeDefinitionHistoryExecutor executor = this.nodeDefinitionHistoryExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(NodeDefinitionHistory.class)
+                .eq(NodeDefinitionHistory::getTenantId, tenantId)
+                .eq(NodeDefinitionHistory::getId, nodeDefinitionHistoryId)
+                .build();
+        return executor.get(query);
+    }
+
+    /**
+     * 根据节点定义 ID 查找节点历史记录（分页）
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     * @param page             当前页
+     * @param pageSize         每页显示数量
+     *
+     * @return Page<NodeDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:00
+     */
+    @Override
+    public Page<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize) {
+        NodeDefinitionHistoryExecutor executor = this.nodeDefinitionHistoryExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(NodeDefinitionHistory.class)
+                .eq(NodeDefinitionHistory::getTenantId, tenantId)
+                .eq(NodeDefinitionHistory::getNodeDefinitionId, nodeDefinitionId)
+                .orderBy(NodeDefinitionHistory::getId, OrderByOperator.DESC)
+                .page(page, pageSize)
+                .build();
+        return executor.find(query);
+    }
+
+    /**
+     * 根据流程定义 ID 查找节点历史记录（分页）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param page                 当前页
+     * @param pageSize             每页显示数量
+     *
+     * @return Page<NodeDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 16:00
+     */
+    @Override
+    public Page<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+        NodeDefinitionHistoryExecutor executor = this.nodeDefinitionHistoryExecutorBuilder.build();
+        return executor.findNodeHistoriesByWorkflowDefinitionId(tenantId, workflowDefinitionId, page, pageSize);
+    }
+
+    /**
+     * 根据租户 ID 查找节点历史记录（分页）
+     *
+     * @param tenantId 租户 ID
+     * @param page     当前页
+     * @param pageSize 每页显示数量
+     *
+     * @return Page<NodeDefinitionHistory>
+     *
+     * @author wangweijun
+     * @since 2024/10/8 15:59
+     */
+    @Override
+    public Page<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize) {
+        NodeDefinitionHistoryExecutor executor = this.nodeDefinitionHistoryExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(NodeDefinitionHistory.class)
+                .eq(NodeDefinitionHistory::getTenantId, tenantId)
+                .orderBy(NodeDefinitionHistory::getId, OrderByOperator.DESC)
+                .page(page, pageSize)
+                .build();
+        return executor.find(query);
     }
 }
