@@ -87,36 +87,35 @@ class WorkflowHelperTest {
 
     /** 多节点案例。 */
     private void createWorkflow1(String tenantId, WorkflowDefinition workflowDefinition) {
-        WorkflowService workflowService = workflowEngine.getWorkflowService();
-        NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
-                .name("请假流程开始").desc("开始节点").build();
-        nodeDefinition = workflowService.createNode(nodeDefinition);
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
+
+        NodeDefinitionBuilder nodeDefinitionBuilder = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
+                .name("请假流程开始").desc("开始节点");
+        NodeDefinition nodeDefinition = workflowServiceHelper.createStartNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
 
-        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+        nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门主管审批").desc("任务节点").approveType(ApproveType.ALL)
-                .approver(Approver.of("张三", "张三姓名")).approver(Approver.of("李四", "李四姓名"))
-                .build();
-        nodeDefinition = workflowService.createNode(nodeDefinition);
+                .approver(Approver.of("张三", "张三姓名")).approver(Approver.of("李四", "李四姓名"));
+        nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
 
-        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+        nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
                 .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
-                .approver(Approver.of("王五", "王五姓名"))
-                .build();
-        nodeDefinition = workflowService.createNode(nodeDefinition);
+                .approver(Approver.of("王五", "王五姓名"));
+        nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
 
-        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
+        nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("总经理审批").desc("任务节点").approveType(ApproveType.ANY)
-                .approver(Approver.of("赵六", "赵六姓名"))
-                .build();
-        nodeDefinition = workflowService.createNode(nodeDefinition);
+                .approver(Approver.of("赵六", "赵六姓名"));
+        nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
 
-        nodeDefinition = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
-                .name("请假流程结束").desc("结束节点").build();
-        nodeDefinition = workflowService.createNode(nodeDefinition);
+        nodeDefinitionBuilder = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinition.getId())
+                .name("请假流程结束").desc("结束节点");
+        nodeDefinition = workflowServiceHelper.createEndNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
     }
 

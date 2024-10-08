@@ -282,6 +282,20 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 创建流程开始节点
+     *
+     * @param nodeDefinitionBuilder 流程定义
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/10/08 20:39
+     */
+    public NodeDefinition createStartNode(NodeDefinitionBuilder nodeDefinitionBuilder) {
+        return this.createNode(nodeDefinitionBuilder.nodeType(NodeType.START));
+    }
+
+    /**
      * 创建流程结束节点
      *
      * @param workflowDefinition 流程定义
@@ -313,6 +327,20 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
         Integer workflowDefinitionId = workflowDefinition.getId();
         NodeDefinitionBuilder nodeDefinitionBuilder = NodeDefinitionBuilder.builderEndNode(tenantId, workflowDefinitionId).name(name).desc(desc);
         return this.createNode(nodeDefinitionBuilder);
+    }
+
+    /**
+     * 创建流程开始节点
+     *
+     * @param nodeDefinitionBuilder 流程定义
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/10/08 20:39
+     */
+    public NodeDefinition createEndNode(NodeDefinitionBuilder nodeDefinitionBuilder) {
+        return this.createNode(nodeDefinitionBuilder.nodeType(NodeType.END));
     }
 
     /**
