@@ -170,10 +170,8 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
         String tenantId = this.nodeDefinition.getTenantId();
         Integer workflowDefinitionId = this.nodeDefinition.getWorkflowDefinitionId();
         NodeType nodeType = this.nodeDefinition.getNodeType();
-        RoleApproveType roleApproveType = this.nodeDefinition.getRoleApproveType();
-        RoleUserApproveType roleUserApproveType = this.nodeDefinition.getRoleUserApproveType();
-        if (tenantId == null || workflowDefinitionId == null || nodeType == null || roleApproveType == null || roleUserApproveType == null) {
-            throw new WorkflowException("workflowDefinitionId, nodeType, roleApproveType, roleUserApproveType cannot be null");
+        if (tenantId == null || workflowDefinitionId == null || nodeType == null) {
+            throw new WorkflowException("tenantId, workflowDefinitionId, nodeType cannot be null");
         }
         return super.build(this.nodeDefinition);
     }
