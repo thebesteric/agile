@@ -2,9 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.helper.service;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinitionHistory;
@@ -12,7 +10,10 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDef
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * 流程定义帮助类
@@ -49,32 +50,6 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     /**
      * 创建流程节点
      *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param nodeType           节点类型
-     * @param approveType        审批类型
-     * @param approverIds        审批人
-     * @param conditions         审批条件
-     * @param desc               节点描述
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                     NodeType nodeType, ApproveType approveType, Set<String> approverIds, Conditions conditions, String desc) {
-        String tenantId = workflowDefinition.getTenantId();
-        Integer workflowDefinitionId = workflowDefinition.getId();
-        NodeDefinitionBuilder nodeDefinitionBuilder = NodeDefinitionBuilder.builderNode(tenantId, workflowDefinitionId, nodeType, sequence)
-                .name(name).approveType(approveType).approverIds(approverIds).conditions(conditions).desc(desc);
-        return this.createNode(nodeDefinitionBuilder);
-    }
-
-    /**
-     * 创建流程节点
-     *
      * @param nodeDefinitionBuilder 节点定义创建器
      *
      * @return NodeDefinition
@@ -84,167 +59,6 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      */
     public NodeDefinition createTaskNode(NodeDefinitionBuilder nodeDefinitionBuilder) {
         return this.createNode(nodeDefinitionBuilder.nodeType(NodeType.TASK));
-    }
-
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverIds        审批人
-     * @param conditions         审批条件
-     * @param desc               节点描述
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, Set<String> approverIds, Conditions conditions, String desc) {
-        return this.createNode(workflowDefinition, name, sequence, NodeType.TASK, approveType, approverIds, conditions, desc);
-    }
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverIds        审批人
-     * @param conditions         审批条件
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, Set<String> approverIds, Conditions conditions) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverIds, conditions, null);
-    }
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverIds        审批人
-     * @param desc               节点描述
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, Set<String> approverIds, String desc) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverIds, null, desc);
-    }
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverIds        审批人
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, Set<String> approverIds) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverIds, null, null);
-    }
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverId         审批人
-     * @param conditions         审批条件
-     * @param desc               节点描述
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, String approverId, Conditions conditions, String desc) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, Set.of(approverId), conditions, desc);
-    }
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverId         审批人
-     * @param conditions         审批条件
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, String approverId, Conditions conditions) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, Set.of(approverId), conditions);
-    }
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverId         审批人
-     * @param desc               节点描述
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, String approverId, String desc) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverId, null, desc);
-    }
-
-    /**
-     * 创建流程节点
-     *
-     * @param workflowDefinition 流程定义
-     * @param name               节点名称
-     * @param sequence           节点排序
-     * @param approveType        审批类型
-     * @param approverId         审批人
-     *
-     * @return NodeDefinition
-     *
-     * @author wangweijun
-     * @since 2024/7/8 16:01
-     */
-    public NodeDefinition createTaskNode(WorkflowDefinition workflowDefinition, String name, Integer sequence,
-                                         ApproveType approveType, String approverId) {
-        return this.createTaskNode(workflowDefinition, name, sequence, approveType, approverId, null, null);
     }
 
     /**
