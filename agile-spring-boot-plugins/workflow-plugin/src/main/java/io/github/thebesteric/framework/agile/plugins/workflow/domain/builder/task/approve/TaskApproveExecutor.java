@@ -90,7 +90,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
         // 判断是否属于角色审批
         if (nodeDefinition.isRoleApprove() && StringUtils.isNotEmpty(roleId)) {
             NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = new NodeRoleAssignmentExecutor(jdbcTemplate);
-            NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinition.getId(), roleId, userId);
+            NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinition.getId(), roleId, userId);
             if (nodeRoleAssignment == null) {
                 throw new WorkflowException("角色审批人未定义");
             }

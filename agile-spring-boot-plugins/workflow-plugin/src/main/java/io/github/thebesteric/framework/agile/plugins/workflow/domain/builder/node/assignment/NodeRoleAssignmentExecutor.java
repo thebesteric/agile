@@ -42,7 +42,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
         Integer nodeDefinitionId = nodeRoleAssignment.getNodeDefinitionId();
         String roleId = nodeRoleAssignment.getRoleId();
         String userId = nodeRoleAssignment.getUserId();
-        NodeRoleAssignment existsNodeRoleAssignment = this.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
+        NodeRoleAssignment existsNodeRoleAssignment = this.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
         if (existsNodeRoleAssignment != null) {
             throw new DataExistsException("已存在相同的节点审批人");
         }
@@ -84,7 +84,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
      * @author wangweijun
      * @since 2024/9/13 09:58
      */
-    public NodeRoleAssignment getByNodeDefinitionIdAndApproverId(String tenantId, Integer nodeDefinitionId, String roleId, String userId) {
+    public NodeRoleAssignment getByNodeDefinitionIdAndRoleIdAndApproverId(String tenantId, Integer nodeDefinitionId, String roleId, String userId) {
         final String selectSql = """
                 SELECT * FROM awf_node_role_assignment 
                 WHERE `tenant_id` = ? AND `node_def_id` = ? AND `role_id` = ? AND `user_id` = ? AND `state` = 1
@@ -92,6 +92,28 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
         RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, rowMapper, tenantId, nodeDefinitionId, roleId, userId)).getOrNull();
     }
+
+    /**
+     * 根据节点定义 ID 和用户 ID 获取审批人
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     * @param userId           审批人 ID
+     *
+     * @return NodeRoleUserAssignment
+     *
+     * @author wangweijun
+     * @since 2024/10/10 19:11
+     */
+    public NodeRoleAssignment getByNodeDefinitionIdAndApproverId(String tenantId, Integer nodeDefinitionId, String userId) {
+        final String selectSql = """
+                SELECT * FROM awf_node_role_assignment 
+                WHERE `tenant_id` = ? AND `node_def_id` = ? AND `user_id` = ? AND `state` = 1
+                """;
+        RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, rowMapper, tenantId, nodeDefinitionId, userId)).getOrNull();
+    }
+
 
     /**
      * 根据节点定义 ID 查找所有审批人

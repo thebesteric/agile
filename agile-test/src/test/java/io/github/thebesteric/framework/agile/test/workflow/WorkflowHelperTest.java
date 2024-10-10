@@ -787,4 +787,19 @@ class WorkflowHelperTest {
         System.out.println(JsonUtils.toJson(workflowDefinitionFlowSchema));
     }
 
+    /**
+     * 获取角色审批用户的角色 ID
+     *
+     * @author wangweijun
+     * @since 2024/10/10 20:11
+     */
+    @Test
+    void roleId() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+
+        System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "g-2"));
+        System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "m-1"));
+    }
+
 }

@@ -1462,7 +1462,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         RoleUserApproveType roleUserApproveType = nodeDefinition.getRoleUserApproveType();
 
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
+        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
         if (nodeRoleAssignment == null) {
             throw new WorkflowException("未查询到相关角色用户，请确认是否审批人是否正确");
         }
@@ -2064,7 +2064,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
         List<NodeRoleAssignment> allNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
         // 当前角色用户
-        NodeRoleAssignment curNodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
+        NodeRoleAssignment curNodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
 
         // 角色审批用户按角色分组
         Map<String, List<NodeRoleAssignment>> roleAssignmentsRoleMap = allNodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
@@ -2566,7 +2566,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     private TaskRoleApproveRecord saveTaskRoleApproveRecord(String tenantId, Integer workflowInstanceId, Integer nodeDefinitionId, Integer taskInstanceId, Integer taskApproveId, String roleId, String userId, String comment, ApproveStatus approveStatus) {
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
+        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
         if (nodeRoleAssignment == null) {
             throw new WorkflowException("角色审批人未定义");
         }
@@ -2948,6 +2948,60 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 执行更新
             doUpdateApprover(tenantId, taskInstances, sourceApproverId, targetApproverId);
         });
+    }
+
+    /**
+     * 是否是角色审批实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/10 18:24
+     */
+    @Override
+    public boolean isRoleTaskInstance(String tenantId, Integer taskInstanceId) {
+        // 获取审批实例
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+        // 获取节点定义
+        Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(nodeDefinitionId);
+        // 判断是否时角色审批
+        return nodeDefinition.isRoleApprove();
+    }
+
+    /**
+     * 获取角色 ID
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approverId     用户 ID
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2024/10/10 18:24
+     */
+    @Override
+    public String getRoleIdByTaskInstanceId(String tenantId, Integer taskInstanceId, String approverId) {
+        // 获取审批实例
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+        // 获取节点定义
+        Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(nodeDefinitionId);
+        if (nodeDefinition.isUserApprove()) {
+            return null;
+        }
+        // 获取角色审批用户
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, approverId);
+        return nodeRoleAssignment == null ? null : nodeRoleAssignment.getRoleId();
     }
 
     /**

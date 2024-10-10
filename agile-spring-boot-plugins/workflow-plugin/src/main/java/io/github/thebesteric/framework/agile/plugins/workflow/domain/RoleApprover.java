@@ -6,7 +6,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -30,10 +32,6 @@ public class RoleApprover implements Serializable {
     /** 审批人描述 */
     private String userDesc;
 
-    public static RoleApprover of(String roleId, Approver approver) {
-        return of(roleId, null, approver);
-    }
-
     public static RoleApprover of(String roleId, String roleDesc, Approver approver) {
         RoleApprover roleApprover = new RoleApprover();
         roleApprover.roleId = roleId;
@@ -43,14 +41,28 @@ public class RoleApprover implements Serializable {
         return roleApprover;
     }
 
+    public static RoleApprover of(String roleId, Approver approver) {
+        return RoleApprover.of(roleId, null, approver);
+    }
+
     public static Set<RoleApprover> of(String roleId, Set<Approver> approvers) {
-        return of(roleId, null, approvers);
+        return RoleApprover.of(roleId, null, approvers);
     }
 
     public static Set<RoleApprover> of(String roleId, String roleDesc, Set<Approver> approvers) {
         Set<RoleApprover> roleApprovers = new LinkedHashSet<>();
         for (Approver approver : approvers) {
-            roleApprovers.add(of(roleId, roleDesc, approver));
+            roleApprovers.add(RoleApprover.of(roleId, roleDesc, approver));
+        }
+        return roleApprovers;
+    }
+
+    public static Set<RoleApprover> of(Map<String, Set<Approver>> multiRoleApprovers) {
+        Set<RoleApprover> roleApprovers = new HashSet<>();
+        for (Map.Entry<String, Set<Approver>> entry : multiRoleApprovers.entrySet()) {
+            String roleId = entry.getKey();
+            Set<Approver> approvers = entry.getValue();
+            roleApprovers.addAll(RoleApprover.of(roleId, approvers));
         }
         return roleApprovers;
     }

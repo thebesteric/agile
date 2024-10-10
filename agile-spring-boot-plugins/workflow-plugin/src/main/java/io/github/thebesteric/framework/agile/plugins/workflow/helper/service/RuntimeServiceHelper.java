@@ -225,6 +225,37 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 是否是角色审批实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/10 18:24
+     */
+    public boolean isRoleTaskInstance(String tenantId, Integer taskInstanceId) {
+        return this.runtimeService.isRoleTaskInstance(tenantId, taskInstanceId);
+    }
+
+    /**
+     * 获取角色 ID
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approverId     用户 ID
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2024/10/10 18:24
+     */
+    public String getRoleIdByTaskInstanceId(String tenantId, Integer taskInstanceId, String approverId) {
+        return this.runtimeService.getRoleIdByTaskInstanceId(tenantId, taskInstanceId, approverId);
+    }
+
+    /**
      * 获取当前流程实例下正在进行的审批节点
      *
      * @param tenantId           租户 ID
