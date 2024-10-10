@@ -466,12 +466,12 @@ class WorkflowHelperTest {
         // String approverId = "王五";
         // String approverId = "王五-1";
         // String approverId = "赵六";
-        // String approverId = "孙七";
+        String approverId = "孙七";
         // String approverId = "admin";
         // String approverId = "admin-1";
 
         String roleId = "经理";
-        String approverId = "manager-1";
+        // String approverId = "manager-1";
         // String approverId = "manager-2";
 
         // String roleId = "组长";
@@ -494,11 +494,11 @@ class WorkflowHelperTest {
         //         .setApproveEndDate("2024-10-09 14:59:34");
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, List.of(roleId), approverId, null, null, null, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
-        int i = 1/0;
+        // int i = 1/0;
 
         taskInstances.forEach(taskInstance -> {
             String comment = "同意";
