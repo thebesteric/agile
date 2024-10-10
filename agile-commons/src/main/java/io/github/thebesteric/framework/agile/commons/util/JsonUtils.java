@@ -13,6 +13,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,7 @@ public class JsonUtils extends AbstractUtils {
                 .configure(SerializationFeature.FAIL_ON_SELF_REFERENCES, false)
                 // Fix Java 8 date/time type `java.time.LocalDateTime` not supported by default
                 .registerModule(new JavaTimeModule())
+                .setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"))
                 .setSerializationInclusion(JsonInclude.Include.ALWAYS);
     }
 
