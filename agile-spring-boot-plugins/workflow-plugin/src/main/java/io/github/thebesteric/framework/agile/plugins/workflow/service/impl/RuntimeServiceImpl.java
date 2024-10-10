@@ -9,6 +9,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.ApproveDatesSegmentCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
@@ -2290,148 +2291,164 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param page               当前页
-     * @param pageSize           每页显示数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         当前页
+     * @param pageSize                     每页显示数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
-        return this.findTaskInstances(tenantId, workflowInstanceId, null, null, page, pageSize);
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId,
+                                                ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, null, null, approveDatesSegmentCondition, page, pageSize);
     }
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param approverId         审批人 ID
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param approverId                   审批人 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
      *
      * @return List<TaskInstance>
      */
     @Override
-    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId) {
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+                                                ApproveDatesSegmentCondition approveDatesSegmentCondition) {
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
-        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, new ArrayList<>(), new ArrayList<>(), 1, Integer.MAX_VALUE).getRecords();
+        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, new ArrayList<>(), new ArrayList<>(), approveDatesSegmentCondition, 1, Integer.MAX_VALUE).getRecords();
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param page               当前页
-     * @param pageSize           每页显示数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         当前页
+     * @param pageSize                     每页显示数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, Integer page, Integer pageSize) {
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+                                                ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
-        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, new ArrayList<>(), new ArrayList<>(), page, pageSize);
+        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, new ArrayList<>(), new ArrayList<>(), approveDatesSegmentCondition, page, pageSize);
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatus         节点状态
-     * @param approveStatus      审批人审批状态
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatus                   节点状态
+     * @param approveStatus                审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
      *
      * @return List<TaskInstance>
      */
     @Override
-    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus) {
-        return this.findTaskInstances(tenantId, workflowInstanceId, roleId, approverId, nodeStatus, approveStatus, 1, Integer.MAX_VALUE).getRecords();
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+                                                NodeStatus nodeStatus, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, roleId, approverId, nodeStatus, approveStatus, approveDatesSegmentCondition, 1, Integer.MAX_VALUE).getRecords();
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatus         节点状态
-     * @param approveStatus      审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatus                   节点状态
+     * @param approveStatus                审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize) {
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+                                                NodeStatus nodeStatus, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<NodeStatus> nodeStatuses = nodeStatus == null ? null : List.of(nodeStatus);
         List<ApproveStatus> approveStatuses = approveStatus == null ? null : List.of(approveStatus);
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
-        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, page, pageSize);
+        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, approveDatesSegmentCondition, page, pageSize);
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleIds            审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatuses       节点状态
-     * @param approveStatuses    审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleIds                      审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatuses                 节点状态
+     * @param approveStatuses              审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId,
+                                                List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
-        return taskInstanceExecutor.findByApproverId(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, page, pageSize);
+        return taskInstanceExecutor.findByApproverId(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, approveDatesSegmentCondition, page, pageSize);
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatus         节点状态
-     * @param approveStatuses    审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatus                   节点状态
+     * @param approveStatuses              审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+                                                NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<NodeStatus> nodeStatuses = nodeStatus == null ? null : List.of(nodeStatus);
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
-        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, page, pageSize);
+        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, approveDatesSegmentCondition, page, pageSize);
     }
 
     /**
      * 分页查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatuses       节点状态
-     * @param approveStatus      审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatuses                 节点状态
+     * @param approveStatus                审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页数量
      *
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, Integer page, Integer pageSize) {
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+                                                List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<ApproveStatus> approveStatuses = approveStatus == null ? null : List.of(approveStatus);
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
-        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, page, pageSize);
+        return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, approveDatesSegmentCondition, page, pageSize);
     }
 
     /**
@@ -2701,7 +2718,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 审批人
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
-
 
 
         // 审批记录与角色审批记录对应表

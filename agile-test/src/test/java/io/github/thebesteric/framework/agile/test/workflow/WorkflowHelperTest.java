@@ -487,12 +487,18 @@ class WorkflowHelperTest {
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
 
+        // ApproveDatesSegmentCondition approveDatesSegmentCondition = new ApproveDatesSegmentCondition()
+        //         .setSubmitStartDate("2024-10-09 14:59:33")
+        //         .setSubmitEndDate("2024-10-09 15:59:33")
+        //         .setApproveStartDate("2024-10-09 14:59:34")
+        //         .setApproveEndDate("2024-10-09 14:59:34");
+
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, List.of(roleId), approverId, null, null, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
-        // int i = 1/0;
+        int i = 1/0;
 
         taskInstances.forEach(taskInstance -> {
             String comment = "同意";
@@ -545,7 +551,7 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 1, roleId == null ? null : List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 1, roleId == null ? null : List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
 
         // int i = 1/0;
@@ -579,7 +585,7 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
@@ -595,8 +601,7 @@ class WorkflowHelperTest {
      */
     @Test
     void abandon() {
-
-
+        // String roleId = null;
         // String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
@@ -615,7 +620,7 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 

@@ -62,7 +62,7 @@ public class RuntimeServiceTest {
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null);
         if (!taskInstances.isEmpty()) {
             for (TaskInstance taskInstance : taskInstances) {
                 runtimeService.approve(tenantId, taskInstance.getId(), roleId, approverId, "同意");
@@ -81,7 +81,7 @@ public class RuntimeServiceTest {
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null);
         if (!taskInstances.isEmpty()) {
             for (TaskInstance taskInstance : taskInstances) {
                 runtimeService.reject(tenantId, taskInstance.getId(), roleId, approverId, "不同意");
@@ -100,7 +100,7 @@ public class RuntimeServiceTest {
         // String approverId = "孙七";
         workflowEngine.setCurrentUser(approverId);
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
-        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS);
+        List<TaskInstance> taskInstances = runtimeService.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null);
         if (!taskInstances.isEmpty()) {
             for (TaskInstance taskInstance : taskInstances) {
                 runtimeService.abandon(tenantId, taskInstance.getId(), roleId, approverId, "弃权");

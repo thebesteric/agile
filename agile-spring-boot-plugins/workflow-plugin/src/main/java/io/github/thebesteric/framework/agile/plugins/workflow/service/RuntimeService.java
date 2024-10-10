@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.ApproveDatesSegmentCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
@@ -174,142 +175,150 @@ public interface RuntimeService {
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatus         节点状态
-     * @param approveStatus      审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页大小
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatus                   节点状态
+     * @param approveStatus                审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页大小
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatuses       节点状态
-     * @param approveStatus      审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页大小
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatuses                 节点状态
+     * @param approveStatus                审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页大小
      *
      * @return Page<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/9/23 19:49
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatus         节点状态
-     * @param approveStatuses    审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页大小
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatus                   节点状态
+     * @param approveStatuses              审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页大小
      *
      * @return Page<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/9/23 19:49
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleIds            审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatuses       节点状态
-     * @param approveStatuses    审批人审批状态
-     * @param page               页码
-     * @param pageSize           每页大小
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleIds                      审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatuses                 节点状态
+     * @param approveStatuses              审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         页码
+     * @param pageSize                     每页大小
      *
      * @return Page<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/9/23 19:49
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param nodeStatus         节点状态
-     * @param approveStatus      审批人审批状态
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param nodeStatus                   节点状态
+     * @param approveStatus                审批人审批状态
+     * @param approveDatesSegmentCondition 审批时间段查询条件
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus);
+    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param page               当前页
-     * @param pageSize           每页显示数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         当前页
+     * @param pageSize                     每页显示数量
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId);
+    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, ApproveDatesSegmentCondition approveDatesSegmentCondition);
 
     /**
      * 查询审批任务
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param roleId             审批人角色 ID
-     * @param approverId         审批人 ID
-     * @param page               当前页
-     * @param pageSize           每页显示数量
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param roleId                       审批人角色 ID
+     * @param approverId                   审批人 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         当前页
+     * @param pageSize                     每页显示数量
      *
      * @return List<TaskInstance>
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, Integer page, Integer pageSize);
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 获取当前流程实例下正在进行的审批节点
