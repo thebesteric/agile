@@ -156,12 +156,15 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
         if (roleIdStrs != null) {
             selectSql += " AND (t.`approver_id` = '%s' OR t.`approver_id` in (%s))".formatted(approverId, roleIdStrs);
             selectSql += " AND nra.`user_id` = '%s'".formatted(approverId);
-            selectSql += " AND NOT EXISTS(SELECT * FROM awf_task_role_approve_record r WHERE r.task_approve_id = t.id ";
-            if (approveStatuses != null && !approveStatuses.isEmpty()) {
-                String codes = approveStatuses.stream().map(ApproveStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));
-                selectSql += " AND r.`status` not in (" + codes + ")";
+            if (CollectionUtils.isNotEmpty(nodeStatuses) && CollectionUtils.isNotEmpty(approveStatuses)) {
+                selectSql += " AND NOT EXISTS(SELECT * FROM awf_task_role_approve_record r WHERE r.task_approve_id = t.id ";
+                if (approveStatuses != null && !approveStatuses.isEmpty()) {
+                    String codes = approveStatuses.stream().map(ApproveStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));
+                    selectSql += " AND r.`status` not in (" + codes + ")";
+                }
+                selectSql += " AND r.node_role_assignment_id = (SELECT id FROM awf_node_role_assignment where tenant_id = %s and user_id = '%s' and role_id in (%s)))"
+                        .formatted(tenantId, approverId, roleIdStrs);
             }
-            selectSql += " AND r.node_role_assignment_id = (SELECT id FROM awf_node_role_assignment where tenant_id = %s and user_id = '%s' and role_id in (%s)))".formatted(tenantId, approverId, roleIdStrs);
         } else {
             selectSql += " AND t.`approver_id` = '%s'".formatted(approverId);
         }

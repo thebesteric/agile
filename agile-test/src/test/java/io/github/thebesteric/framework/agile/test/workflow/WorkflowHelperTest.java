@@ -82,7 +82,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow1(tenantId, workflowDefinition);
+        createWorkflow7(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -458,8 +458,8 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        String roleId = "xxx";
-        String approverId = "张三";
+        // String roleId = "xxx";
+        // String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
@@ -470,8 +470,8 @@ class WorkflowHelperTest {
         // String approverId = "admin";
         // String approverId = "admin-1";
 
-        // String roleId = "经理";
-        // String approverId = "manager-1";
+        String roleId = "经理";
+        String approverId = "manager-1";
         // String approverId = "manager-2";
 
         // String roleId = "组长";
@@ -566,12 +566,12 @@ class WorkflowHelperTest {
         // String approverId = "王五";
         // String approverId = "赵六";
 
-        // String roleId = "经理";
-        // String approverId = "manager-1";
+        String roleId = "经理";
+        String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        String roleId = "组长";
-        String approverId = "grouper-1";
+        // String roleId = "组长";
+        // String approverId = "grouper-1";
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -750,6 +750,12 @@ class WorkflowHelperTest {
         runtimeServiceHelper.updateApprover(tenantId, "admin", "test");
     }
 
+    /**
+     * 流程实例审批记录
+     *
+     * @author wangweijun
+     * @since 2024/10/9 14:57
+     */
     @Test
     void workflowInstanceApproveRecords() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -760,6 +766,12 @@ class WorkflowHelperTest {
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
     }
 
+    /**
+     * 查看流程定义的流程图
+     *
+     * @author wangweijun
+     * @since 2024/10/9 14:53
+     */
     @Test
     void workflowDefinitionFlowSchema() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
