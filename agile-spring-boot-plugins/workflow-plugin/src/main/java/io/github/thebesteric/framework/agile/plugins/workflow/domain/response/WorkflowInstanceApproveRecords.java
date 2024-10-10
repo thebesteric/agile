@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import lombok.Data;
 
@@ -20,13 +21,11 @@ import java.util.Map;
 @Data
 public class WorkflowInstanceApproveRecords {
     /** 流程实例 ID */
-    private Integer workflowInstanceId;
+    private WorkflowInstanceResponse workflowInstance;
     /** 流程定义 */
     private WorkflowDefinitionResponse workflowDefinition;
     /** 流程节点 */
     private List<NodeDefinitionResponse> nodeDefinitionResponses;
-    /** 创建时间 */
-    private Date createdAt;
 
     /**
      * 组装
@@ -57,15 +56,12 @@ public class WorkflowInstanceApproveRecords {
                                                     String curRoleId, String curUserId) {
 
         WorkflowInstanceApproveRecords records = new WorkflowInstanceApproveRecords();
-        records.setWorkflowInstanceId(workflowInstance.getId());
-        records.setCreatedAt(workflowInstance.getCreatedAt());
+        // 封装流程实例
+        WorkflowInstanceResponse workflowInstanceResponse = WorkflowInstanceResponse.of(workflowInstance);
+        records.setWorkflowInstance(workflowInstanceResponse);
 
         // 封装流程定义
-        WorkflowDefinitionResponse workflowDefinitionResponse = new WorkflowDefinitionResponse();
-        workflowDefinitionResponse.setId(workflowDefinition.getId());
-        workflowDefinitionResponse.setTenantId(workflowDefinition.getTenantId());
-        workflowDefinitionResponse.setName(workflowDefinition.getName());
-        workflowDefinitionResponse.setCreatedAt(workflowDefinition.getCreatedAt());
+        WorkflowDefinitionResponse workflowDefinitionResponse = WorkflowDefinitionResponse.of(workflowDefinition);
         records.setWorkflowDefinition(workflowDefinitionResponse);
 
         List<NodeDefinitionResponse> nodeDefinitionResponses = new ArrayList<>();
@@ -75,26 +71,6 @@ public class WorkflowInstanceApproveRecords {
 
             // 封装任务实例
             TaskInstanceResponse taskInstanceResponse = null;
-            if (taskInstance != null) {
-                taskInstanceResponse = new TaskInstanceResponse();
-                taskInstanceResponse.setId(taskInstance.getId());
-                taskInstanceResponse.setApprovedCount(taskInstance.getApprovedCount());
-                taskInstanceResponse.setTotalCount(taskInstance.getTotalCount());
-                taskInstanceResponse.setCreatedAt(taskInstance.getCreatedAt());
-            }
-
-            // 封装节点定义
-            NodeDefinitionResponse nodeDefinitionResponse = new NodeDefinitionResponse();
-            nodeDefinitionResponse.setId(nodeDefinition.getId());
-            nodeDefinitionResponse.setName(nodeDefinition.getName());
-            nodeDefinitionResponse.setNodeType(nodeDefinition.getNodeType().toMap());
-            nodeDefinitionResponse.setCreatedAt(nodeDefinition.getCreatedAt());
-            nodeDefinitionResponse.setTaskInstanceResponse(taskInstanceResponse);
-
-            // 封装审批人
-            List<NodeAssignment> currNodeAssignments = nodeAssignments.stream().filter(nodeAssignment -> nodeDefinition.getId().equals(nodeAssignment.getNodeDefinitionId())).toList();
-            List<NodeAssignmentResponse> nodeAssignmentResponses = currNodeAssignments.stream().map(NodeAssignmentResponse::of).toList();
-            nodeDefinitionResponse.setNodeAssignmentResponses(nodeAssignmentResponses);
 
             // 封装审批记录
             if (taskInstance != null) {
@@ -105,15 +81,58 @@ public class WorkflowInstanceApproveRecords {
                         List<TaskRoleApproveRecord> taskRoleApproveRecords = taskApproveAndRoleApproveRecordsMap.get(taskApprove);
                         return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleId, curUserId);
                     }).toList();
-                    taskInstanceResponse.setTaskApproveResponses(taskApproveResponses);
+                    // 封装任务实例
+                    taskInstanceResponse = TaskInstanceResponse.of(taskInstance, taskApproveResponses);
                 }
             }
 
+            // 封装审批人
+            List<NodeAssignment> currNodeAssignments = nodeAssignments.stream().filter(nodeAssignment -> nodeDefinition.getId().equals(nodeAssignment.getNodeDefinitionId())).toList();
+            List<NodeAssignmentResponse> nodeAssignmentResponses = currNodeAssignments.stream().map(NodeAssignmentResponse::of).toList();
+
+            // 封装节点定义
+            NodeDefinitionResponse nodeDefinitionResponse = NodeDefinitionResponse.of(nodeDefinition, taskInstanceResponse, nodeAssignmentResponses);
             nodeDefinitionResponses.add(nodeDefinitionResponse);
         }
         records.setNodeDefinitionResponses(nodeDefinitionResponses);
 
         return records;
+    }
+
+    @Data
+    public static class WorkflowInstanceResponse {
+        /** 流程实例 ID */
+        private Integer id;
+        /** 租户 ID */
+        private String tenantId;
+        /** 流程定义 ID */
+        private Integer workflowDefinitionId;
+        /** 流程发起人 */
+        private String requesterId;
+        /** 业务类型 */
+        private String businessType;
+        /** 业务标识 */
+        private String businessId;
+        /** 请求条件 */
+        private RequestConditions requestConditions;
+        /** 流程状态 */
+        private Map<String, Object> status;
+        /** 创建时间 */
+        private Date createdAt;
+
+        public static WorkflowInstanceResponse of(WorkflowInstance workflowInstance) {
+            WorkflowInstanceResponse response = new WorkflowInstanceResponse();
+            response.id = workflowInstance.getId();
+            response.tenantId = workflowInstance.getTenantId();
+            response.workflowDefinitionId = workflowInstance.getWorkflowDefinitionId();
+            response.requesterId = workflowInstance.getRequesterId();
+            response.businessType = workflowInstance.getBusinessType();
+            response.businessId = workflowInstance.getBusinessId();
+            response.requestConditions = workflowInstance.getRequestConditions();
+            response.status = workflowInstance.getStatus().toMap();
+            response.createdAt = workflowInstance.getCreatedAt();
+            return response;
+        }
     }
 
     @Data
@@ -126,6 +145,15 @@ public class WorkflowInstanceApproveRecords {
         private String name;
         /** 创建时间 */
         private Date createdAt;
+
+        public static WorkflowDefinitionResponse of(WorkflowDefinition workflowDefinition) {
+            WorkflowDefinitionResponse response = new WorkflowDefinitionResponse();
+            response.id = workflowDefinition.getId();
+            response.tenantId = workflowDefinition.getTenantId();
+            response.name = workflowDefinition.getName();
+            response.createdAt = workflowDefinition.getCreatedAt();
+            return response;
+        }
     }
 
     @Data
@@ -142,6 +170,17 @@ public class WorkflowInstanceApproveRecords {
         private List<NodeAssignmentResponse> nodeAssignmentResponses;
         /** 创建时间 */
         private Date createdAt;
+
+        public static NodeDefinitionResponse of(NodeDefinition nodeDefinition, TaskInstanceResponse taskInstanceResponse, List<NodeAssignmentResponse> nodeAssignmentResponses) {
+            NodeDefinitionResponse response = new NodeDefinitionResponse();
+            response.id = nodeDefinition.getId();
+            response.name = nodeDefinition.getName();
+            response.nodeType = nodeDefinition.getNodeType().toMap();
+            response.taskInstanceResponse = taskInstanceResponse;
+            response.nodeAssignmentResponses = nodeAssignmentResponses;
+            response.createdAt = nodeDefinition.getCreatedAt();
+            return response;
+        }
     }
 
     @Data
@@ -180,6 +219,16 @@ public class WorkflowInstanceApproveRecords {
         private List<TaskApproveResponse> taskApproveResponses;
         /** 创建时间 */
         private Date createdAt;
+
+        public static TaskInstanceResponse of(TaskInstance taskInstance, List<TaskApproveResponse> taskApproveResponses) {
+            TaskInstanceResponse response = new TaskInstanceResponse();
+            response.id = taskInstance.getId();
+            response.approvedCount = taskInstance.getApprovedCount();
+            response.totalCount = taskInstance.getTotalCount();
+            response.taskApproveResponses = taskApproveResponses;
+            response.createdAt = taskInstance.getCreatedAt();
+            return response;
+        }
     }
 
     @Data
