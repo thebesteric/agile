@@ -56,6 +56,7 @@ public class WorkflowInstance extends BaseEntity {
         workflowInstance.setTenantId(rs.getString("tenant_id"));
         workflowInstance.setWorkflowDefinitionId(rs.getInt("wf_def_id"));
         workflowInstance.setRequesterId(rs.getString("requester_id"));
+        workflowInstance.setBusinessType(rs.getString("business_type"));
         workflowInstance.setBusinessId(rs.getString("business_id"));
         String reqConditionsStr = rs.getString("req_conditions");
         if (CharSequenceUtil.isNotEmpty(reqConditionsStr)) {

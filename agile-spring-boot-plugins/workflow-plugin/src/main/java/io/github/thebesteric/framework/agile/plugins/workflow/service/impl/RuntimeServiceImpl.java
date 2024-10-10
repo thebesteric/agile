@@ -515,7 +515,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 更新流程实例为：已完成
                 workflowInstance.setStatus(WorkflowStatus.COMPLETED);
                 workflowInstanceExecutor.updateById(workflowInstance);
-
                 return null;
             }
 
