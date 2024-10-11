@@ -879,7 +879,7 @@ class WorkflowHelperTest {
     }
 
     /**
-     * 获取角色审批记录
+     * 获取用户审批记录
      *
      * @author wangweijun
      * @since 2024/10/11 18:33
