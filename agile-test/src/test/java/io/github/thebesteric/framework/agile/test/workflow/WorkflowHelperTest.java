@@ -878,6 +878,12 @@ class WorkflowHelperTest {
         System.out.println(JsonUtils.toJson(taskApproves));
     }
 
+    /**
+     * 获取角色审批记录
+     *
+     * @author wangweijun
+     * @since 2024/10/11 18:33
+     */
     @Test
     void findTaskRoleApprove() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
