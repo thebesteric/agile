@@ -7,8 +7,10 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowS
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.ApproveDatesSegmentCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 
@@ -332,6 +334,45 @@ public interface RuntimeService {
      * @since 2024/9/9 15:06
      */
     TaskInstance getInCurrentlyEffectTaskInstance(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 获取当前流程实例下正在进行的节点定义
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/27 15:16
+     */
+    NodeDefinition getInCurrentlyEffectNodeDefinition(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 获取当前流程实例下正在进行的审批用户
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:57
+     */
+    List<Approver> findInCurrentlyEffectApprovers(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 获取当前流程实例下正在进行的角色审批用户
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:57
+     */
+    List<RoleApprover> findInCurrentlyEffectRoleApprovers(String tenantId, Integer workflowInstanceId);
 
     /**
      * 根据任务实例 ID 查找任务实例

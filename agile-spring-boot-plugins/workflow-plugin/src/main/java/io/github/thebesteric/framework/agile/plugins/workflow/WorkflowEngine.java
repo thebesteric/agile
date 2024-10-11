@@ -7,6 +7,20 @@ import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemp
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.TableMetadataHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowProperties;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.history.NodeDefinitionHistoryExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve.TaskApproveExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve.TaskRoleApproveRecordExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.history.TaskHistoryExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance.TaskInstanceExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.assignment.WorkflowAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.history.WorkflowDefinitionHistoryExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.repository.WorkflowRepositoryExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
@@ -18,7 +32,9 @@ import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.Deplo
 import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.RepositoryServiceImpl;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.RuntimeServiceImpl;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.impl.WorkflowServiceImpl;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -44,8 +60,58 @@ public class WorkflowEngine {
             TaskInstance.class, TaskApprove.class, TaskRoleApproveRecord.class, TaskHistory.class
     );
 
+    @Getter
+    private final WorkflowDefinitionExecutorBuilder workflowDefinitionExecutorBuilder;
+    @Getter
+    private final WorkflowInstanceExecutorBuilder workflowInstanceExecutorBuilder;
+    @Getter
+    private final WorkflowRepositoryExecutorBuilder workflowRepositoryExecutorBuilder;
+    @Getter
+    private final WorkflowAssignmentExecutorBuilder workflowAssignmentExecutorBuilder;
+    @Getter
+    private final WorkflowDefinitionHistoryExecutorBuilder workflowDefinitionHistoryExecutorBuilder;
+
+    @Getter
+    private final NodeDefinitionExecutorBuilder nodeDefinitionExecutorBuilder;
+    @Getter
+    private final NodeAssignmentExecutorBuilder nodeAssignmentExecutorBuilder;
+    @Getter
+    private final NodeRelationExecutorBuilder nodeRelationExecutorBuilder;
+    @Getter
+    private final NodeRoleAssignmentExecutorBuilder nodeRoleAssignmentExecutorBuilder;
+    @Getter
+    private final NodeDefinitionHistoryExecutorBuilder nodeDefinitionHistoryExecutorBuilder;
+
+    @Getter
+    private final TaskInstanceExecutorBuilder taskInstanceExecutorBuilder;
+    @Getter
+    private final TaskApproveExecutorBuilder taskApproveExecutorBuilder;
+    @Getter
+    private final TaskRoleApproveRecordExecutorBuilder taskRoleApproveRecordExecutorBuilder;
+    @Getter
+    private final TaskHistoryExecutorBuilder taskHistoryExecutorBuilder;
+
+
     public WorkflowEngine(AgileWorkflowContext context) {
         this.context = context;
+        JdbcTemplate jdbcTemplate = context.getJdbcTemplateHelper().getJdbcTemplate();
+
+        this.workflowDefinitionExecutorBuilder = WorkflowDefinitionExecutorBuilder.builder(jdbcTemplate);
+        this.workflowInstanceExecutorBuilder = WorkflowInstanceExecutorBuilder.builder(jdbcTemplate);
+        this.workflowRepositoryExecutorBuilder = WorkflowRepositoryExecutorBuilder.builder(jdbcTemplate);
+        this.workflowAssignmentExecutorBuilder = WorkflowAssignmentExecutorBuilder.builder(jdbcTemplate);
+        this.workflowDefinitionHistoryExecutorBuilder = WorkflowDefinitionHistoryExecutorBuilder.builder(jdbcTemplate);
+
+        this.nodeDefinitionExecutorBuilder = NodeDefinitionExecutorBuilder.builder(jdbcTemplate);
+        this.nodeAssignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
+        this.nodeRelationExecutorBuilder = NodeRelationExecutorBuilder.builder(jdbcTemplate);
+        this.nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
+        this.nodeDefinitionHistoryExecutorBuilder = NodeDefinitionHistoryExecutorBuilder.builder(jdbcTemplate);
+
+        this.taskInstanceExecutorBuilder = TaskInstanceExecutorBuilder.builder(jdbcTemplate);
+        this.taskApproveExecutorBuilder = TaskApproveExecutorBuilder.builder(jdbcTemplate);
+        this.taskRoleApproveRecordExecutorBuilder = TaskRoleApproveRecordExecutorBuilder.builder(jdbcTemplate);
+        this.taskHistoryExecutorBuilder = TaskHistoryExecutorBuilder.builder(jdbcTemplate);
     }
 
     /**

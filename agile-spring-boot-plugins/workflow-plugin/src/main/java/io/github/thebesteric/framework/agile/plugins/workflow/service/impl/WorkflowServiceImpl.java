@@ -10,9 +10,8 @@ import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemp
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.history.NodeDefinitionHistoryBuilder;
@@ -52,6 +51,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     private final NodeRelationExecutorBuilder nodeRelationExecutorBuilder;
     private final NodeAssignmentExecutorBuilder nodeAssignmentExecutorBuilder;
     private final NodeDefinitionHistoryExecutorBuilder nodeDefinitionHistoryExecutorBuilder;
+    private final NodeRoleAssignmentExecutorBuilder nodeRoleAssignmentExecutorBuilder;
     private final WorkflowInstanceExecutorBuilder workflowInstanceExecutorBuilder;
     private final WorkflowDefinitionExecutorBuilder workflowDefinitionExecutorBuilder;
     private final DeploymentService deploymentService;
@@ -63,6 +63,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         nodeRelationExecutorBuilder = NodeRelationExecutorBuilder.builder(jdbcTemplate);
         nodeAssignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
         nodeDefinitionHistoryExecutorBuilder = NodeDefinitionHistoryExecutorBuilder.builder(jdbcTemplate);
+        nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
         workflowInstanceExecutorBuilder = WorkflowInstanceExecutorBuilder.builder(jdbcTemplate);
         workflowDefinitionExecutorBuilder = WorkflowDefinitionExecutorBuilder.builder(jdbcTemplate);
         deploymentService = new DeploymentServiceImpl(context);
@@ -653,5 +654,72 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 .page(page, pageSize)
                 .build();
         return executor.find(query);
+    }
+
+    /**
+     * 获取用户任务关联记录
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return Set<NodeAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:20
+     */
+    @Override
+    public List<NodeAssignment> findNodeAssignments(String tenantId, Integer nodeDefinitionId) {
+        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+        return nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
+    }
+
+    /**
+     * 查询节点的审批用户
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:31
+     */
+    @Override
+    public List<Approver> findApprovers(String tenantId, Integer nodeDefinitionId) {
+        NodeDefinition nodeDefinition = this.getNode(tenantId, nodeDefinitionId);
+        List<NodeAssignment> nodeAssignments = this.findNodeAssignments(tenantId, nodeDefinitionId);
+        return nodeAssignments.stream().map(nodeAssignment -> {
+            Approver approver = Approver.of(nodeAssignment.getApproverId(), nodeAssignment.getDesc());
+            approver.setRoleType(nodeDefinition.isRoleApprove());
+            return approver;
+        }).toList();
+    }
+
+    /**
+     * 查询角色节点的审批用户
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return List<RoleApprover>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:31
+     */
+    @Override
+    public List<RoleApprover> findRoleApprovers(String tenantId, Integer nodeDefinitionId) {
+        NodeDefinition nodeDefinition = this.getNode(tenantId, nodeDefinitionId);
+        if (nodeDefinition.isUserApprove()) {
+            return Collections.emptyList();
+        }
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = this.nodeRoleAssignmentExecutorBuilder.build();
+        List<NodeAssignment> nodeAssignments = this.findNodeAssignments(tenantId, nodeDefinitionId);
+        return nodeAssignments.stream().map(nodeAssignment -> {
+                    String roleId = nodeAssignment.getApproverId();
+                    return nodeRoleAssignmentExecutor.findByNodeDefinitionIdRoleId(tenantId, nodeDefinitionId, roleId);
+                })
+                .flatMap(List::stream)
+                .map(nodeRoleAssignment -> RoleApprover.of(nodeRoleAssignment.getRoleId(), nodeRoleAssignment.getDesc(), Approver.of(nodeRoleAssignment.getUserId(), nodeRoleAssignment.getUserDesc())))
+                .toList();
     }
 }

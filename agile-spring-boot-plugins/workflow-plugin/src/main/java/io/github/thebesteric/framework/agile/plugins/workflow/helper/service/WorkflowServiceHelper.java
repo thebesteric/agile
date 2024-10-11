@@ -3,7 +3,10 @@ package io.github.thebesteric.framework.agile.plugins.workflow.helper.service;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinitionHistory;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
@@ -471,6 +474,51 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      */
     public Page<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize) {
         return this.workflowService.findNodeHistoriesByTenantId(tenantId, page, pageSize);
+    }
+
+    /**
+     * 获取用户任务关联记录
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return Set<NodeAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:20
+     */
+    public List<NodeAssignment> findNodeAssignments(String tenantId, Integer nodeDefinitionId) {
+        return this.workflowService.findNodeAssignments(tenantId, nodeDefinitionId);
+    }
+
+    /**
+     * 查询节点的审批用户
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:31
+     */
+    public List<Approver> findApprovers(String tenantId, Integer nodeDefinitionId) {
+        return this.workflowService.findApprovers(tenantId, nodeDefinitionId);
+    }
+
+    /**
+     * 查询角色节点的审批用户
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return List<RoleApprover>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:31
+     */
+    public List<RoleApprover> findRoleApprovers(String tenantId, Integer nodeDefinitionId) {
+        return this.workflowService.findRoleApprovers(tenantId, nodeDefinitionId);
     }
 
 }

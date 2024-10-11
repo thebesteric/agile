@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -25,6 +26,9 @@ public class Approver implements Serializable {
     /** 审批人描述 */
     private String desc;
 
+    /** 是否是角色 */
+    private boolean roleType = false;
+
     public static Approver of(String id) {
         return of(id, null);
     }
@@ -44,6 +48,7 @@ public class Approver implements Serializable {
      * @author wangweijun
      * @since 2024/9/9 13:40
      */
+    @JsonIgnore
     public boolean isUnSettingAssignmentApprover() {
         return this.id.startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && this.id.endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX);
     }

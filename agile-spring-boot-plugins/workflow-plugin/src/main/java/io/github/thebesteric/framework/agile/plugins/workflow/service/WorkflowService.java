@@ -2,10 +2,9 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinitionHistory;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 
 import java.util.List;
 
@@ -259,4 +258,43 @@ public interface WorkflowService {
      * @since 2024/10/8 16:02
      */
     NodeDefinitionHistory getNodeDefinitionHistory(String tenantId, Integer nodeDefinitionHistoryId);
+
+    /**
+     * 获取用户任务关联记录
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return Set<NodeAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:20
+     */
+    List<NodeAssignment> findNodeAssignments(String tenantId, Integer nodeDefinitionId);
+
+    /**
+     * 查询节点的审批用户
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:31
+     */
+    List<Approver> findApprovers(String tenantId, Integer nodeDefinitionId);
+
+    /**
+     * 查询角色节点的审批用户
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return List<RoleApprover>
+     *
+     * @author wangweijun
+     * @since 2024/10/10 21:31
+     */
+    List<RoleApprover> findRoleApprovers(String tenantId, Integer nodeDefinitionId);
 }

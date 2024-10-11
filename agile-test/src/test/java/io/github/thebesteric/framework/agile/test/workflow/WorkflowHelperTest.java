@@ -802,4 +802,54 @@ class WorkflowHelperTest {
         System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "m-1"));
     }
 
+    /**
+     * 获取正在生效的任务实例和节点定义
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:33
+     */
+    @Test
+    void getInCurrentlyEffect() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+
+        // 获取当前流程实例下正在生效的任务实例
+        TaskInstance taskInstance = runtimeServiceHelper.getInCurrentlyEffectTaskInstance(tenantId, 1);
+        System.out.println("taskInstance = " + taskInstance);
+
+        // 获取当前流程实例下正在生效的任务实例对应的节点定义
+        NodeDefinition nodeDefinition = runtimeServiceHelper.getInCurrentlyEffectNodeDefinition(tenantId, 1);
+        System.out.println("nodeDefinition = " + nodeDefinition);
+    }
+
+    /**
+     * 根据节点定义获取审批人列表
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:33
+     */
+    @Test
+    void findApprovers() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
+
+        List<Approver> approvers = workflowServiceHelper.findApprovers(tenantId, 3);
+        System.out.println(JsonUtils.toJson(approvers));
+
+        List<RoleApprover> roleApprovers = workflowServiceHelper.findRoleApprovers(tenantId, 3);
+        System.out.println(JsonUtils.toJson(roleApprovers));
+    }
+
+    @Test
+    void findInCurrentlyEffectApprovers() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+
+        List<Approver> inCurrentlyEffectApprovers = runtimeServiceHelper.findInCurrentlyEffectApprovers(tenantId, 1);
+        System.out.println(JsonUtils.toJson(inCurrentlyEffectApprovers));
+
+        List<RoleApprover> inCurrentlyEffectRoleApprovers = runtimeServiceHelper.findInCurrentlyEffectRoleApprovers(tenantId, 1);
+        System.out.println(JsonUtils.toJson(inCurrentlyEffectRoleApprovers));
+    }
+
 }

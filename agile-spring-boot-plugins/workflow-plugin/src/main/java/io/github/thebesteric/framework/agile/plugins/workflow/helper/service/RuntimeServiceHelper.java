@@ -8,6 +8,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowS
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.ApproveDatesSegmentCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
@@ -15,7 +16,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDef
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.RuntimeService;
-import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 
 import java.util.List;
 
@@ -282,13 +282,37 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/27 15:16
      */
     public NodeDefinition getInCurrentlyEffectNodeDefinition(String tenantId, Integer workflowInstanceId) {
-        TaskInstance inCurrentlyEffectTaskInstance = this.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
-        if (inCurrentlyEffectTaskInstance != null) {
-            Integer nodeDefinitionId = inCurrentlyEffectTaskInstance.getNodeDefinitionId();
-            WorkflowService workflowService = this.workflowEngine.getWorkflowService();
-            return workflowService.getNode(tenantId, nodeDefinitionId);
-        }
-        return null;
+        return this.runtimeService.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 获取当前流程实例下正在进行的审批用户
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:57
+     */
+    public List<Approver> findInCurrentlyEffectApprovers(String tenantId, Integer workflowInstanceId) {
+        return this.runtimeService.findInCurrentlyEffectApprovers(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 获取当前流程实例下正在进行的角色审批用户
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:57
+     */
+    public List<RoleApprover> findInCurrentlyEffectRoleApprovers(String tenantId, Integer workflowInstanceId) {
+        return this.runtimeService.findInCurrentlyEffectRoleApprovers(tenantId, workflowInstanceId);
     }
 
     /**

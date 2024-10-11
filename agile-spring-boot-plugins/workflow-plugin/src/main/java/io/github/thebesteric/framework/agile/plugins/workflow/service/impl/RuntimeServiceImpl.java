@@ -9,10 +9,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.ApproveDatesSegmentCondition;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutor;
@@ -35,6 +32,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.Wo
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractRuntimeService;
+import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -62,6 +60,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     private final TaskApproveExecutorBuilder taskApproveExecutorBuilder;
     private final TaskHistoryExecutorBuilder taskHistoryExecutorBuilder;
     private final TaskRoleApproveRecordExecutorBuilder taskRoleApproveRecordExecutorBuilder;
+    private final WorkflowService workflowService;
 
     public RuntimeServiceImpl(AgileWorkflowContext context) {
         super(context);
@@ -76,6 +75,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         taskApproveExecutorBuilder = TaskApproveExecutorBuilder.builder(jdbcTemplate);
         taskHistoryExecutorBuilder = TaskHistoryExecutorBuilder.builder(jdbcTemplate);
         taskRoleApproveRecordExecutorBuilder = TaskRoleApproveRecordExecutorBuilder.builder(jdbcTemplate);
+        workflowService = new WorkflowServiceImpl(context);
     }
 
     /**
@@ -2465,6 +2465,62 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     public TaskInstance getInCurrentlyEffectTaskInstance(String tenantId, Integer workflowInstanceId) {
         TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
         return taskInstanceExecutor.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 获取当前流程实例下正在进行的节点定义
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/9/27 15:16
+     */
+    @Override
+    public NodeDefinition getInCurrentlyEffectNodeDefinition(String tenantId, Integer workflowInstanceId) {
+        TaskInstance inCurrentlyEffectTaskInstance = this.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
+        if (inCurrentlyEffectTaskInstance != null) {
+            Integer nodeDefinitionId = inCurrentlyEffectTaskInstance.getNodeDefinitionId();
+            NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+            return nodeDefinitionExecutor.getById(tenantId, nodeDefinitionId);
+        }
+        return null;
+    }
+
+    /**
+     * 获取当前流程实例下正在进行的审批用户
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:57
+     */
+    @Override
+    public List<Approver> findInCurrentlyEffectApprovers(String tenantId, Integer workflowInstanceId) {
+        NodeDefinition nodeDefinition = this.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
+        return workflowService.findApprovers(tenantId, nodeDefinition.getId());
+    }
+
+    /**
+     * 获取当前流程实例下正在进行的角色审批用户
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<Approver>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 10:57
+     */
+    @Override
+    public List<RoleApprover> findInCurrentlyEffectRoleApprovers(String tenantId, Integer workflowInstanceId) {
+        NodeDefinition nodeDefinition = this.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
+        return workflowService.findRoleApprovers(tenantId, nodeDefinition.getId());
     }
 
     /**
