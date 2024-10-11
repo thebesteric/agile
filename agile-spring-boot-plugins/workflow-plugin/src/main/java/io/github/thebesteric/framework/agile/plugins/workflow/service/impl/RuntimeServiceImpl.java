@@ -652,7 +652,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
 
         // 获取该流程实例下已经完成审批和即将要审批的审批人
-        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, nextTaskInstance.getWorkflowInstanceId(), null);
+        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, nextTaskInstance.getWorkflowInstanceId(), null, null);
 
         // 下一个审批人的审批情况（下一个审批人在之前的审批记录中是否存在，并且是通过审核的）
         Optional<TaskApprove> nextApproverIdApproveOptional = taskApproves.stream()
@@ -716,7 +716,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             }
             // 非自动审批的情况
             else {
-                taskApprove = taskApproveExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstanceId, roleId, userId);
+                taskApprove = taskApproveExecutor.getByTaskInstanceIdAndRoleIdAndApproverId(tenantId, taskInstanceId, ActiveStatus.ACTIVE, roleId, userId);
                 // 用户审批的情况
                 if (ApproverIdType.ROLE != taskApprove.getApproverIdType()) {
                     // 更新 TaskApprove 的 active、status 和 comment
@@ -1847,7 +1847,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 更新 TaskApprove 的 comment，并将状态设置为：已驳回
             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
-            TaskApprove taskApprove = taskApproveExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstanceId, roleId, userId);
+            TaskApprove taskApprove = taskApproveExecutor.getByTaskInstanceIdAndRoleIdAndApproverId(tenantId, taskInstanceId, ActiveStatus.ACTIVE, roleId, userId);
             taskApprove.setActive(ActiveStatus.INACTIVE);
             taskApprove.setStatus(ApproveStatus.REJECTED);
             taskApprove.setComment(comment);
@@ -1975,7 +1975,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             checkIfApproveSeqStatus(tenantId, taskInstanceId, nodeDefinition.getApproveType());
 
             // 获取当前审批记录
-            TaskApprove taskApprove = taskApproveExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstanceId, roleId, userId);
+            TaskApprove taskApprove = taskApproveExecutor.getByTaskInstanceIdAndRoleIdAndApproverId(tenantId, taskInstanceId, ActiveStatus.ACTIVE, roleId, userId);
 
             // 获取当前实例是否有同意的审批结果
             boolean hasApproved = false;
@@ -2248,7 +2248,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
         // 获取该流程下所有的审批人
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
-        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId, null);
+        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId, null, null);
         // 查看是否已经有人参与了审批
         TaskApprove taskApprove = taskApproves.stream().filter(i -> ApproveStatus.IN_PROGRESS != i.getStatus()).findFirst().orElse(null);
         if (taskApprove != null) {
@@ -2502,8 +2502,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public List<Approver> findInCurrentlyEffectApprovers(String tenantId, Integer workflowInstanceId) {
-        NodeDefinition nodeDefinition = this.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
-        return workflowService.findApprovers(tenantId, nodeDefinition.getId());
+        // 获取正在进行中的审批记录
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        List<TaskApprove> inProgressTaskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId, null, ApproveStatus.IN_PROGRESS);
+
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        // 获取所有审批人
+        return inProgressTaskApproves.stream().map(taskApprove -> {
+            TaskInstance taskInstance = taskInstanceExecutor.getById(taskApprove.getTaskInstanceId());
+            Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+            NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(tenantId, nodeDefinitionId);
+            NodeAssignment nodeAssignment = nodeAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, taskApprove.getApproverId());
+            return Approver.of(nodeAssignment, nodeDefinition.isRoleApprove());
+        }).toList();
     }
 
     /**
@@ -2519,8 +2532,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public List<RoleApprover> findInCurrentlyEffectRoleApprovers(String tenantId, Integer workflowInstanceId) {
-        NodeDefinition nodeDefinition = this.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
-        return workflowService.findRoleApprovers(tenantId, nodeDefinition.getId());
+        // 获取正在进行中的角色审批记录
+        TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+        List<TaskRoleApproveRecord> inProgressTaskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId, ApproveStatus.IN_PROGRESS);
+        List<Integer> nodeRoleAssignmentIds = inProgressTaskRoleApproveRecords.stream().map(TaskRoleApproveRecord::getNodeRoleAssignmentId).toList();
+        // 获取所有角色审批人
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+        return nodeRoleAssignmentIds.stream().map(nodeRoleAssignmentExecutor::getById).map(RoleApprover::of).toList();
     }
 
     /**
@@ -3058,6 +3076,99 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
         NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, approverId);
         return nodeRoleAssignment == null ? null : nodeRoleAssignment.getRoleId();
+    }
+
+    /**
+     * 获取审批记录
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approverId     用户 ID
+     *
+     * @return TaskApprove
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:51
+     */
+    @Override
+    public TaskApprove getTaskApprove(String tenantId, Integer taskInstanceId, String approverId) {
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        return taskApproveExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstanceId, approverId);
+    }
+
+    /**
+     * 获取角色审批记录
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param approverId     用户 ID
+     *
+     * @return TaskRoleApprove
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:51
+     */
+    @Override
+    public TaskRoleApprove getTaskRoleApprove(String tenantId, Integer taskInstanceId, String roleId, String approverId) {
+        // 获取角色审批记录
+        TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+        TaskRoleApproveRecord taskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, approverId);
+        if (taskRoleApproveRecord == null) {
+            return null;
+        }
+        // 获取审批记录
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        TaskApprove taskApprove = taskApproveExecutor.getById(taskRoleApproveRecord.getTaskApproveId());
+        // 获取角色审批人
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getById(taskRoleApproveRecord.getNodeRoleAssignmentId());
+        // 封装
+        return TaskRoleApprove.of(taskRoleApproveRecord, taskApprove, nodeRoleAssignment);
+    }
+
+    /**
+     * 获取审批记录列表
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<TaskApprove>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:52
+     */
+    @Override
+    public List<TaskApprove> findTaskApproves(String tenantId, Integer workflowInstanceId) {
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        return taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 获取角色审批记录列表
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<TaskRoleApprove>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:52
+     */
+    @Override
+    public List<TaskRoleApprove> findTaskRoleApproves(String tenantId, Integer workflowInstanceId) {
+        TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+        List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
+        return taskRoleApproveRecords.stream().map(taskRoleApproveRecord -> {
+            // 获取审批记录
+            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+            TaskApprove taskApprove = taskApproveExecutor.getById(taskRoleApproveRecord.getTaskApproveId());
+            // 获取角色审批人
+            NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+            NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getById(taskRoleApproveRecord.getNodeRoleAssignmentId());
+            // 封装
+            return TaskRoleApprove.of(taskRoleApproveRecord, taskApprove, nodeRoleAssignment);
+        }).toList();
     }
 
     /**

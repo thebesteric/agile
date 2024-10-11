@@ -30,15 +30,17 @@ public class NodeRoleAssignmentBuilder extends AbstractBuilder<NodeRoleAssignmen
         return builder;
     }
 
-    public NodeRoleAssignmentBuilder userId(Integer seq, String userId, String userDesc) {
+    public NodeRoleAssignmentBuilder userInfo(Integer seq, String userId, String userName, String userDesc) {
         this.nodeRoleUserAssignment.setUserId(userId);
+        this.nodeRoleUserAssignment.setUserName(userName);
         this.nodeRoleUserAssignment.setUserDesc(userDesc);
         this.nodeRoleUserAssignment.setUserSeq(seq);
         return this;
     }
 
-    public NodeRoleAssignmentBuilder roleId(Integer seq, String roleId, String roleDesc) {
+    public NodeRoleAssignmentBuilder roleInfo(Integer seq, String roleId, String roleName, String roleDesc) {
         this.nodeRoleUserAssignment.setRoleId(roleId);
+        this.nodeRoleUserAssignment.setRoleName(roleName);
         this.nodeRoleUserAssignment.setRoleDesc(roleDesc);
         this.nodeRoleUserAssignment.setRoleSeq(seq);
         return this;

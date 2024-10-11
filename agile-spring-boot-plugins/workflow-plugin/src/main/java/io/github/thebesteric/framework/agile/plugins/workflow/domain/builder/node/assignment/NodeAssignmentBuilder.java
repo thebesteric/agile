@@ -31,10 +31,11 @@ public class NodeAssignmentBuilder extends AbstractBuilder<NodeAssignment> {
         return builder;
     }
 
-    public NodeAssignmentBuilder approverId(ApproverIdType approverIdType, ApproveType approveType, String approverId, String desc) {
+    public NodeAssignmentBuilder approverInfo(ApproverIdType approverIdType, ApproveType approveType, String approverId, String approverName, String approverDesc) {
         this.nodeAssignment.setApproverIdType(approverIdType);
         this.nodeAssignment.setApproverId(approverId);
-        this.nodeAssignment.setDesc(desc);
+        this.nodeAssignment.setApproverName(approverName);
+        this.nodeAssignment.setApproverDesc(approverDesc);
         if (ApproveType.SEQ == approveType) {
             this.nodeAssignment.setApproverSeq(seq.getAndIncrement());
         }

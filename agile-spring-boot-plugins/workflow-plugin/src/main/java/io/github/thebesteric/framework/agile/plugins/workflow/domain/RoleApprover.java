@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
 import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -25,48 +26,103 @@ public class RoleApprover implements Serializable {
 
     /** 角色唯一标识 */
     private String roleId;
+    /** 角色名称 */
+    private String roleName;
     /** 角色描述 */
     private String roleDesc;
     /** 审批人唯一标识 */
     private String userId;
+    /** 审批人名称 */
+    private String userName;
     /** 审批人描述 */
     private String userDesc;
 
-    public static RoleApprover of(String roleId, String roleDesc, Approver approver) {
+    public static RoleApprover of(NodeRoleAssignment nodeRoleAssignment) {
+        RoleApprover roleApprover = new RoleApprover();
+        roleApprover.roleId = nodeRoleAssignment.getRoleId();
+        roleApprover.roleName = nodeRoleAssignment.getRoleName();
+        roleApprover.roleDesc = nodeRoleAssignment.getRoleDesc();
+        roleApprover.userId = nodeRoleAssignment.getUserId();
+        roleApprover.userName = nodeRoleAssignment.getUserName();
+        roleApprover.userDesc = nodeRoleAssignment.getUserDesc();
+        return roleApprover;
+    }
+
+    public static RoleApprover of(String roleId, String roleName, String roleDesc, Approver approver) {
         RoleApprover roleApprover = new RoleApprover();
         roleApprover.roleId = roleId;
+        roleApprover.roleName = roleName;
         roleApprover.roleDesc = roleDesc;
         roleApprover.userId = approver.getId();
+        roleApprover.userName = approver.getName();
         roleApprover.userDesc = approver.getDesc();
         return roleApprover;
     }
 
+    public static RoleApprover of(String roleId, String roleName, Approver approver) {
+        return RoleApprover.of(roleId, roleName, null, approver);
+    }
+
     public static RoleApprover of(String roleId, Approver approver) {
-        return RoleApprover.of(roleId, null, approver);
+        return RoleApprover.of(roleId, null, null, approver);
+    }
+
+    public static Set<RoleApprover> of(String roleId, String roleName, String roleDesc, Set<Approver> approvers) {
+        Set<RoleApprover> roleApprovers = new LinkedHashSet<>();
+        for (Approver approver : approvers) {
+            roleApprovers.add(RoleApprover.of(roleId, roleName, roleDesc, approver));
+        }
+        return roleApprovers;
+    }
+
+    public static RoleApprover of(ApproverRole approverRole, Approver approver) {
+        return RoleApprover.of(approverRole.id, approverRole.name, approverRole.desc, approver);
+    }
+
+    public static Set<RoleApprover> of(String roleId, String roleName, Set<Approver> approvers) {
+        return RoleApprover.of(roleId, roleName, null, approvers);
     }
 
     public static Set<RoleApprover> of(String roleId, Set<Approver> approvers) {
         return RoleApprover.of(roleId, null, approvers);
     }
 
-    public static Set<RoleApprover> of(String roleId, String roleDesc, Set<Approver> approvers) {
-        Set<RoleApprover> roleApprovers = new LinkedHashSet<>();
-        for (Approver approver : approvers) {
-            roleApprovers.add(RoleApprover.of(roleId, roleDesc, approver));
-        }
-        return roleApprovers;
+    public static Set<RoleApprover> of(ApproverRole approverRole, Set<Approver> approvers) {
+        return RoleApprover.of(approverRole.id, approverRole.name, approverRole.desc, approvers);
     }
 
-    public static Set<RoleApprover> of(Map<String, Set<Approver>> multiRoleApprovers) {
+    public static Set<RoleApprover> of(Map<ApproverRole, Set<Approver>> multiRoleApprovers) {
         Set<RoleApprover> roleApprovers = new HashSet<>();
-        for (Map.Entry<String, Set<Approver>> entry : multiRoleApprovers.entrySet()) {
-            String roleId = entry.getKey();
+        for (Map.Entry<ApproverRole, Set<Approver>> entry : multiRoleApprovers.entrySet()) {
+            ApproverRole approverRole = entry.getKey();
             Set<Approver> approvers = entry.getValue();
-            roleApprovers.addAll(RoleApprover.of(roleId, approvers));
+            roleApprovers.addAll(RoleApprover.of(approverRole.id, approverRole.name, approverRole.desc, approvers));
         }
         return roleApprovers;
     }
 
+    @Data
+    public static class ApproverRole {
+        private String id;
+        private String name;
+        private String desc;
+
+        public static ApproverRole of(String id, String name, String desc) {
+            ApproverRole approverRole = new ApproverRole();
+            approverRole.id = id;
+            approverRole.name = name;
+            approverRole.desc = desc;
+            return approverRole;
+        }
+
+        public static ApproverRole of(String id, String name) {
+            return ApproverRole.of(id, name, null);
+        }
+
+        public static ApproverRole of(String id) {
+            return ApproverRole.of(id, null, null);
+        }
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -80,4 +136,5 @@ public class RoleApprover implements Serializable {
     public int hashCode() {
         return new HashCodeBuilder(17, 37).append(roleId).append(userId).toHashCode();
     }
+
 }

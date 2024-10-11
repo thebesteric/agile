@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
 import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -23,20 +24,33 @@ public class Approver implements Serializable {
 
     /** 审批人唯一标识 */
     private String id;
+    /** 审批人名称 */
+    private String name;
     /** 审批人描述 */
     private String desc;
 
     /** 是否是角色 */
     private boolean roleType = false;
 
-    public static Approver of(String id) {
-        return of(id, null);
+    public static Approver of(String id, String name, String desc) {
+        Approver approver = new Approver();
+        approver.id = id;
+        approver.name = name;
+        approver.desc = desc;
+        return approver;
     }
 
-    public static Approver of(String id, String desc) {
-        Approver approver = new Approver();
-        approver.setId(id);
-        approver.setDesc(desc);
+    public static Approver of(String id, String name) {
+        return Approver.of(id, name, null);
+    }
+
+    public static Approver of(String id) {
+        return Approver.of(id, null, null);
+    }
+
+    public static Approver of(NodeAssignment nodeAssignment, boolean roleType) {
+        Approver approver = Approver.of(nodeAssignment.getApproverId(), nodeAssignment.getApproverName(), nodeAssignment.getApproverDesc());
+        approver.roleType = roleType;
         return approver;
     }
 

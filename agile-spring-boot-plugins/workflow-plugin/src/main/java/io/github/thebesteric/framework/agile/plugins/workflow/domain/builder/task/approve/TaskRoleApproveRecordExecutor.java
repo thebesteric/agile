@@ -151,7 +151,7 @@ public class TaskRoleApproveRecordExecutor extends AbstractExecutor<TaskRoleAppr
      */
     public List<TaskRoleApproveRecord> findByTaskInstanceIdAndRoleId(String tenantId, Integer taskInstanceId, String roleId) {
         String selectSql = """
-                SELECT * FROM awf_task_role_approve_record t
+                SELECT t.* FROM awf_task_role_approve_record t
                 LEFT JOIN awf_node_role_assignment r ON r.id = t.node_role_assignment_id
                 WHERE t.tenant_id = ? AND t.task_inst_id = ? AND r.role_id = ?
                 """;
@@ -173,7 +173,7 @@ public class TaskRoleApproveRecordExecutor extends AbstractExecutor<TaskRoleAppr
      */
     public List<TaskRoleApproveRecord> findByTaskInstanceIdAndRoleIdAndStatus(String tenantId, Integer taskInstanceId, String roleId, ApproveStatus approveStatus) {
         String selectSql = """
-                SELECT * FROM awf_task_role_approve_record t
+                SELECT t.* FROM awf_task_role_approve_record t
                 LEFT JOIN awf_node_role_assignment r ON r.id = t.node_role_assignment_id
                 WHERE t.tenant_id = ? AND t.task_inst_id = ? AND r.role_id = ? AND t.status = ?
                 """;
@@ -195,11 +195,48 @@ public class TaskRoleApproveRecordExecutor extends AbstractExecutor<TaskRoleAppr
      */
     public TaskRoleApproveRecord getByTaskInstanceIdAndRoleIdAndUserId(String tenantId, Integer taskInstanceId, String roleId, String userId) {
         String selectSql = """
-                SELECT * FROM awf_task_role_approve_record t
+                SELECT t.* FROM awf_task_role_approve_record t
                 LEFT JOIN awf_node_role_assignment r ON r.id = t.node_role_assignment_id
                 WHERE t.tenant_id = ? AND t.task_inst_id = ? AND r.role_id = ? AND r.user_id = ?
                 """;
         RowMapper<TaskRoleApproveRecord> rowMapper = (ResultSet rs, int rowNum) -> TaskRoleApproveRecord.of(rs);
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, rowMapper, tenantId, taskInstanceId, roleId, userId)).getOrNull();
+    }
+
+    /**
+     * 根据流程实例 ID 获取角色审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<TaskRoleApproveRecord>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 14:26
+     */
+    public List<TaskRoleApproveRecord> findByTWorkflowInstanceId(String tenantId, Integer workflowInstanceId) {
+        return this.findByTWorkflowInstanceId(tenantId, workflowInstanceId, null);
+    }
+
+    /**
+     * 根据流程实例 ID 获取角色审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param approveStatus      审批状态
+     *
+     * @return List<TaskRoleApproveRecord>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 14:26
+     */
+    public List<TaskRoleApproveRecord> findByTWorkflowInstanceId(String tenantId, Integer workflowInstanceId, ApproveStatus approveStatus) {
+        Query query = QueryBuilderWrapper.createLambda(TaskRoleApproveRecord.class)
+                .eq(TaskRoleApproveRecord::getTenantId, tenantId)
+                .eq(TaskRoleApproveRecord::getWorkflowInstanceId, workflowInstanceId)
+                .eq(approveStatus != null, TaskRoleApproveRecord::getStatus, approveStatus.getCode())
+                .eq(TaskRoleApproveRecord::getState, 1)
+                .build();
+        return super.find(query).getRecords();
     }
 }

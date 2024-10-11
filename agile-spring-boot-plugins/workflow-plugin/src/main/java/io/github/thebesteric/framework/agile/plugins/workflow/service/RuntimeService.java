@@ -4,15 +4,10 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.ApproveDatesSegmentCondition;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
-import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 
 import java.util.List;
 
@@ -609,4 +604,59 @@ public interface RuntimeService {
      * @since 2024/10/10 18:24
      */
     String getRoleIdByTaskInstanceId(String tenantId, Integer taskInstanceId, String approverId);
+
+    /**
+     * 获取审批记录
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approverId     用户 ID
+     *
+     * @return TaskApprove
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:51
+     */
+    TaskApprove getTaskApprove(String tenantId, Integer taskInstanceId, String approverId);
+
+    /**
+     * 获取角色审批记录
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param approverId     用户 ID
+     *
+     * @return TaskRoleApprove
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:51
+     */
+    TaskRoleApprove getTaskRoleApprove(String tenantId, Integer taskInstanceId, String roleId, String approverId);
+
+    /**
+     * 获取审批记录列表
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<TaskApprove>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:52
+     */
+    List<TaskApprove> findTaskApproves(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 获取角色审批记录列表
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<TaskRoleApprove>
+     *
+     * @author wangweijun
+     * @since 2024/10/11 13:52
+     */
+    List<TaskRoleApprove> findTaskRoleApproves(String tenantId, Integer workflowInstanceId);
 }

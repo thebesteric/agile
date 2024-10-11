@@ -231,7 +231,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
                 ApproveType approveType = nodeDefinition.getApproveType();
                 for (Approver approver : nodeDefinition.getApprovers()) {
-                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverId(approverIdType, approveType, approver.getId(), approver.getDesc()).build();
+                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, approver.getId(), approver.getName(), approver.getDesc()).build();
                     NodeAssignmentExecutor assignmentExecutor = nodeAssignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
                     assignmentExecutor.save();
                 }
@@ -688,11 +688,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     public List<Approver> findApprovers(String tenantId, Integer nodeDefinitionId) {
         NodeDefinition nodeDefinition = this.getNode(tenantId, nodeDefinitionId);
         List<NodeAssignment> nodeAssignments = this.findNodeAssignments(tenantId, nodeDefinitionId);
-        return nodeAssignments.stream().map(nodeAssignment -> {
-            Approver approver = Approver.of(nodeAssignment.getApproverId(), nodeAssignment.getDesc());
-            approver.setRoleType(nodeDefinition.isRoleApprove());
-            return approver;
-        }).toList();
+        return nodeAssignments.stream().map(nodeAssignment -> Approver.of(nodeAssignment, nodeDefinition.isRoleApprove())).toList();
     }
 
     /**
@@ -719,7 +715,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                     return nodeRoleAssignmentExecutor.findByNodeDefinitionIdRoleId(tenantId, nodeDefinitionId, roleId);
                 })
                 .flatMap(List::stream)
-                .map(nodeRoleAssignment -> RoleApprover.of(nodeRoleAssignment.getRoleId(), nodeRoleAssignment.getDesc(), Approver.of(nodeRoleAssignment.getUserId(), nodeRoleAssignment.getUserDesc())))
+                .map(RoleApprover::of)
                 .toList();
     }
 }

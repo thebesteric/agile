@@ -18,10 +18,7 @@ import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * WorkflowHelperTest
@@ -55,7 +52,7 @@ class WorkflowHelperTest {
                 // 是否允许节点审批人为空的时候，自动通过
                 .allowEmptyAutoApprove(false)
                 // 当节点审批人为空的时候，使用的默认审批人
-                .whenEmptyApprovers(Set.of(Approver.of("admin", "系统管理员"), Approver.of("admin-1", "系统管理员-1")))
+                .whenEmptyApprovers(Set.of(Approver.of("admin", "系统管理员", "系统管理员描述"), Approver.of("admin-1", "系统管理员-1", "系统管理员-1-描述")))
                 .allowRedo(true)
                 .requiredComment(true)
                 .type("日常办公流程");
@@ -97,7 +94,7 @@ class WorkflowHelperTest {
 
         nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门主管审批").desc("任务节点").approveType(ApproveType.ALL)
-                .approver(Approver.of("张三", "张三姓名")).approver(Approver.of("李四", "李四姓名"));
+                .approver(Approver.of("张三", "张三姓名", "张三备注")).approver(Approver.of("李四", "李四姓名", "李四备注"));
         nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
 
@@ -331,14 +328,18 @@ class WorkflowHelperTest {
 
     /** 多角色条件审批案例 */
     private void createWorkflow7(String tenantId, WorkflowDefinition workflowDefinition) {
+        Set<Approver> majorSet = new LinkedHashSet<>();
+        majorSet.add(Approver.of("major-1", "负责人1", "负责人1-备注"));
+        majorSet.add(Approver.of("major-2", "负责人2", "负责人2-备注"));
+
         Set<Approver> groupSet = new LinkedHashSet<>();
-        groupSet.add(Approver.of("grouper-1", "组长1"));
-        groupSet.add(Approver.of("grouper-2", "组长2"));
-        groupSet.add(Approver.of("grouper-3", "组长3"));
+        groupSet.add(Approver.of("grouper-1", "组长1", "组长1-备注"));
+        groupSet.add(Approver.of("grouper-2", "组长2", "组长2-备注"));
+        groupSet.add(Approver.of("grouper-3", "组长3", "组长3-备注"));
 
         Set<Approver> manageSet = new LinkedHashSet<>();
-        manageSet.add(Approver.of("manager-1", "经理1"));
-        manageSet.add(Approver.of("manager-2", "经理2"));
+        manageSet.add(Approver.of("manager-1", "经理1", "经理1-备注"));
+        manageSet.add(Approver.of("manager-2", "经理2", "经理2-备注"));
 
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
@@ -353,7 +354,10 @@ class WorkflowHelperTest {
                 .roleApprove(true)
                 .roleApproveType(RoleApproveType.SEQ)
                 .roleUserApproveType(RoleUserApproveType.ANY)
-                .roleApprovers(RoleApprover.of("组长", groupSet))
+                .roleApprovers(RoleApprover.of(
+                        Map.of(
+                                RoleApprover.ApproverRole.of("组长", "组长名称", "组长备注"), groupSet,
+                                RoleApprover.ApproverRole.of("负责人", "负责人名称", "负责人备注"), majorSet)))
                 .conditions(conditions)
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
@@ -366,7 +370,7 @@ class WorkflowHelperTest {
                 .roleApprove(true)
                 .roleApproveType(RoleApproveType.SEQ)
                 .roleUserApproveType(RoleUserApproveType.ALL)
-                .roleApprovers(RoleApprover.of("经理", manageSet))
+                .roleApprovers(RoleApprover.of("经理", "经理角色名称", "经理角色备注", manageSet))
                 .conditions(conditions)
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
@@ -376,7 +380,7 @@ class WorkflowHelperTest {
         conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
                 .name("人事主管审批").desc("任务节点").conditions(conditions)
-                .approverId("赵六")
+                .approver(Approver.of("赵六", "赵六名称", "赵六备注"))
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -385,7 +389,7 @@ class WorkflowHelperTest {
         conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
                 .name("人事经理审批").desc("任务节点").conditions(conditions)
-                .approverId("孙七")
+                .approver(Approver.of("孙七", "孙七名称", "孙七备注"))
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -437,7 +441,7 @@ class WorkflowHelperTest {
 
 
         RequestConditions requestConditions = RequestConditions.newInstance();
-        requestConditions.addRequestCondition(RequestCondition.of("day", "4"));
+        requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
         WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions);
 
         // 添加附件
@@ -458,19 +462,19 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        // String roleId = "xxx";
-        // String approverId = "张三";
+        String roleId = "xxx";
+        String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
         // String approverId = "赵六";
-        String approverId = "孙七";
+        // String approverId = "孙七";
         // String approverId = "admin";
         // String approverId = "admin-1";
 
-        String roleId = "经理";
+        // String roleId = "经理";
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
@@ -478,6 +482,10 @@ class WorkflowHelperTest {
         // String approverId = "grouper-1";
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
+
+        // String roleId = "负责人";
+        // String approverId = "major-1";
+        // String approverId = "major-2";
 
         // String roleId = "总监";
         // String approverId = "major-1";
@@ -833,13 +841,19 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
 
-        List<Approver> approvers = workflowServiceHelper.findApprovers(tenantId, 3);
+        List<Approver> approvers = workflowServiceHelper.findApprovers(tenantId, 4);
         System.out.println(JsonUtils.toJson(approvers));
 
-        List<RoleApprover> roleApprovers = workflowServiceHelper.findRoleApprovers(tenantId, 3);
+        List<RoleApprover> roleApprovers = workflowServiceHelper.findRoleApprovers(tenantId, 2);
         System.out.println(JsonUtils.toJson(roleApprovers));
     }
 
+    /**
+     * 获取当前流程实例下正在生效的审批人列表
+     *
+     * @author wangweijun
+     * @since 2024/10/11 14:34
+     */
     @Test
     void findInCurrentlyEffectApprovers() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -850,6 +864,30 @@ class WorkflowHelperTest {
 
         List<RoleApprover> inCurrentlyEffectRoleApprovers = runtimeServiceHelper.findInCurrentlyEffectRoleApprovers(tenantId, 1);
         System.out.println(JsonUtils.toJson(inCurrentlyEffectRoleApprovers));
+    }
+
+    @Test
+    void findTaskApprove() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+
+        TaskApprove taskApprove = runtimeServiceHelper.getTaskApprove(tenantId, 2, "张三");
+        System.out.println(JsonUtils.toJson(taskApprove));
+
+        List<TaskApprove> taskApproves = runtimeServiceHelper.findTaskApproves(tenantId, 1);
+        System.out.println(JsonUtils.toJson(taskApproves));
+    }
+
+    @Test
+    void findTaskRoleApprove() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+
+        TaskRoleApprove taskRoleApprove= runtimeServiceHelper.getTaskRoleApprove(tenantId, 2, "经理", "manager-1");
+        System.out.println(JsonUtils.toJson(taskRoleApprove));
+
+        List<TaskRoleApprove> taskRoleApproves = runtimeServiceHelper.findTaskRoleApproves(tenantId, 1);
+        System.out.println(JsonUtils.toJson(taskRoleApproves));
     }
 
 }

@@ -102,8 +102,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                     // 角色用户的顺序
                     int userSeqValue = userSeq.getAndIncrement();
                     NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentBuilder
-                            .userId(userSeqValue, roleApprover.getUserId(), roleApprover.getUserDesc())
-                            .roleId(roleSeqValue, roleApprover.getRoleId(), roleApprover.getRoleDesc())
+                            .userInfo(userSeqValue, roleApprover.getUserId(), roleApprover.getUserName(), roleApprover.getUserDesc())
+                            .roleInfo(roleSeqValue, roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc())
                             .build();
                     NodeRoleAssignmentExecutor nodeRoleUserAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.nodeRoleUserAssignment(nodeRoleAssignment).build();
                     nodeRoleUserAssignmentExecutor.save();
@@ -126,7 +126,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
 
 
             // 将 approvers 设置为角色用户
-            approvers = roleApprovers.stream().map(roleApprover -> Approver.of(roleApprover.getRoleId(), roleApprover.getRoleDesc())).collect(Collectors.toSet());
+            approvers = roleApprovers.stream().map(roleApprover -> Approver.of(roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc())).collect(Collectors.toSet());
         }
 
         // 设置节点审批人
@@ -135,7 +135,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
         NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
         for (Approver approver : approvers) {
-            NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverId(approverIdType, approveType, approver.getId(), approver.getDesc()).build();
+            NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, approver.getId(), approver.getName(), approver.getDesc()).build();
             NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
             assignmentExecutor.save();
         }

@@ -69,7 +69,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
             whenEmptyApprovers.forEach(approver -> {
                 WorkflowAssignment workflowAssignment = WorkflowAssignmentBuilder
                         .builder(workflowDefinition.getTenantId(), workflowDefinition.getId())
-                        .approverId(approver.getId(), approver.getDesc())
+                        .approverInfo(approver.getId(), approver.getName(), approver.getDesc())
                         .build();
                 workflowAssignmentExecutor.save(workflowAssignment);
             });

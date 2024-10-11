@@ -37,6 +37,9 @@ public class NodeRoleAssignment extends BaseEntity {
     @EntityColumn(name = "role_id", length = 32, nullable = false, comment = "角色 ID")
     private String roleId;
 
+    @EntityColumn(name = "role_name", length = 64, comment = "角色名称")
+    private String roleName;
+
     @EntityColumn(name = "role_seq", type = EntityColumn.Type.SMALL_INT, comment = "角色审批顺序")
     private Integer roleSeq;
 
@@ -45,6 +48,9 @@ public class NodeRoleAssignment extends BaseEntity {
 
     @EntityColumn(name = "user_id", length = 32, nullable = false, comment = "用户 ID")
     private String userId;
+
+    @EntityColumn(name = "user_name", length = 64, comment = "用户 ID")
+    private String userName;
 
     @EntityColumn(name = "user_seq", type = EntityColumn.Type.SMALL_INT, comment = "用户审批顺序")
     private Integer userSeq;
@@ -57,8 +63,10 @@ public class NodeRoleAssignment extends BaseEntity {
         nodeRoleAssignment.setTenantId(rs.getString("tenant_id"));
         nodeRoleAssignment.setNodeDefinitionId(rs.getInt("node_def_id"));
         nodeRoleAssignment.setRoleId(rs.getString("role_id"));
+        nodeRoleAssignment.setRoleName(rs.getString("role_name"));
         nodeRoleAssignment.setRoleDesc(rs.getString("role_desc"));
         nodeRoleAssignment.setUserId(rs.getString("user_id"));
+        nodeRoleAssignment.setUserName(rs.getString("user_name"));
         nodeRoleAssignment.setUserDesc(rs.getString("user_desc"));
         // 解决 rs.getInt("xxx") null 值会返回 0 的问题
         Object userSeqObject = rs.getObject("user_seq");

@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.ta
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutor;
@@ -65,7 +66,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      * @since 2024/6/24 20:03
      */
     public TaskApprove getByTaskInstanceIdAndApproverId() {
-        return this.getByTaskInstanceIdAndApproverId(taskApprove.getTenantId(), taskApprove.getTaskInstanceId(), null, taskApprove.getApproverId());
+        return this.getByTaskInstanceIdAndApproverId(taskApprove.getTenantId(), taskApprove.getTaskInstanceId(), taskApprove.getApproverId());
     }
 
     /**
@@ -73,6 +74,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
+     * @param activeStatus   生效状态
      * @param roleId         角色 ID
      * @param userId         用户 ID
      *
@@ -81,7 +83,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      * @author wangweijun
      * @since 2024/6/24 20:03
      */
-    public TaskApprove getByTaskInstanceIdAndApproverId(String tenantId, Integer taskInstanceId, String roleId, String userId) {
+    public TaskApprove getByTaskInstanceIdAndRoleIdAndApproverId(String tenantId, Integer taskInstanceId, ActiveStatus activeStatus, String roleId, String userId) {
         TaskInstanceExecutor taskInstanceExecutor = new TaskInstanceExecutor(jdbcTemplate);
         NodeDefinitionExecutor nodeDefinitionExecutor = new NodeDefinitionExecutor(jdbcTemplate);
         TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
@@ -97,13 +99,37 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
             userId = nodeRoleAssignment.getRoleId();
         }
 
+        if (activeStatus == null) {
+            activeStatus = ActiveStatus.ACTIVE;
+        }
+
         final String selectSql = """
                 SELECT * FROM awf_task_approve 
-                WHERE `state` = 1 AND `active` = 1 AND `tenant_id` = ? AND `task_inst_id` = ? AND `approver_id` = '%s' 
-                """.formatted(userId);
-
+                WHERE `state` = 1 AND `active` = %s AND `tenant_id` = ? AND `task_inst_id` = ? AND `approver_id` = '%s' 
+                """.formatted(activeStatus.getCode(), userId);
         RowMapper<TaskApprove> rowMapper = (ResultSet rs, int rowNum) -> TaskApprove.of(rs);
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, rowMapper, tenantId, taskInstanceId)).getOrNull();
+    }
+
+    /**
+     * 根据任务实例 ID 和审批人 ID 查询审批信息
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approverId     用户 ID
+     *
+     * @return TaskApprove
+     *
+     * @author wangweijun
+     * @since 2024/10/11 14:09
+     */
+    public TaskApprove getByTaskInstanceIdAndApproverId(String tenantId, Integer taskInstanceId, String approverId) {
+        final String selectSql = """
+                SELECT * FROM awf_task_approve 
+                WHERE `state` = 1 AND `tenant_id` = ? AND `task_inst_id` = ? AND `approver_id` = ?
+                """;
+        RowMapper<TaskApprove> rowMapper = (ResultSet rs, int rowNum) -> TaskApprove.of(rs);
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, rowMapper, tenantId, taskInstanceId, approverId)).getOrNull();
     }
 
     /**
@@ -152,13 +178,14 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
      * @param activeStatus       活动状态
+     * @param approveStatus      审核状态
      *
      * @return List<TaskApprove>
      *
      * @author wangweijun
      * @since 2024/6/27 13:46
      */
-    public List<TaskApprove> findByTWorkflowInstanceId(String tenantId, Integer workflowInstanceId, ActiveStatus activeStatus) {
+    public List<TaskApprove> findByTWorkflowInstanceId(String tenantId, Integer workflowInstanceId, ActiveStatus activeStatus, ApproveStatus approveStatus) {
         String selectSql = """
                 SELECT a.* FROM awf_task_approve a 
                 LEFT JOIN awf_task_instance i ON a.`task_inst_id` = i.`id`
@@ -166,6 +193,9 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
                 """;
         if (activeStatus != null) {
             selectSql += " AND a.`active` = '" + activeStatus.getCode() + "'";
+        }
+        if (approveStatus != null) {
+            selectSql += " AND a.`status` = '" + approveStatus.getCode() + "'";
         }
         RowMapper<TaskApprove> rowMapper = (ResultSet rs, int rowNum) -> TaskApprove.of(rs);
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowInstanceId).stream().toList();
@@ -183,7 +213,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
      * @since 2024/6/27 13:46
      */
     public List<TaskApprove> findByTWorkflowInstanceId(String tenantId, Integer workflowInstanceId) {
-        return findByTWorkflowInstanceId(tenantId, workflowInstanceId, null);
+        return findByTWorkflowInstanceId(tenantId, workflowInstanceId, null, null);
     }
 
 }
