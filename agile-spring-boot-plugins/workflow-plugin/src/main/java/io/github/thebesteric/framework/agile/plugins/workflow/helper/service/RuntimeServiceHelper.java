@@ -325,6 +325,36 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 根据流程实例 ID 获取流程实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return WorkflowInstance
+     *
+     * @author wangweijun
+     * @since 2024/10/12 15:15
+     */
+    public WorkflowInstance getWorkflowInstanceById(String tenantId, Integer workflowInstanceId) {
+        return this.runtimeService.getWorkflowInstanceById(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 根据任务实例 ID 获取流程实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return WorkflowInstance
+     *
+     * @author wangweijun
+     * @since 2024/10/12 15:15
+     */
+    public WorkflowInstance getWorkflowInstanceByTaskInstanceId(String tenantId, Integer taskInstanceId) {
+        return this.runtimeService.getWorkflowInstanceByTaskInstanceId(tenantId, taskInstanceId);
+    }
+
+    /**
      * 查找流程实例：根据发起人
      *
      * @param tenantId    租户 ID

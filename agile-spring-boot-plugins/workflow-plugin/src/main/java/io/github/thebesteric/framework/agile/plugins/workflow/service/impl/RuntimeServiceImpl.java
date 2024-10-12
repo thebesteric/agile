@@ -3185,6 +3185,48 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
+     * 根据流程实例 ID 获取流程实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return WorkflowInstance
+     *
+     * @author wangweijun
+     * @since 2024/10/12 15:15
+     */
+    @Override
+    public WorkflowInstance getWorkflowInstanceById(String tenantId, Integer workflowInstanceId) {
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
+        if (workflowInstance == null || !tenantId.equals(workflowInstance.getTenantId())) {
+            return null;
+        }
+        return workflowInstance;
+    }
+
+    /**
+     * 根据任务实例 ID 获取流程实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return WorkflowInstance
+     *
+     * @author wangweijun
+     * @since 2024/10/12 15:15
+     */
+    @Override
+    public WorkflowInstance getWorkflowInstanceByTaskInstanceId(String tenantId, Integer taskInstanceId) {
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+        if (taskInstance == null || !tenantId.equals(taskInstance.getTenantId())) {
+            return null;
+        }
+        return this.getWorkflowInstanceById(tenantId, taskInstance.getWorkflowInstanceId());
+    }
+
+    /**
      * doUpdateApprover
      *
      * @param tenantId         租户 ID

@@ -659,4 +659,30 @@ public interface RuntimeService {
      * @since 2024/10/11 13:52
      */
     List<TaskRoleApprove> findTaskRoleApproves(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 根据流程实例 ID 获取流程实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return WorkflowInstance
+     *
+     * @author wangweijun
+     * @since 2024/10/12 15:15
+     */
+    WorkflowInstance getWorkflowInstanceById(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 根据任务实例 ID 获取流程实例
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return WorkflowInstance
+     *
+     * @author wangweijun
+     * @since 2024/10/12 15:15
+     */
+    WorkflowInstance getWorkflowInstanceByTaskInstanceId(String tenantId, Integer taskInstanceId);
 }
