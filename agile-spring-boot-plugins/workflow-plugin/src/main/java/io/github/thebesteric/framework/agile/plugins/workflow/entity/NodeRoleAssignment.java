@@ -20,7 +20,6 @@ import java.sql.SQLException;
  * @version v1.0
  * @since 2024-09-12 20:08:47
  */
-@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Data
 @EntityClass(value = "awf_node_role_assignment", comment = "节点角色用户定义表")

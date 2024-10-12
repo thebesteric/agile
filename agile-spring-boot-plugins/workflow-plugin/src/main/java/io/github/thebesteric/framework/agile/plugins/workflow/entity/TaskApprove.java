@@ -8,7 +8,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproverI
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -24,7 +23,6 @@ import java.sql.SQLException;
  * @version v1.0
  * @since 2024-06-12 17:45:35
  */
-@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Data
 @EntityClass(value = "awf_task_approve", comment = "任务实例审批表")

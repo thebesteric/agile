@@ -463,13 +463,13 @@ class WorkflowHelperTest {
     @Test
     void approve() {
         String roleId = "xxx";
-        String approverId = "张三";
+        // String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
-        // String approverId = "赵六";
+        String approverId = "赵六";
         // String approverId = "孙七";
         // String approverId = "admin";
         // String approverId = "admin-1";
@@ -780,7 +780,7 @@ class WorkflowHelperTest {
     }
 
     /**
-     * 查看流程定义的流程图
+     * 查看流程定义纲要
      *
      * @author wangweijun
      * @since 2024/10/9 14:53
@@ -806,8 +806,9 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
-        System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "g-2"));
-        System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "m-1"));
+        System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "grouper-1"));
+        System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "major-1"));
+        System.out.println(runtimeServiceHelper.getRoleIdByTaskInstanceId(tenantId, 2, "张三"));
     }
 
     /**
@@ -841,10 +842,10 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
 
-        List<Approver> approvers = workflowServiceHelper.findApprovers(tenantId, 4);
+        List<Approver> approvers = workflowServiceHelper.findApprovers(tenantId, 3);
         System.out.println(JsonUtils.toJson(approvers));
 
-        List<RoleApprover> roleApprovers = workflowServiceHelper.findRoleApprovers(tenantId, 2);
+        List<RoleApprover> roleApprovers = workflowServiceHelper.findRoleApprovers(tenantId, 3);
         System.out.println(JsonUtils.toJson(roleApprovers));
     }
 
@@ -866,6 +867,12 @@ class WorkflowHelperTest {
         System.out.println(JsonUtils.toJson(inCurrentlyEffectRoleApprovers));
     }
 
+    /**
+     * 获取用户审批记录
+     *
+     * @author wangweijun
+     * @since 2024/10/11 18:33
+     */
     @Test
     void findTaskApprove() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -879,7 +886,7 @@ class WorkflowHelperTest {
     }
 
     /**
-     * 获取用户审批记录
+     * 获取角色用户审批记录
      *
      * @author wangweijun
      * @since 2024/10/11 18:33

@@ -266,7 +266,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
     }
 
     /**
-     * 获取流程定义流程图
+     * 获取流程定义纲要
      *
      * @param tenantId           租户 ID
      * @param workflowDefinition 流程定义

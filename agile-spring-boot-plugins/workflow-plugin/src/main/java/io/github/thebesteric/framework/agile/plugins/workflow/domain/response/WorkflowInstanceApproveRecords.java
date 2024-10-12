@@ -189,6 +189,8 @@ public class WorkflowInstanceApproveRecords {
         private Integer id;
         /** 审批人 */
         private String approverId;
+        /** 审批人名称 */
+        private String approverName;
         /** 审批人备注 */
         private String approverDesc;
         /** 审批顺序 */
@@ -200,7 +202,8 @@ public class WorkflowInstanceApproveRecords {
             NodeAssignmentResponse response = new NodeAssignmentResponse();
             response.id = nodeAssignment.getId();
             response.approverId = nodeAssignment.getApproverId();
-            response.approverDesc = nodeAssignment.getDesc();
+            response.approverName = nodeAssignment.getApproverName();
+            response.approverDesc = nodeAssignment.getApproverDesc();
             response.approverSeq = nodeAssignment.getApproverSeq();
             response.createdAt = nodeAssignment.getCreatedAt();
             return response;
@@ -283,12 +286,16 @@ public class WorkflowInstanceApproveRecords {
         private Integer nodeRoleAssignmentId;
         /** 角色 ID */
         private String roleId;
+        /** 角色名称 */
+        private String roleName;
         /** 角色顺序 */
         private Integer roleSeq;
         /** 角色描述 */
         private String roleDesc;
         /** 审核人 ID */
         private String userId;
+        /** 审核人名称 */
+        private String userName;
         /** 审核人顺序 */
         private Integer userSeq;
         /** 审核人描述 */
@@ -307,9 +314,11 @@ public class WorkflowInstanceApproveRecords {
             response.taskRoleApproveRecordId = taskRoleApproveRecord.getId();
             response.nodeRoleAssignmentId = nodeRoleAssignment.getId();
             response.roleId = nodeRoleAssignment.getRoleId();
+            response.roleName = nodeRoleAssignment.getRoleName();
             response.roleSeq = nodeRoleAssignment.getRoleSeq();
             response.roleDesc = nodeRoleAssignment.getRoleDesc();
             response.userId = nodeRoleAssignment.getUserId();
+            response.userName = nodeRoleAssignment.getUserName();
             response.userSeq = nodeRoleAssignment.getUserSeq();
             response.userDesc = nodeRoleAssignment.getUserDesc();
             response.comment = taskRoleApproveRecord.getComment();

@@ -49,6 +49,11 @@ public class TaskInstanceExecutorBuilder extends AbstractExecutorBuilder<TaskIns
         return this;
     }
 
+    public TaskInstanceExecutorBuilder roleApprove(boolean roleApprove) {
+        this.taskInstanceExecutor.getTaskInstance().setRoleApprove(roleApprove);
+        return this;
+    }
+
     public TaskInstanceExecutorBuilder approvedCount(Integer approvedCount) {
         this.taskInstanceExecutor.getTaskInstance().setApprovedCount(approvedCount);
         return this;

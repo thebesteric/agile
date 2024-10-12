@@ -91,7 +91,7 @@ public class WorkflowDefinitionFlowSchema {
 
         // 添加第一级任务节点
         List<NodeDefinition> nextNodeDefinitions = nodeRelations.stream()
-                .filter(i -> i.getFromNodeId().equals(startNode.getId())).flatMap(i -> Stream.of(i.getToNodeId()))
+                .filter(i -> i.getFromNodeId().equals(startNode.getId())).map(NodeRelation::getToNodeId)
                 .map(nodeId -> taskNodes.stream().filter(n -> NodeType.END != n.getNodeType()).filter(n -> n.getId().equals(nodeId)).findFirst().orElse(null))
                 .toList();
 
@@ -200,8 +200,12 @@ public class WorkflowDefinitionFlowSchema {
         private Integer id;
         /** 审批人 ID */
         private String approverId;
+        /** 审批人名称 */
+        private String approverName;
         /** 审批顺序 */
         private Integer approverSeq;
+        /** 审批人描述 */
+        private String approverDesc;
         /** 审批人 ID 类型 */
         private ApproverIdType approverIdType;
 
@@ -209,7 +213,9 @@ public class WorkflowDefinitionFlowSchema {
             NodeAssignmentResponse nodeAssignmentResponse = new NodeAssignmentResponse();
             nodeAssignmentResponse.id = nodeAssignment.getId();
             nodeAssignmentResponse.approverId = nodeAssignment.getApproverId();
+            nodeAssignmentResponse.approverName = nodeAssignment.getApproverName();
             nodeAssignmentResponse.approverSeq = nodeAssignment.getApproverSeq();
+            nodeAssignmentResponse.approverDesc = nodeAssignment.getApproverDesc();
             nodeAssignmentResponse.approverIdType = nodeAssignment.getApproverIdType();
             return nodeAssignmentResponse;
         }
@@ -221,12 +227,16 @@ public class WorkflowDefinitionFlowSchema {
         private Integer id;
         /** 角色 ID */
         private String roleId;
+        /** 角色名称 */
+        private String roleName;
         /** 角色审批顺序 */
         private Integer roleSeq;
         /** 角色描述 */
         private String roleDesc;
         /** 用户 ID */
         private String userId;
+        /** 用户名称 */
+        private String userName;
         /** 用户 ID */
         private Integer userSeq;
         /** 用户描述 */
@@ -236,9 +246,11 @@ public class WorkflowDefinitionFlowSchema {
             NodeRoleAssignmentResponse nodeRoleAssignmentResponse = new NodeRoleAssignmentResponse();
             nodeRoleAssignmentResponse.id = nodeRoleAssignment.getId();
             nodeRoleAssignmentResponse.roleId = nodeRoleAssignment.getRoleId();
+            nodeRoleAssignmentResponse.roleName = nodeRoleAssignment.getRoleName();
             nodeRoleAssignmentResponse.roleSeq = nodeRoleAssignment.getRoleSeq();
             nodeRoleAssignmentResponse.roleDesc = nodeRoleAssignment.getRoleDesc();
             nodeRoleAssignmentResponse.userId = nodeRoleAssignment.getUserId();
+            nodeRoleAssignmentResponse.userName = nodeRoleAssignment.getUserName();
             nodeRoleAssignmentResponse.userSeq = nodeRoleAssignment.getUserSeq();
             nodeRoleAssignmentResponse.userDesc = nodeRoleAssignment.getUserDesc();
             return nodeRoleAssignmentResponse;

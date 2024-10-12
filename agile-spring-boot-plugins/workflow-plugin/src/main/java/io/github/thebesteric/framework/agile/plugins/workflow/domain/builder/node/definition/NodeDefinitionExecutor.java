@@ -190,6 +190,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             NodeDefinition nd = NodeDefinition.of(rs);
             Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
             nd.setApprovers(approvers);
+            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setRoleApprovers(roleApprovers);
             return nd;
         }, workflowDefinitionId, name, tenantId)).getOrNull();
     }
@@ -222,6 +224,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             NodeDefinition nd = NodeDefinition.of(rs);
             Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
             nd.setApprovers(approvers);
+            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setRoleApprovers(roleApprovers);
             return nd;
         }, id, tenantId)).getOrNull();
     }
@@ -255,6 +259,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         nodeDefinitions.forEach(nd -> {
             Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
             nd.setApprovers(approvers);
+            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setRoleApprovers(roleApprovers);
         });
         return nodeDefinitions;
     }
@@ -290,6 +296,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             NodeDefinition nd = NodeDefinition.of(rs);
             Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
             nd.setApprovers(approvers);
+            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setRoleApprovers(roleApprovers);
             return nd;
         }, workflowDefinitionId, tenantId)).getOrNull();
     }
@@ -325,6 +333,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             NodeDefinition nd = NodeDefinition.of(rs);
             Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
             nd.setApprovers(approvers);
+            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setRoleApprovers(roleApprovers);
             return nd;
         }, workflowDefinitionId, tenantId)).getOrNull();
     }
@@ -361,6 +371,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         nodeDefinitions.forEach(nd -> {
             Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
             nd.setApprovers(approvers);
+            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
+            nd.setRoleApprovers(roleApprovers);
         });
         return nodeDefinitions;
     }
@@ -388,6 +400,8 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         for (NodeDefinition toNodeDefinition : toNodeDefinitions) {
             Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, toNodeDefinition.getId());
             toNodeDefinition.setApprovers(approvers);
+            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, toNodeDefinition.getId());
+            toNodeDefinition.setRoleApprovers(roleApprovers);
         }
         return toNodeDefinitions;
     }
@@ -428,7 +442,26 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      */
     public Set<Approver> findApproversByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
         NodeAssignmentExecutor nodeAssignmentExecutor = new NodeAssignmentExecutor(jdbcTemplate);
+        NodeDefinition curNodeDefinition = this.getById(nodeDefinitionId);
+        boolean roleApprove = curNodeDefinition.isRoleApprove();
         return nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId)
-                .stream().map(assignment -> Approver.of(assignment.getApproverId(), assignment.getDesc())).collect(Collectors.toSet());
+                .stream().map(nodeAssignment -> Approver.of(nodeAssignment, roleApprove)).collect(Collectors.toSet());
+    }
+
+    /**
+     * 根据节点定义 ID 查找节点角色审批人
+     *
+     * @param tenantId         租户 ID
+     * @param nodeDefinitionId 节点定义 ID
+     *
+     * @return Set<RoleApprover>
+     *
+     * @author wangweijun
+     * @since 2024/10/12 13:49
+     */
+    public Set<RoleApprover> findRoleApproversByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = new NodeRoleAssignmentExecutor(jdbcTemplate);
+        return nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId)
+                .stream().map(RoleApprover::of).collect(Collectors.toSet());
     }
 }

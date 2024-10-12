@@ -32,12 +32,17 @@ public class Approver implements Serializable {
     /** 是否是角色 */
     private boolean roleType = false;
 
-    public static Approver of(String id, String name, String desc) {
+    public static Approver of(String id, String name, String desc, boolean roleType) {
         Approver approver = new Approver();
         approver.id = id;
         approver.name = name;
         approver.desc = desc;
+        approver.roleType = roleType;
         return approver;
+    }
+
+    public static Approver of(String id, String name, String desc) {
+        return Approver.of(id, name, desc, false);
     }
 
     public static Approver of(String id, String name) {
@@ -49,9 +54,7 @@ public class Approver implements Serializable {
     }
 
     public static Approver of(NodeAssignment nodeAssignment, boolean roleType) {
-        Approver approver = Approver.of(nodeAssignment.getApproverId(), nodeAssignment.getApproverName(), nodeAssignment.getApproverDesc());
-        approver.roleType = roleType;
-        return approver;
+        return Approver.of(nodeAssignment.getApproverId(), nodeAssignment.getApproverName(), nodeAssignment.getApproverDesc(), roleType);
     }
 
     /**
