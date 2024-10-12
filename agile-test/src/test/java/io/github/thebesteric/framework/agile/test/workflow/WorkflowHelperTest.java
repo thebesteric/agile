@@ -903,4 +903,13 @@ class WorkflowHelperTest {
         System.out.println(JsonUtils.toJson(taskRoleApproves));
     }
 
+    @Test
+    void getWorkflowInstance() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+
+        System.out.println(runtimeServiceHelper.getWorkflowInstanceById(tenantId, 1));
+        System.out.println(runtimeServiceHelper.getWorkflowInstanceByTaskInstanceId(tenantId, 2));
+    }
+
 }
