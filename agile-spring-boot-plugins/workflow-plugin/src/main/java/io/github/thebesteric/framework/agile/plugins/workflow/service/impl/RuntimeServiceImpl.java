@@ -115,8 +115,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             recordLogs(tenantId, workflowInstanceId, null, null, TaskHistoryMessage.INSTANCE_SUBMIT_FORM);
 
             // 创建审批开始实例
-            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.tenantId(tenantId).status(NodeStatus.COMPLETED)
-                    .workflowInstanceId(workflowInstanceId).nodeDefinitionId(startNodeDefinition.getId()).build();
+            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.tenantId(tenantId)
+                    .roleApprove(startNodeDefinition.isRoleApprove())
+                    .status(NodeStatus.COMPLETED)
+                    .workflowInstanceId(workflowInstanceId)
+                    .nodeDefinitionId(startNodeDefinition.getId())
+                    .build();
             TaskInstance startTaskInstance = taskInstanceExecutor.save();
 
             // 记录流程日志（开始审批）
@@ -170,6 +174,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     taskInstanceExecutor = taskInstanceExecutorBuilder.status(NodeStatus.IN_PROGRESS)
                             .tenantId(tenantId)
                             .workflowInstanceId(workflowInstanceId).nodeDefinitionId(nextNodeDefinitionId)
+                            .roleApprove(nextNodeDefinition.isRoleApprove())
                             .approvedCount(0)
                             // 设置总需要审批的次数
                             .totalCount(this.calcTotalCount(workflowDefinition, nextNodeDefinition, nextNodeAssignments))
@@ -555,7 +560,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     List<NodeAssignment> nextNodeAssignments = new ArrayList<>();
 
                     // 准备构建下一个节点实例
-                    taskInstanceExecutorBuilder.workflowInstanceId(workflowInstance.getId()).nodeDefinitionId(nextNodeDefinitionId);
+                    taskInstanceExecutorBuilder.workflowInstanceId(workflowInstance.getId())
+                            .roleApprove(nextNodeDefinition.isRoleApprove())
+                            .nodeDefinitionId(nextNodeDefinitionId);
 
                     // 已经是结束节点
                     if (NodeType.END == nextNodeDefinition.getNodeType()) {
@@ -807,6 +814,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         .tenantId(tenantId)
                         .workflowInstanceId(taskInstance.getWorkflowInstanceId())
                         .nodeDefinitionId(endNodeDefinition.getId())
+                        .roleApprove(endNodeDefinition.isRoleApprove())
                         .status(NodeStatus.COMPLETED)
                         .build();
                 taskInstanceExecutor.save();
@@ -1887,6 +1895,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 创建结束节点实例，将状态设置为：已驳回
             taskInstanceExecutor = taskInstanceExecutorBuilder.tenantId(tenantId)
                     .workflowInstanceId(workflowInstanceId).nodeDefinitionId(endNodeDefinition.getId())
+                    .roleApprove(endNodeDefinition.isRoleApprove())
                     .status(NodeStatus.REJECTED).build();
             taskInstanceExecutor.save();
 
@@ -2275,8 +2284,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, workflowInstance.getWorkflowDefinitionId());
 
         // 创建取消节点实例
-        taskInstanceExecutor = taskInstanceExecutorBuilder.tenantId(tenantId).workflowInstanceId(workflowInstanceId)
-                .nodeDefinitionId(endNodeDefinition.getId()).status(NodeStatus.CANCELED).build();
+        taskInstanceExecutor = taskInstanceExecutorBuilder.tenantId(tenantId)
+                .workflowInstanceId(workflowInstanceId)
+                .nodeDefinitionId(endNodeDefinition.getId())
+                .roleApprove(endNodeDefinition.isRoleApprove())
+                .status(NodeStatus.CANCELED)
+                .build();
         taskInstanceExecutor.save();
 
         // 流程实例标记为：已取消
