@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 import io.github.thebesteric.framework.agile.commons.util.DateUtils;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 
@@ -27,38 +28,58 @@ public class ApproveDatesSegmentCondition {
     private Date approveEndDate;
 
     public ApproveDatesSegmentCondition setSubmitStartDate(String submitStartDateStr) {
-        this.submitStartDate = DateUtils.parseToDateTime(submitStartDateStr);
+        if (StringUtils.isNotEmpty(submitStartDateStr)) {
+            this.submitStartDate = DateUtils.parseToDateTime(submitStartDateStr);
+        }
         return this;
     }
 
     public ApproveDatesSegmentCondition setSubmitEndDate(String submitEndDateStr) {
-        this.submitEndDate = DateUtils.parseToDateTime(submitEndDateStr);
+        if (StringUtils.isNotEmpty(submitEndDateStr)) {
+            this.submitEndDate = DateUtils.parseToDateTime(submitEndDateStr);
+        }
         return this;
     }
 
-    public ApproveDatesSegmentCondition setApproveStartDate(String submitStartDateStr) {
-        this.approveStartDate = DateUtils.parseToDateTime(submitStartDateStr);
+    public ApproveDatesSegmentCondition setApproveStartDate(String approveStartDateStr) {
+        if (StringUtils.isNotEmpty(approveStartDateStr)) {
+            this.approveStartDate = DateUtils.parseToDateTime(approveStartDateStr);
+        }
         return this;
     }
 
-    public ApproveDatesSegmentCondition setApproveEndDate(String submitEndDateStr) {
-        this.approveEndDate = DateUtils.parseToDateTime(submitEndDateStr);
+    public ApproveDatesSegmentCondition setApproveEndDate(String approveEndDateStr) {
+        if (StringUtils.isNotEmpty(approveEndDateStr)) {
+            this.approveEndDate = DateUtils.parseToDateTime(approveEndDateStr);
+        }
         return this;
     }
 
     public String submitStartDateToStr() {
+        if (this.submitStartDate == null) {
+            return null;
+        }
         return DateUtils.formatToDateTime(this.submitStartDate);
     }
 
     public String submitEndDateToStr() {
+        if (this.submitEndDate == null) {
+            return null;
+        }
         return DateUtils.formatToDateTime(this.submitEndDate);
     }
 
     public String approveStartDateToStr() {
+        if (this.approveStartDate == null) {
+            return null;
+        }
         return DateUtils.formatToDateTime(this.approveStartDate);
     }
 
     public String approveEndDateToStr() {
+        if (this.approveEndDate == null) {
+            return null;
+        }
         return DateUtils.formatToDateTime(this.approveEndDate);
     }
 
