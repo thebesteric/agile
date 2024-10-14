@@ -899,7 +899,24 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/12 13:42
      */
     public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String curRoleId, String curUserId) {
-        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, curRoleId, curUserId);
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, List.of(curRoleId), curUserId);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param curRoleIds         当前角色 IDs
+     * @param curUserId          当前用户 ID
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId) {
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, curRoleIds, curUserId);
     }
 
     /**
@@ -916,7 +933,24 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/12 13:42
      */
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String curRoleId, String curUserId) {
-        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleId, curUserId);
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, List.of(curRoleId), curUserId);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param curRoleIds           当前角色 IDs
+     * @param curUserId            当前用户 ID
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/10/14 16:37
+     */
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId) {
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleIds, curUserId);
     }
 
     /**

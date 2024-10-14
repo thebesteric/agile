@@ -38,7 +38,7 @@ public class WorkflowInstanceApproveRecords {
      * @param taskApproveAndRoleApproveRecordsMap    审批任务与角色审批记录对应关系
      * @param taskRoleRecordAndNodeRoleAssignmentMap 角色审批记录与角色用户对应关系
      * @param nodeAssignments                        节点审批人
-     * @param curRoleId                              当前角色 ID
+     * @param curRoleIds                             当前角色 IDs
      * @param curUserId                              当前用户 ID
      *
      * @return WorkflowInstanceApproveRecords
@@ -53,7 +53,7 @@ public class WorkflowInstanceApproveRecords {
                                                     Map<TaskApprove, List<TaskRoleApproveRecord>> taskApproveAndRoleApproveRecordsMap,
                                                     Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
                                                     List<NodeAssignment> nodeAssignments,
-                                                    String curRoleId, String curUserId) {
+                                                    List<String> curRoleIds, String curUserId) {
 
         WorkflowInstanceApproveRecords records = new WorkflowInstanceApproveRecords();
         // 封装流程实例
@@ -79,7 +79,7 @@ public class WorkflowInstanceApproveRecords {
                     List<TaskApproveResponse> taskApproveResponses = currTaskApproves.stream().map(taskApprove -> {
                         NodeAssignment nodeAssignment = nodeDefAndNodeAssignmentMap.get(nodeDefinition);
                         List<TaskRoleApproveRecord> taskRoleApproveRecords = taskApproveAndRoleApproveRecordsMap.get(taskApprove);
-                        return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleId, curUserId);
+                        return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleIds, curUserId);
                     }).toList();
                     // 封装任务实例
                     taskInstanceResponse = TaskInstanceResponse.of(taskInstance, taskApproveResponses);
@@ -255,7 +255,9 @@ public class WorkflowInstanceApproveRecords {
         /** 创建时间 */
         private Date createdAt;
 
-        public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment, List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap, String curRoleId, String curUserId) {
+        public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment,
+                                             List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
+                                             List<String> curRoleIds, String curUserId) {
             TaskApproveResponse response = new TaskApproveResponse();
             if (nodeDefinition.isUserApprove()) {
                 response.userId = nodeAssignment.getId().toString();
@@ -271,7 +273,7 @@ public class WorkflowInstanceApproveRecords {
             if (taskRoleApproveRecords != null) {
                 response.taskRoleApproveRecordResponses = taskRoleApproveRecords.stream().map(taskRoleApproveRecord -> {
                     NodeRoleAssignment nodeRoleAssignment = taskRoleRecordAndNodeRoleAssignmentMap.get(taskRoleApproveRecord);
-                    return TaskRoleApproveRecordResponse.of(taskRoleApproveRecord, nodeRoleAssignment, curRoleId, curUserId);
+                    return TaskRoleApproveRecordResponse.of(taskRoleApproveRecord, nodeRoleAssignment, curRoleIds, curUserId);
                 }).toList();
             }
             return response;
@@ -309,7 +311,7 @@ public class WorkflowInstanceApproveRecords {
         /** 创建时间 */
         private Date createdAt;
 
-        public static TaskRoleApproveRecordResponse of(TaskRoleApproveRecord taskRoleApproveRecord, NodeRoleAssignment nodeRoleAssignment, String curRoleId, String curUserId) {
+        public static TaskRoleApproveRecordResponse of(TaskRoleApproveRecord taskRoleApproveRecord, NodeRoleAssignment nodeRoleAssignment, List<String> curRoleIds, String curUserId) {
             TaskRoleApproveRecordResponse response = new TaskRoleApproveRecordResponse();
             response.taskRoleApproveRecordId = taskRoleApproveRecord.getId();
             response.nodeRoleAssignmentId = nodeRoleAssignment.getId();
@@ -324,7 +326,7 @@ public class WorkflowInstanceApproveRecords {
             response.comment = taskRoleApproveRecord.getComment();
             response.approveStatus = taskRoleApproveRecord.getStatus();
             response.createdAt = taskRoleApproveRecord.getCreatedAt();
-            response.isSelf = curUserId != null && curUserId.equals(nodeRoleAssignment.getUserId()) && curRoleId != null && curRoleId.equals(nodeRoleAssignment.getRoleId());
+            response.isSelf = curUserId != null && curUserId.equals(nodeRoleAssignment.getUserId()) && curRoleIds != null && curRoleIds.contains(nodeRoleAssignment.getRoleId());
             return response;
         }
     }

@@ -441,7 +441,7 @@ class WorkflowHelperTest {
 
 
         RequestConditions requestConditions = RequestConditions.newInstance();
-        requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
+        requestConditions.addRequestCondition(RequestCondition.of("day", "3"));
         WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions);
 
         // 添加附件
@@ -462,21 +462,21 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        String roleId = "xxx";
+        // String roleId = "xxx";
         // String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
-        String approverId = "赵六";
+        // String approverId = "赵六";
         // String approverId = "孙七";
         // String approverId = "admin";
         // String approverId = "admin-1";
 
-        // String roleId = "经理";
+        String roleId = "经理";
         // String approverId = "manager-1";
-        // String approverId = "manager-2";
+        String approverId = "manager-2";
 
         // String roleId = "组长";
         // String approverId = "grouper-1";
@@ -774,9 +774,12 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
-        List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, "经理", "manager-1");
+        List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理"), "manager-1");
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
+        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 3, List.of("经理", "组长"), "manager-1");
+        System.out.println("===============================");
+        System.out.println(JsonUtils.toJson(workflowInstanceApproveRecord));
     }
 
     /**
@@ -896,7 +899,7 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
-        TaskRoleApprove taskRoleApprove= runtimeServiceHelper.getTaskRoleApprove(tenantId, 2, "经理", "manager-1");
+        TaskRoleApprove taskRoleApprove = runtimeServiceHelper.getTaskRoleApprove(tenantId, 2, "经理", "manager-1");
         System.out.println(JsonUtils.toJson(taskRoleApprove));
 
         List<TaskRoleApprove> taskRoleApproves = runtimeServiceHelper.findTaskRoleApproves(tenantId, 1);

@@ -2757,7 +2757,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
-     * @param curRoleId          当前角色 ID
+     * @param curRoleIds         当前角色 IDs
      * @param curUserId          当前用户 ID
      *
      * @return WorkflowInstanceApproveRecords
@@ -2766,7 +2766,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/12 13:42
      */
     @Override
-    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String curRoleId, String curUserId) {
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId) {
         // 流程实例
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
@@ -2830,7 +2830,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         }
 
         // 返回 WorkflowInstanceApproveRecords
-        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, nodeDefAndNodeAssignmentMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeAssignments, curRoleId, curUserId);
+        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, nodeDefAndNodeAssignmentMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeAssignments, curRoleIds, curUserId);
     }
 
     /**
@@ -2846,7 +2846,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId) {
-        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, null, null);
+        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, List.of(), null);
     }
 
     /**
@@ -2854,7 +2854,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
-     * @param curRoleId            当前角色 ID
+     * @param curRoleIds           当前角色 IDs
      * @param curUserId            当前用户 ID
      *
      * @return List<WorkflowInstanceApproveRecords>
@@ -2863,7 +2863,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/12 13:42
      */
     @Override
-    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String curRoleId, String curUserId) {
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId) {
         // 流程定义
         WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
         WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
@@ -2875,7 +2875,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         List<WorkflowInstance> workflowInstances = workflowInstanceExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId);
         for (WorkflowInstance workflowInstance : workflowInstances) {
-            WorkflowInstanceApproveRecords records = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), curRoleId, curUserId);
+            WorkflowInstanceApproveRecords records = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), curRoleIds, curUserId);
             recordsList.add(records);
         }
 
