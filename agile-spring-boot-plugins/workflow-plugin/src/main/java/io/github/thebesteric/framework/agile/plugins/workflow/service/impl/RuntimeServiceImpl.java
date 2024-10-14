@@ -3227,6 +3227,26 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
+     * 查找流程实例：根据流程定义 key
+     *
+     * @param tenantId         租户 ID
+     * @param key              流程定义 key
+     * @param workflowStatuses 流程状态
+     * @param page             当前页
+     * @param pageSize         每页显示数量
+     *
+     * @return Page<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/14 10:10
+     */
+    @Override
+    public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        return workflowInstanceExecutor.findWorkflowInstancesByKey(tenantId, key, workflowStatuses, page, pageSize);
+    }
+
+    /**
      * doUpdateApprover
      *
      * @param tenantId         租户 ID

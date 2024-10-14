@@ -10,6 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowIns
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.List;
@@ -212,4 +213,38 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
         return this.find(query);
     }
 
+    /**
+     * 查找流程实例：根据流程定义 key
+     *
+     * @param tenantId         租户 ID
+     * @param key              流程定义 key
+     * @param workflowStatuses 流程状态
+     * @param page             当前页
+     * @param pageSize         每页显示数量
+     *
+     * @return Page<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/14 10:10
+     */
+    public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
+        String selectSql = """
+                SELECT DISTINCT wi.* FROM `awf_wf_instance` wi
+                    LEFT JOIN `awf_wf_definition` wd ON wi.`wf_def_id` = wd.`id`
+                WHERE wi.`tenant_id` = ? and wi.`state` = 1  and wd.`key` = ?
+                """;
+        if (CollectionUtils.isNotEmpty(workflowStatuses)) {
+            String codes = workflowStatuses.stream().map(WorkflowStatus::getCode).map(String::valueOf).collect(Collectors.joining(","));
+            selectSql += " AND wi.`status` in (" + codes + ")";
+        }
+
+        String countSql = "SELECT COUNT(*) FROM (" + selectSql + ") AS t";
+        Integer count = this.jdbcTemplate.queryForObject(countSql, Integer.class, tenantId, key);
+
+        selectSql += " ORDER BY wi.`id` DESC LIMIT ? OFFSET ?";
+        Integer offset = (page - 1) * pageSize;
+        List<WorkflowInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, key, pageSize, offset);
+
+        return Page.of(page, pageSize, count == null ? 0 : count, records);
+    }
 }

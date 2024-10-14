@@ -903,6 +903,12 @@ class WorkflowHelperTest {
         System.out.println(JsonUtils.toJson(taskRoleApproves));
     }
 
+    /**
+     * 查询流程实例
+     *
+     * @author wangweijun
+     * @since 2024/10/14 10:21
+     */
     @Test
     void getWorkflowInstance() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -910,6 +916,9 @@ class WorkflowHelperTest {
 
         System.out.println(runtimeServiceHelper.getWorkflowInstanceById(tenantId, 1));
         System.out.println(runtimeServiceHelper.getWorkflowInstanceByTaskInstanceId(tenantId, 2));
+
+        Page<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstancesByKey(tenantId, workflowKey, List.of(WorkflowStatus.IN_PROGRESS), 1, 10);
+        System.out.println(workflowInstances);
     }
 
 }

@@ -11,6 +11,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.RuntimeService;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -463,6 +464,60 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     public Page<WorkflowInstance> findWorkflowInstancesByApproverId(String tenantId, String approverId, Integer page, Integer pageSize) {
         return this.findWorkflowInstancesByApproverId(tenantId, approverId, List.of(), List.of(), page, pageSize);
     }
+
+    /**
+     * 查找流程实例：根据流程定义 key
+     *
+     * @param tenantId         租户 ID
+     * @param key              流程定义 key
+     * @param workflowStatuses 流程状态
+     * @param page             当前页
+     * @param pageSize         每页显示数量
+     *
+     * @return Page<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/14 10:10
+     */
+    public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
+        return this.runtimeService.findWorkflowInstancesByKey(tenantId, key, workflowStatuses, page, pageSize);
+    }
+
+    /**
+     * 查找流程实例：根据流程定义 key
+     *
+     * @param tenantId       租户 ID
+     * @param key            流程定义 key
+     * @param workflowStatus 流程状态
+     * @param page           当前页
+     * @param pageSize       每页显示数量
+     *
+     * @return Page<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/14 10:10
+     */
+    public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, WorkflowStatus workflowStatus, Integer page, Integer pageSize) {
+        return this.findWorkflowInstancesByKey(tenantId, key, List.of(workflowStatus), page, pageSize);
+    }
+
+    /**
+     * 查找流程实例：根据流程定义 key
+     *
+     * @param tenantId 租户 ID
+     * @param key      流程定义 key
+     * @param page     当前页
+     * @param pageSize 每页显示数量
+     *
+     * @return Page<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/14 10:10
+     */
+    public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, Integer page, Integer pageSize) {
+        return this.findWorkflowInstancesByKey(tenantId, key, Collections.emptyList(), page, pageSize);
+    }
+
 
     /**
      * 下个任务实例节点是不是未完成设置的动态审批节点
