@@ -3062,7 +3062,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
-     * 获取角色 ID
+     * 根据任务实例 ID：获取角色 ID
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
