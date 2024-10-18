@@ -14,6 +14,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.nod
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve.TaskApproveExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve.TaskRoleApproveRecordExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.dynamic.TaskDynamicAssignmentExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.history.TaskHistoryExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance.TaskInstanceExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.assignment.WorkflowAssignmentExecutorBuilder;
@@ -57,7 +58,7 @@ public class WorkflowEngine {
     private static final List<Class<? extends BaseEntity>> ENTITY_CLASSES = List.of(
             WorkflowDefinition.class, WorkflowInstance.class, WorkflowRepository.class, WorkflowAssignment.class, WorkflowDefinitionHistory.class,
             NodeDefinition.class, NodeAssignment.class, NodeRelation.class, NodeRoleAssignment.class, NodeDefinitionHistory.class,
-            TaskInstance.class, TaskApprove.class, TaskRoleApproveRecord.class, TaskHistory.class
+            TaskInstance.class, TaskApprove.class, TaskRoleApproveRecord.class, TaskHistory.class, TaskDynamicAssignment.class
     );
 
     @Getter
@@ -90,6 +91,8 @@ public class WorkflowEngine {
     private final TaskRoleApproveRecordExecutorBuilder taskRoleApproveRecordExecutorBuilder;
     @Getter
     private final TaskHistoryExecutorBuilder taskHistoryExecutorBuilder;
+    @Getter
+    private final TaskDynamicAssignmentExecutorBuilder taskDynamicAssignmentExecutorBuilder;
 
 
     public WorkflowEngine(AgileWorkflowContext context) {
@@ -112,6 +115,7 @@ public class WorkflowEngine {
         this.taskApproveExecutorBuilder = TaskApproveExecutorBuilder.builder(jdbcTemplate);
         this.taskRoleApproveRecordExecutorBuilder = TaskRoleApproveRecordExecutorBuilder.builder(jdbcTemplate);
         this.taskHistoryExecutorBuilder = TaskHistoryExecutorBuilder.builder(jdbcTemplate);
+        this.taskDynamicAssignmentExecutorBuilder = TaskDynamicAssignmentExecutorBuilder.builder(jdbcTemplate);
     }
 
     /**

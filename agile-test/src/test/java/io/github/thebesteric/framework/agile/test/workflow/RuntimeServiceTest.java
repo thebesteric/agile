@@ -36,7 +36,7 @@ public class RuntimeServiceTest {
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
-        runtimeService.start(tenantId, "test-key", requesterId, "123-789-3", "org.agile.workflow.Business.class", "请假申请单", requestConditions);
+        runtimeService.start(tenantId, "test-key", requesterId, "123-789-3", "org.agile.workflow.Business.class", "请假申请单", requestConditions, null);
     }
 
     @Test

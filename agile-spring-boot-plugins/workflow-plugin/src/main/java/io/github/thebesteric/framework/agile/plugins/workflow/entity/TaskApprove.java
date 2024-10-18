@@ -169,4 +169,16 @@ public class TaskApprove extends BaseEntity {
     public int hashCode() {
         return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(tenantId).append(workflowInstanceId).append(taskInstanceId).append(approverId).toHashCode();
     }
+
+    public Integer getDynamicApproverSeq() {
+        if (this.isDynamicTaskApprove()) {
+            return null;
+        }
+        String seqStr = this.approverId.split(":")[1].substring(0, 1);
+        return Integer.parseInt(seqStr);
+    }
+
+    public boolean isDynamicTaskApprove() {
+        return this.approverId.startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && this.approverId.endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX);
+    }
 }

@@ -11,7 +11,7 @@ import io.github.thebesteric.framework.agile.commons.util.AbstractUtils;
  */
 public final class WorkflowConstants extends AbstractUtils {
     /** 动态指定审批人前缀 */
-    public static final String DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX = "{assignment:";
+    public static final String DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX = "{dynamic:";
     /** 动态指定审批人后缀 */
     public static final String DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX = "}";
     /** 动态指定审批人 */

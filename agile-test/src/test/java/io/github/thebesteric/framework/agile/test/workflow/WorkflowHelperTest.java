@@ -48,9 +48,9 @@ class WorkflowHelperTest {
                 .key(workflowKey)
                 .name("请假流程-1")
                 // 连续审批模式
-                .continuousApproveMode(ContinuousApproveMode.APPROVE_ALL)
+                .continuousApproveMode(ContinuousApproveMode.APPROVE_CONTINUOUS)
                 // 是否允许节点审批人为空的时候，自动通过
-                .allowEmptyAutoApprove(false)
+                .allowEmptyAutoApprove(true)
                 // 当节点审批人为空的时候，使用的默认审批人
                 .whenEmptyApprovers(Set.of(Approver.of("admin", "系统管理员", "系统管理员描述"), Approver.of("admin-1", "系统管理员-1", "系统管理员-1-描述")))
                 .allowRedo(true)
@@ -79,7 +79,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow7(tenantId, workflowDefinition);
+        createWorkflow3(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -182,15 +182,15 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
-                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ALL)
-                .dynamicAssignmentApprovers(2) // 预设 2 个审批人
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.SEQ)
+                .dynamicAssignmentApproversNum(-1) // 预设 2 个审批人
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
                 .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
-                .dynamicAssignmentApprovers(1) // 预设 1 个审批人
+                .dynamicAssignmentApproversNum(1) // 预设 1 个审批人
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -209,6 +209,7 @@ class WorkflowHelperTest {
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
+        // 空节点：allowEmptyAutoApprove 必须为 true，表示默认通过，即：空审批岗
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门主管审批").desc("任务节点").approveType(ApproveType.ANY)
                 .build();
@@ -429,20 +430,30 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(userId);
         // runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天");
 
-        // // 预设：动态审批人
-        // WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
-        // NodeDefinition firstTaskNode = workflowServiceHelper.getFirstTaskNode(tenantId, workflowDefinition.getId());
-        // if (firstTaskNode.isUnSettingAssignmentApprovers()) {
-        //     System.out.println("需要指定审批人数量：" + firstTaskNode.getApprovers());
-        //     List<Approver> approvers = List.of(Approver.of("张三"), Approver.of("李四"));
-        //     runtimeServiceHelper.dynamicAssignmentApprovers(tenantId, firstTaskNode.getId(), approvers);
-        //     System.out.println("审批人设置完毕：" + approvers);
-        // }
-
+        // 动态审批节点的情况下，预设：动态审批人
+        WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
+        NodeDefinition firstTaskNode = workflowServiceHelper.getFirstTaskNode(tenantId, workflowDefinition.getId());
+        List<Approver> approvers = new ArrayList<>();
+        if (firstTaskNode.isDynamic()) {
+            Integer dynamicAssignmentNum = firstTaskNode.getDynamicAssignmentNum();
+            System.out.println("需要指定审批人数量：" + dynamicAssignmentNum);
+            // 未指定动态审批人数量
+            if (dynamicAssignmentNum == -1) {
+                approvers.add(Approver.of("张三", "张三姓名", "张三备注"));
+                approvers.add(Approver.of("李四", "李四姓名", "李四备注"));
+            }
+            // 指定了动态审批人数量
+            else {
+                for (int i = 1; i <= dynamicAssignmentNum; i++) {
+                    approvers.add(Approver.of("张三-" + i, "张三姓名-" + i, "张三备注-" + i));
+                }
+            }
+            System.out.println("审批人设置完毕：" + approvers);
+        }
 
         RequestConditions requestConditions = RequestConditions.newInstance();
-        requestConditions.addRequestCondition(RequestCondition.of("day", "3"));
-        WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions);
+        requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
+        WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions, approvers);
 
         // 添加附件
         RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
@@ -462,21 +473,22 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        // String roleId = "xxx";
+        String roleId = "xxx";
         // String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
-        // String approverId = "王五-1";
+        String approverId = "王五-1";
+        // String approverId = "哈哈";
         // String approverId = "赵六";
         // String approverId = "孙七";
         // String approverId = "admin";
         // String approverId = "admin-1";
 
-        String roleId = "经理";
+        // String roleId = "经理";
         // String approverId = "manager-1";
-        String approverId = "manager-2";
+        // String approverId = "manager-2";
 
         // String roleId = "组长";
         // String approverId = "grouper-1";
@@ -521,16 +533,24 @@ class WorkflowHelperTest {
 
             // 当前生效的任务实例
             Integer workflowInstanceId = taskInstance.getWorkflowInstanceId();
-            NodeDefinition inCurrentlyEffectNodeDefinition = runtimeServiceHelper.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
-            if (inCurrentlyEffectNodeDefinition != null && inCurrentlyEffectNodeDefinition.isUnSettingAssignmentApprovers()) {
-                Set<Approver> waitingToSetApprovers = inCurrentlyEffectNodeDefinition.getApprovers();
+            TaskInstance inCurrentlyEffectTaskInstance = runtimeServiceHelper.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
+            if (inCurrentlyEffectTaskInstance == null) {
+                return;
+            }
+            boolean dynamicNodeAndUnSettingApprovers = runtimeServiceHelper.isDynamicNodeAndUnSettingApprovers(tenantId, inCurrentlyEffectTaskInstance.getId());
+            if (dynamicNodeAndUnSettingApprovers) {
+                NodeDefinition inCurrentlyEffectNodeDefinition = runtimeServiceHelper.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
                 List<Approver> actualApprovers = new ArrayList<>();
-                int index = 1;
-                for (Approver waitingToSetApprover : waitingToSetApprovers) {
-                    actualApprovers.add(Approver.of("王五-" + index));
-                    index++;
+                Integer dynamicAssignmentNum = inCurrentlyEffectNodeDefinition.getDynamicAssignmentNum();
+                if (dynamicAssignmentNum == -1) {
+                    actualApprovers.add(Approver.of("王五-1", "王五-1-姓名", "王五-1-备注"));
+                    actualApprovers.add(Approver.of("王五-2", "王五-2-姓名", "王五-2-备注"));
+                } else {
+                    for (int i = 1; i <= dynamicAssignmentNum; i++) {
+                        actualApprovers.add(Approver.of("王五-" + i, "王五-" + i + "-姓名", "王五-" + i + "-备注"));
+                    }
                 }
-                runtimeServiceHelper.dynamicAssignmentApprovers(tenantId, inCurrentlyEffectNodeDefinition.getId(), actualApprovers);
+                runtimeServiceHelper.dynamicAssignmentApprovers(tenantId, inCurrentlyEffectNodeDefinition.getId(), inCurrentlyEffectTaskInstance.getId(), actualApprovers);
             }
         });
     }
@@ -541,14 +561,14 @@ class WorkflowHelperTest {
      */
     @Test
     void redo() {
-        // String roleId = null;
-        // String approverId = "张三";
+        String roleId = null;
+        String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
 
-        String roleId = "经理";
-        String approverId = "manager-1";
+        // String roleId = "经理";
+        // String approverId = "manager-1";
         // String approverId = "manager-2";
         // String roleId = "组长";
         // String approverId = "grouper-1";
@@ -559,7 +579,7 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 1, roleId == null ? null : List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), null, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 2, roleId == null ? null : List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
 
         // int i = 1/0;
@@ -574,14 +594,14 @@ class WorkflowHelperTest {
      */
     @Test
     void reject() {
-        // String roleId = null;
-        // String approverId = "张三";
+        String roleId = null;
+        String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
 
-        String roleId = "经理";
-        String approverId = "manager-1";
+        // String roleId = "经理";
+        // String approverId = "manager-1";
         // String approverId = "manager-2";
 
         // String roleId = "组长";
@@ -777,7 +797,7 @@ class WorkflowHelperTest {
         List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理"), "manager-1");
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
-        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 3, List.of("经理", "组长"), "manager-1");
+        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理", "组长"), "manager-1");
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecord));
     }

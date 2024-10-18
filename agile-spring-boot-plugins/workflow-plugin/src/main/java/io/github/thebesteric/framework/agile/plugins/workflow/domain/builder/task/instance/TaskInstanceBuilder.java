@@ -24,7 +24,7 @@ public class TaskInstanceBuilder extends AbstractBuilder<TaskInstance> {
         return new TaskInstanceBuilder(new TaskInstance());
     }
 
-    public TaskInstanceBuilder workflowDefinitionId(String tenantId) {
+    public TaskInstanceBuilder tenantId(String tenantId) {
         this.taskInstance.setTenantId(tenantId);
         return this;
     }

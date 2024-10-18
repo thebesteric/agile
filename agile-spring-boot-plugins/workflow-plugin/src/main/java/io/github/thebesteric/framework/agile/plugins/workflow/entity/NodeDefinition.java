@@ -62,8 +62,11 @@ public class NodeDefinition extends BaseEntity {
     @EntityColumn(nullable = false, length = 12, precision = 2, comment = "排序")
     private Double sequence;
 
-    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是动态指定审批人")
-    private boolean dynamicAssignment = false;
+    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是动态指定审批节点")
+    private boolean dynamic = false;
+
+    @EntityColumn(nullable = false, defaultExpression = "0", comment = "动态审批人数量")
+    private Integer dynamicAssignmentNum = 0;
 
     @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是角色审批节点")
     private boolean roleApprove = false;
@@ -81,18 +84,6 @@ public class NodeDefinition extends BaseEntity {
     /** 角色审批人，存储在 NodeRoleUserAssignment 表中 */
     @Transient
     private Set<RoleApprover> roleApprovers = new LinkedHashSet<>();
-
-    /**
-     * 是否时动态指定审批人节点，并且没有设置动态审批人
-     *
-     * @return boolean
-     *
-     * @author wangweijun
-     * @since 2024/9/27 15:13
-     */
-    public boolean isUnSettingAssignmentApprovers() {
-        return this.dynamicAssignment && this.approvers.stream().anyMatch(Approver::isUnSettingAssignmentApprover);
-    }
 
     /**
      * 是否包含审批条件
@@ -325,7 +316,8 @@ public class NodeDefinition extends BaseEntity {
             nodeDefinition.setConditions(JSONUtil.toBean(conditionStr, Conditions.class));
         }
         nodeDefinition.setSequence(rs.getDouble("sequence"));
-        nodeDefinition.setDynamicAssignment(rs.getInt("dynamic_assignment") == 1);
+        nodeDefinition.setDynamic(rs.getInt("dynamic") == 1);
+        nodeDefinition.setDynamicAssignmentNum(rs.getInt("dynamic_assignment_num"));
         nodeDefinition.setRoleApprove(rs.getInt("role_approve") == 1);
         nodeDefinition.setRoleUserApproveType(RoleUserApproveType.of(rs.getInt("role_user_approve_type")));
         nodeDefinition.setRoleApproveType(RoleApproveType.of(rs.getInt("role_approve_type")));

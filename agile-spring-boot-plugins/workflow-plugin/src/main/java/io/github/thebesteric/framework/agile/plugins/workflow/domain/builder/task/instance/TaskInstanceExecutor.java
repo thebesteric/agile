@@ -7,10 +7,12 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.ApproveDatesSegmentCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
@@ -100,9 +102,12 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
      */
     public Page<TaskInstance> findByApproverId(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses,
                                                ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
-        String roleIdStrs = null;
-
+        // 判断是否是动态审批人
+        if (isDynamicApproverId(approverId)) {
+            throw new WorkflowException("非法请求，请先设置动态审批人：%s", approverId);
+        }
         // 查询角色
+        String roleIdStrs = null;
         if (CollectionUtils.isNotEmpty(roleIds)) {
             List<String> supposeRoleIds = null;
             String selectRoleSql = """
@@ -219,6 +224,20 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
         List<TaskInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> TaskInstance.of(rs), tenantId, pageSize, offset);
 
         return Page.of(page, pageSize, count, records);
+    }
+
+    /**
+     * 是否是动态审批人
+     *
+     * @param approverId 审批人 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/18 14:35
+     */
+    public boolean isDynamicApproverId(String approverId) {
+        return approverId.startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && approverId.endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX);
     }
 
     /**

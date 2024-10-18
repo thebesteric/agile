@@ -153,7 +153,7 @@ public class WorkflowDefinitionFlowSchema {
         /** 排序 */
         private Double sequence;
         /** 是否是动态指定审批人 */
-        private boolean dynamicAssignment = false;
+        private boolean dynamic = false;
         /** 是否是动态指定审批人 */
         private boolean roleApprove = false;
         /** 是否是动态指定审批人 */
@@ -178,7 +178,7 @@ public class WorkflowDefinitionFlowSchema {
             nodeDefinitionResponse.approveType = nodeDefinition.getApproveType().toMap();
             nodeDefinitionResponse.conditions = nodeDefinition.getConditions();
             nodeDefinitionResponse.sequence = nodeDefinition.getSequence();
-            nodeDefinitionResponse.dynamicAssignment = nodeDefinition.isDynamicAssignment();
+            nodeDefinitionResponse.dynamic = nodeDefinition.isDynamic();
             nodeDefinitionResponse.roleApprove = nodeDefinition.isRoleApprove();
             nodeDefinitionResponse.roleUserApproveType = nodeDefinition.getRoleUserApproveType().toMap();
             nodeDefinitionResponse.roleApproveType = nodeDefinition.getRoleApproveType().toMap();

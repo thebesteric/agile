@@ -30,13 +30,14 @@ public interface RuntimeService {
      * @param businessType          业务类型
      * @param desc                  描述
      * @param requestConditions     申请条件
+     * @param dynamicApprovers      动态审批人
      *
      * @return WorkflowInstanceBuilder
      *
      * @author wangweijun
      * @since 2024/6/14 11:02
      */
-    WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions);
+    WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers);
 
     /**
      * 启动流程
@@ -535,12 +536,13 @@ public interface RuntimeService {
      *
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
+     * @param taskInstanceId   任务实例 ID
      * @param approvers        审批人列表
      *
      * @author wangweijun
      * @since 2024/9/9 13:58
      */
-    void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, List<Approver> approvers);
+    void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, List<Approver> approvers);
 
     /**
      * 更新审批人（未审批状态下）
@@ -701,4 +703,43 @@ public interface RuntimeService {
      * @since 2024/10/14 10:10
      */
     Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize);
+
+    /**
+     * 查找动态审批人
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return List<TaskDynamicAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/10/18 10:35
+     */
+    List<TaskDynamicAssignment> findTaskDynamicAssignments(String tenantId, Integer taskInstanceId);
+
+    /**
+     * 是否是动态审批节点，且没有设置动态审批人
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/18 10:54
+     */
+    boolean isDynamicNodeAndUnSettingApprovers(String tenantId, Integer taskInstanceId);
+
+    /**
+     * 是否是动态审批节点
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/18 14:54
+     */
+    boolean isDynamicNode(String tenantId, Integer taskInstanceId);
 }

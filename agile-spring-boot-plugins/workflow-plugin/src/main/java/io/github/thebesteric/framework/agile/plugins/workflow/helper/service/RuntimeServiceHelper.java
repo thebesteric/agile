@@ -43,7 +43,24 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 14:02
      */
     public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String desc) {
-        return this.start(workflowDefinition, requesterId, null, null, desc);
+        return this.start(workflowDefinition, requesterId, desc, null);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param workflowDefinition 流程定义
+     * @param requesterId        申请人
+     * @param desc               申请内容
+     * @param dynamicApprovers   动态审批人
+     *
+     * @return 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/7/9 14:02
+     */
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String desc, List<Approver> dynamicApprovers) {
+        return this.start(workflowDefinition, requesterId, null, null, desc, null, dynamicApprovers);
     }
 
     /**
@@ -80,9 +97,28 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 14:02
      */
     public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
+        return this.start(workflowDefinition, requesterId, businessId, businessType, desc, requestConditions, null);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param workflowDefinition 流程定义
+     * @param requesterId        申请人
+     * @param businessId         业务 ID
+     * @param businessType       业务类型
+     * @param desc               申请内容
+     * @param requestConditions  申请条件
+     *
+     * @return 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/7/9 14:02
+     */
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
         String tenantId = workflowDefinition.getTenantId();
         String key = workflowDefinition.getKey();
-        return this.start(tenantId, key, requesterId, businessId, businessType, desc, requestConditions);
+        return this.start(tenantId, key, requesterId, businessId, businessType, desc, requestConditions, dynamicApprovers);
     }
 
     /**
@@ -95,14 +131,15 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @param businessType          业务类型
      * @param desc                  申请内容
      * @param requestConditions     申请条件
+     * @param dynamicApprovers      动态审批人
      *
      * @return 流程实例
      *
      * @author wangweijun
      * @since 2024/7/9 14:02
      */
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
-        return this.runtimeService.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, requestConditions);
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
+        return this.runtimeService.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, requestConditions, dynamicApprovers);
     }
 
     /**
@@ -518,49 +555,19 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
         return this.findWorkflowInstancesByKey(tenantId, key, Collections.emptyList(), page, pageSize);
     }
 
-
-    /**
-     * 下个任务实例节点是不是未完成设置的动态审批节点
-     *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     *
-     * @return boolean
-     *
-     * @author wangweijun
-     * @since 2024/9/27 15:25
-     */
-    public boolean nextIsUnSettingDynamicAssignmentApproverTaskInstance(String tenantId, Integer workflowInstanceId) {
-        NodeDefinition inCurrentlyEffectNodeDefinition = this.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
-        return inCurrentlyEffectNodeDefinition != null && inCurrentlyEffectNodeDefinition.isUnSettingAssignmentApprovers();
-    }
-
     /**
      * 动态设置审批人
      *
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
-     * @param approver         审批人
-     *
-     * @author wangweijun
-     * @since 2024/9/9 13:58
-     */
-    public void dynamicAssignmentApprover(String tenantId, Integer nodeDefinitionId, Approver approver) {
-        this.dynamicAssignmentApprovers(tenantId, nodeDefinitionId, List.of(approver));
-    }
-
-    /**
-     * 动态设置审批人
-     *
-     * @param tenantId         租户 ID
-     * @param nodeDefinitionId 节点定义 ID
+     * @param taskInstanceId   任务实例 ID
      * @param approvers        审批人列表
      *
      * @author wangweijun
      * @since 2024/9/9 13:58
      */
-    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, List<Approver> approvers) {
-        this.runtimeService.dynamicAssignmentApprovers(tenantId, nodeDefinitionId, approvers);
+    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, List<Approver> approvers) {
+        this.runtimeService.dynamicAssignmentApprovers(tenantId, nodeDefinitionId, taskInstanceId, approvers);
     }
 
     /**
@@ -1014,5 +1021,35 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      */
     public List<TaskRoleApprove> findTaskRoleApproves(String tenantId, Integer workflowInstanceId) {
         return this.runtimeService.findTaskRoleApproves(tenantId, workflowInstanceId);
+    }
+
+    /**
+     * 查找动态审批人
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return List<TaskDynamicAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/10/18 10:35
+     */
+    public List<TaskDynamicAssignment> findTaskDynamicAssignments(String tenantId, Integer taskInstanceId) {
+        return this.runtimeService.findTaskDynamicAssignments(tenantId, taskInstanceId);
+    }
+
+    /**
+     * 是否是动态审批节点，且没有设置动态审批人
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/18 10:54
+     */
+    public boolean isDynamicNodeAndUnSettingApprovers(String tenantId, Integer taskInstanceId) {
+        return this.runtimeService.isDynamicNodeAndUnSettingApprovers(tenantId, taskInstanceId);
     }
 }

@@ -7,7 +7,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprove
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.util.Assert;
 
 import java.util.LinkedHashSet;
@@ -92,8 +91,8 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
 
     public NodeDefinitionBuilder approver(Approver approver) {
         // 判断是否是动态指定审批人
-        if (this.nodeDefinition.isDynamicAssignment()) {
-            this.nodeDefinition.setDynamicAssignment(false);
+        if (this.nodeDefinition.isDynamic()) {
+            this.nodeDefinition.setDynamic(false);
             Set<Approver> approvers = this.nodeDefinition.getApprovers();
             Set<Approver> dynamicAssignmentApprovers = approvers.stream().filter(i -> i.getId().startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX)).collect(Collectors.toSet());
             // 删除所有动态指定的审批人
@@ -108,19 +107,31 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
     public NodeDefinitionBuilder approvers(Set<Approver> approvers) {
         Assert.notEmpty(approvers, "approvers cannot be empty");
         // 判断是否是动态指定审批人
-        if (this.nodeDefinition.isDynamicAssignment()) {
-            this.nodeDefinition.setDynamicAssignment(false);
+        if (this.nodeDefinition.isDynamic()) {
+            this.nodeDefinition.setDynamic(false);
         }
         this.nodeDefinition.setApprovers(new LinkedHashSet<>(approvers));
         return this;
     }
 
-    public NodeDefinitionBuilder dynamicAssignmentApprovers(int approverNum) {
+    public NodeDefinitionBuilder dynamicAssignmentApproversNum(int approverNum) {
         this.nodeDefinition.getApprovers().clear();
-        for (int i = 0; i < approverNum; i++) {
-            this.nodeDefinition.getApprovers().add(Approver.of(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(i)));
+        // 未指定动态审批人数量
+        if (approverNum < 0) {
+            approverNum = -1;
+            this.nodeDefinition.getApprovers().add(Approver.of(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(approverNum)));
         }
-        this.nodeDefinition.setDynamicAssignment(true);
+        // 指定了动态审批人的数量
+        else if (approverNum >= 1) {
+            for (int i = 0; i < approverNum; i++) {
+                this.nodeDefinition.getApprovers().add(Approver.of(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(i)));
+            }
+        }
+        if (approverNum != 0) {
+            this.nodeDefinition.setDynamic(true);
+            this.nodeDefinition.setDynamicAssignmentNum(approverNum);
+        }
+        // approverNum = 0 则表示是空审批节点，需要将流程定义的 allowEmptyAutoApprove 设置为 true，表示允许空节点审批
         return this;
     }
 
@@ -159,14 +170,6 @@ public class NodeDefinitionBuilder extends AbstractBuilder<NodeDefinition> {
     }
 
     public NodeDefinition build() {
-        if (NodeType.TASK == this.nodeDefinition.getNodeType()) {
-            if (this.nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(this.nodeDefinition.getRoleApprovers())) {
-                throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
-            }
-            if (this.nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(this.nodeDefinition.getApprovers())) {
-                throw new WorkflowException("用户审批节点: 审批用户不能为空");
-            }
-        }
         String tenantId = this.nodeDefinition.getTenantId();
         Integer workflowDefinitionId = this.nodeDefinition.getWorkflowDefinitionId();
         NodeType nodeType = this.nodeDefinition.getNodeType();

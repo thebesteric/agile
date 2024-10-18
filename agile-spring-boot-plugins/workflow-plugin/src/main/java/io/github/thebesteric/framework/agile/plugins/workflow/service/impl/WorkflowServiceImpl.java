@@ -115,21 +115,24 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
     public NodeDefinition createNode(NodeDefinition nodeDefinition) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
+            // 查找所属流程定义
+            WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+            WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
             // 校验节点是否合法
             if (NodeType.TASK == nodeDefinition.getNodeType()) {
-                if (nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(nodeDefinition.getRoleApprovers())) {
-                    throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
-                }
-                if (nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
-                    throw new WorkflowException("用户审批节点: 审批用户不能为空");
+                if (!workflowDefinition.isAllowEmptyAutoApprove()) {
+                    if (nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(nodeDefinition.getRoleApprovers())) {
+                        throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
+                    }
+                    if (nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
+                        throw new WorkflowException("用户审批节点: 审批用户不能为空");
+                    }
                 }
                 if (nodeDefinition.getSequence() >= Integer.MAX_VALUE || nodeDefinition.getSequence() <= Integer.MIN_VALUE) {
                     throw new WorkflowException("节点更新修改失败: 节点顺序不能大于等于 %s 或小于等于 %s", Integer.MAX_VALUE, Integer.MIN_VALUE);
                 }
             }
-            // 查找所属流程定义
-            WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
-            WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
+
             // 检查当前流程定义是否有正在进行的实例
             throwExceptionWhenWorkflowDefinitionHasInProcessInstances(nodeDefinition.getTenantId(), workflowDefinition.getId());
             // 将流程定义设置为未发布

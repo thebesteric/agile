@@ -10,15 +10,15 @@ import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemp
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutor;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.dynamic.TaskDynamicAssignmentBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.dynamic.TaskDynamicAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.dynamic.TaskDynamicAssignmentExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.history.TaskHistoryExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.history.TaskHistoryExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance.TaskInstanceExecutor;
@@ -32,7 +32,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.Wo
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractRuntimeService;
-import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -60,7 +59,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     private final TaskApproveExecutorBuilder taskApproveExecutorBuilder;
     private final TaskHistoryExecutorBuilder taskHistoryExecutorBuilder;
     private final TaskRoleApproveRecordExecutorBuilder taskRoleApproveRecordExecutorBuilder;
-    private final WorkflowService workflowService;
+    private final TaskDynamicAssignmentExecutorBuilder taskDynamicAssignmentExecutorBuilder;
 
     public RuntimeServiceImpl(AgileWorkflowContext context) {
         super(context);
@@ -75,7 +74,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         taskApproveExecutorBuilder = TaskApproveExecutorBuilder.builder(jdbcTemplate);
         taskHistoryExecutorBuilder = TaskHistoryExecutorBuilder.builder(jdbcTemplate);
         taskRoleApproveRecordExecutorBuilder = TaskRoleApproveRecordExecutorBuilder.builder(jdbcTemplate);
-        workflowService = new WorkflowServiceImpl(context);
+        taskDynamicAssignmentExecutorBuilder = TaskDynamicAssignmentExecutorBuilder.builder(jdbcTemplate);
     }
 
     /**
@@ -88,9 +87,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param businessType          业务类型
      * @param desc                  描述
      * @param requestConditions     申请条件
+     * @param dynamicApprovers      动态审批人
      */
     @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
             WorkflowDefinition workflowDefinition = getWorkflowDefinition(tenantId, workflowDefinitionKey);
@@ -162,14 +162,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
                     List<NodeAssignment> nextNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinitionId);
 
-                    // 查询动态审批人
-                    Optional<NodeAssignment> anyDynamicAssignmentApprover = nextNodeAssignments.stream()
-                            .filter(nodeAssignment -> nodeAssignment.getApproverId().startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX)).findAny();
-                    // 存在动态指定审批人，且待审批人未配置
-                    if (nextNodeDefinition.isDynamicAssignment() && anyDynamicAssignmentApprover.isPresent()) {
-                        throw new WorkflowException("动态审批节点，请先设置审批人");
-                    }
-
                     // 保存任务节点
                     taskInstanceExecutor = taskInstanceExecutorBuilder.status(NodeStatus.IN_PROGRESS)
                             .tenantId(tenantId)
@@ -177,34 +169,74 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             .roleApprove(nextNodeDefinition.isRoleApprove())
                             .approvedCount(0)
                             // 设置总需要审批的次数
-                            .totalCount(this.calcTotalCount(workflowDefinition, nextNodeDefinition, nextNodeAssignments))
+                            .totalCount(this.calcTotalCount(workflowDefinition, nextNodeDefinition, nextNodeAssignments, dynamicApprovers))
                             .build();
                     TaskInstance nextTaskInstance = taskInstanceExecutor.save();
                     Integer nextTaskInstanceId = nextTaskInstance.getId();
 
+                    // 实例任务审批节点
                     List<TaskApprove> taskApproves = new ArrayList<>();
+
                     // 存在审批人：创建任务实例审批人
                     if (CollUtil.isNotEmpty(nextNodeAssignments)) {
-                        int i = 0;
                         ApproverIdType approverIdType = nextNodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
-                        for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
-                            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder
-                                    .newEntity()
-                                    .tenantId(tenantId)
-                                    .workflowInstanceId(workflowInstanceId)
-                                    .taskInstanceId(nextTaskInstanceId)
-                                    .approverId(nextNodeAssignment.getApproverId())
-                                    .approverIdType(approverIdType)
-                                    .approveSeq(nextNodeAssignment.getApproverSeq())
-                                    .status(ApproveStatus.IN_PROGRESS)
-                                    .active(ActiveStatus.ACTIVE).build();
-                            // 顺序审批，后续审批人需要等待前一个审批人审批完成，后续的审批状态设置为：挂起
-                            if (ApproveType.SEQ == nextNodeDefinition.getApproveType() && i > 0) {
-                                taskApproveExecutorBuilder.status(ApproveStatus.SUSPEND);
+                        ApproveType approveType = nextNodeDefinition.getApproveType();
+                        // 动态审批节点
+                        if (nextNodeDefinition.isDynamic()) {
+                            if (CollectionUtils.isEmpty(dynamicApprovers)) {
+                                throw new WorkflowException("动态审批节点，请先设置审批人");
                             }
-                            TaskApprove taskApprove = taskApproveExecutor.save();
-                            taskApproves.add(taskApprove);
-                            i++;
+                            TaskDynamicAssignmentBuilder taskDynamicAssignmentBuilder = TaskDynamicAssignmentBuilder.builder(tenantId, nextNodeDefinitionId, nextTaskInstanceId);
+                            int i = 0;
+                            for (Approver dynamicApprover : dynamicApprovers) {
+                                // 保存 TaskDynamicAssignment
+                                TaskDynamicAssignmentExecutor taskDynamicAssignmentExecutor = taskDynamicAssignmentExecutorBuilder.build();
+                                TaskDynamicAssignment taskDynamicAssignment = taskDynamicAssignmentBuilder
+                                        .approverInfo(approveType, dynamicApprover.getId(), dynamicApprover.getName(), dynamicApprover.getDesc())
+                                        .build();
+                                taskDynamicAssignmentExecutor.save(taskDynamicAssignment);
+                                // 保存 TaskApprove
+                                TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.newEntity()
+                                        .tenantId(tenantId)
+                                        .workflowInstanceId(workflowInstanceId)
+                                        .taskInstanceId(nextTaskInstanceId)
+                                        .approverIdType(ApproverIdType.USER)
+                                        .approverId(taskDynamicAssignment.getApproverId())
+                                        .approveSeq(taskDynamicAssignment.getApproverSeq())
+                                        .status(ApproveStatus.IN_PROGRESS)
+                                        .active(ActiveStatus.ACTIVE).build();
+                                // 顺序审批，后续审批人需要等待前一个审批人审批完成，后续的审批状态设置为：挂起
+                                if (ApproveType.SEQ == approveType && i > 0) {
+                                    taskApproveExecutorBuilder.status(ApproveStatus.SUSPEND);
+                                }
+                                TaskApprove taskApprove = taskApproveExecutor.save();
+                                taskApproves.add(taskApprove);
+                                i++;
+                            }
+                            taskDynamicAssignmentBuilder.resetSeq();
+                        }
+                        // 非动态审批节点
+                        else {
+                            int i = 0;
+                            for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
+                                TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder
+                                        .newEntity()
+                                        .tenantId(tenantId)
+                                        .workflowInstanceId(workflowInstanceId)
+                                        .taskInstanceId(nextTaskInstanceId)
+                                        .approverId(nextNodeAssignment.getApproverId())
+                                        .approverIdType(approverIdType)
+                                        .approveSeq(nextNodeAssignment.getApproverSeq())
+                                        .status(ApproveStatus.IN_PROGRESS)
+                                        .active(ActiveStatus.ACTIVE).build();
+                                // 顺序审批，后续审批人需要等待前一个审批人审批完成，后续的审批状态设置为：挂起
+                                if (ApproveType.SEQ == approveType && i > 0) {
+                                    taskApproveExecutorBuilder.status(ApproveStatus.SUSPEND);
+                                }
+                                TaskApprove taskApprove = taskApproveExecutor.save();
+                                taskApproves.add(taskApprove);
+                                i++;
+                            }
                         }
                     }
                     // 没有审批人: 允许自动同意，则自动同意
@@ -236,6 +268,48 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             }
             return workflowInstance;
         });
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     * @param requesterId           申请人 ID
+     * @param businessId            业务标识
+     * @param businessType          业务类型
+     * @param desc                  描述
+     */
+    @Override
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc) {
+        return this.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, null, null);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     * @param requesterId           申请人 ID
+     * @param desc                  描述
+     * @param requestConditions     申请条件
+     */
+    @Override
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc, RequestConditions requestConditions) {
+        return this.start(tenantId, workflowDefinitionKey, requesterId, null, null, desc, requestConditions, null);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     * @param requesterId           申请人 ID
+     * @param desc                  描述
+     */
+    @Override
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc) {
+        return this.start(tenantId, workflowDefinitionKey, requesterId, desc, null);
     }
 
     /**
@@ -373,6 +447,62 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param workflowDefinition 流程定义
      * @param nodeDefinition     节点定义
      * @param nodeAssignments    候选审批人
+     * @param dynamicApprovers   动态候选审批人
+     *
+     * @return Integer
+     *
+     * @author wangweijun
+     * @since 2024/7/15 09:44
+     */
+    private Integer calcTotalCount(WorkflowDefinition workflowDefinition, NodeDefinition nodeDefinition, List<NodeAssignment> nodeAssignments, List<Approver> dynamicApprovers) {
+        int nodeAssignmentSize = nodeAssignments.size();
+        // 判断是否是角色审批
+        if (nodeDefinition.isRoleApprove()) {
+            RoleUserApproveType roleUserApproveType = nodeDefinition.getRoleUserApproveType();
+            RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
+
+            String tenantId = nodeDefinition.getTenantId();
+            Integer nodeDefinitionId = nodeDefinition.getId();
+            NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+            // 查询到所有角色下的用户
+            List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
+            // 根据角色 ID 分组
+            Map<String, List<NodeRoleAssignment>> nodeRoleAssignmentMap = nodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
+            // 角色属于：或签
+            if (RoleApproveType.ANY == roleApproveType) {
+                // 角色用户属于：会签 或 顺签，则如：A 角色包含 2 个用户，B 角色包含 3 个用户，则总需要审批的次数为 2 * 3 = 6，真实需要审批的用户判断为：A 角色中：6 % 2 == 0 或 B 角色中：6 % 3 == 0，即表示审批完成
+                int multiplication = Math.negateExact(nodeRoleAssignmentMap.values().stream().mapToInt(List::size).reduce(1, (a, b) -> a * b));
+                // 角色用户属于：或签，则总需要审批的次数为 1，否则获取每个角色里的用户的乘积，并取取相反数
+                return RoleUserApproveType.ANY == roleUserApproveType ? 1 : multiplication;
+            }
+            // 角色属于：会签 或 顺签
+            else {
+                // 角色用户属于：会签 或 顺签，求每个角色中用户的数量之和
+                int sum = nodeRoleAssignmentMap.values().stream().mapToInt(List::size).sum();
+                // 角色用户属于：或签，则总需要审批的次数为角色的数量，否则获取每个角色中用户的数量之和
+                return RoleUserApproveType.ANY == roleUserApproveType ? nodeAssignmentSize : sum;
+            }
+        }
+        // 用户审批的情况（非角色审批）：除或签、自动审批外，其余均需要审批全部
+        ApproveType approveType = nodeDefinition.getApproveType();
+        // 动态审批节点
+        if (nodeDefinition.isDynamic()) {
+            if (!workflowDefinition.isAllowEmptyAutoApprove() && CollectionUtils.isEmpty(dynamicApprovers)) {
+                throw new WorkflowException("动态审批节点，动态审批人列表不能为空");
+            }
+            int dynamicApproversSize = dynamicApprovers == null ? 0 : dynamicApprovers.size();
+            return ApproveType.ANY == approveType || (workflowDefinition.isAllowEmptyAutoApprove() && dynamicApproversSize == 0) ? 1 : dynamicApproversSize;
+        }
+        // 非动态审批节点
+        return ApproveType.ANY == approveType || (workflowDefinition.isAllowEmptyAutoApprove() && nodeAssignmentSize == 0) ? 1 : nodeAssignmentSize;
+    }
+
+    /**
+     * 计算总需要审批的次数
+     *
+     * @param workflowDefinition 流程定义
+     * @param nodeDefinition     节点定义
+     * @param nodeAssignments    候选审批人
      *
      * @return Integer
      *
@@ -411,48 +541,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 用户审批的情况（非角色审批）：除或签、自动审批外，其余均需要审批全部
         ApproveType approveType = nodeDefinition.getApproveType();
         return ApproveType.ANY == approveType || (workflowDefinition.isAllowEmptyAutoApprove() && nodeAssignmentSize == 0) ? 1 : nodeAssignmentSize;
-    }
-
-    /**
-     * 启动流程
-     *
-     * @param tenantId              租户 ID
-     * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
-     * @param businessId            业务标识
-     * @param businessType          业务类型
-     * @param desc                  描述
-     */
-    @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc) {
-        return this.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, null);
-    }
-
-    /**
-     * 启动流程
-     *
-     * @param tenantId              租户 ID
-     * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
-     * @param desc                  描述
-     * @param requestConditions     申请条件
-     */
-    @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc, RequestConditions requestConditions) {
-        return this.start(tenantId, workflowDefinitionKey, requesterId, null, null, desc, requestConditions);
-    }
-
-    /**
-     * 启动流程
-     *
-     * @param tenantId              租户 ID
-     * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
-     * @param desc                  描述
-     */
-    @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc) {
-        return this.start(tenantId, workflowDefinitionKey, requesterId, desc, null);
     }
 
     /**
@@ -554,6 +642,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     if ((conditions != null && requestConditions != null && !conditions.matchRequestCondition(requestConditions))
                         || (conditions != null && requestConditions == null)) {
                         continue;
+                    }
+
+                    // 同一个类型的节点，只允许存在一个
+                    if (!nextTaskInstances.isEmpty()) {
+                        TaskInstance taskInstance = nextTaskInstances.stream().filter(i -> i.getNodeDefinitionId().equals(nextNodeDefinitionId)).findAny().orElse(null);
+                        if (taskInstance != null) {
+                            continue;
+                        }
                     }
 
                     // 下一个节点的审批人
@@ -1408,7 +1504,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         // 判断是否是动态审批节点
                         NodeDefinition nextNodeDefinition = nodeDefinitionExecutor.getById(nextTaskInstance.getNodeDefinitionId());
                         // 如果是动态审批节点，则更新为未设置的动态审批人
-                        if (nextNodeDefinition.isDynamicAssignment()) {
+                        if (nextNodeDefinition.isDynamic()) {
                             NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
                             List<NodeAssignment> dynamicApprovers = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinition.getId());
                             for (int i = 0; i < dynamicApprovers.size(); i++) {
@@ -2791,6 +2887,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 节点定义与节点审批人的对应关系
         Map<NodeDefinition, NodeAssignment> nodeDefAndNodeAssignmentMap = new HashMap<>();
 
+        // 节点定义动态节点审批人的对应关系
+        TaskDynamicAssignmentExecutor taskDynamicAssignmentExecutor = taskDynamicAssignmentExecutorBuilder.build();
+        Map<NodeDefinition, List<TaskDynamicAssignment>> nodeDefAndTaskDynamicAssignmentMap = new HashMap<>();
+
         List<Pair<NodeDefinition, TaskInstance>> nodeDefAndTasks = new ArrayList<>();
         for (NodeDefinition nodeDefinition : nodeDefinitions) {
             TaskInstance taskInstance = taskInstanceExecutor.getByWorkflowInstanceIdAndNodeDefinitionId(tenantId, workflowInstanceId, nodeDefinition.getId());
@@ -2799,6 +2899,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 封装：节点定义与节点审批人的对应关系
             Optional<NodeAssignment> nodeAssignmentOptional = nodeAssignments.stream().filter(nodeAssignment -> nodeDefinition.getId().equals(nodeAssignment.getNodeDefinitionId())).findFirst();
             nodeAssignmentOptional.ifPresent(assignment -> nodeDefAndNodeAssignmentMap.put(nodeDefinition, assignment));
+
+            // 封装：节点定义动态节点审批人的对应关系
+            List<TaskDynamicAssignment> taskDynamicAssignments = new ArrayList<>();
+            if (nodeDefinition.isDynamic()) {
+                taskDynamicAssignments = taskDynamicAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinition.getId());
+            }
+            nodeDefAndTaskDynamicAssignmentMap.put(nodeDefinition, taskDynamicAssignments);
         }
 
         // 审批人
@@ -2830,7 +2937,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         }
 
         // 返回 WorkflowInstanceApproveRecords
-        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves, nodeDefAndNodeAssignmentMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeAssignments, curRoleIds, curUserId);
+        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves,
+                nodeDefAndNodeAssignmentMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeDefAndTaskDynamicAssignmentMap,
+                nodeAssignments, curRoleIds, curUserId);
     }
 
     /**
@@ -2887,57 +2996,67 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
+     * @param taskInstanceId   任务实例 ID
      * @param approvers        审批人列表
      *
      * @author wangweijun
      * @since 2024/9/9 13:58
      */
     @Override
-    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, List<Approver> approvers) {
+    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, List<Approver> approvers) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
+            // 获取到节点定义
+            NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+            NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(nodeDefinitionId);
+            if (!nodeDefinition.isDynamic()) {
+                throw new WorkflowException("非动态审批节点，无法设置动态审批人");
+            }
             // 查找节点审批人
             NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
-            List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
-            if (CollectionUtils.isEmpty(nodeAssignments)) {
+            List<NodeAssignment> nodeAssignments = new ArrayList<>(nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId));
+            if (CollectionUtils.isEmpty(nodeAssignments) || nodeDefinition.getDynamicAssignmentNum() == 0) {
                 throw new WorkflowException("节点审批人不存在，请核实审批节点是否正确");
             }
-            if (nodeAssignments.size() != approvers.size()) {
+            if (nodeDefinition.getDynamicAssignmentNum() >= 1 && nodeAssignments.size() != approvers.size()) {
                 throw new WorkflowException("审批人数量不一致，节点审批人数量：%s，审批人数量：%s", nodeAssignments.size(), approvers.size());
             }
-            for (int i = 0; i < nodeAssignments.size(); i++) {
-                NodeAssignment nodeAssignment = nodeAssignments.get(i);
-                Approver approver = approvers.get(i);
-                // 判断合法性
-                if (approver.getId().startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && approver.getId().endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX)) {
-                    throw new WorkflowException("审批人设置错误");
-                }
-                // 重新设置节点审批人
-                nodeAssignment.setApproverId(approver.getId());
-                nodeAssignmentExecutor.updateById(nodeAssignment);
 
-                // 处理未设置具体审批人的情况：查询审批实例
-                TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
-                Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
-                        .eq(TaskInstance::getTenantId, tenantId)
-                        .eq(TaskInstance::getNodeDefinitionId, nodeDefinitionId)
-                        .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
-                        .eq(TaskInstance::getState, 1).build();
-                TaskInstance taskInstance = taskInstanceExecutor.get(query);
-                if (taskInstance != null) {
-                    TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
-                    query = QueryBuilderWrapper.createLambda(TaskApprove.class)
-                            .eq(TaskApprove::getTenantId, tenantId)
-                            .eq(TaskApprove::getTaskInstanceId, taskInstance.getId())
-                            .eq(TaskApprove::getActive, ActiveStatus.ACTIVE.getCode())
-                            .eq(TaskApprove::getState, 1).build();
-                    TaskApprove taskApprove = taskApproveExecutor.get(query);
-                    // 是否是未设置的审批人
-                    if (taskApprove.isUnSettingApprover()) {
-                        taskApprove.setApproverId(approver.getId());
-                        taskApproveExecutor.updateById(taskApprove);
-                    }
+            // 创建动态审批人
+            List<TaskDynamicAssignment> taskDynamicAssignments = new ArrayList<>();
+            TaskDynamicAssignmentExecutor taskDynamicAssignmentExecutor = taskDynamicAssignmentExecutorBuilder.build();
+            ApproveType approveType = nodeDefinition.getApproveType();
+            for (Approver approver : approvers) {
+                // 判断合法性：不允许非动态审批节点使用 {assignment:n} 的格式
+                if (approver.getId().startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX) && approver.getId().endsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX)) {
+                    throw new WorkflowException("审批人格式设置错误");
                 }
+                TaskDynamicAssignment taskDynamicAssignment = TaskDynamicAssignmentBuilder.builder(tenantId, nodeDefinitionId, taskInstanceId)
+                        .approverInfo(approveType, approver.getId(), approver.getName(), approver.getDesc()).build();
+                taskDynamicAssignmentExecutor.save(taskDynamicAssignment);
+                taskDynamicAssignments.add(taskDynamicAssignment);
+            }
+            taskDynamicAssignments.sort(Comparator.comparingInt(TaskDynamicAssignment::getApproverSeq));
+
+            // 此时的 taskApprove 为 {dynamic:n} 的形式，需要修改为真实的用户
+            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+            List<TaskApprove> taskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
+            // 获取所有未设置的动态审批人
+            List<TaskApprove> unSettingDynamicTaskApproves = new ArrayList<>(taskApproves.stream().filter(TaskApprove::isUnSettingApprover).toList());
+            unSettingDynamicTaskApproves.sort(Comparator.comparingInt(TaskApprove::getApproverSeq));
+
+            // 再次判断数量
+            if (unSettingDynamicTaskApproves.size() != taskDynamicAssignments.size()) {
+                throw new WorkflowException("审批人数量不一致，节点审批人数量：%s，动态审批人数量：%s", unSettingDynamicTaskApproves.size(), taskDynamicAssignments.size());
+            }
+
+            // 更新 taskApprove
+            for (int i = 0; i < taskDynamicAssignments.size(); i++) {
+                TaskDynamicAssignment taskDynamicAssignment = taskDynamicAssignments.get(i);
+                TaskApprove unSettingDynamicTaskApprove = unSettingDynamicTaskApproves.get(i);
+                unSettingDynamicTaskApprove.setApproverId(taskDynamicAssignment.getApproverId());
+                unSettingDynamicTaskApprove.setApproverSeq(taskDynamicAssignment.getApproverSeq());
+                taskApproveExecutor.updateById(unSettingDynamicTaskApprove);
             }
         });
     }
@@ -3244,6 +3363,80 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         return workflowInstanceExecutor.findWorkflowInstancesByKey(tenantId, key, workflowStatuses, page, pageSize);
+    }
+
+    /**
+     * 查找动态审批人
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return List<TaskDynamicAssignment>
+     *
+     * @author wangweijun
+     * @since 2024/10/18 10:35
+     */
+    @Override
+    public List<TaskDynamicAssignment> findTaskDynamicAssignments(String tenantId, Integer taskInstanceId) {
+        // 查找任务实例
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+        // 查找节点定义
+        Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(tenantId, nodeDefinitionId);
+        // 非动态节点，直接返回
+        if (!nodeDefinition.isDynamic()) {
+            return List.of();
+        }
+        TaskDynamicAssignmentExecutor taskDynamicAssignmentExecutor = taskDynamicAssignmentExecutorBuilder.build();
+        return taskDynamicAssignmentExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
+    }
+
+    /**
+     * 是否是动态审批节点，且没有设置动态审批人
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/18 10:54
+     */
+    @Override
+    public boolean isDynamicNodeAndUnSettingApprovers(String tenantId, Integer taskInstanceId) {
+        // 判断是否是动态审批节点
+        if (!this.isDynamicNode(tenantId, taskInstanceId)) {
+            return false;
+        }
+        // 判断是否设置了动态审批人
+        List<TaskDynamicAssignment> taskDynamicAssignments = this.findTaskDynamicAssignments(tenantId, taskInstanceId);
+        return CollectionUtils.isEmpty(taskDynamicAssignments);
+    }
+
+    /**
+     * 是否是动态审批节点
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/10/18 14:54
+     */
+    @Override
+    public boolean isDynamicNode(String tenantId, Integer taskInstanceId) {
+        // 查找任务实例
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+        // 查找节点定义
+        Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(tenantId, nodeDefinitionId);
+        // 判断是否是动态审批节点
+        return nodeDefinition.isDynamic();
     }
 
     /**

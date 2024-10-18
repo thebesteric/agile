@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import lombok.Data;
@@ -37,6 +38,7 @@ public class WorkflowInstanceApproveRecords {
      * @param nodeDefAndNodeAssignmentMap            节点定义与节点审批人的对应关系
      * @param taskApproveAndRoleApproveRecordsMap    审批任务与角色审批记录对应关系
      * @param taskRoleRecordAndNodeRoleAssignmentMap 角色审批记录与角色用户对应关系
+     * @param nodeDefAndDynamicNodeAssignmentMap     节点定义动态节点审批人的对应关系
      * @param nodeAssignments                        节点审批人
      * @param curRoleIds                             当前角色 IDs
      * @param curUserId                              当前用户 ID
@@ -52,6 +54,7 @@ public class WorkflowInstanceApproveRecords {
                                                     Map<NodeDefinition, NodeAssignment> nodeDefAndNodeAssignmentMap,
                                                     Map<TaskApprove, List<TaskRoleApproveRecord>> taskApproveAndRoleApproveRecordsMap,
                                                     Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
+                                                    Map<NodeDefinition, List<TaskDynamicAssignment>> nodeDefAndDynamicNodeAssignmentMap,
                                                     List<NodeAssignment> nodeAssignments,
                                                     List<String> curRoleIds, String curUserId) {
 
@@ -88,10 +91,14 @@ public class WorkflowInstanceApproveRecords {
 
             // 封装审批人
             List<NodeAssignment> currNodeAssignments = nodeAssignments.stream().filter(nodeAssignment -> nodeDefinition.getId().equals(nodeAssignment.getNodeDefinitionId())).toList();
-            List<NodeAssignmentResponse> nodeAssignmentResponses = currNodeAssignments.stream().map(NodeAssignmentResponse::of).toList();
+            List<NodeAssignmentResponse> nodeAssignmentsResponse = currNodeAssignments.stream().map(NodeAssignmentResponse::of).toList();
+
+            // 获取动态审批人
+            List<TaskDynamicAssignment> taskDynamicAssignments = nodeDefAndDynamicNodeAssignmentMap.get(nodeDefinition);
+            List<TaskDynamicAssignmentResponse> taskDynamicAssignmentsResponse = taskDynamicAssignments.stream().map(TaskDynamicAssignmentResponse::of).toList();
 
             // 封装节点定义
-            NodeDefinitionResponse nodeDefinitionResponse = NodeDefinitionResponse.of(nodeDefinition, taskInstanceResponse, nodeAssignmentResponses);
+            NodeDefinitionResponse nodeDefinitionResponse = NodeDefinitionResponse.of(nodeDefinition, taskInstanceResponse, nodeAssignmentsResponse, taskDynamicAssignmentsResponse);
             nodeDefinitionResponses.add(nodeDefinitionResponse);
         }
         records.setNodeDefinitionResponses(nodeDefinitionResponses);
@@ -141,8 +148,22 @@ public class WorkflowInstanceApproveRecords {
         private Integer id;
         /** 租户 ID */
         private String tenantId;
+        /** 流程标识 */
+        private String key;
         /** 流程名称 */
         private String name;
+        /** 流程类型（用于类型分类） */
+        private String type;
+        /** 连续审批方式：默认每个节点都需要审批 */
+        private Map<String, Object> continuousApproveMode;
+        /** 审批人为空时，是否允许自动审批 */
+        private boolean allowEmptyAutoApprove = false;
+        /** 是否允许撤回 */
+        private boolean allowRedo = true;
+        /** 是否必须填写审批意见 */
+        private boolean requiredComment = false;
+        /** 发布状态 */
+        private Map<String, Object> publish;
         /** 创建时间 */
         private Date createdAt;
 
@@ -150,7 +171,14 @@ public class WorkflowInstanceApproveRecords {
             WorkflowDefinitionResponse response = new WorkflowDefinitionResponse();
             response.id = workflowDefinition.getId();
             response.tenantId = workflowDefinition.getTenantId();
+            response.key = workflowDefinition.getKey();
             response.name = workflowDefinition.getName();
+            response.type = workflowDefinition.getType();
+            response.continuousApproveMode = workflowDefinition.getContinuousApproveMode().toMap();
+            response.allowEmptyAutoApprove = workflowDefinition.isAllowEmptyAutoApprove();
+            response.allowRedo = workflowDefinition.isAllowRedo();
+            response.requiredComment = workflowDefinition.isRequiredComment();
+            response.publish = workflowDefinition.getPublish().toMap();
             response.createdAt = workflowDefinition.getCreatedAt();
             return response;
         }
@@ -164,20 +192,46 @@ public class WorkflowInstanceApproveRecords {
         private String name;
         /** 节点类型 */
         private Map<String, Object> nodeType;
+        /** 是否是动态指定审批节点 */
+        private boolean dynamic = false;
+        /** 动态审批人数量 */
+        private Integer dynamicAssignmentNum = 0;
+        /** 条件定义 */
+        private Conditions conditions;
+        /** 排序 */
+        private Double sequence;
+        /** 是否是角色审批节点 */
+        private boolean roleApprove = false;
+        /** 角色用户审批类型 */
+        private Map<String, Object> roleUserApproveType;
+        /** 角色审批类型 */
+        private Map<String, Object> roleApproveType;
         /** 节点实例 */
         private TaskInstanceResponse taskInstanceResponse;
         /** 审批人 */
-        private List<NodeAssignmentResponse> nodeAssignmentResponses;
+        private List<NodeAssignmentResponse> nodeAssignmentsResponse;
+        /** 动态审批人 */
+        private List<TaskDynamicAssignmentResponse> taskDynamicAssignmentsResponse;
         /** 创建时间 */
         private Date createdAt;
 
-        public static NodeDefinitionResponse of(NodeDefinition nodeDefinition, TaskInstanceResponse taskInstanceResponse, List<NodeAssignmentResponse> nodeAssignmentResponses) {
+        public static NodeDefinitionResponse of(NodeDefinition nodeDefinition, TaskInstanceResponse taskInstanceResponse,
+                                                List<NodeAssignmentResponse> nodeAssignmentsResponse,
+                                                List<TaskDynamicAssignmentResponse> taskDynamicAssignmentsResponse) {
             NodeDefinitionResponse response = new NodeDefinitionResponse();
             response.id = nodeDefinition.getId();
             response.name = nodeDefinition.getName();
             response.nodeType = nodeDefinition.getNodeType().toMap();
+            response.dynamic = nodeDefinition.isDynamic();
+            response.dynamicAssignmentNum = nodeDefinition.getDynamicAssignmentNum();
+            response.conditions = nodeDefinition.getConditions();
+            response.sequence = nodeDefinition.getSequence();
+            response.roleApprove = nodeDefinition.isRoleApprove();
+            response.roleUserApproveType = nodeDefinition.getRoleUserApproveType().toMap();
+            response.roleApproveType = nodeDefinition.getRoleApproveType().toMap();
             response.taskInstanceResponse = taskInstanceResponse;
-            response.nodeAssignmentResponses = nodeAssignmentResponses;
+            response.nodeAssignmentsResponse = nodeAssignmentsResponse;
+            response.taskDynamicAssignmentsResponse = taskDynamicAssignmentsResponse;
             response.createdAt = nodeDefinition.getCreatedAt();
             return response;
         }
@@ -206,6 +260,39 @@ public class WorkflowInstanceApproveRecords {
             response.approverDesc = nodeAssignment.getApproverDesc();
             response.approverSeq = nodeAssignment.getApproverSeq();
             response.createdAt = nodeAssignment.getCreatedAt();
+            return response;
+        }
+    }
+
+    @Data
+    public static class TaskDynamicAssignmentResponse {
+        /** 动态审批人 ID */
+        private Integer id;
+        /** 节点定义 ID */
+        private Integer nodeDefinitionId;
+        /** 任务实例 ID */
+        private Integer taskInstanceId;
+        /** 审批人 */
+        private String approverId;
+        /** 审批人名称 */
+        private String approverName;
+        /** 审批人备注 */
+        private String approverDesc;
+        /** 审批顺序 */
+        private Integer approverSeq;
+        /** 创建时间 */
+        private Date createdAt;
+
+        public static TaskDynamicAssignmentResponse of(TaskDynamicAssignment taskDynamicAssignment) {
+            TaskDynamicAssignmentResponse response = new TaskDynamicAssignmentResponse();
+            response.id = taskDynamicAssignment.getId();
+            response.nodeDefinitionId = taskDynamicAssignment.getNodeDefinitionId();
+            response.taskInstanceId = taskDynamicAssignment.getTaskInstanceId();
+            response.approverId = taskDynamicAssignment.getApproverId();
+            response.approverName = taskDynamicAssignment.getApproverName();
+            response.approverDesc = taskDynamicAssignment.getApproverDesc();
+            response.approverSeq = taskDynamicAssignment.getApproverSeq();
+            response.createdAt = taskDynamicAssignment.getCreatedAt();
             return response;
         }
     }
