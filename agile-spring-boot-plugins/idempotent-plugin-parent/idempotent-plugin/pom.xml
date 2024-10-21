@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
         <artifactId>idempotent-plugin-parent</artifactId>
-        <version>1.0.15.13</version>
+        <version>1.0.15.14</version>
     </parent>
 
     <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
