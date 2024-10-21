@@ -79,7 +79,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow3(tenantId, workflowDefinition);
+        createWorkflow2(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -124,17 +124,30 @@ class WorkflowHelperTest {
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
-        Conditions conditions = Conditions.defaultConditions();
+
+
+        Conditions conditions = Conditions.newInstance(LogicOperator.AND, 1);
+        conditions.addCondition(Condition.of("day", "1", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于 1 天"));
         conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN, "请假日期小于 3 天"));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
-                .name("部门主管审批").desc("任务节点").conditions(conditions).approveType(ApproveType.ANY)
-                .approverId("张三").approverId("李四")
+                .name("部门组长审批").desc("任务节点").conditions(conditions).approveType(ApproveType.ANY)
+                .approverId("张三")
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
-        conditions = Conditions.defaultConditions();
+        conditions = Conditions.newInstance(LogicOperator.AND, 2);
         conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于等于 3 天"));
+        conditions.addCondition(Condition.of("day", "5", Operator.LESS_THAN, "请假日期小于 5 天"));
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
+                .name("部门主管审批").desc("任务节点").conditions(conditions)
+                .approverId("李四")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        conditions = Conditions.newInstance(LogicOperator.AND, 3);
+        conditions.addCondition(Condition.of("day", "5", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于等于 5 天"));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门经理审批").desc("任务节点").conditions(conditions)
                 .approverId("王五")
@@ -452,7 +465,7 @@ class WorkflowHelperTest {
         }
 
         RequestConditions requestConditions = RequestConditions.newInstance();
-        requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
+        requestConditions.addRequestCondition(RequestCondition.of("day", "1"));
         WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions, approvers);
 
         // 添加附件
@@ -465,7 +478,7 @@ class WorkflowHelperTest {
         deploy();
         createNode();
         publish();
-        start();
+        // start();
     }
 
     /**
@@ -479,9 +492,9 @@ class WorkflowHelperTest {
         // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
-        String approverId = "王五-1";
+        // String approverId = "王五-1";
         // String approverId = "哈哈";
-        // String approverId = "赵六";
+        String approverId = "赵六";
         // String approverId = "孙七";
         // String approverId = "admin";
         // String approverId = "admin-1";

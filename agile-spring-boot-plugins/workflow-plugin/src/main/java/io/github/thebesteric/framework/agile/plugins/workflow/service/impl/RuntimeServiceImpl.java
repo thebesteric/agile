@@ -127,7 +127,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             recordLogs(tenantId, workflowInstanceId, startTaskInstance.getId(), startNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_STARTED);
 
             // 创建下一个审批实例（多个审批实例，通常是条件节点）
-            List<NodeDefinition> toTaskNodes = nodeDefinitionExecutor.findToTaskNodesByFromNodeId(tenantId, startNodeDefinition.getId());
+            List<NodeDefinition> toTaskNodes = new ArrayList<>(nodeDefinitionExecutor.findToTaskNodesByFromNodeId(tenantId, startNodeDefinition.getId()));
             if (CollUtil.isNotEmpty(toTaskNodes)) {
                 List<NodeDefinition> nextNodeDefinitions = new ArrayList<>();
                 // 只有一个审批节点
@@ -141,11 +141,23 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 }
                 // 存在多个审批节点
                 else {
+                    // 按优先级排序
+                    toTaskNodes.sort(Comparator.comparingInt(nd -> {
+                        if (nd.getConditions() == null) {
+                            return 0;
+                        }
+                        return nd.getConditions().getPriority();
+                    }));
                     for (NodeDefinition toTaskNode : toTaskNodes) {
-                        // 没有审批条件或满足审批条件
+                        // 没有审批条件，则添加所有的节点
                         Conditions conditions = toTaskNode.getConditions();
-                        if (conditions == null || conditions.matchRequestCondition(requestConditions)) {
+                        if (conditions == null) {
                             nextNodeDefinitions.add(toTaskNode);
+                        }
+                        // 存在并满足审批条件，则只会添加一个符合条件的节点
+                        else if (conditions.matchRequestCondition(requestConditions)) {
+                            nextNodeDefinitions.add(toTaskNode);
+                            break;
                         }
                     }
                 }

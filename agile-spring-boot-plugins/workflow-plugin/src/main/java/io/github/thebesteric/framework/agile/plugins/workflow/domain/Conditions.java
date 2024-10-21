@@ -29,17 +29,20 @@ public class Conditions implements Serializable {
     private List<Condition> conditions = new ArrayList<>();
     /** 逻辑运算符 */
     private LogicOperator logicOperator;
+    /** 优先级 */
+    private Integer priority;
 
-    private Conditions(LogicOperator logicOperator) {
+    private Conditions(LogicOperator logicOperator, Integer priority) {
         this.logicOperator = logicOperator;
+        this.priority = priority;
     }
 
     public static Conditions defaultConditions() {
-        return newInstance(LogicOperator.AND);
+        return newInstance(LogicOperator.AND, Integer.MAX_VALUE);
     }
 
-    public static Conditions newInstance(LogicOperator logicOperator) {
-        return new Conditions(logicOperator);
+    public static Conditions newInstance(LogicOperator logicOperator, Integer priority) {
+        return new Conditions(logicOperator, priority);
     }
 
     /**
