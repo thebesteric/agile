@@ -741,6 +741,20 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     nextTaskInstances.add(nextTaskInstance);
                 }
             }
+
+            // 兜底方案：nextTaskInstances 为 empty 的情况，说明可能没有任何一个条件节点符合该审批情况，则默认将审批流程设置为：已完成
+            if (CollectionUtils.isEmpty(nextTaskInstances)) {
+                // 更新节点状态
+                prevTaskInstance.setStatus(NodeStatus.COMPLETED);
+                taskInstanceExecutor.updateById(prevTaskInstance);
+                // 更新流程实例为：已完成
+                workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+                workflowInstanceExecutor.updateById(workflowInstance);
+            }
+
+            // 这里可能返回 null，也可能返回 empty
+            // nextTaskInstances = null: 表示正常达到结束节点
+            // nextTaskInstances = empty: 表示条件节点中，没有符合的审批节点，则结束流程
             return nextTaskInstances;
         });
     }
@@ -915,7 +929,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstanceId, nodeDefinition.getName(), TaskHistoryMessage.INSTANCE_APPROVED);
 
             // 没有下一级审批节点，且当前审批节点全部审批完成，则表示流程已经结束
-            if (nextTaskInstances == null && taskInstance.isCompleted()) {
+            // nextTaskInstances = null: 表示正常达到结束节点
+            // nextTaskInstances = empty: 表示条件节点中，没有符合的审批节点，则结束流程
+            if (CollectionUtils.isEmpty(nextTaskInstances) && taskInstance.isCompleted()) {
                 // 创建结束节点实例
                 NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, nodeDefinition.getWorkflowDefinitionId());
                 taskInstanceExecutor = taskInstanceExecutorBuilder.newInstance()
@@ -2140,7 +2156,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstanceId, nodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ABANDONED);
 
             // 没有下一级审批节点，且当前审批节点全部审批完成，则表示流程已经结束
-            if (nextTaskInstances == null && taskInstance.isCompleted()) {
+            // nextTaskInstances = null: 表示正常达到结束节点
+            // nextTaskInstances = empty: 表示条件节点中，没有符合的审批节点，则结束流程
+            if (CollectionUtils.isEmpty(nextTaskInstances) && taskInstance.isCompleted()) {
                 // 记录流程日志（审批结束）
                 NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, nodeDefinition.getWorkflowDefinitionId());
                 recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), null, endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ENDED);
