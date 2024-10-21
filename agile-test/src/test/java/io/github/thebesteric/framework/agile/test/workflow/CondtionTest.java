@@ -19,7 +19,7 @@ public class CondtionTest {
 
     @Test
     void testConditions() {
-        Conditions conditions = Conditions.newInstance(LogicOperator.AND);
+        Conditions conditions = Conditions.newInstance(LogicOperator.AND, Integer.MAX_VALUE);
         conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN));
         conditions.addCondition(Condition.of("name", "lisi", Operator.EQUAL));
 
