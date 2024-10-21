@@ -163,6 +163,7 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         conditions = Conditions.defaultConditions();
+        conditions.addCondition(Condition.of("day", "1", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于 1 天"));
         conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN, "请假日期小于 3 天"));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("人事主管审批").desc("任务节点").conditions(conditions)
@@ -173,9 +174,17 @@ class WorkflowHelperTest {
 
         conditions = Conditions.defaultConditions();
         conditions.addCondition(Condition.of("day", "3", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于等于 3 天"));
+        conditions.addCondition(Condition.of("day", "5", Operator.LESS_THAN, "请假日期小于 5 天"));
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("人事经理审批").desc("任务节点").conditions(conditions)
                 .approverId("孙七")
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
+
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 4)
+                .name("公司总监审批").desc("任务节点")
+                .approverId("嘿嘿")
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -465,7 +474,7 @@ class WorkflowHelperTest {
         }
 
         RequestConditions requestConditions = RequestConditions.newInstance();
-        requestConditions.addRequestCondition(RequestCondition.of("day", "1"));
+        requestConditions.addRequestCondition(RequestCondition.of("day", "3"));
         WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions, approvers);
 
         // 添加附件
@@ -493,9 +502,10 @@ class WorkflowHelperTest {
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
-        // String approverId = "哈哈";
-        String approverId = "赵六";
+        String approverId = "哈哈";
+        // String approverId = "赵六";
         // String approverId = "孙七";
+        // String approverId = "嘿嘿";
         // String approverId = "admin";
         // String approverId = "admin-1";
 
