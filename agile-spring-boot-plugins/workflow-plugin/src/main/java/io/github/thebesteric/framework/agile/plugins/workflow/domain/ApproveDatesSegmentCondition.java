@@ -27,10 +27,20 @@ public class ApproveDatesSegmentCondition {
     /** 审批时间-结束时间 */
     private Date approveEndDate;
 
+    public ApproveDatesSegmentCondition setSubmitStartDate(Date submitStartDate) {
+        this.submitStartDate = submitStartDate;
+        return this;
+    }
+
     public ApproveDatesSegmentCondition setSubmitStartDate(String submitStartDateStr) {
         if (StringUtils.isNotEmpty(submitStartDateStr)) {
             this.submitStartDate = DateUtils.parseToDateTime(submitStartDateStr);
         }
+        return this;
+    }
+
+    public ApproveDatesSegmentCondition setSubmitEndDate(Date submitEndDate) {
+        this.submitStartDate = submitEndDate;
         return this;
     }
 
@@ -41,10 +51,20 @@ public class ApproveDatesSegmentCondition {
         return this;
     }
 
+    public ApproveDatesSegmentCondition setApproveStartDate(Date approveStartDate) {
+        this.approveStartDate = approveStartDate;
+        return this;
+    }
+
     public ApproveDatesSegmentCondition setApproveStartDate(String approveStartDateStr) {
         if (StringUtils.isNotEmpty(approveStartDateStr)) {
             this.approveStartDate = DateUtils.parseToDateTime(approveStartDateStr);
         }
+        return this;
+    }
+
+    public ApproveDatesSegmentCondition setApproveEndDate(Date approveEndDate) {
+        this.approveEndDate = approveEndDate;
         return this;
     }
 
