@@ -37,13 +37,13 @@ public class WorkflowDefinition extends BaseEntity {
     @EntityColumn(length = 32, uniqueGroup = "tenant_key", nullable = false, comment = "租户 ID")
     private String tenantId;
 
-    @EntityColumn(length = 32, uniqueGroup = "tenant_key", nullable = false, comment = "流程标识")
+    @EntityColumn(length = 64, uniqueGroup = "tenant_key", nullable = false, comment = "流程标识")
     private String key = "default";
 
-    @EntityColumn(length = 32, nullable = false, comment = "流程名称")
+    @EntityColumn(length = 64, nullable = false, comment = "流程名称")
     private String name;
 
-    @EntityColumn(length = 32, comment = "流程类型（用于类型分类）")
+    @EntityColumn(length = 64, comment = "流程类型（用于类型分类）")
     private String type = "default";
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "连续审批方式：默认每个节点都需要审批")

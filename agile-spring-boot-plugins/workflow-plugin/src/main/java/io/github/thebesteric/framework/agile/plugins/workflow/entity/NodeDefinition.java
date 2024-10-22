@@ -47,7 +47,7 @@ public class NodeDefinition extends BaseEntity {
     @EntityColumn(name = "wf_def_id", nullable = false, comment = "流程定义 ID")
     private Integer workflowDefinitionId;
 
-    @EntityColumn(length = 32, nullable = false, comment = "流程名称")
+    @EntityColumn(length = 64, nullable = false, comment = "节点名称")
     private String name;
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "节点类型")
