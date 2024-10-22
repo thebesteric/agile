@@ -61,6 +61,21 @@ class WorkflowHelperTest {
     }
 
     /**
+     * 禁用流程定义
+     *
+     * @author wangweijun
+     * @since 2024/10/22 13:29
+     */
+    @Test
+    void disable() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+
+        deploymentServiceHelper.disable(tenantId, workflowKey);
+        // deploymentServiceHelper.enable(tenantId, workflowKey);
+    }
+
+    /**
      * 创建节点关系
      */
     @Test
@@ -617,8 +632,8 @@ class WorkflowHelperTest {
     @Test
     void reject() {
         String roleId = null;
-        String approverId = "张三";
-        // String approverId = "李四";
+        // String approverId = "张三";
+        String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
 
