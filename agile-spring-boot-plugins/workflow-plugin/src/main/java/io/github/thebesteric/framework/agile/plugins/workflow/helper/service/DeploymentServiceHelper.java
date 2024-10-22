@@ -181,6 +181,17 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 禁用流程定义
+     *
+     * @param tenantId 租户 ID
+     * @param id       流程 ID
+     */
+    public void disable(String tenantId, Integer id) {
+        WorkflowDefinition workflowDefinition = getById(tenantId, id);
+        this.disable(tenantId, workflowDefinition.getKey());
+    }
+
+    /**
      * 启用流程定义
      *
      * @param tenantId 租户 ID
@@ -188,6 +199,17 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      */
     public void enable(String tenantId, String key) {
         this.deploymentService.enable(tenantId, key);
+    }
+
+    /**
+     * 启用流程定义
+     *
+     * @param tenantId 租户 ID
+     * @param id       流程 ID
+     */
+    public void enable(String tenantId, Integer id) {
+        WorkflowDefinition workflowDefinition = getById(tenantId, id);
+        this.enable(tenantId, workflowDefinition.getKey());
     }
 
     /**
