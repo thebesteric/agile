@@ -742,4 +742,30 @@ public interface RuntimeService {
      * @since 2024/10/18 14:54
      */
     boolean isDynamicNode(String tenantId, Integer taskInstanceId);
+
+    /**
+     * 查询正在进行的流程实例
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/22 11:50
+     */
+    List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId);
+
+    /**
+     * 查询正在进行的流程实例
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 KEY
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/22 11:50
+     */
+    List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, String workflowDefinitionKey);
 }

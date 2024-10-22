@@ -3470,6 +3470,48 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
+     * 查询正在进行的流程实例
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/22 11:50
+     */
+    @Override
+    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId) {
+        // 检查是否有正在进行的流程实例
+        WorkflowInstanceExecutor workflowInstanceExecutor = this.workflowInstanceExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
+                .eq(WorkflowInstance::getTenantId, tenantId)
+                .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
+                .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
+                .eq(WorkflowInstance::getState, 1).build();
+        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+        return page.getRecords();
+    }
+
+    /**
+     * 查询正在进行的流程实例
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 KEY
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/22 11:50
+     */
+    @Override
+    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getByTenantAndKey(tenantId, workflowDefinitionKey);
+        return this.findWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinition.getId());
+    }
+
+    /**
      * doUpdateApprover
      *
      * @param tenantId         租户 ID
