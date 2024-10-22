@@ -125,7 +125,6 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
 
-
         Conditions conditions = Conditions.newInstance(LogicOperator.AND, 1);
         conditions.addCondition(Condition.of("day", "1", Operator.GREATER_THAN_AND_EQUAL, "请假日期大于 1 天"));
         conditions.addCondition(Condition.of("day", "3", Operator.LESS_THAN, "请假日期小于 3 天"));
@@ -965,6 +964,20 @@ class WorkflowHelperTest {
 
         Page<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstancesByKey(tenantId, workflowKey, List.of(WorkflowStatus.IN_PROGRESS), 1, 10);
         System.out.println(workflowInstances);
+    }
+
+    /**
+     * 查询流程定下正在进行中的实例
+     *
+     * @author wangweijun
+     * @since 2024/10/22 13:29
+     */
+    @Test
+    void findWorkflowInstanceByTaskInstanceId() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+
+        System.out.println(runtimeServiceHelper.findWorkflowDefinitionHasInProcessInstances(tenantId, 1));
     }
 
 }
