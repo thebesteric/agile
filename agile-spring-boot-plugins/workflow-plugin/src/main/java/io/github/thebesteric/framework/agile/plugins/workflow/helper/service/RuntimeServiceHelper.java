@@ -109,6 +109,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @param businessType       业务类型
      * @param desc               申请内容
      * @param requestConditions  申请条件
+     * @param dynamicApprovers   动态审批人
      *
      * @return 流程实例
      *
