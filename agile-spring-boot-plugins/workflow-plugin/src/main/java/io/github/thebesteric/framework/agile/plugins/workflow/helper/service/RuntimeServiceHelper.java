@@ -1052,4 +1052,34 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     public boolean isDynamicNodeAndUnSettingApprovers(String tenantId, Integer taskInstanceId) {
         return this.runtimeService.isDynamicNodeAndUnSettingApprovers(tenantId, taskInstanceId);
     }
+
+    /**
+     * 查询正在进行的流程实例
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/22 11:50
+     */
+    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId) {
+        return this.runtimeService.findWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinitionId);
+    }
+
+    /**
+     * 查询正在进行的流程实例
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 KEY
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/10/22 11:50
+     */
+    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, String workflowDefinitionKey) {
+        return this.runtimeService.findWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinitionKey);
+    }
 }
