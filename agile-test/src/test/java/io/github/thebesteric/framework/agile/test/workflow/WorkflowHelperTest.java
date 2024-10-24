@@ -40,7 +40,8 @@ class WorkflowHelperTest {
      */
     @Test
     void deploy() {
-        DeploymentServiceHelper deploymentServiceHelper = new WorkflowHelper(workflowEngine).getDeploymentServiceHelper();
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
         deploymentServiceHelper.setCurrentUser("admin");
         // 创建流程定义
         WorkflowDefinitionBuilder builder = WorkflowDefinitionBuilder.builder()
@@ -501,7 +502,7 @@ class WorkflowHelperTest {
         deploy();
         createNode();
         publish();
-        // start();
+        start();
     }
 
     /**
@@ -512,11 +513,11 @@ class WorkflowHelperTest {
         String roleId = "xxx";
         // String approverId = "张三";
         // String approverId = "张三-1";
-        // String approverId = "李四";
+        String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
-        String approverId = "哈哈";
+        // String approverId = "哈哈";
         // String approverId = "赵六";
         // String approverId = "孙七";
         // String approverId = "嘿嘿";
@@ -550,12 +551,18 @@ class WorkflowHelperTest {
         //         .setApproveStartDate("2024-10-09 14:59:34")
         //         .setApproveEndDate("2024-10-09 14:59:34");
 
+        // List<NodeStatus> nodeStatuses = List.of(NodeStatus.IN_PROGRESS, NodeStatus.COMPLETED, NodeStatus.CANCELED, NodeStatus.REJECTED);
+        // List<ApproveStatus> approveStatuses = List.of(ApproveStatus.IN_PROGRESS, ApproveStatus.REJECTED);
+
+        List<NodeStatus> nodeStatuses = List.of(NodeStatus.IN_PROGRESS);
+        List<ApproveStatus> approveStatuses = List.of(ApproveStatus.IN_PROGRESS);
+
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, List.of(roleId), approverId, nodeStatuses, approveStatuses, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
-        // int i = 1/0;
+        // int ex = 1/0;
 
         taskInstances.forEach(taskInstance -> {
             String comment = "同意";
@@ -695,7 +702,7 @@ class WorkflowHelperTest {
     }
 
     /**
-     * 审批-拒绝
+     * 审批-取消提交（发起者在未有节点开始审批的时候）
      */
     @Test
     void cancel() {
@@ -850,7 +857,7 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
 
-        WorkflowDefinitionFlowSchema workflowDefinitionFlowSchema = deploymentServiceHelper.getWorkflowDefinitionFlowSchema(tenantId, 1);
+        WorkflowDefinitionFlowSchema workflowDefinitionFlowSchema = deploymentServiceHelper.schema(tenantId, 1);
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowDefinitionFlowSchema));
     }
@@ -992,7 +999,7 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
-        System.out.println(runtimeServiceHelper.findWorkflowDefinitionHasInProcessInstances(tenantId, 1));
+        System.out.println(runtimeServiceHelper.findWorkflowInstances(tenantId, null, 1));
     }
 
 }

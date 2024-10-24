@@ -1,14 +1,20 @@
 package io.github.thebesteric.framework.agile.test.workflow;
 
+import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinitionHistory;
+import io.github.thebesteric.framework.agile.plugins.workflow.helper.WorkflowHelper;
+import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.DeploymentServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.util.List;
 
 @SpringBootTest
 class DeploymentServiceTest {
@@ -32,41 +38,77 @@ class DeploymentServiceTest {
         System.out.println(workflow);
     }
 
+    /**
+     * 删除流程定义
+     */
     @Test
     void delete() {
-        DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        deploymentService.delete(tenantId, key);
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        deploymentServiceHelper.delete(tenantId, key);
     }
 
     @Test
+    void getById() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.getById(tenantId, 1);
+        System.out.println(workflowDefinition);
+    }
+
+    @Test
+    void getByKey() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.getByKey(tenantId, key);
+        System.out.println(workflowDefinition);
+    }
+
+    /**
+     * 获取所有流程定义
+     */
+    @Test
     void list() {
-        DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        for (WorkflowDefinition workflow : deploymentService.find(tenantId)) {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        List<WorkflowDefinition> workflowDefinitions = deploymentServiceHelper.list(tenantId);
+        for (WorkflowDefinition workflow : workflowDefinitions) {
             System.out.println(workflow);
         }
     }
 
     @Test
     void disable() {
-        DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        deploymentService.disable(tenantId, key);
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        deploymentServiceHelper.disable(tenantId, key);
     }
 
     @Test
     void enable() {
-        DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        deploymentService.enable(tenantId, key);
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        deploymentServiceHelper.enable(tenantId, key);
     }
 
     @Test
     void update() {
-        DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        WorkflowDefinition workflowDefinition = deploymentService.getByKey(tenantId, key);
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.getByKey(tenantId, key);
         workflowDefinition.setTenantId("8888");
         workflowDefinition.setKey("test-key");
         workflowDefinition.setName("测试流程");
         workflowDefinition.setDesc("这是一个测试流程");
-        deploymentService.update(workflowDefinition);
+        deploymentServiceHelper.update(workflowDefinition);
+    }
+
+    @Test
+    void schema() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        WorkflowDefinitionFlowSchema schema = deploymentServiceHelper.schema(tenantId, key);
+        System.out.println(JsonUtils.toJson(schema));
     }
 
     @Test
