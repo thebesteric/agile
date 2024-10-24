@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.entity;
 import io.github.thebesteric.framework.agile.commons.util.DateUtils;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ConditionNotMatchedAnyStrategy;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.PublishStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
@@ -49,6 +50,9 @@ public class WorkflowDefinition extends BaseEntity {
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "连续审批方式：默认每个节点都需要审批")
     private ContinuousApproveMode continuousApproveMode = ContinuousApproveMode.APPROVE_ALL;
 
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "没有条件节点符合时的处理策略: 默认抛出异常")
+    private ConditionNotMatchedAnyStrategy conditionNotMatchedAnyStrategy = ConditionNotMatchedAnyStrategy.PROCESS_THROW_EXCEPTION;
+
     @EntityColumn(nullable = false, defaultExpression = "0", comment = "审批人为空时，是否允许自动审批")
     private boolean allowEmptyAutoApprove = false;
 
@@ -84,6 +88,7 @@ public class WorkflowDefinition extends BaseEntity {
         workflowDefinition.setName(rs.getString("name"));
         workflowDefinition.setType(rs.getString("type"));
         workflowDefinition.setContinuousApproveMode(ContinuousApproveMode.of(rs.getInt("continuous_approve_mode")));
+        workflowDefinition.setConditionNotMatchedAnyStrategy(ConditionNotMatchedAnyStrategy.of(rs.getInt("condition_not_matched_any_strategy")));
         workflowDefinition.setAllowEmptyAutoApprove(rs.getInt("allow_empty_auto_approve") == 1);
         workflowDefinition.setAllowRedo(rs.getInt("allow_redo") == 1);
         workflowDefinition.setRequiredComment(rs.getInt("required_comment") == 1);

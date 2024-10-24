@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidDataException;
+import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
@@ -636,7 +637,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             if (!nodeRelations.isEmpty()) {
                 for (NodeRelation nodeRelation : nodeRelations) {
-
                     // 下一个节点定义
                     Integer nextNodeDefinitionId = nodeRelation.getFromNodeId();
                     NodeDefinition nextNodeDefinition = nodeDefinitionExecutor.getById(nextNodeDefinitionId);
@@ -647,109 +647,66 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     if (nodeRelations.size() > 1 && NodeType.END == toNodeDefinition.getNodeType() && !nextNodeDefinition.hasConditions()) {
                         continue;
                     }
-
-                    // 审批条件判断
-                    Conditions conditions = nextNodeDefinition.getConditions();
-                    RequestConditions requestConditions = workflowInstance.getRequestConditions();
-                    if ((conditions != null && requestConditions != null && !conditions.matchRequestCondition(requestConditions))
-                        || (conditions != null && requestConditions == null)) {
-                        continue;
-                    }
-
-                    // 同一个类型的节点，只允许存在一个
-                    if (!nextTaskInstances.isEmpty()) {
-                        TaskInstance taskInstance = nextTaskInstances.stream().filter(i -> i.getNodeDefinitionId().equals(nextNodeDefinitionId)).findAny().orElse(null);
-                        if (taskInstance != null) {
-                            continue;
-                        }
-                    }
-
-                    // 下一个节点的审批人
-                    List<NodeAssignment> nextNodeAssignments = new ArrayList<>();
-
-                    // 准备构建下一个节点实例
-                    taskInstanceExecutorBuilder.workflowInstanceId(workflowInstance.getId())
-                            .roleApprove(nextNodeDefinition.isRoleApprove())
-                            .nodeDefinitionId(nextNodeDefinitionId);
-
-                    // 已经是结束节点
-                    if (NodeType.END == nextNodeDefinition.getNodeType()) {
-                        // 更新下个节点状态为：已完成
-                        taskInstanceExecutorBuilder.status(NodeStatus.COMPLETED);
-
-                        // 更新流程实例为：已完成
-                        workflowInstance.setStatus(WorkflowStatus.COMPLETED);
-                        workflowInstanceExecutor.updateById(workflowInstance);
-                    }
-                    // 不是结束节点
-                    else {
-                        // 查找节点审批人
-                        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
-                        nextNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinitionId);
-                        // 更新下个节点状态为：进行中，并更新节点审批人数量
-                        taskInstanceExecutorBuilder.tenantId(tenantId)
-                                .status(NodeStatus.IN_PROGRESS)
-                                .totalCount(this.calcTotalCount(workflowDefinition, nextNodeDefinition, nextNodeAssignments))
-                                .approvedCount(0);
-                    }
-
-                    // 保存任务节点
-                    taskInstanceExecutor = taskInstanceExecutorBuilder.build();
-                    TaskInstance nextTaskInstance = taskInstanceExecutor.save();
-
-                    // 如果允许自动审批，并且没有审批人，则自动审批
-                    if (workflowDefinition.isAllowEmptyAutoApprove() && nextNodeAssignments.isEmpty()) {
-                        this.approve(tenantId, nextTaskInstance.getId(), null, WorkflowConstants.AUTO_APPROVER, WorkflowConstants.AUTO_APPROVER_COMMENT);
-                    }
-
-                    // 创建任务实例审批人
-                    List<TaskApprove> taskApproves = new ArrayList<>();
-                    if (CollUtil.isNotEmpty(nextNodeAssignments) && NodeType.END != nextNodeDefinition.getNodeType()) {
-                        int i = 0;
-                        for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
-                            taskApproveExecutorBuilder
-                                    .tenantId(tenantId)
-                                    .workflowInstanceId(nextTaskInstance.getWorkflowInstanceId())
-                                    .taskInstanceId(nextTaskInstance.getId())
-                                    .approverId(nextNodeAssignment.getApproverId())
-                                    .approverIdType(nextNodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER)
-                                    .approveSeq(nextNodeAssignment.getApproverSeq())
-                                    .active(ActiveStatus.ACTIVE)
-                                    .status(ApproveStatus.IN_PROGRESS)
-                                    .build();
-
-                            // 顺序审批，后续审批人需要等待前一个审批人审批完成，后续的审批状态设置为：挂起
-                            if (ApproveType.SEQ == nextNodeDefinition.getApproveType() && i > 0) {
-                                taskApproveExecutorBuilder.status(ApproveStatus.SUSPEND);
-                            }
-                            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
-                            TaskApprove taskApprove = taskApproveExecutor.save();
-                            taskApproves.add(taskApprove);
-                            i++;
-
-                            // 判断连续审批模式
-                            ContinuousApproveMode continuousApproveMode = workflowDefinition.getContinuousApproveMode();
-                            this.continuousApproveModeProcess(tenantId, nextTaskInstance, roleId, userId, null, nextNodeAssignment.getApproverId(), continuousApproveMode);
-                        }
-                    }
-
-                    // 判断是否是角色审批，如果是角色审批则创建角色审批记录
-                    if (nextNodeDefinition.isRoleApprove()) {
-                        this.processTaskRoleApproveRecords(tenantId, nextNodeDefinition, nextTaskInstance, taskApproves);
-                    }
-
-                    nextTaskInstances.add(nextTaskInstance);
+                    // 检查当前节点是否符合审批条件，符合则保存任务实例
+                    checkAndSaveNextTaskInstance(tenantId, workflowInstance, workflowDefinition, nextNodeDefinition, roleId, userId, nextTaskInstances);
                 }
             }
 
-            // 兜底方案：nextTaskInstances 为 empty 的情况，说明可能没有任何一个条件节点符合该审批情况，则默认将审批流程设置为：已完成
+            // 兜底方案：nextTaskInstances 为 empty 的情况，说明可能没有任何一个条件节点符合该审批情况，则需要判断执行策略
             if (CollectionUtils.isEmpty(nextTaskInstances)) {
-                // 更新节点状态
-                prevTaskInstance.setStatus(NodeStatus.COMPLETED);
-                taskInstanceExecutor.updateById(prevTaskInstance);
-                // 更新流程实例为：已完成
-                workflowInstance.setStatus(WorkflowStatus.COMPLETED);
-                workflowInstanceExecutor.updateById(workflowInstance);
+                switch (workflowDefinition.getConditionNotMatchedAnyStrategy()) {
+                    case PROCESS_APPROVED:
+                        // 更新流程实例为：已完成
+                        workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+                        workflowInstanceExecutor.updateById(workflowInstance);
+                        break;
+                    case PROCESS_REJECTED:
+                        // 更新流程实例为：已拒绝
+                        workflowInstance.setStatus(WorkflowStatus.REJECTED);
+                        workflowInstanceExecutor.updateById(workflowInstance);
+                        break;
+                    case PROCESS_CONTINUE_TO_NEXT:
+                        // 因为都没有符合条件的节点，故获取节点关系中最后一个节点定义
+                        Integer lastNodeDefinitionId = nodeRelations.get(nodeRelations.size() - 1).getFromNodeId();
+                        NodeDefinition lastNodeDefinition = nodeDefinitionExecutor.getById(lastNodeDefinitionId);
+                        // 如果是结束节点，则标记为已完成
+                        if (NodeType.END == lastNodeDefinition.getNodeType()) {
+                            // 更新流程实例为：已完成
+                            workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+                            workflowInstanceExecutor.updateById(workflowInstance);
+                        }
+                        // 不是结束节点，则需要找到下一个节点，
+                        else {
+                            // 查找下一个最小的节点
+                            List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
+                            Double minSequence = nodeDefinitions.stream()
+                                    .filter(n -> NodeType.TASK == n.getNodeType())
+                                    .filter(n -> n.getSequence() > lastNodeDefinition.getSequence())
+                                    .min(Comparator.comparing(NodeDefinition::getSequence))
+                                    .map(NodeDefinition::getSequence)
+                                    .stream().findFirst().orElse(null);
+                            // 不存在下级节点定义
+                            if (minSequence == null) {
+                                // 更新流程实例为：已完成
+                                workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+                                workflowInstanceExecutor.updateById(workflowInstance);
+                            }
+                            // 存在下级节点定义
+                            else {
+                                List<NodeDefinition> nextNodeDefinitions = nodeDefinitionExecutor.findBySequence(tenantId, workflowDefinition.getId(), minSequence);
+                                for (NodeDefinition nextNodeDefinition : nextNodeDefinitions) {
+                                    // 检查当前节点是否符合审批条件，符合则保存任务实例
+                                    checkAndSaveNextTaskInstance(tenantId, workflowInstance, workflowDefinition, nextNodeDefinition, roleId, userId, nextTaskInstances);
+                                }
+                            }
+
+                        }
+                        break;
+                    default:
+                        // 抛出异常
+                        RequestConditions requestConditions = workflowInstance.getRequestConditions();
+                        throw new WorkflowException("没有符合条件的审批节点: " + JsonUtils.toJson(requestConditions.getRequestConditions()));
+                }
             }
 
             // 这里可能返回 null，也可能返回 empty
@@ -757,6 +714,107 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // nextTaskInstances = empty: 表示条件节点中，没有符合的审批节点，则结束流程
             return nextTaskInstances;
         });
+    }
+
+    private void checkAndSaveNextTaskInstance(String tenantId, WorkflowInstance workflowInstance, WorkflowDefinition workflowDefinition, NodeDefinition nextNodeDefinition, String roleId, String userId, List<TaskInstance> nextTaskInstances) {
+        // 判断是否时结束节点
+        if (NodeType.END == nextNodeDefinition.getNodeType()) {
+            return;
+        }
+
+        // 审批条件判断
+        Conditions conditions = nextNodeDefinition.getConditions();
+        RequestConditions requestConditions = workflowInstance.getRequestConditions();
+        if ((conditions != null && requestConditions != null && !conditions.matchRequestCondition(requestConditions))
+            || (conditions != null && requestConditions == null)) {
+            return;
+        }
+        Integer nextNodeDefinitionId = nextNodeDefinition.getId();
+
+        // 同一个类型的节点，只允许存在一个
+        if (!nextTaskInstances.isEmpty()) {
+            TaskInstance taskInstance = nextTaskInstances.stream().filter(i -> i.getNodeDefinitionId().equals(nextNodeDefinitionId)).findAny().orElse(null);
+            if (taskInstance != null) {
+                return;
+            }
+        }
+
+        // 下一个节点的审批人
+        List<NodeAssignment> nextNodeAssignments = new ArrayList<>();
+
+        // 准备构建下一个节点实例
+        taskInstanceExecutorBuilder.workflowInstanceId(workflowInstance.getId())
+                .roleApprove(nextNodeDefinition.isRoleApprove())
+                .nodeDefinitionId(nextNodeDefinitionId);
+
+        // 已经是结束节点
+        if (NodeType.END == nextNodeDefinition.getNodeType()) {
+            // 更新下个节点状态为：已完成
+            taskInstanceExecutorBuilder.status(NodeStatus.COMPLETED);
+
+            // 更新流程实例为：已完成
+            workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+            WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+            workflowInstanceExecutor.updateById(workflowInstance);
+        }
+        // 不是结束节点
+        else {
+            // 查找节点审批人
+            NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+            nextNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinitionId);
+            // 更新下个节点状态为：进行中，并更新节点审批人数量
+            taskInstanceExecutorBuilder.tenantId(tenantId)
+                    .status(NodeStatus.IN_PROGRESS)
+                    .totalCount(this.calcTotalCount(workflowDefinition, nextNodeDefinition, nextNodeAssignments))
+                    .approvedCount(0);
+        }
+
+        // 保存任务节点
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        TaskInstance nextTaskInstance = taskInstanceExecutor.save();
+
+        // 如果允许自动审批，并且没有审批人，则自动审批
+        if (workflowDefinition.isAllowEmptyAutoApprove() && nextNodeAssignments.isEmpty()) {
+            this.approve(tenantId, nextTaskInstance.getId(), null, WorkflowConstants.AUTO_APPROVER, WorkflowConstants.AUTO_APPROVER_COMMENT);
+        }
+
+        // 创建任务实例审批人
+        List<TaskApprove> taskApproves = new ArrayList<>();
+        if (CollUtil.isNotEmpty(nextNodeAssignments) && NodeType.END != nextNodeDefinition.getNodeType()) {
+            int i = 0;
+            for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
+                taskApproveExecutorBuilder
+                        .tenantId(tenantId)
+                        .workflowInstanceId(nextTaskInstance.getWorkflowInstanceId())
+                        .taskInstanceId(nextTaskInstance.getId())
+                        .approverId(nextNodeAssignment.getApproverId())
+                        .approverIdType(nextNodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER)
+                        .approveSeq(nextNodeAssignment.getApproverSeq())
+                        .active(ActiveStatus.ACTIVE)
+                        .status(ApproveStatus.IN_PROGRESS)
+                        .build();
+
+                // 顺序审批，后续审批人需要等待前一个审批人审批完成，后续的审批状态设置为：挂起
+                if (ApproveType.SEQ == nextNodeDefinition.getApproveType() && i > 0) {
+                    taskApproveExecutorBuilder.status(ApproveStatus.SUSPEND);
+                }
+                TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+                TaskApprove taskApprove = taskApproveExecutor.save();
+                taskApproves.add(taskApprove);
+                i++;
+
+                // 判断连续审批模式
+                ContinuousApproveMode continuousApproveMode = workflowDefinition.getContinuousApproveMode();
+                this.continuousApproveModeProcess(tenantId, nextTaskInstance, roleId, userId, null, nextNodeAssignment.getApproverId(), continuousApproveMode);
+            }
+        }
+
+        // 判断是否是角色审批，如果是角色审批则创建角色审批记录
+        if (nextNodeDefinition.isRoleApprove()) {
+            this.processTaskRoleApproveRecords(tenantId, nextNodeDefinition, nextTaskInstance, taskApproves);
+        }
+
+        nextTaskInstances.add(nextTaskInstance);
     }
 
     /**
@@ -932,14 +990,20 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // nextTaskInstances = null: 表示正常达到结束节点
             // nextTaskInstances = empty: 表示条件节点中，没有符合的审批节点，则结束流程
             if (CollectionUtils.isEmpty(nextTaskInstances) && taskInstance.isCompleted()) {
+                Integer workflowDefinitionId = nodeDefinition.getWorkflowDefinitionId();
+                WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+                WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
+                // 获取条件节点不符合时的处理策略
+                ConditionNotMatchedAnyStrategy conditionNotMatchedAnyStrategy = workflowDefinition.getConditionNotMatchedAnyStrategy();
+                NodeStatus nodeStatus = ConditionNotMatchedAnyStrategy.PROCESS_REJECTED == conditionNotMatchedAnyStrategy ? NodeStatus.REJECTED : NodeStatus.COMPLETED;
                 // 创建结束节点实例
-                NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, nodeDefinition.getWorkflowDefinitionId());
+                NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, workflowDefinitionId);
                 taskInstanceExecutor = taskInstanceExecutorBuilder.newInstance()
                         .tenantId(tenantId)
                         .workflowInstanceId(taskInstance.getWorkflowInstanceId())
                         .nodeDefinitionId(endNodeDefinition.getId())
                         .roleApprove(endNodeDefinition.isRoleApprove())
-                        .status(NodeStatus.COMPLETED)
+                        .status(nodeStatus)
                         .build();
                 taskInstanceExecutor.save();
                 // 记录流程日志（审批结束）

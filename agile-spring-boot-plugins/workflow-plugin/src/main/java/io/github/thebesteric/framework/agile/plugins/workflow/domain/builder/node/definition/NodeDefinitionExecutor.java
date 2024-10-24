@@ -187,12 +187,9 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                 SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `name` = ? AND `state` = 1 AND `tenant_id` = ?
                 """;
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
-            NodeDefinition nd = NodeDefinition.of(rs);
-            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setApprovers(approvers);
-            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setRoleApprovers(roleApprovers);
-            return nd;
+            NodeDefinition nodeDef = NodeDefinition.of(rs);
+            setApproverAndRoleApprovers(tenantId, nodeDef);
+            return nodeDef;
         }, workflowDefinitionId, name, tenantId)).getOrNull();
     }
 
@@ -221,12 +218,9 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                 SELECT * FROM awf_node_definition WHERE `id` = ? AND `tenant_id` = ?
                 """;
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
-            NodeDefinition nd = NodeDefinition.of(rs);
-            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setApprovers(approvers);
-            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setRoleApprovers(roleApprovers);
-            return nd;
+            NodeDefinition nodeDef = NodeDefinition.of(rs);
+            setApproverAndRoleApprovers(tenantId, nodeDef);
+            return nodeDef;
         }, id, tenantId)).getOrNull();
     }
 
@@ -256,12 +250,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                 """;
         RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);
         List<NodeDefinition> nodeDefinitions = jdbcTemplate.query(selectSql, rowMapper, workflowDefinitionId, tenantId).stream().toList();
-        nodeDefinitions.forEach(nd -> {
-            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setApprovers(approvers);
-            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setRoleApprovers(roleApprovers);
-        });
+        setApproverAndRoleApprovers(tenantId, nodeDefinitions);
         return nodeDefinitions;
     }
 
@@ -293,12 +282,9 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                 SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `node_type` = %s AND `tenant_id` = ?
                 """.formatted(NodeType.START.getCode());
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
-            NodeDefinition nd = NodeDefinition.of(rs);
-            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setApprovers(approvers);
-            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setRoleApprovers(roleApprovers);
-            return nd;
+            NodeDefinition nodeDef = NodeDefinition.of(rs);
+            setApproverAndRoleApprovers(tenantId, nodeDef);
+            return nodeDef;
         }, workflowDefinitionId, tenantId)).getOrNull();
     }
 
@@ -330,12 +316,9 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                 SELECT * FROM awf_node_definition WHERE `wf_def_id` = ? AND `node_type` = %s AND `tenant_id` = ?
                 """.formatted(NodeType.END.getCode());
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
-            NodeDefinition nd = NodeDefinition.of(rs);
-            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setApprovers(approvers);
-            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setRoleApprovers(roleApprovers);
-            return nd;
+            NodeDefinition nodeDef = NodeDefinition.of(rs);
+            setApproverAndRoleApprovers(tenantId, nodeDef);
+            return nodeDef;
         }, workflowDefinitionId, tenantId)).getOrNull();
     }
 
@@ -368,12 +351,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                 """.formatted(NodeType.TASK.getCode());
         RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);
         List<NodeDefinition> nodeDefinitions = jdbcTemplate.query(selectSql, rowMapper, workflowDefinitionId, tenantId).stream().toList();
-        nodeDefinitions.forEach(nd -> {
-            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setApprovers(approvers);
-            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nd.getId());
-            nd.setRoleApprovers(roleApprovers);
-        });
+        setApproverAndRoleApprovers(tenantId, nodeDefinitions);
         return nodeDefinitions;
     }
 
@@ -397,12 +375,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);
         List<NodeDefinition> toNodeDefinitions = jdbcTemplate.query(selectSql, rowMapper, fromNodeDefinitionId, tenantId).stream().toList();
         // 设置审批人集合
-        for (NodeDefinition toNodeDefinition : toNodeDefinitions) {
-            Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, toNodeDefinition.getId());
-            toNodeDefinition.setApprovers(approvers);
-            Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, toNodeDefinition.getId());
-            toNodeDefinition.setRoleApprovers(roleApprovers);
-        }
+        setApproverAndRoleApprovers(tenantId, toNodeDefinitions);
         return toNodeDefinitions;
     }
 
@@ -463,5 +436,59 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = new NodeRoleAssignmentExecutor(jdbcTemplate);
         return nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId)
                 .stream().map(RoleApprover::of).collect(Collectors.toSet());
+    }
+
+    /**
+     * 根据流程定义 ID 和排序顺序查找节点定义集合
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param sequence             排序顺序
+     *
+     * @return List<NodeDefinition>
+     *
+     * @author wangweijun
+     * @since 2024/10/24 21:14
+     */
+    public List<NodeDefinition> findBySequence(String tenantId, Integer workflowDefinitionId, Double sequence) {
+        final String selectSql = """
+                SELECT * FROM awf_node_definition WHERE `state` = 1 AND `tenant_id` = ? AND `wf_def_id` = ? AND `sequence` = ?
+                """;
+        RowMapper<NodeDefinition> rowMapper = (ResultSet rs, int rowNum) -> NodeDefinition.of(rs);
+        List<NodeDefinition> nodeDefinitions = jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowDefinitionId, sequence).stream().toList();
+        // 设置审批人集合
+        setApproverAndRoleApprovers(tenantId, nodeDefinitions);
+        return nodeDefinitions;
+    }
+
+    /**
+     * 设置审批人集合
+     *
+     * @param tenantId        租户 ID
+     * @param nodeDefinitions 节点定义集合
+     *
+     * @author wangweijun
+     * @since 2024/10/24 21:10
+     */
+    private void setApproverAndRoleApprovers(String tenantId, List<NodeDefinition> nodeDefinitions) {
+        for (NodeDefinition nodeDef : nodeDefinitions) {
+            this.setApproverAndRoleApprovers(tenantId, nodeDef);
+        }
+    }
+
+    /**
+     * 设置审批人集合
+     *
+     * @param tenantId       租户 ID
+     * @param nodeDefinition 节点定义
+     *
+     * @author wangweijun
+     * @since 2024/10/24 21:10
+     */
+    private void setApproverAndRoleApprovers(String tenantId, NodeDefinition nodeDefinition) {
+        Set<Approver> approvers = findApproversByNodeDefinitionId(tenantId, nodeDefinition.getId());
+        nodeDefinition.setApprovers(approvers);
+        Set<RoleApprover> roleApprovers = findRoleApproversByNodeDefinitionId(tenantId, nodeDefinition.getId());
+        nodeDefinition.setRoleApprovers(roleApprovers);
     }
 }

@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wo
 
 import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ConditionNotMatchedAnyStrategy;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
@@ -53,6 +54,11 @@ public class WorkflowDefinitionBuilder extends AbstractBuilder<WorkflowDefinitio
         if (CharSequenceUtil.isNotEmpty(type)) {
             this.workflowDefinition.setType(type);
         }
+        return this;
+    }
+
+    public WorkflowDefinitionBuilder conditionNotMatchedAnyStrategy(ConditionNotMatchedAnyStrategy strategy) {
+        this.workflowDefinition.setConditionNotMatchedAnyStrategy(strategy);
         return this;
     }
 
