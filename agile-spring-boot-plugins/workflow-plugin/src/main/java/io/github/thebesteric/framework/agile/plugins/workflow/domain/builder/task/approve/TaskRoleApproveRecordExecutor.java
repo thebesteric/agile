@@ -231,12 +231,14 @@ public class TaskRoleApproveRecordExecutor extends AbstractExecutor<TaskRoleAppr
      * @since 2024/10/11 14:26
      */
     public List<TaskRoleApproveRecord> findByTWorkflowInstanceId(String tenantId, Integer workflowInstanceId, ApproveStatus approveStatus) {
-        Query query = QueryBuilderWrapper.createLambda(TaskRoleApproveRecord.class)
+        QueryBuilderWrapper.Builder<TaskRoleApproveRecord> builder = QueryBuilderWrapper.createLambda(TaskRoleApproveRecord.class)
                 .eq(TaskRoleApproveRecord::getTenantId, tenantId)
                 .eq(TaskRoleApproveRecord::getWorkflowInstanceId, workflowInstanceId)
-                .eq(approveStatus != null, TaskRoleApproveRecord::getStatus, approveStatus.getCode())
-                .eq(TaskRoleApproveRecord::getState, 1)
-                .build();
+                .eq(TaskRoleApproveRecord::getState, 1);
+        if (approveStatus != null) {
+            builder.eq(TaskRoleApproveRecord::getStatus, approveStatus.getCode());
+        }
+        Query query = builder.build();
         return super.find(query).getRecords();
     }
 }

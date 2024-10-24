@@ -176,7 +176,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     }
 
     /**
-     * 获取节点定义
+     * 获取节点定义集合
      *
      * @param tenantId          租户 ID
      * @param nodeDefinitionIds 节点定义 IDs
@@ -196,6 +196,22 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 获取节点定义集合
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     *
+     * @return List
+     *
+     * @author wangweijun
+     * @since 2024/7/8 16:01
+     */
+    public List<NodeDefinition> getNodes(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        return this.workflowService.getNodes(tenantId, workflowDefinition.getId());
+    }
+
+    /**
      * 获取开始节点
      *
      * @param workflowDefinition 节点定义
@@ -207,6 +223,22 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      */
     public NodeDefinition getStartNode(WorkflowDefinition workflowDefinition) {
         return this.getStartNode(workflowDefinition.getTenantId(), workflowDefinition.getId());
+    }
+
+    /**
+     * 获取开始节点
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 KEY
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/10/24 10:09
+     */
+    public NodeDefinition getStartNode(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        return this.getStartNode(workflowDefinition);
     }
 
     /**
@@ -241,6 +273,22 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     /**
      * 获取结束节点
      *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 KEY
+     *
+     * @return NodeDefinition
+     *
+     * @author wangweijun
+     * @since 2024/7/12 12:45
+     */
+    public NodeDefinition getEndNode(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        return this.getEndNode(workflowDefinition);
+    }
+
+    /**
+     * 获取结束节点
+     *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
      *
@@ -270,6 +318,22 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 获取所有任务节点
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     *
+     * @return List<NodeDefinition>
+     *
+     * @author wangweijun
+     * @since 2024/9/9 13:13
+     */
+    public List<NodeDefinition> findTaskNodes(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        return this.findTaskNodes(tenantId, workflowDefinition.getId());
+    }
+
+    /**
      * 获取第一个任务节点
      *
      * @param tenantId             租户 ID
@@ -286,6 +350,22 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 获取第一个任务节点
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     *
+     * @return List<NodeDefinition>
+     *
+     * @author wangweijun
+     * @since 2024/9/9 13:13
+     */
+    public NodeDefinition getFirstTaskNode(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        return this.getFirstTaskNode(tenantId, workflowDefinition.getId());
+    }
+
+    /**
      * 获取最后一个任务节点
      *
      * @param tenantId             租户 ID
@@ -296,9 +376,25 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/9/9 13:13
      */
-    public NodeDefinition getEndTaskNode(String tenantId, Integer workflowDefinitionId) {
+    public NodeDefinition getLastTaskNode(String tenantId, Integer workflowDefinitionId) {
         List<NodeDefinition> taskNodes = findTaskNodes(tenantId, workflowDefinitionId);
         return taskNodes.stream().max(Comparator.comparingDouble(NodeDefinition::getSequence)).orElse(null);
+    }
+
+    /**
+     * 获取最后一个任务节点
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     *
+     * @return List<NodeDefinition>
+     *
+     * @author wangweijun
+     * @since 2024/9/9 13:13
+     */
+    public NodeDefinition getLastTaskNode(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        return this.getLastTaskNode(tenantId, workflowDefinition.getId());
     }
 
     /**
@@ -409,6 +505,21 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      */
     public void publish(String tenantId, Integer workflowDefinitionId) {
         this.workflowService.createRelations(tenantId, workflowDefinitionId);
+    }
+
+    /**
+     * 发布流程（创建节点关系）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 Key
+     *
+     * @author wangweijun
+     * @since 2024/7/8 16:14
+     */
+    public void publish(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        Integer workflowDefinitionId = workflowDefinition.getId();
+        this.publish(tenantId, workflowDefinitionId);
     }
 
     /**

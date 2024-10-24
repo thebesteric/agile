@@ -1058,6 +1058,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * 查询正在进行的流程实例
      *
      * @param tenantId             租户 ID
+     * @param workflowStatus       流程状态
      * @param workflowDefinitionId 流程定义 ID
      *
      * @return List<WorkflowInstance>
@@ -1065,14 +1066,15 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/10/22 11:50
      */
-    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId) {
-        return this.runtimeService.findWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinitionId);
+    public List<WorkflowInstance> findWorkflowInstances(String tenantId, WorkflowStatus workflowStatus, Integer workflowDefinitionId) {
+        return this.runtimeService.findWorkflowInstances(tenantId, workflowStatus, workflowDefinitionId);
     }
 
     /**
      * 查询正在进行的流程实例
      *
      * @param tenantId              租户 ID
+     * @param workflowStatus        流程状态
      * @param workflowDefinitionKey 流程定义 KEY
      *
      * @return List<WorkflowInstance>
@@ -1080,7 +1082,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/10/22 11:50
      */
-    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, String workflowDefinitionKey) {
-        return this.runtimeService.findWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinitionKey);
+    public List<WorkflowInstance> findWorkflowInstances(String tenantId, WorkflowStatus workflowStatus, String workflowDefinitionKey) {
+        return this.runtimeService.findWorkflowInstances(tenantId, workflowStatus, workflowDefinitionKey);
     }
 }

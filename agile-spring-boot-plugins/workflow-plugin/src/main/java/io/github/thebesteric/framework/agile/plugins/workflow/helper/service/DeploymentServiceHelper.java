@@ -171,6 +171,19 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 删除流程定义
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义唯一标识
+     *
+     * @author wangweijun
+     * @since 2024/10/23 18:24
+     */
+    public void delete(String tenantId, String workflowDefinitionKey) {
+        this.deploymentService.delete(tenantId, workflowDefinitionKey);
+    }
+
+    /**
      * 禁用流程定义
      *
      * @param tenantId 租户 ID
@@ -223,7 +236,7 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/9/29 18:31
      */
-    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowDefinitionId) {
+    public WorkflowDefinitionFlowSchema schema(String tenantId, Integer workflowDefinitionId) {
         WorkflowDefinition workflowDefinition = getById(tenantId, workflowDefinitionId);
         return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition);
     }
@@ -239,7 +252,7 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/9/29 18:31
      */
-    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, String key) {
+    public WorkflowDefinitionFlowSchema schema(String tenantId, String key) {
         WorkflowDefinition workflowDefinition = getByKey(tenantId, key);
         return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition);
     }

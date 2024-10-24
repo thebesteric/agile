@@ -32,8 +32,8 @@ public interface DeploymentService {
     /**
      * 删除流程定义
      *
-     * @param tenantId 租户
-     * @param key      key
+     * @param tenantId 租户 ID
+     * @param key      流程定义唯一标识
      *
      * @author wangweijun
      * @since 2024/6/17 15:26

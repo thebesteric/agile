@@ -3169,12 +3169,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             Integer workflowInstanceId = workflowInstance.getId();
 
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
-            Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
+            QueryBuilderWrapper.Builder<TaskInstance> builder = QueryBuilderWrapper.createLambda(TaskInstance.class)
                     .eq(TaskInstance::getTenantId, tenantId)
-                    .eq(workflowInstanceId != null, TaskInstance::getWorkflowInstanceId, workflowInstanceId)
                     .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
-                    .eq(TaskInstance::getState, 1)
-                    .build();
+                    .eq(TaskInstance::getState, 1);
+            if (workflowInstanceId != null) {
+                builder.eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId);
+            }
+            Query query = builder.build();
             Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
             List<TaskInstance> taskInstances = taskInstancePage.getRecords();
             if (taskInstances.isEmpty()) {
@@ -3473,6 +3475,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * 查询正在进行的流程实例
      *
      * @param tenantId             租户 ID
+     * @param workflowStatus       流程状态
      * @param workflowDefinitionId 流程定义 ID
      *
      * @return List<WorkflowInstance>
@@ -3481,14 +3484,17 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/10/22 11:50
      */
     @Override
-    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId) {
+    public List<WorkflowInstance> findWorkflowInstances(String tenantId, WorkflowStatus workflowStatus, Integer workflowDefinitionId) {
         // 检查是否有正在进行的流程实例
         WorkflowInstanceExecutor workflowInstanceExecutor = this.workflowInstanceExecutorBuilder.build();
-        Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
+        QueryBuilderWrapper.Builder<WorkflowInstance> builder = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
                 .eq(WorkflowInstance::getTenantId, tenantId)
                 .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
-                .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
-                .eq(WorkflowInstance::getState, 1).build();
+                .eq(WorkflowInstance::getState, 1);
+        if (workflowStatus != null) {
+            builder.eq(WorkflowInstance::getStatus, workflowStatus.getCode());
+        }
+        Query query = builder.build();
         Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
         return page.getRecords();
     }
@@ -3497,6 +3503,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * 查询正在进行的流程实例
      *
      * @param tenantId              租户 ID
+     * @param workflowStatus        流程状态
      * @param workflowDefinitionKey 流程定义 KEY
      *
      * @return List<WorkflowInstance>
@@ -3505,10 +3512,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/10/22 11:50
      */
     @Override
-    public List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, String workflowDefinitionKey) {
+    public List<WorkflowInstance> findWorkflowInstances(String tenantId, WorkflowStatus workflowStatus, String workflowDefinitionKey) {
         WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
         WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getByTenantAndKey(tenantId, workflowDefinitionKey);
-        return this.findWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinition.getId());
+        return this.findWorkflowInstances(tenantId, workflowStatus, workflowDefinition.getId());
     }
 
     /**

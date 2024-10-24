@@ -744,9 +744,10 @@ public interface RuntimeService {
     boolean isDynamicNode(String tenantId, Integer taskInstanceId);
 
     /**
-     * 查询正在进行的流程实例
+     * 查询流程实例
      *
      * @param tenantId             租户 ID
+     * @param workflowStatus       流程状态
      * @param workflowDefinitionId 流程定义 ID
      *
      * @return List<WorkflowInstance>
@@ -754,12 +755,13 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/10/22 11:50
      */
-    List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, Integer workflowDefinitionId);
+    List<WorkflowInstance> findWorkflowInstances(String tenantId, WorkflowStatus workflowStatus, Integer workflowDefinitionId);
 
     /**
-     * 查询正在进行的流程实例
+     * 查询流程实例
      *
      * @param tenantId              租户 ID
+     * @param workflowStatus        流程状态
      * @param workflowDefinitionKey 流程定义 KEY
      *
      * @return List<WorkflowInstance>
@@ -767,5 +769,5 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/10/22 11:50
      */
-    List<WorkflowInstance> findWorkflowDefinitionHasInProcessInstances(String tenantId, String workflowDefinitionKey);
+    List<WorkflowInstance> findWorkflowInstances(String tenantId, WorkflowStatus workflowStatus, String workflowDefinitionKey);
 }
