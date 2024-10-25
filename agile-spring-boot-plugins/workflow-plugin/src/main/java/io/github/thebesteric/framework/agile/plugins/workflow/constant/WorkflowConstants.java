@@ -18,6 +18,6 @@ public final class WorkflowConstants extends AbstractUtils {
     public static final String DYNAMIC_ASSIGNMENT_APPROVER_VALUE = DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX + "%s" + DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX;
 
     /** 系统审批人 */
-    public static final String AUTO_APPROVER = "{SYSTEM:AUTO}";
+    public static final String AUTO_APPROVER_ID = "{SYSTEM:AUTO}";
     public static final String AUTO_APPROVER_COMMENT = "系统自动同意";
 }

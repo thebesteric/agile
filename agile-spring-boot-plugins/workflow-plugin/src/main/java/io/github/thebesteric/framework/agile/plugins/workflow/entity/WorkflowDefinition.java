@@ -17,8 +17,6 @@ import java.io.Serial;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
 /**
  * 流程定义表
@@ -70,7 +68,7 @@ public class WorkflowDefinition extends BaseEntity {
 
     /** 审批人（当节点审批人为空，且 allowEmptyAutoApprove 为 false 时生效），存储在 WorkflowAssignment 表中 */
     @Transient
-    private Set<Approver> whenEmptyApprovers = new LinkedHashSet<>();
+    private Approver whenEmptyApprover;
 
     public void setPublish(PublishStatus publish) {
         this.publish = publish;

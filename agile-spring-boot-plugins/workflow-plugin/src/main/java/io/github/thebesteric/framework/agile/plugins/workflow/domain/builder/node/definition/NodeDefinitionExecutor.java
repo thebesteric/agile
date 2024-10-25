@@ -73,12 +73,12 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         // 节点定义不是开始或结束节点，非自动审批条件下，审批人为空的情况
         if (nodeType != NodeType.START && nodeType != NodeType.END && !workflowDefinition.isAllowEmptyAutoApprove() && approvers.isEmpty()) {
             // 默认审批人为空
-            if (workflowDefinition.getWhenEmptyApprovers().isEmpty()) {
+            if (workflowDefinition.getWhenEmptyApprover() == null) {
                 throw new WorkflowException("非自动审批条件下，审批人不能为空");
             }
             // 不是角色审批节点，设置审批人为流程定义的默认审批人
-            if (!nodeDefinition.isRoleApprove()) {
-                approvers = workflowDefinition.getWhenEmptyApprovers();
+            if (nodeDefinition.isUserApprove()) {
+                approvers = Set.of(workflowDefinition.getWhenEmptyApprover());
             }
         }
 

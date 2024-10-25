@@ -38,9 +38,6 @@ public class WorkflowAssignment extends BaseEntity {
     @EntityColumn(name = "approver_name", length = 64, comment = "用户名称")
     private String approverName;
 
-    @EntityColumn(name = "approver_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
-    private Integer approverSeq;
-
     @EntityColumn(name = "approver_desc", comment = "用户备注")
     private String approverDesc;
 
@@ -51,11 +48,6 @@ public class WorkflowAssignment extends BaseEntity {
         nodeAssignment.setApproverId(rs.getString("approver_id"));
         nodeAssignment.setApproverName(rs.getString("approver_name"));
         nodeAssignment.setApproverDesc(rs.getString("approver_desc"));
-        // 解决 rs.getInt("xxx") null 值会返回 0 的问题
-        Object userSeqObject = rs.getObject("approver_seq");
-        if (userSeqObject != null) {
-            nodeAssignment.setApproverSeq((Integer) userSeqObject);
-        }
         return of(nodeAssignment, rs);
     }
 }

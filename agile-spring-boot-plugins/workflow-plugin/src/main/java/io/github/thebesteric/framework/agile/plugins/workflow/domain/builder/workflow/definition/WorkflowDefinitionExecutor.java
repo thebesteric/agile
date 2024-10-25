@@ -20,8 +20,6 @@ import org.springframework.jdbc.core.RowMapper;
 import java.sql.ResultSet;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * 流程定义创建者
@@ -62,17 +60,15 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
         // 保存流程定义
         workflowDefinition = super.save(workflowDefinition);
         // 获取流程定义的审批人
-        Set<Approver> whenEmptyApprovers = workflowDefinition.getWhenEmptyApprovers();
-        // 当 isAllowEmptyAutoApprove 为 false 时，且 whenEmptyApprovers 不为空，表示使用 whenEmptyApprovers 进行审批
-        if (whenEmptyApprovers != null && !whenEmptyApprovers.isEmpty()) {
-            // 保存审批人
-            whenEmptyApprovers.forEach(approver -> {
-                WorkflowAssignment workflowAssignment = WorkflowAssignmentBuilder
-                        .builder(workflowDefinition.getTenantId(), workflowDefinition.getId())
-                        .approverInfo(approver.getId(), approver.getName(), approver.getDesc())
-                        .build();
-                workflowAssignmentExecutor.save(workflowAssignment);
-            });
+        Approver whenEmptyApprover = workflowDefinition.getWhenEmptyApprover();
+        // 当 isAllowEmptyAutoApprove 为 false 时，且 whenEmptyApprover 不为空，表示使用 whenEmptyApprover 进行审批
+        if (whenEmptyApprover != null) {
+            // 保存默认审批人
+            WorkflowAssignment workflowAssignment = WorkflowAssignmentBuilder
+                    .builder(workflowDefinition.getTenantId(), workflowDefinition.getId())
+                    .approverInfo(whenEmptyApprover.getId(), whenEmptyApprover.getName(), whenEmptyApprover.getDesc())
+                    .build();
+            workflowAssignmentExecutor.save(workflowAssignment);
         }
         return workflowDefinition;
     }
@@ -121,7 +117,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
                 """;
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
             WorkflowDefinition wfd = WorkflowDefinition.of(rs);
-            packageDefaultApprovers(wfd);
+            packageDefaultApprover(wfd);
             return wfd;
         }, tenantId, key)).getOrNull();
     }
@@ -152,7 +148,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
                 """;
         RowMapper<WorkflowDefinition> rowMapper = (ResultSet rs, int rowNum) -> WorkflowDefinition.of(rs);
         List<WorkflowDefinition> workflowDefinitions = jdbcTemplate.query(selectSql, rowMapper, tenantId).stream().toList();
-        workflowDefinitions.forEach(this::packageDefaultApprovers);
+        workflowDefinitions.forEach(this::packageDefaultApprover);
         return workflowDefinitions;
     }
 
@@ -239,7 +235,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
      */
     public WorkflowDefinition getById(Integer workflowDefinitionId) {
         WorkflowDefinition wfd = super.getById(workflowDefinitionId);
-        packageDefaultApprovers(wfd);
+        packageDefaultApprover(wfd);
         return wfd;
     }
 
@@ -249,14 +245,17 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
      *
-     * @return Set<Approver>
+     * @return Approver
      *
      * @author wangweijun
      * @since 2024/9/6 14:45
      */
-    public Set<Approver> findApproversByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
-        return workflowAssignmentExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId)
-                .stream().map(assignment -> Approver.of(assignment.getApproverId(), assignment.getDesc())).collect(Collectors.toSet());
+    public Approver getDefaultApprover(String tenantId, Integer workflowDefinitionId) {
+        WorkflowAssignment workflowAssignment = workflowAssignmentExecutor.getByWorkflowDefinitionId(tenantId, workflowDefinitionId);
+        if (workflowAssignment != null) {
+            return Approver.of(workflowAssignment.getApproverId(), workflowAssignment.getApproverName(), workflowAssignment.getApproverDesc());
+        }
+        return null;
     }
 
     /**
@@ -267,8 +266,8 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
      * @author wangweijun
      * @since 2024/9/10 14:54
      */
-    private void packageDefaultApprovers(WorkflowDefinition workflowDefinition) {
-        Set<Approver> approvers = this.findApproversByWorkflowDefinitionId(workflowDefinition.getTenantId(), workflowDefinition.getId());
-        workflowDefinition.setWhenEmptyApprovers(approvers);
+    private void packageDefaultApprover(WorkflowDefinition workflowDefinition) {
+        Approver defaultApprover = this.getDefaultApprover(workflowDefinition.getTenantId(), workflowDefinition.getId());
+        workflowDefinition.setWhenEmptyApprover(defaultApprover);
     }
 }

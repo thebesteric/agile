@@ -10,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
-import java.util.List;
 
 /**
  * WorkflowAssignmentExecutor
@@ -79,18 +78,6 @@ public class WorkflowAssignmentExecutor extends AbstractExecutor<WorkflowAssignm
     /**
      * 根据流程定义 ID 查找所有审批人
      *
-     * @return List<WorkflowAssignment>
-     *
-     * @author wangweijun
-     * @since 2024/9/10 12:06
-     */
-    public List<WorkflowAssignment> findByWorkflowDefinitionId() {
-        return this.findByWorkflowDefinitionId(workflowAssignment.getTenantId(), workflowAssignment.getWorkflowDefinitionId());
-    }
-
-    /**
-     * 根据流程定义 ID 查找所有审批人
-     *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
      *
@@ -99,12 +86,12 @@ public class WorkflowAssignmentExecutor extends AbstractExecutor<WorkflowAssignm
      * @author wangweijun
      * @since 2024/9/10 12:06
      */
-    public List<WorkflowAssignment> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
+    public WorkflowAssignment getByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId) {
         final String selectSql = """
-                SELECT * FROM awf_wf_assignment WHERE `tenant_id` = ? AND `wf_def_id` = ? AND `state` = 1 ORDER BY `approver_seq` ASC
+                SELECT * FROM awf_wf_assignment WHERE `tenant_id` = ? AND `wf_def_id` = ? AND `state` = 1
                 """;
         RowMapper<WorkflowAssignment> rowMapper = (ResultSet rs, int rowNum) -> WorkflowAssignment.of(rs);
-        return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowDefinitionId).stream().toList();
+        return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowDefinitionId).stream().findFirst().orElse(null);
     }
 
     /**

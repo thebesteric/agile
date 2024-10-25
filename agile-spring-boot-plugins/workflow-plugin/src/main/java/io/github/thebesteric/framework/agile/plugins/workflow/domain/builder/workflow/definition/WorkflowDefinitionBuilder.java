@@ -7,11 +7,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.Continuou
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
-import org.springframework.util.Assert;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * WorkflowDefinitionBuilder
@@ -86,20 +81,8 @@ public class WorkflowDefinitionBuilder extends AbstractBuilder<WorkflowDefinitio
         return whenEmptyApprover(Approver.of(approverId));
     }
 
-    public WorkflowDefinitionBuilder whenEmptyApproverIds(Set<String> approverIds) {
-        Assert.notEmpty(approverIds, "approverIds cannot be empty");
-        Set<Approver> approvers = approverIds.stream().map(Approver::of).collect(Collectors.toSet());
-        return this.whenEmptyApprovers(approvers);
-    }
-
     public WorkflowDefinitionBuilder whenEmptyApprover(Approver approver) {
-        this.workflowDefinition.getWhenEmptyApprovers().add(approver);
-        return this;
-    }
-
-    public WorkflowDefinitionBuilder whenEmptyApprovers(Set<Approver> approvers) {
-        Assert.notEmpty(approvers, "approvers cannot be empty");
-        this.workflowDefinition.setWhenEmptyApprovers(new LinkedHashSet<>(approvers));
+        this.workflowDefinition.setWhenEmptyApprover(approver);
         return this;
     }
 

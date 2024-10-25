@@ -254,7 +254,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     }
                     // 没有审批人: 允许自动同意，则自动同意
                     else if (workflowDefinition.isAllowEmptyAutoApprove()) {
-                        this.approve(tenantId, nextTaskInstanceId, null, WorkflowConstants.AUTO_APPROVER, WorkflowConstants.AUTO_APPROVER_COMMENT);
+                        this.approve(tenantId, nextTaskInstanceId, null, WorkflowConstants.AUTO_APPROVER_ID, WorkflowConstants.AUTO_APPROVER_COMMENT);
                     }
                     // 其他未知情况
                     else {
@@ -264,9 +264,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     // 审批人列表为空
                     if (taskApproves.isEmpty()) {
                         // 获取当流程实例的默认审批人
-                        Set<Approver> whenEmptyApprovers = workflowDefinition.getWhenEmptyApprovers();
+                        Approver whenEmptyApprover = workflowDefinition.getWhenEmptyApprover();
                         // 实例的默认审批人为空，且不允许空节点自动审核
-                        if (CollectionUtils.isEmpty(whenEmptyApprovers) && !workflowDefinition.isAllowEmptyAutoApprove()) {
+                        if (whenEmptyApprover == null && !workflowDefinition.isAllowEmptyAutoApprove()) {
                             throw new WorkflowException("任务实例审批表不能为空");
                         }
                     }
@@ -323,6 +323,26 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     @Override
     public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc) {
         return this.start(tenantId, workflowDefinitionKey, requesterId, desc, null);
+    }
+
+    /**
+     * 获取流程默认审批人
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2024/10/25 14:23
+     */
+    private Approver getDefaultApprover(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        Approver defaultApprover = workflowDefinitionExecutor.getDefaultApprover(tenantId, workflowDefinitionId);
+        if (defaultApprover == null) {
+            defaultApprover = Approver.of(WorkflowConstants.AUTO_APPROVER_ID);
+        }
+        return defaultApprover;
     }
 
     /**
@@ -789,7 +809,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
         // 如果允许自动审批，并且没有审批人，则自动审批
         if (workflowDefinition.isAllowEmptyAutoApprove() && nextNodeAssignments.isEmpty()) {
-            this.approve(tenantId, nextTaskInstance.getId(), null, WorkflowConstants.AUTO_APPROVER, WorkflowConstants.AUTO_APPROVER_COMMENT);
+            this.approve(tenantId, nextTaskInstance.getId(), null, WorkflowConstants.AUTO_APPROVER_ID, WorkflowConstants.AUTO_APPROVER_COMMENT);
         }
 
         // 创建任务实例审批人
@@ -899,16 +919,22 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
             TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
 
+            // 获取当前审批任务
             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
             TaskApprove taskApprove;
             // 自动审批的情况
-            if (WorkflowConstants.AUTO_APPROVER.equals(userId)) {
+            if (WorkflowConstants.AUTO_APPROVER_ID.equals(userId)) {
+                Integer workflowInstanceId = taskInstance.getWorkflowInstanceId();
+                WorkflowInstance workflowInstance = getWorkflowInstanceById(tenantId, workflowInstanceId);
+                Integer workflowDefinitionId = workflowInstance.getWorkflowDefinitionId();
+                // 获取默认审批人
+                Approver defaultApprover = this.getDefaultApprover(tenantId, workflowDefinitionId);
                 // 创建一个 approver
                 taskApprove = TaskApproveBuilder.builder()
                         .tenantId(tenantId)
-                        .workflowInstanceId(taskInstance.getWorkflowInstanceId())
+                        .workflowInstanceId(workflowInstanceId)
                         .taskInstanceId(taskInstanceId)
-                        .approverId(userId)
+                        .approverId(defaultApprover.getId())
                         .active(ActiveStatus.INACTIVE)
                         .status(ApproveStatus.APPROVED)
                         .comment(comment)
@@ -2887,6 +2913,22 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     private WorkflowDefinition getWorkflowDefinition(String tenantId, String workflowDefinitionKey) {
         WorkflowDefinitionExecutor definitionExecutor = workflowDefinitionExecutorBuilder.tenantId(tenantId).key(workflowDefinitionKey).build();
+        return definitionExecutor.getByTenantAndKey();
+    }
+
+    /**
+     * 根据租户 ID 和 流程定义 Key 获取流程定义
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 Key
+     *
+     * @return WorkflowDefinition
+     *
+     * @author wangweijun
+     * @since 2024/6/24 11:24
+     */
+    private WorkflowDefinition getWorkflowDefinition(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinitionExecutor definitionExecutor = workflowDefinitionExecutorBuilder.tenantId(tenantId).id(workflowDefinitionId).build();
         return definitionExecutor.getByTenantAndKey();
     }
 

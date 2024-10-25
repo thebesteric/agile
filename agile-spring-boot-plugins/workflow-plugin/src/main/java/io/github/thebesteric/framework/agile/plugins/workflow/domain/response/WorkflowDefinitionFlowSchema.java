@@ -42,7 +42,7 @@ public class WorkflowDefinitionFlowSchema {
     /** 发布日期 */
     private Date publishedAt;
     /** 为空时的审批人 */
-    private Set<Approver> whenEmptyApprovers = new LinkedHashSet<>();
+    private Approver whenEmptyApprover;
     /** 创建日期 */
     private Date createdAt;
 
@@ -78,7 +78,7 @@ public class WorkflowDefinitionFlowSchema {
         flowSchema.requiredComment = workflowDefinition.isRequiredComment();
         flowSchema.publish = workflowDefinition.getPublish().toMap();
         flowSchema.publishedAt = workflowDefinition.getPublishedAt();
-        flowSchema.whenEmptyApprovers = workflowDefinition.getWhenEmptyApprovers();
+        flowSchema.whenEmptyApprover = workflowDefinition.getWhenEmptyApprover();
         flowSchema.createdAt = workflowDefinition.getCreatedAt();
 
         NodeDefinition startNode = nodeDefinitions.stream().filter(nodeDefinition -> nodeDefinition.getNodeType() == NodeType.START).findFirst().orElseThrow();
