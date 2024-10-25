@@ -95,6 +95,35 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
     /**
      * 查询任务审批记录
      *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param page               当前页
+     * @param pageSize           每页显示数量
+     *
+     * @return Page<TaskHistory>
+     */
+    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+        return this.findTaskHistories(tenantId, null, workflowInstanceId, null, page, pageSize);
+    }
+
+    /**
+     * 查询任务审批记录
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     * @param workflowInstanceId   流程实例 ID
+     * @param page                 当前页
+     * @param pageSize             每页显示数量
+     *
+     * @return Page<TaskHistory>
+     */
+    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+        return this.findTaskHistories(tenantId, workflowDefinitionId, workflowInstanceId, null, page, pageSize);
+    }
+
+    /**
+     * 查询任务审批记录
+     *
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
      * @param workflowInstanceId   流程实例 ID
