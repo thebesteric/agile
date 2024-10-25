@@ -669,38 +669,43 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         // 因为都没有符合条件的节点，故获取节点关系中最后一个节点定义
                         Integer lastNodeDefinitionId = nodeRelations.get(nodeRelations.size() - 1).getFromNodeId();
                         NodeDefinition lastNodeDefinition = nodeDefinitionExecutor.getById(lastNodeDefinitionId);
-                        // 如果是结束节点，则标记为已完成
-                        if (NodeType.END == lastNodeDefinition.getNodeType()) {
-                            // 更新流程实例为：已完成
-                            workflowInstance.setStatus(WorkflowStatus.COMPLETED);
-                            workflowInstanceExecutor.updateById(workflowInstance);
-                        }
-                        // 不是结束节点，则需要找到下一个节点，
-                        else {
-                            // 查找下一个最小的节点
-                            List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
-                            Double minSequence = nodeDefinitions.stream()
-                                    .filter(n -> NodeType.TASK == n.getNodeType())
-                                    .filter(n -> n.getSequence() > lastNodeDefinition.getSequence())
-                                    .min(Comparator.comparing(NodeDefinition::getSequence))
-                                    .map(NodeDefinition::getSequence)
-                                    .stream().findFirst().orElse(null);
-                            // 不存在下级节点定义
-                            if (minSequence == null) {
+                        do {
+                            // 如果是结束节点，则标记为已完成
+                            if (NodeType.END == lastNodeDefinition.getNodeType()) {
                                 // 更新流程实例为：已完成
                                 workflowInstance.setStatus(WorkflowStatus.COMPLETED);
                                 workflowInstanceExecutor.updateById(workflowInstance);
+                                break;
                             }
-                            // 存在下级节点定义
+                            // 不是结束节点，则需要找到下一个节点，
                             else {
-                                List<NodeDefinition> nextNodeDefinitions = nodeDefinitionExecutor.findBySequence(tenantId, workflowDefinition.getId(), minSequence);
-                                for (NodeDefinition nextNodeDefinition : nextNodeDefinitions) {
-                                    // 检查当前节点是否符合审批条件，符合则保存任务实例
-                                    checkAndSaveNextTaskInstance(tenantId, workflowInstance, workflowDefinition, nextNodeDefinition, roleId, userId, nextTaskInstances);
+                                // 查找下一个最小的节点
+                                List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
+                                final NodeDefinition finalLastNodeDefinition = lastNodeDefinition;
+                                Double minSequence = nodeDefinitions.stream()
+                                        .filter(n -> NodeType.TASK == n.getNodeType())
+                                        .filter(n -> n.getSequence() > finalLastNodeDefinition.getSequence())
+                                        .min(Comparator.comparing(NodeDefinition::getSequence))
+                                        .map(NodeDefinition::getSequence)
+                                        .stream().findFirst().orElse(null);
+                                // 不存在下级节点定义
+                                if (minSequence == null) {
+                                    // 更新流程实例为：已完成
+                                    workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+                                    workflowInstanceExecutor.updateById(workflowInstance);
+                                    break;
+                                }
+                                // 存在下级节点定义
+                                else {
+                                    List<NodeDefinition> nextNodeDefinitions = nodeDefinitionExecutor.findBySequence(tenantId, workflowDefinition.getId(), minSequence);
+                                    for (NodeDefinition nextNodeDefinition : nextNodeDefinitions) {
+                                        // 检查当前节点是否符合审批条件，符合则保存任务实例
+                                        checkAndSaveNextTaskInstance(tenantId, workflowInstance, workflowDefinition, nextNodeDefinition, roleId, userId, nextTaskInstances);
+                                    }
+                                    lastNodeDefinition = nextNodeDefinitions.get(nextNodeDefinitions.size() - 1);
                                 }
                             }
-
-                        }
+                        } while (CollectionUtils.isEmpty(nextTaskInstances));
                         break;
                     default:
                         // 抛出异常
@@ -716,12 +721,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         });
     }
 
+    /**
+     * 检查并保存任务实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstance   流程实例
+     * @param workflowDefinition 流程定义
+     * @param nextNodeDefinition 下一个节点定义
+     * @param roleId             角色 ID
+     * @param userId             用户 ID
+     * @param nextTaskInstances  下一个任务实例列表
+     *
+     * @author wangweijun
+     * @since 2024/10/25 09:27
+     */
     private void checkAndSaveNextTaskInstance(String tenantId, WorkflowInstance workflowInstance, WorkflowDefinition workflowDefinition, NodeDefinition nextNodeDefinition, String roleId, String userId, List<TaskInstance> nextTaskInstances) {
-        // 判断是否时结束节点
-        if (NodeType.END == nextNodeDefinition.getNodeType()) {
-            return;
-        }
-
         // 审批条件判断
         Conditions conditions = nextNodeDefinition.getConditions();
         RequestConditions requestConditions = workflowInstance.getRequestConditions();
