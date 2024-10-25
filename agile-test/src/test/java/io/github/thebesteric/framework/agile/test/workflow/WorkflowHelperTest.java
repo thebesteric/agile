@@ -50,10 +50,12 @@ class WorkflowHelperTest {
                 .name("请假流程-1")
                 // 连续审批模式
                 .continuousApproveMode(ContinuousApproveMode.APPROVE_CONTINUOUS)
+                // 没有条件节点符合时的处理策略
+                .conditionNotMatchedAnyStrategy(ConditionNotMatchedAnyStrategy.PROCESS_CONTINUE_TO_NEXT)
                 // 是否允许节点审批人为空的时候，自动通过
-                .allowEmptyAutoApprove(true)
+                .allowEmptyAutoApprove(false)
                 // 当节点审批人为空的时候，使用的默认审批人
-                .whenEmptyApprovers(Set.of(Approver.of("admin", "系统管理员", "系统管理员描述"), Approver.of("admin-1", "系统管理员-1", "系统管理员-1-描述")))
+                .whenEmptyApprover(Approver.of("admin", "系统管理员", "系统管理员描述"))
                 .allowRedo(true)
                 .requiredComment(true)
                 .type("日常办公流程");
@@ -95,7 +97,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow2(tenantId, workflowDefinition);
+        createWorkflow4(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -198,7 +200,7 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 4)
-                .name("公司总监审批").desc("任务节点")
+                .name("总经理审批").desc("任务节点")
                 .approverId("嘿嘿")
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
@@ -238,7 +240,7 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
     }
 
-    /** 动态审批（空节点自动审核，默认审批人）案例 */
+    /** 默认审批人（空节点自动审核，默认审批人）案例 */
     private void createWorkflow4(String tenantId, WorkflowDefinition workflowDefinition) {
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         NodeDefinition nodeDefinition = NodeDefinitionBuilder.builderStartNode(tenantId, workflowDefinition.getId())
@@ -489,7 +491,7 @@ class WorkflowHelperTest {
         }
 
         RequestConditions requestConditions = RequestConditions.newInstance();
-        requestConditions.addRequestCondition(RequestCondition.of("day", "3"));
+        requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
         WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions, approvers);
 
         // 添加附件
@@ -513,9 +515,9 @@ class WorkflowHelperTest {
         String roleId = "xxx";
         // String approverId = "张三";
         // String approverId = "张三-1";
-        String approverId = "李四";
+        // String approverId = "李四";
         // String approverId = "小明";
-        // String approverId = "王五";
+        String approverId = "王五";
         // String approverId = "王五-1";
         // String approverId = "哈哈";
         // String approverId = "赵六";
@@ -727,7 +729,7 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         TaskHistoryServiceHelper taskHistoryServiceHelper = workflowHelper.getTaskHistoryServiceHelper();
 
-        Page<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, 1, 1, null, 1, 20);
+        Page<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, 1, 1, 20);
         taskHistories.getRecords().forEach(System.out::println);
     }
 
