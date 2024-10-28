@@ -13,8 +13,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDef
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.WorkflowService;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -186,13 +184,8 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/8 16:01
      */
-    public List<NodeDefinition> getNodes(String tenantId, Integer nodeDefinitionId, Integer... nodeDefinitionIds) {
-        List<Integer> ids = new ArrayList<>();
-        ids.add(nodeDefinitionId);
-        if (nodeDefinitionIds != null && nodeDefinitionIds.length > 0) {
-            ids.addAll(Arrays.asList(nodeDefinitionIds));
-        }
-        return this.workflowService.getNodes(tenantId, ids);
+    public List<NodeDefinition> getNodes(String tenantId, List<Integer> nodeDefinitionIds) {
+        return this.workflowService.getNodes(tenantId, nodeDefinitionIds);
     }
 
     /**
