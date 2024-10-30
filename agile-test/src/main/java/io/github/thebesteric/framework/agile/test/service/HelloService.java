@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.test.service;
 
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileContext;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ public class HelloService {
 
     @AgileLogger
     public String foo(String name) {
+        LoggerPrinter.info("executing foo");
         // 方式一：使用 helloService 代理对象进行调用，注意需要懒加载
         // return currentProxy.sayHello(name);
 

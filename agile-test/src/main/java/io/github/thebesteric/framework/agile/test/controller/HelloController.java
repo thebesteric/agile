@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.test.controller;
 
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.domain.R;
 import io.github.thebesteric.framework.agile.distributed.locks.annotation.DistributedLock;
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationParasiticContext;
@@ -50,6 +51,7 @@ public class HelloController {
     @CrossOrigin
     @GetMapping("/foo")
     public R<String> foo(String name) {
+        LoggerPrinter.info("entering foo");
         return R.success(helloService.foo(name));
     }
 
