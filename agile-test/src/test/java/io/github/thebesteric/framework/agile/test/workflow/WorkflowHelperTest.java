@@ -97,7 +97,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow4(tenantId, workflowDefinition);
+        createWorkflow1(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -461,6 +461,9 @@ class WorkflowHelperTest {
     @Test
     void start() {
         String userId = "eric";
+        String userName = "老王";
+        String userDesc = "这个一个申请人";
+        Requester requester = Requester.of(userId, userName, userDesc);
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
         WorkflowDefinition workflowDefinition = deploymentServiceHelper.getByKey(tenantId, workflowKey);
@@ -492,7 +495,7 @@ class WorkflowHelperTest {
 
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
-        WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, "123-123", "project", "申请请假 3 天", requestConditions, approvers);
+        WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, requester, "123-123", "project", "申请请假 3 天", requestConditions, approvers);
 
         // 添加附件
         RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
@@ -517,10 +520,10 @@ class WorkflowHelperTest {
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
-        String approverId = "王五";
+        // String approverId = "王五";
         // String approverId = "王五-1";
         // String approverId = "哈哈";
-        // String approverId = "赵六";
+        String approverId = "赵六";
         // String approverId = "孙七";
         // String approverId = "嘿嘿";
         // String approverId = "admin";
@@ -608,8 +611,8 @@ class WorkflowHelperTest {
     @Test
     void redo() {
         String roleId = null;
-        String approverId = "张三";
-        // String approverId = "李四";
+        // String approverId = "张三";
+        String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
 
@@ -625,7 +628,7 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 2, roleId == null ? null : List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), null, 1, 10);
+        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 1, roleId == null ? null : List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
 
         // int i = 1/0;
@@ -1002,6 +1005,15 @@ class WorkflowHelperTest {
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
         System.out.println(runtimeServiceHelper.findWorkflowInstances(tenantId, null, 1));
+    }
+
+    @Test
+    void findByRequestId() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, "eric", WorkflowStatus.IN_PROGRESS, 1, 10);
+        List<WorkflowInstance> workflowInstances = page.getRecords();
+        workflowInstances.forEach(System.out::println);
     }
 
 }
