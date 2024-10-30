@@ -537,6 +537,53 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 查找流程实例：根据发起人
+     *
+     * @param tenantId    租户 ID
+     * @param requesterId 发起人
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/7/10 18:24
+     */
+    public List<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId) {
+        return this.findWorkflowInstancesByRequestId(tenantId, requesterId, List.of());
+    }
+
+    /**
+     * 查找流程实例：根据发起人
+     *
+     * @param tenantId        租户 ID
+     * @param requesterId     发起人
+     * @param workflowStatus 流程状态
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/7/10 18:24
+     */
+    public List<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId, WorkflowStatus workflowStatus) {
+        return this.findWorkflowInstancesByRequestId(tenantId, requesterId, List.of(workflowStatus));
+    }
+
+    /**
+     * 查找流程实例：根据发起人
+     *
+     * @param tenantId         租户 ID
+     * @param requesterId      发起人
+     * @param workflowStatuses 流程状态
+     *
+     * @return List<WorkflowInstance>
+     *
+     * @author wangweijun
+     * @since 2024/7/10 18:24
+     */
+    public List<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId, List<WorkflowStatus> workflowStatuses) {
+        return this.findWorkflowInstancesByRequestId(tenantId, requesterId, workflowStatuses, 1, Integer.MAX_VALUE).getRecords();
+    }
+
+    /**
      * 查找流程实例：根据审批人
      *
      * @param tenantId         租户 ID
