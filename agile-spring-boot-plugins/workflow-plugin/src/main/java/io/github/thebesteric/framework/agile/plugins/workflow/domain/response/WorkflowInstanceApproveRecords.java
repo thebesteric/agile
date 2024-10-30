@@ -305,6 +305,8 @@ public class WorkflowInstanceApproveRecords {
         private Integer approvedCount;
         /** 应审批总人数 */
         private Integer totalCount;
+        /** 审核结果 */
+        private Map<String, Object> status;
         /** 审批节点 */
         private List<TaskApproveResponse> taskApproveResponses;
         /** 创建时间 */
@@ -315,6 +317,7 @@ public class WorkflowInstanceApproveRecords {
             response.id = taskInstance.getId();
             response.approvedCount = taskInstance.getApprovedCount();
             response.totalCount = taskInstance.getTotalCount();
+            response.status = taskInstance.getStatus().toMap();
             response.taskApproveResponses = taskApproveResponses;
             response.createdAt = taskInstance.getCreatedAt();
             return response;
@@ -331,12 +334,10 @@ public class WorkflowInstanceApproveRecords {
         private String comment;
         /** 审核结果 */
         private Map<String, Object> approveStatus;
-
         /** 是否时角色审批 */
         private boolean roleApprove;
         /** 角色审批人列表 */
         private List<TaskRoleApproveRecordResponse> taskRoleApproveRecordResponses;
-
         /** 是否为当前用户 */
         private boolean isSelf;
         /** 创建时间 */
