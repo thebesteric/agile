@@ -11,7 +11,10 @@ import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemp
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation.NodeRelationExecutor;
@@ -83,7 +86,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
+     * @param requester             申请人
      * @param businessId            业务标识
      * @param businessType          业务类型
      * @param desc                  描述
@@ -91,7 +94,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param dynamicApprovers      动态审批人
      */
     @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
             WorkflowDefinition workflowDefinition = getWorkflowDefinition(tenantId, workflowDefinitionKey);
@@ -104,7 +107,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 获取流程实例
             WorkflowInstanceExecutor instanceExecutor = workflowInstanceExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinition.getId())
-                    .requesterId(requesterId).businessId(businessId).businessType(businessType).requestConditions(requestConditions).status(WorkflowStatus.IN_PROGRESS).desc(desc).build();
+                    .requester(requester).businessId(businessId).businessType(businessType).requestConditions(requestConditions).status(WorkflowStatus.IN_PROGRESS).desc(desc).build();
             WorkflowInstance workflowInstance = instanceExecutor.save();
             Integer workflowInstanceId = workflowInstance.getId();
 
@@ -295,7 +298,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc) {
-        return this.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, null, null);
+        return this.start(tenantId, workflowDefinitionKey, Requester.of(requesterId), businessId, businessType, desc, null, null);
     }
 
     /**
@@ -309,7 +312,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc, RequestConditions requestConditions) {
-        return this.start(tenantId, workflowDefinitionKey, requesterId, null, null, desc, requestConditions, null);
+        return this.start(tenantId, workflowDefinitionKey, Requester.of(requesterId), null, null, desc, requestConditions, null);
     }
 
     /**

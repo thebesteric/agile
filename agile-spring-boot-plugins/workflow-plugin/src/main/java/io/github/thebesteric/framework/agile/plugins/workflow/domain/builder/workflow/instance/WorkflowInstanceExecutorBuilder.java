@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wo
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Requester;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,8 +32,11 @@ public class WorkflowInstanceExecutorBuilder extends AbstractExecutorBuilder<Wor
         return this;
     }
 
-    public WorkflowInstanceExecutorBuilder requesterId(String requesterId) {
-        this.workflowDefinitionExecutor.getWorkflowInstance().setRequesterId(requesterId);
+    public WorkflowInstanceExecutorBuilder requester(Requester requester) {
+        WorkflowInstance workflowInstance = this.workflowDefinitionExecutor.getWorkflowInstance();
+        workflowInstance.setRequesterId(requester.getId());
+        workflowInstance.setRequesterName(requester.getName());
+        workflowInstance.setRequesterDesc(requester.getDesc());
         return this;
     }
 

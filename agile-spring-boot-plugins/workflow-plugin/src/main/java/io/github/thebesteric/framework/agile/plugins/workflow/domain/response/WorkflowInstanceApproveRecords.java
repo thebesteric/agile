@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import lombok.Data;
@@ -114,14 +115,18 @@ public class WorkflowInstanceApproveRecords {
         private String tenantId;
         /** 流程定义 ID */
         private Integer workflowDefinitionId;
-        /** 流程发起人 */
+        /** 流程发起人 ID */
         private String requesterId;
+        /** 流程发起人名称 */
+        private String requesterName;
+        /** 流程发起人描述 */
+        private String requesterDesc;
         /** 业务类型 */
         private String businessType;
         /** 业务标识 */
         private String businessId;
         /** 请求条件 */
-        private RequestConditions requestConditions;
+        private List<RequestCondition> requestConditions = new ArrayList<>();
         /** 流程状态 */
         private Map<String, Object> status;
         /** 创建时间 */
@@ -133,9 +138,14 @@ public class WorkflowInstanceApproveRecords {
             response.tenantId = workflowInstance.getTenantId();
             response.workflowDefinitionId = workflowInstance.getWorkflowDefinitionId();
             response.requesterId = workflowInstance.getRequesterId();
+            response.requesterName = workflowInstance.getRequesterName();
+            response.requesterDesc = workflowInstance.getRequesterDesc();
             response.businessType = workflowInstance.getBusinessType();
             response.businessId = workflowInstance.getBusinessId();
-            response.requestConditions = workflowInstance.getRequestConditions();
+            RequestConditions requestConditions = workflowInstance.getRequestConditions();
+            if (requestConditions != null) {
+                response.requestConditions = requestConditions.getRequestConditions();
+            }
             response.status = workflowInstance.getStatus().toMap();
             response.createdAt = workflowInstance.getCreatedAt();
             return response;
@@ -156,6 +166,8 @@ public class WorkflowInstanceApproveRecords {
         private String type;
         /** 连续审批方式：默认每个节点都需要审批 */
         private Map<String, Object> continuousApproveMode;
+        /** 没有条件节点符合时的处理策略: 默认抛出异常 */
+        private Map<String, Object> conditionNotMatchedAnyStrategy;
         /** 审批人为空时，是否允许自动审批 */
         private boolean allowEmptyAutoApprove = false;
         /** 是否允许撤回 */
@@ -175,6 +187,7 @@ public class WorkflowInstanceApproveRecords {
             response.name = workflowDefinition.getName();
             response.type = workflowDefinition.getType();
             response.continuousApproveMode = workflowDefinition.getContinuousApproveMode().toMap();
+            response.conditionNotMatchedAnyStrategy = workflowDefinition.getConditionNotMatchedAnyStrategy().toMap();
             response.allowEmptyAutoApprove = workflowDefinition.isAllowEmptyAutoApprove();
             response.allowRedo = workflowDefinition.isAllowRedo();
             response.requiredComment = workflowDefinition.isRequiredComment();

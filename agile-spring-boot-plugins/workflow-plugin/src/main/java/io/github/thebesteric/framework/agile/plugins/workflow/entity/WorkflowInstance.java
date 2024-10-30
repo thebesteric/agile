@@ -36,8 +36,14 @@ public class WorkflowInstance extends BaseEntity {
     @EntityColumn(name = "wf_def_id", nullable = false, comment = "流程定义 ID")
     private Integer workflowDefinitionId;
 
-    @EntityColumn(length = 32, nullable = false, comment = "流程发起人")
+    @EntityColumn(name = "requester_id", length = 32, nullable = false, comment = "流程发起人 ID")
     private String requesterId;
+
+    @EntityColumn(name = "requester_name", length = 64, comment = "流程发起人名称")
+    private String requesterName;
+
+    @EntityColumn(name = "requester_desc", comment = "流程发起人描述")
+    private String requesterDesc;
 
     @EntityColumn(length = 255, comment = "业务类型")
     private String businessType;
@@ -56,6 +62,8 @@ public class WorkflowInstance extends BaseEntity {
         workflowInstance.setTenantId(rs.getString("tenant_id"));
         workflowInstance.setWorkflowDefinitionId(rs.getInt("wf_def_id"));
         workflowInstance.setRequesterId(rs.getString("requester_id"));
+        workflowInstance.setRequesterName(rs.getString("requester_name"));
+        workflowInstance.setRequesterDesc(rs.getString("requester_desc"));
         workflowInstance.setBusinessType(rs.getString("business_type"));
         workflowInstance.setBusinessId(rs.getString("business_id"));
         String reqConditionsStr = rs.getString("req_conditions");

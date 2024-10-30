@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatu
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Requester;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.RuntimeService;
@@ -36,7 +37,7 @@ public class RuntimeServiceTest {
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
-        runtimeService.start(tenantId, "test-key", requesterId, "123-789-3", "org.agile.workflow.Business.class", "请假申请单", requestConditions, null);
+        runtimeService.start(tenantId, "test-key", Requester.of(requesterId), "123-789-3", "org.agile.workflow.Business.class", "请假申请单", requestConditions, null);
     }
 
     @Test

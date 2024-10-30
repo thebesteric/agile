@@ -34,7 +34,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * 启动流程
      *
      * @param workflowDefinition 流程定义
-     * @param requesterId        申请人
+     * @param requesterId        申请人 ID
      * @param desc               申请内容
      *
      * @return 流程实例
@@ -43,14 +43,30 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 14:02
      */
     public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String desc) {
-        return this.start(workflowDefinition, requesterId, desc, null);
+        return this.start(workflowDefinition, Requester.of(requesterId), desc);
     }
 
     /**
      * 启动流程
      *
      * @param workflowDefinition 流程定义
-     * @param requesterId        申请人
+     * @param requester          申请人
+     * @param desc               申请内容
+     *
+     * @return 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/7/9 14:02
+     */
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, Requester requester, String desc) {
+        return this.start(workflowDefinition, requester, desc, null);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param workflowDefinition 流程定义
+     * @param requesterId        申请人 ID
      * @param desc               申请内容
      * @param dynamicApprovers   动态审批人
      *
@@ -60,14 +76,31 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 14:02
      */
     public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String desc, List<Approver> dynamicApprovers) {
-        return this.start(workflowDefinition, requesterId, null, null, desc, null, dynamicApprovers);
+        return this.start(workflowDefinition, Requester.of(requesterId), desc, dynamicApprovers);
     }
 
     /**
      * 启动流程
      *
      * @param workflowDefinition 流程定义
-     * @param requesterId        申请人
+     * @param requester          申请人
+     * @param desc               申请内容
+     * @param dynamicApprovers   动态审批人
+     *
+     * @return 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/7/9 14:02
+     */
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, Requester requester, String desc, List<Approver> dynamicApprovers) {
+        return this.start(workflowDefinition, requester, null, null, desc, null, dynamicApprovers);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param workflowDefinition 流程定义
+     * @param requesterId        申请人 ID
      * @param businessId         业务 ID
      * @param businessType       业务类型
      * @param desc               申请内容
@@ -78,14 +111,32 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 14:02
      */
     public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc) {
-        return this.start(workflowDefinition, requesterId, businessId, businessType, desc, null);
+        return this.start(workflowDefinition, Requester.of(requesterId), businessId, businessType, desc);
     }
 
     /**
      * 启动流程
      *
      * @param workflowDefinition 流程定义
-     * @param requesterId        申请人
+     * @param requester          申请人
+     * @param businessId         业务 ID
+     * @param businessType       业务类型
+     * @param desc               申请内容
+     *
+     * @return 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/7/9 14:02
+     */
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, Requester requester, String businessId, String businessType, String desc) {
+        return this.start(workflowDefinition, requester, businessId, businessType, desc, null);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param workflowDefinition 流程定义
+     * @param requesterId        申请人 ID
      * @param businessId         业务 ID
      * @param businessType       业务类型
      * @param desc               申请内容
@@ -97,14 +148,33 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 14:02
      */
     public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions) {
-        return this.start(workflowDefinition, requesterId, businessId, businessType, desc, requestConditions, null);
+        return this.start(workflowDefinition, Requester.of(requesterId), businessId, businessType, desc, requestConditions);
     }
 
     /**
      * 启动流程
      *
      * @param workflowDefinition 流程定义
-     * @param requesterId        申请人
+     * @param requester          申请人
+     * @param businessId         业务 ID
+     * @param businessType       业务类型
+     * @param desc               申请内容
+     * @param requestConditions  申请条件
+     *
+     * @return 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/7/9 14:02
+     */
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, Requester requester, String businessId, String businessType, String desc, RequestConditions requestConditions) {
+        return this.start(workflowDefinition, requester, businessId, businessType, desc, requestConditions, null);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param workflowDefinition 流程定义
+     * @param requesterId        申请人 ID
      * @param businessId         业务 ID
      * @param businessType       业务类型
      * @param desc               申请内容
@@ -117,9 +187,29 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/7/9 14:02
      */
     public WorkflowInstance start(WorkflowDefinition workflowDefinition, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
+        return this.start(workflowDefinition, Requester.of(requesterId), businessId, businessType, desc, requestConditions, dynamicApprovers);
+    }
+
+    /**
+     * 启动流程
+     *
+     * @param workflowDefinition 流程定义
+     * @param requester          申请人
+     * @param businessId         业务 ID
+     * @param businessType       业务类型
+     * @param desc               申请内容
+     * @param requestConditions  申请条件
+     * @param dynamicApprovers   动态审批人
+     *
+     * @return 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/7/9 14:02
+     */
+    public WorkflowInstance start(WorkflowDefinition workflowDefinition, Requester requester, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
         String tenantId = workflowDefinition.getTenantId();
         String key = workflowDefinition.getKey();
-        return this.start(tenantId, key, requesterId, businessId, businessType, desc, requestConditions, dynamicApprovers);
+        return this.start(tenantId, key, requester, businessId, businessType, desc, requestConditions, dynamicApprovers);
     }
 
     /**
@@ -127,7 +217,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人
+     * @param requester             申请人
      * @param businessId            业务 ID
      * @param businessType          业务类型
      * @param desc                  申请内容
@@ -139,8 +229,8 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/9 14:02
      */
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
-        return this.runtimeService.start(tenantId, workflowDefinitionKey, requesterId, businessId, businessType, desc, requestConditions, dynamicApprovers);
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
+        return this.runtimeService.start(tenantId, workflowDefinitionKey, requester, businessId, businessType, desc, requestConditions, dynamicApprovers);
     }
 
     /**
