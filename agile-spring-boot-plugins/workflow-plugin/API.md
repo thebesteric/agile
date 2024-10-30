@@ -393,14 +393,23 @@ WorkflowInstance workflowInstance = runtimeServiceHelper.getWorkflowInstanceById
 ```java
 WorkflowInstance workflowInstance = runtimeServiceHelper.getWorkflowInstanceByTaskInstanceId(tenantId, taskInstanceId);
 ```
-#### 4.2.17 获取流程实例 - `runtimeServiceHelper.findWorkflowInstances`
+#### 4.2.17 获取流程实例-根据提交人 ID 获取 - `runtimeServiceHelper.findWorkflowInstancesByRequestId`
+- tenantId: 租户 ID
+- requesterId: 提交人 ID
+- workflowStatus: 流程状态
+- page: 当前页
+- pageSize: 每页大小
+```java
+Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, requesterId, workflowStatus, page, pageSize);
+```
+#### 4.2.18 获取流程实例 - `runtimeServiceHelper.findWorkflowInstances`
 - tenantId: 租户 ID
 - workflowStatus: 流程实例状态
 - workflowDefinitionId: 流程定义 ID
 ```java
 List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstances(tenantId, workflowStatus, workflowDefinitionId);
 ```
-#### 4。2.18 获取审核日志 - `taskHistoryServiceHelper.findTaskHistories`
+#### 4。2.19 获取审核日志 - `taskHistoryServiceHelper.findTaskHistories`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 - page: 当前页
