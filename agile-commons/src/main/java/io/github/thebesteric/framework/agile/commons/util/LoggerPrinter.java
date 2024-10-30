@@ -14,11 +14,11 @@ public class LoggerPrinter extends AbstractUtils {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerPrinter.class);
 
-    private static final String LOG_PREFIX = "[Agile]: ";
+    private static final String LOG_PREFIX = "[Agile] %s: ";
 
     // debug
     public static void debug(Logger log, String message, Object... args) {
-        if (log.isDebugEnabled()) log.debug(LOG_PREFIX + message, args);
+        if (log.isDebugEnabled()) log.debug(getLogPrefix() + message, args);
     }
 
     public static void debug(String message, Object... args) {
@@ -27,7 +27,7 @@ public class LoggerPrinter extends AbstractUtils {
 
     // info
     public static void info(Logger log, String message, Object... args) {
-        if (log.isInfoEnabled()) log.info(LOG_PREFIX + message, args);
+        if (log.isInfoEnabled()) log.info(getLogPrefix() + message, args);
     }
 
     public static void info(String message, Object... args) {
@@ -36,7 +36,7 @@ public class LoggerPrinter extends AbstractUtils {
 
     // warn
     public static void warn(Logger log, String message, Object... args) {
-        if (log.isWarnEnabled()) log.warn(LOG_PREFIX + message, args);
+        if (log.isWarnEnabled()) log.warn(getLogPrefix() + message, args);
     }
 
     public static void warn(String message, Object... args) {
@@ -45,7 +45,7 @@ public class LoggerPrinter extends AbstractUtils {
 
     // error
     public static void error(Logger log, String message, Object... args) {
-        if (log.isErrorEnabled()) log.error(LOG_PREFIX + message, args);
+        if (log.isErrorEnabled()) log.error(getLogPrefix() + message, args);
     }
 
     public static void error(String message, Object... args) {
@@ -54,11 +54,16 @@ public class LoggerPrinter extends AbstractUtils {
 
     // trace
     public static void trace(Logger log, String message, Object... args) {
-        if (log.isTraceEnabled()) log.trace(LOG_PREFIX + message, args);
+        if (log.isTraceEnabled()) log.trace(getLogPrefix() + message, args);
     }
 
     public static void trace(String message, Object... args) {
         trace(log, message, args);
+    }
+
+    private static String getLogPrefix() {
+        String transactionId = TransactionUtils.get();
+        return LOG_PREFIX.formatted(transactionId);
     }
 
 }
