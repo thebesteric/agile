@@ -14,7 +14,7 @@ public class LoggerPrinter extends AbstractUtils {
 
     private static final Logger log = LoggerFactory.getLogger(LoggerPrinter.class);
 
-    private static final String LOG_PREFIX = "[Agile] %s: ";
+    private static final String LOG_PREFIX = "[Agile] - %s: ";
 
     // debug
     public static void debug(Logger log, String message, Object... args) {
