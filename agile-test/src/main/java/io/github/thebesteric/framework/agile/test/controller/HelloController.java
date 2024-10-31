@@ -48,6 +48,12 @@ public class HelloController {
         return R.success(map);
     }
 
+    @GetMapping("/ex")
+    public R<Void> ex() {
+        int i = 1/0;
+        return R.success();
+    }
+
     @CrossOrigin
     @GetMapping("/foo")
     public R<String> foo(String name) {
