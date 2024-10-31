@@ -81,10 +81,11 @@ public class AgileLoggerAdvice implements MethodInterceptor {
             Recorder currentRecorder = agileLoggerContext.getCurrentRecorder();
             currentRecorder.process(invokeLog);
             // 记录本地日志
-            localLogRecordBuilder.invokeLog(invokeLog);
             AgileLoggerProperties.LocalLogRecorderConfig localLogRecorderConfig = properties.getLocalLogRecorderConfig();
-            LocalLogRecorder.record(localLogRecorderConfig, localLogRecordBuilder.build());
-
+            if (localLogRecorderConfig.isEnable()) {
+                localLogRecordBuilder.invokeLog(invokeLog);
+                LocalLogRecorder.record(localLogRecorderConfig, localLogRecordBuilder.build());
+            }
         }
         return result;
     }

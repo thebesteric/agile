@@ -110,10 +110,12 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
             currentRecorder.process(requestLog);
 
             // 记录本地日志
-            localLogRecordBuilder.invokeLog(requestLog);
             AgileLoggerProperties properties = agileLoggerContext.getProperties();
             AgileLoggerProperties.LocalLogRecorderConfig localLogRecorderConfig = properties.getLocalLogRecorderConfig();
-            LocalLogRecorder.record(localLogRecorderConfig, localLogRecordBuilder.build());
+            if (localLogRecorderConfig.isEnable()) {
+                localLogRecordBuilder.invokeLog(requestLog);
+                LocalLogRecorder.record(localLogRecorderConfig, localLogRecordBuilder.build());
+            }
 
             agileLoggerContext.getParentIdQueue().clear();
             DurationWatcher.clear();
