@@ -14,6 +14,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.R
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.LogRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.StdoutRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.scaner.AgileLoggerControllerScanner;
+import io.github.thebesteric.framework.agile.plugins.logger.recorder.LocalLogRecordController;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
@@ -94,6 +95,11 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
     @Bean
     public AgileLoggerContextInitializer agileLoggerContextInitializer(List<ClassPathScanner> scanners) {
         return new AgileLoggerContextInitializer(scanners);
+    }
+
+    @Bean
+    public LocalLogRecordController localLogRecordController() {
+        return new LocalLogRecordController();
     }
 
     @Configuration

@@ -19,6 +19,9 @@ sourceflag:
           maximum-pool-size: 2
           keep-alive-time: 60s
           queue-size: 1024
+      local-log-recorder-config:
+        enable: true
+        record-levels: info, error
     idempotent:
       enable: true
       message: "接口幂等，无法提交"

@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.logger.filter;
 import io.github.thebesteric.framework.agile.commons.util.DurationWatcher;
 import io.github.thebesteric.framework.agile.commons.util.TransactionUtils;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerContext;
+import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.IgnoredMethod;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
@@ -12,6 +13,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.Req
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.RequestLoggerProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.response.ResponseSuccessDefineProcessor;
+import io.github.thebesteric.framework.agile.plugins.logger.recorder.LocalLogRecorder;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -65,11 +67,16 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
         // 初始化相关属性
         initProperties(requestWrapper);
 
+        // 本地日志构建器
+        LocalLogRecorder.LocalLogRecord.Builder localLogRecordBuilder = LocalLogRecorder.LocalLogRecord.builder();
+
         // 开始计时
         String durationTag = DurationWatcher.start();
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
         } catch (Exception ex) {
+            // 本地日志增加异常信息
+            localLogRecordBuilder.exception(ex);
             // Program exceptions
             responseWrapper.setException(ex);
             responseWrapper.setBuffer(ex.getMessage());
@@ -101,6 +108,12 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
             // 记录日志
             Recorder currentRecorder = agileLoggerContext.getCurrentRecorder();
             currentRecorder.process(requestLog);
+
+            // 记录本地日志
+            localLogRecordBuilder.invokeLog(requestLog);
+            AgileLoggerProperties properties = agileLoggerContext.getProperties();
+            AgileLoggerProperties.LocalLogRecorderConfig localLogRecorderConfig = properties.getLocalLogRecorderConfig();
+            LocalLogRecorder.record(localLogRecorderConfig, localLogRecordBuilder.build());
 
             agileLoggerContext.getParentIdQueue().clear();
             DurationWatcher.clear();

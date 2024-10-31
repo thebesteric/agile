@@ -1,5 +1,8 @@
 package io.github.thebesteric.framework.agile.commons.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * ExceptionUtils
  *
@@ -33,6 +36,17 @@ public class ExceptionUtils extends AbstractUtils {
     public static StackTraceElement getMajorCause(Throwable ex) {
         StackTraceElement[] causes = getCauses(ex);
         return CollectionUtils.isEmpty(causes) ? null : causes[0];
+    }
+
+    public static StringWriter getStackTrace(Throwable ex) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        ex.printStackTrace(pw);
+        return sw;
+    }
+
+    public static String getStackTraceStr(Throwable ex) {
+        return getStackTrace(ex).toString();
     }
 
 }

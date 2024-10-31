@@ -13,4 +13,8 @@ public enum LogLevel {
             return LogLevel.INFO;
         }
     }
+
+    public static LogLevel ofWithException(String name) {
+        return Enum.valueOf(LogLevel.class, name.toUpperCase());
+    }
 }

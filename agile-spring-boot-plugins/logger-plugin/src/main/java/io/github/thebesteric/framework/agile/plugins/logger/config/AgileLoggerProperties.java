@@ -1,6 +1,8 @@
 package io.github.thebesteric.framework.agile.plugins.logger.config;
 
+import io.github.thebesteric.framework.agile.commons.util.CollectionUtils;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
+import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogMode;
 import lombok.*;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -8,6 +10,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 
 /**
  * AgileLoggerProperties
@@ -20,12 +23,25 @@ import java.util.List;
 @ConfigurationProperties(prefix = AgileConstants.PROPERTIES_PREFIX + ".logger")
 public class AgileLoggerProperties {
 
+    /** 是否开启 */
     private boolean enable = true;
-    private String basePackage;
+
+    /** 日志配置 */
     @NestedConfigurationProperty
     private Logger logger = new Logger();
+
+    /** 异步配置 */
     @NestedConfigurationProperty
     private Async async = new Async();
+
+    /** 本地日志记录配置 */
+    private LocalLogRecorderConfig localLogRecorderConfig = new LocalLogRecorderConfig();
+
+    @Data
+    public static class LocalLogRecorderConfig {
+        private boolean enable = false;
+        private Set<LogLevel> recordLevels = CollectionUtils.createSet(LogLevel.ERROR);
+    }
 
     @Data
     public static class Logger {
