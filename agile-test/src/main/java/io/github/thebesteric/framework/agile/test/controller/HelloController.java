@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
  */
 @RestController
 @RequestMapping("/hello")
-@AgileLogger
+@AgileLogger(tag = "hello")
 public class HelloController {
 
     @Autowired

@@ -20,8 +20,9 @@ sourceflag:
           keep-alive-time: 60s
           queue-size: 1024
       local-log-recorder-config:
-        enable: false
+        enable: true
         record-levels: info, error
+        record-tags: test, hello
     idempotent:
       enable: true
       message: "接口幂等，无法提交"
