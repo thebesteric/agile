@@ -143,7 +143,7 @@ deploymentServiceHelper.delete(tenantId, key);
 ```java
 workflowServiceHelper.publish(tenantId, key);
 ```
-#### 2.2.9 获取流程定义 Schema - `deploymentServiceHelper.schema`
+#### 2.2.9 获取流程定义纲要 - `deploymentServiceHelper.schema`
 - tenantId: 租户 ID
 - key: 流程定义 Key
 ```java
@@ -416,4 +416,10 @@ List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInst
 - pageSize: 每页大小
 ```java
 Page<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, workflowInstanceId, page, pageSize);
+```
+#### 4。2.20 获取流程定义纲要 - `runtimeServiceHelper.schema`
+- tenantId: 租户 ID
+- workflowInstanceId: 流程实例 ID
+```java
+WorkflowDefinitionFlowSchema schema = runtimeServiceHelper.schema(tenantId, workflowInstanceId);
 ```
