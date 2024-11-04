@@ -157,15 +157,28 @@ public interface DeploymentService {
     /**
      * 获取流程定义流程图
      *
-     * @param tenantId           租户 ID
-     * @param workflowDefinition 流程定义
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
      *
      * @return WorkflowDefinitionFlowSchema
      *
      * @author wangweijun
      * @since 2024/9/29 18:29
      */
-    WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, WorkflowDefinition workflowDefinition);
+    WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowDefinitionId);
+
+    /**
+     * 获取流程定义流程图
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/9/29 18:29
+     */
+    WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, String workflowDefinitionKey);
 
     /**
      * 根据流程定义 key 获取流程定义历史记录列表（分页）

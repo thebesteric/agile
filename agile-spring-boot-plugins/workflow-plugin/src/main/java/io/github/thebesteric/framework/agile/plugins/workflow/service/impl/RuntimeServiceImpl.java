@@ -32,10 +32,12 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wor
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractRuntimeService;
+import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -64,6 +66,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     private final TaskHistoryExecutorBuilder taskHistoryExecutorBuilder;
     private final TaskRoleApproveRecordExecutorBuilder taskRoleApproveRecordExecutorBuilder;
     private final TaskDynamicAssignmentExecutorBuilder taskDynamicAssignmentExecutorBuilder;
+    private final DeploymentService deploymentService;
 
     public RuntimeServiceImpl(AgileWorkflowContext context) {
         super(context);
@@ -79,6 +82,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         taskHistoryExecutorBuilder = TaskHistoryExecutorBuilder.builder(jdbcTemplate);
         taskRoleApproveRecordExecutorBuilder = TaskRoleApproveRecordExecutorBuilder.builder(jdbcTemplate);
         taskDynamicAssignmentExecutorBuilder = TaskDynamicAssignmentExecutorBuilder.builder(jdbcTemplate);
+        deploymentService = new DeploymentServiceImpl(context);
     }
 
     /**
@@ -1041,18 +1045,61 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 NodeStatus nodeStatus = ConditionNotMatchedAnyStrategy.PROCESS_REJECTED == conditionNotMatchedAnyStrategy ? NodeStatus.REJECTED : NodeStatus.COMPLETED;
                 // 创建结束节点实例
                 NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, workflowDefinitionId);
+                Integer workflowInstanceId = taskInstance.getWorkflowInstanceId();
                 taskInstanceExecutor = taskInstanceExecutorBuilder.newInstance()
                         .tenantId(tenantId)
-                        .workflowInstanceId(taskInstance.getWorkflowInstanceId())
+                        .workflowInstanceId(workflowInstanceId)
                         .nodeDefinitionId(endNodeDefinition.getId())
                         .roleApprove(endNodeDefinition.isRoleApprove())
                         .status(nodeStatus)
                         .build();
                 taskInstanceExecutor.save();
+
+                // 获取流程实例
+                WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+                WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
+
+                // 保存流程定义
+                this.saveWorkflowSchema(tenantId, workflowInstance);
+                // 保存流程实例的审批记录
+                this.saveWorkflowInstanceApproveRecords(tenantId, workflowInstance);
+
                 // 记录流程日志（审批结束）
-                recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ENDED);
+                recordLogs(tenantId, workflowInstanceId, taskInstance.getId(), endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ENDED);
             }
         });
+    }
+
+    /**
+     * 保存流程定义
+     *
+     * @param tenantId         租户 ID
+     * @param workflowInstance 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/11/4 10:55
+     */
+    private void saveWorkflowSchema(String tenantId, WorkflowInstance workflowInstance) {
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        WorkflowDefinitionFlowSchema workflowDefinitionFlowSchema = this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowInstance.getWorkflowDefinitionId());
+        workflowInstance.setFlowSchema(workflowDefinitionFlowSchema);
+        workflowInstanceExecutor.updateById(workflowInstance);
+    }
+
+    /**
+     * 保存流程实例的审批记录
+     *
+     * @param tenantId         租户 ID
+     * @param workflowInstance 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/11/4 10:28
+     */
+    private void saveWorkflowInstanceApproveRecords(String tenantId, WorkflowInstance workflowInstance) {
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        WorkflowInstanceApproveRecords workflowInstanceApproveRecords = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId());
+        workflowInstance.setApproveRecords(workflowInstanceApproveRecords);
+        workflowInstanceExecutor.updateById(workflowInstance);
     }
 
     /**
@@ -2134,6 +2181,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             workflowInstance.setStatus(WorkflowStatus.REJECTED);
             workflowInstanceExecutor.updateById(workflowInstance);
 
+            // 保存流程定义
+            this.saveWorkflowSchema(tenantId, workflowInstance);
+            // 保存流程实例审批记录
+            this.saveWorkflowInstanceApproveRecords(tenantId, workflowInstance);
+
             // 记录流程日志（审批驳回）
             recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstanceId, nodeDefinition.getName(), TaskHistoryMessage.INSTANCE_REJECTED);
             // 记录流程日志（审批结束）
@@ -3022,6 +3074,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         if (workflowInstance == null) {
             WorkflowException.throwWorkflowInstanceNotFoundException();
         }
+
+        // 查询是否存在审批记录，如果有则直接返回（存在审批记录，表示该流程实例已经完成审核）
+        WorkflowInstanceApproveRecords workflowInstanceApproveRecords = workflowInstance.getApproveRecords();
+        if (workflowInstanceApproveRecords != null) {
+            return workflowInstanceApproveRecords;
+        }
+
         // 流程定义
         WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
         WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowInstance.getWorkflowDefinitionId());
@@ -3109,6 +3168,29 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     @Override
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId) {
         return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, List.of(), null);
+    }
+
+    /**
+     * 获取流程定义纲要
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程定义
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/11/4 11:20
+     */
+    @Override
+    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowInstanceId) {
+        WorkflowInstance workflowInstance = getWorkflowInstanceById(tenantId, workflowInstanceId);
+        if (workflowInstance == null) {
+            throw new WorkflowException("流程定义不存在");
+        }
+        if (workflowInstance.getFlowSchema() != null) {
+            return workflowInstance.getFlowSchema();
+        }
+        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowInstance.getWorkflowDefinitionId());
     }
 
     /**

@@ -1,8 +1,7 @@
 package io.github.thebesteric.framework.agile.core.domain;
 
-import io.github.thebesteric.framework.agile.commons.util.MapWrapper;
-
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * BaseEnum
@@ -26,9 +25,13 @@ public interface BaseEnum {
      * @author wangweijun
      * @since 2024/5/31 15:47
      */
-    default Map<String, Object> toMap() {
-        return MapWrapper.createLambda(BaseEnum.class)
-                .put(BaseEnum::getCode, this.getCode())
-                .put(BaseEnum::getDesc, this.getDesc()).build();
+    default Map<String, String> toMap() {
+        Map<String, String> map = new TreeMap<>();
+        map.put("code", String.valueOf(this.getCode()));
+        map.put("desc", this.getDesc());
+        return map;
+        // return MapWrapper.createLambda(BaseEnum.class)
+        //         .put(BaseEnum::getCode, this.getCode())
+        //         .put(BaseEnum::getDesc, this.getDesc()).build();
     }
 }

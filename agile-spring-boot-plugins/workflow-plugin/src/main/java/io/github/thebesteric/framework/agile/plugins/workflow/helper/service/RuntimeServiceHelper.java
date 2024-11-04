@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveSt
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.AbstractServiceHelper;
@@ -554,8 +555,8 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     /**
      * 查找流程实例：根据发起人
      *
-     * @param tenantId        租户 ID
-     * @param requesterId     发起人
+     * @param tenantId       租户 ID
+     * @param requesterId    发起人
      * @param workflowStatus 流程状态
      *
      * @return List<WorkflowInstance>
@@ -1096,6 +1097,21 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      */
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId) {
         return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleIds, curUserId);
+    }
+
+    /**
+     * 获取流程定义纲要
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/11/4 11:19
+     */
+    public WorkflowDefinitionFlowSchema schema(String tenantId, Integer workflowInstanceId) {
+        return this.runtimeService.getWorkflowDefinitionFlowSchema(tenantId, workflowInstanceId);
     }
 
     /**

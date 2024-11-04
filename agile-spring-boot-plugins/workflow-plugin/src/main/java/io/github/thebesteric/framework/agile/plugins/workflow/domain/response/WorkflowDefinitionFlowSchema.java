@@ -7,6 +7,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprove
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import lombok.Data;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -18,7 +20,10 @@ import java.util.stream.Stream;
  * @since 2024-09-29 18:28:40
  */
 @Data
-public class WorkflowDefinitionFlowSchema {
+public class WorkflowDefinitionFlowSchema implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 8622244089008695940L;
+
     /** 流程定义ID */
     private Integer id;
     /** 租户 ID */
@@ -30,7 +35,7 @@ public class WorkflowDefinitionFlowSchema {
     /** 流程类型（用于类型分类） */
     private String type = "default";
     /** 连续审批方式：默认每个节点都需要审批 */
-    private Map<String, Object> continuousApproveMode;
+    private Map<String, String> continuousApproveMode;
     /** 审批人为空时，是否允许自动审批 */
     private boolean allowEmptyAutoApprove = false;
     /** 是否允许撤回 */
@@ -38,7 +43,7 @@ public class WorkflowDefinitionFlowSchema {
     /** 是否必须填写审批意见 */
     private boolean requiredComment = false;
     /** 发布状态 */
-    private Map<String, Object> publish;
+    private Map<String, String> publish;
     /** 发布日期 */
     private Date publishedAt;
     /** 为空时的审批人 */
@@ -139,15 +144,18 @@ public class WorkflowDefinitionFlowSchema {
     }
 
     @Data
-    public static class NodeDefinitionResponse {
+    public static class NodeDefinitionResponse implements Serializable{
+        @Serial
+        private static final long serialVersionUID = -2416352782055701117L;
+
         /** 节点定义ID */
         private Integer id;
         /** 流程名称 */
         private String name;
         /** 节点类型 */
-        private Map<String, Object> nodeType;
+        private Map<String, String> nodeType;
         /** 审批类型 */
-        private Map<String, Object> approveType;
+        private Map<String, String> approveType;
         /** 条件定义 */
         private Conditions conditions;
         /** 排序 */
@@ -157,9 +165,9 @@ public class WorkflowDefinitionFlowSchema {
         /** 是否是动态指定审批人 */
         private boolean roleApprove = false;
         /** 是否是动态指定审批人 */
-        private Map<String, Object> roleUserApproveType;
+        private Map<String, String> roleUserApproveType;
         /** 角色审批类型 */
-        private Map<String, Object> roleApproveType;
+        private Map<String, String> roleApproveType;
         /** 审批人 */
         private Set<Approver> approvers = new LinkedHashSet<>();
         /** 角色审批人 */
@@ -195,7 +203,10 @@ public class WorkflowDefinitionFlowSchema {
     }
 
     @Data
-    public static class NodeAssignmentResponse {
+    public static class NodeAssignmentResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = -7225604582591287563L;
+
         /** ID */
         private Integer id;
         /** 审批人 ID */
@@ -222,7 +233,10 @@ public class WorkflowDefinitionFlowSchema {
     }
 
     @Data
-    public static class NodeRoleAssignmentResponse {
+    public static class NodeRoleAssignmentResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = -8716668936512338775L;
+
         /** ID */
         private Integer id;
         /** 角色 ID */

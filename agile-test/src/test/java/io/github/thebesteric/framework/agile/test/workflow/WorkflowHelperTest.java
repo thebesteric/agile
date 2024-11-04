@@ -846,7 +846,7 @@ class WorkflowHelperTest {
         List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理"), "manager-1");
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
-        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理", "组长"), "manager-1");
+        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 2, List.of("经理", "组长"), "manager-1");
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecord));
     }
@@ -865,6 +865,11 @@ class WorkflowHelperTest {
         WorkflowDefinitionFlowSchema workflowDefinitionFlowSchema = deploymentServiceHelper.schema(tenantId, 1);
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowDefinitionFlowSchema));
+
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        WorkflowDefinitionFlowSchema schema = runtimeServiceHelper.schema(tenantId, 1);
+        System.out.println("===============================");
+        System.out.println(JsonUtils.toJson(schema));
     }
 
     /**

@@ -6,6 +6,8 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -54,8 +56,14 @@ public class WorkflowInstance extends BaseEntity {
     @EntityColumn(name = "req_conditions", type = EntityColumn.Type.JSON, comment = "请求条件")
     private RequestConditions requestConditions;
 
-    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "流程状态")
+    @EntityColumn(name = "status", type = EntityColumn.Type.TINY_INT, nullable = false, comment = "流程状态")
     private WorkflowStatus status;
+
+    @EntityColumn(name = "flow_schema", type = EntityColumn.Type.JSON, comment = "流程定义")
+    private WorkflowDefinitionFlowSchema flowSchema;
+
+    @EntityColumn(name = "approve_records", type = EntityColumn.Type.JSON, comment = "流程实例审批记录")
+    private WorkflowInstanceApproveRecords approveRecords;
 
     public static WorkflowInstance of(ResultSet rs) throws SQLException {
         WorkflowInstance workflowInstance = new WorkflowInstance();
@@ -69,6 +77,14 @@ public class WorkflowInstance extends BaseEntity {
         String reqConditionsStr = rs.getString("req_conditions");
         if (CharSequenceUtil.isNotEmpty(reqConditionsStr)) {
             workflowInstance.setRequestConditions(JSONUtil.toBean(reqConditionsStr, RequestConditions.class));
+        }
+        String approveRecordsStr = rs.getString("approve_records");
+        if (CharSequenceUtil.isNotEmpty(approveRecordsStr)) {
+            workflowInstance.setApproveRecords(JSONUtil.toBean(approveRecordsStr, WorkflowInstanceApproveRecords.class));
+        }
+        String flowSchemaStr = rs.getString("flow_schema");
+        if (CharSequenceUtil.isNotEmpty(flowSchemaStr)) {
+            workflowInstance.setFlowSchema(JSONUtil.toBean(flowSchemaStr, WorkflowDefinitionFlowSchema.class));
         }
         workflowInstance.setStatus(WorkflowStatus.of(rs.getInt("status")));
         return of(workflowInstance, rs);

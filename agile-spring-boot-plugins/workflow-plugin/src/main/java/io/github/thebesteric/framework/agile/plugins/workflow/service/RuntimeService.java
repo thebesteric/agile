@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatu
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 
@@ -530,6 +531,19 @@ public interface RuntimeService {
      * @since 2024/9/12 13:42
      */
     List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId);
+
+    /**
+     * 获取流程定义纲要
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程定义
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/11/4 11:20
+     */
+    WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowInstanceId);
 
     /**
      * 动态设置审批人

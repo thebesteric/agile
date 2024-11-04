@@ -237,8 +237,7 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/29 18:31
      */
     public WorkflowDefinitionFlowSchema schema(String tenantId, Integer workflowDefinitionId) {
-        WorkflowDefinition workflowDefinition = getById(tenantId, workflowDefinitionId);
-        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition);
+        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinitionId);
     }
 
     /**
@@ -253,8 +252,7 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/29 18:31
      */
     public WorkflowDefinitionFlowSchema schema(String tenantId, String key) {
-        WorkflowDefinition workflowDefinition = getByKey(tenantId, key);
-        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition);
+        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, key);
     }
 
     /**

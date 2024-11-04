@@ -268,8 +268,8 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
     /**
      * 获取流程定义纲要
      *
-     * @param tenantId           租户 ID
-     * @param workflowDefinition 流程定义
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
      *
      * @return WorkflowDefinitionFlowSchema
      *
@@ -277,7 +277,9 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @since 2024/9/29 18:29
      */
     @Override
-    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, WorkflowDefinition workflowDefinition) {
+    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowDefinitionId) {
+        // 获取流程定义
+        WorkflowDefinition workflowDefinition = this.getById(tenantId, workflowDefinitionId);
         // 获取节点定义
         NodeDefinitionExecutor nodeDefinitionExecutor = this.nodeDefinitionExecutorBuilder.build();
         List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());
@@ -293,6 +295,23 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
 
         // 封装
         return WorkflowDefinitionFlowSchema.of(workflowDefinition, nodeDefinitions, nodeRelations, nodeAssignments, nodeRoleAssignments);
+    }
+
+    /**
+     * 获取流程定义纲要
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     *
+     * @return WorkflowDefinitionFlowSchema
+     *
+     * @author wangweijun
+     * @since 2024/11/4 10:48
+     */
+    @Override
+    public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = getByKey(tenantId, workflowDefinitionKey);
+        return this.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition.getId());
     }
 
     /**

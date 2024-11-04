@@ -8,6 +8,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCond
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import lombok.Data;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -21,7 +23,10 @@ import java.util.Map;
  * @since 2024-09-12 12:06:48
  */
 @Data
-public class WorkflowInstanceApproveRecords {
+public class WorkflowInstanceApproveRecords implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 4516285379098113700L;
+
     /** 流程实例 ID */
     private WorkflowInstanceResponse workflowInstance;
     /** 流程定义 */
@@ -108,7 +113,10 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class WorkflowInstanceResponse {
+    public static class WorkflowInstanceResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 8027852454113775015L;
+
         /** 流程实例 ID */
         private Integer id;
         /** 租户 ID */
@@ -128,7 +136,7 @@ public class WorkflowInstanceApproveRecords {
         /** 请求条件 */
         private List<RequestCondition> requestConditions = new ArrayList<>();
         /** 流程状态 */
-        private Map<String, Object> status;
+        private Map<String, String> status;
         /** 创建时间 */
         private Date createdAt;
 
@@ -153,7 +161,10 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class WorkflowDefinitionResponse {
+    public static class WorkflowDefinitionResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 6449586499506204689L;
+
         /** 流程定义 ID */
         private Integer id;
         /** 租户 ID */
@@ -165,9 +176,9 @@ public class WorkflowInstanceApproveRecords {
         /** 流程类型（用于类型分类） */
         private String type;
         /** 连续审批方式：默认每个节点都需要审批 */
-        private Map<String, Object> continuousApproveMode;
+        private Map<String, String> continuousApproveMode;
         /** 没有条件节点符合时的处理策略: 默认抛出异常 */
-        private Map<String, Object> conditionNotMatchedAnyStrategy;
+        private Map<String, String> conditionNotMatchedAnyStrategy;
         /** 审批人为空时，是否允许自动审批 */
         private boolean allowEmptyAutoApprove = false;
         /** 是否允许撤回 */
@@ -175,7 +186,7 @@ public class WorkflowInstanceApproveRecords {
         /** 是否必须填写审批意见 */
         private boolean requiredComment = false;
         /** 发布状态 */
-        private Map<String, Object> publish;
+        private Map<String, String> publish;
         /** 创建时间 */
         private Date createdAt;
 
@@ -198,13 +209,16 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class NodeDefinitionResponse {
+    public static class NodeDefinitionResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = -8280161498012703611L;
+
         /** 节点定义 ID */
         private Integer id;
         /** 节点名称 */
         private String name;
         /** 节点类型 */
-        private Map<String, Object> nodeType;
+        private Map<String, String> nodeType;
         /** 是否是动态指定审批节点 */
         private boolean dynamic = false;
         /** 动态审批人数量 */
@@ -216,9 +230,9 @@ public class WorkflowInstanceApproveRecords {
         /** 是否是角色审批节点 */
         private boolean roleApprove = false;
         /** 角色用户审批类型 */
-        private Map<String, Object> roleUserApproveType;
+        private Map<String, String> roleUserApproveType;
         /** 角色审批类型 */
-        private Map<String, Object> roleApproveType;
+        private Map<String, String> roleApproveType;
         /** 节点实例 */
         private TaskInstanceResponse taskInstanceResponse;
         /** 审批人 */
@@ -251,7 +265,10 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class NodeAssignmentResponse {
+    public static class NodeAssignmentResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = -725062203728064396L;
+
         /** 审批人 ID */
         private Integer id;
         /** 审批人 */
@@ -278,7 +295,10 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class TaskDynamicAssignmentResponse {
+    public static class TaskDynamicAssignmentResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 6895044462882392326L;
+
         /** 动态审批人 ID */
         private Integer id;
         /** 节点定义 ID */
@@ -311,7 +331,10 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class TaskInstanceResponse {
+    public static class TaskInstanceResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 706922113015404374L;
+
         /** 节点实例 ID */
         private Integer id;
         /** 审批人数 */
@@ -319,7 +342,7 @@ public class WorkflowInstanceApproveRecords {
         /** 应审批总人数 */
         private Integer totalCount;
         /** 审核结果 */
-        private Map<String, Object> status;
+        private Map<String, String> status;
         /** 审批节点 */
         private List<TaskApproveResponse> taskApproveResponses;
         /** 创建时间 */
@@ -338,7 +361,10 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class TaskApproveResponse {
+    public static class TaskApproveResponse implements Serializable {
+        @Serial
+        private static final long serialVersionUID = 7710466011285696446L;
+
         /** 审核人 ID（根据 roleApprove 来对应 NodeAssignment 或 NodeRoleAssignment 中的 ID） */
         private String userId;
         /** 审批记录 ID */
@@ -346,7 +372,7 @@ public class WorkflowInstanceApproveRecords {
         /** 审核意见 */
         private String comment;
         /** 审核结果 */
-        private Map<String, Object> approveStatus;
+        private Map<String, String> approveStatus;
         /** 是否时角色审批 */
         private boolean roleApprove;
         /** 角色审批人列表 */
@@ -382,7 +408,10 @@ public class WorkflowInstanceApproveRecords {
     }
 
     @Data
-    public static class TaskRoleApproveRecordResponse {
+    public static class TaskRoleApproveRecordResponse implements Serializable{
+        @Serial
+        private static final long serialVersionUID = 332412407655337100L;
+
         /** 角色审批记录 ID */
         private Integer taskRoleApproveRecordId;
         /** 角色用户 ID */
