@@ -34,6 +34,7 @@ public class LocalLogRecorder extends AbstractUtils {
         if (config == null || !config.isEnable()) {
             return;
         }
+        // 需要记录的日志级别
         Set<LogLevel> recordLevels = config.getRecordLevels();
         if (recordLevels == null) {
             recordLevels = new HashSet<>();
@@ -41,7 +42,13 @@ public class LocalLogRecorder extends AbstractUtils {
         recordLevels.add(LogLevel.ERROR);
         InvokeLog invokeLog = localLogRecord.getInvokeLog();
         LogLevel logLevel = invokeLog.getLevel();
-        if (recordLevels.contains(logLevel)) {
+
+        // 需要记录的日志标签
+        Set<String> recordTags = config.getRecordTags();
+        String logTag = invokeLog.getTag();
+
+        // 符合日志级别或标签，则记录
+        if (recordLevels.contains(logLevel) || recordTags.contains(logTag)) {
             CACHE.put(invokeLog.getLogId(), localLogRecord);
         }
     }
@@ -55,7 +62,12 @@ public class LocalLogRecorder extends AbstractUtils {
         return sortedLocalLogRecords.stream().filter(localLogRecord -> trackId.equals(localLogRecord.getInvokeLog().getTrackId())).toList();
     }
 
-    public static PagingResponse<LocalLogRecord> list(LogLevel logLevel, int current, int size) {
+    public static List<LocalLogRecord> tagName(String tagName) {
+        List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
+        return sortedLocalLogRecords.stream().filter(localLogRecord -> tagName.equals(localLogRecord.getInvokeLog().getTag())).toList();
+    }
+
+    public static PagingResponse<LocalLogRecord> list(LogLevel logLevel, String tagName, int current, int size) {
         List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
         List<LocalLogRecord> totalRecords = sortedLocalLogRecords.stream()
                 .filter(localLogRecord -> {
@@ -63,7 +75,14 @@ public class LocalLogRecorder extends AbstractUtils {
                         return true;
                     }
                     return logLevel.equals(localLogRecord.getInvokeLog().getLevel());
-                }).toList();
+                })
+                .filter(localLogRecord -> {
+                    if (tagName == null) {
+                        return true;
+                    }
+                    return tagName.equals(localLogRecord.getInvokeLog().getTag());
+                })
+                .toList();
         List<LocalLogRecord> records = totalRecords.stream().skip((long) (current - 1) * size).limit(size).toList();
         return PagingResponse.of(current, size, totalRecords.size(), records);
     }

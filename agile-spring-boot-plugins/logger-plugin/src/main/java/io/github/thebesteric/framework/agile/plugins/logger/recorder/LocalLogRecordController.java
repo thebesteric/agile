@@ -30,13 +30,14 @@ public class LocalLogRecordController {
 
     @GetMapping("/list")
     public PagingResponse<LocalLogRecorder.LocalLogRecord> list(@RequestParam(required = false) String logLevel,
+                                                                @RequestParam(required = false) String tagName,
                                                                 @RequestParam(required = false, defaultValue = "1") Integer current,
                                                                 @RequestParam(required = false, defaultValue = "10") Integer size) {
         LogLevel level = null;
         if (StringUtils.isNotEmpty(logLevel)) {
             level = LogLevel.ofWithException(logLevel);
         }
-        return LocalLogRecorder.list(level, current, size);
+        return LocalLogRecorder.list(level, tagName, current, size);
     }
 
 }

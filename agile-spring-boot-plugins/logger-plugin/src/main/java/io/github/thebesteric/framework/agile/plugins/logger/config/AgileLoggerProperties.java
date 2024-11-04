@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -40,7 +41,10 @@ public class AgileLoggerProperties {
     @Data
     public static class LocalLogRecorderConfig {
         private boolean enable = false;
+        /** 需要记录的日志级别 */
         private Set<LogLevel> recordLevels = CollectionUtils.createSet(LogLevel.ERROR);
+        /** 需要记录的日志标签 */
+        private Set<String> recordTags = new HashSet<>();
     }
 
     @Data
