@@ -10,6 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerPr
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import lombok.Data;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -77,7 +78,7 @@ public class LocalLogRecorder extends AbstractUtils {
                     return logLevel.equals(localLogRecord.getInvokeLog().getLevel());
                 })
                 .filter(localLogRecord -> {
-                    if (tagName == null) {
+                    if (StringUtils.isEmpty(tagName)) {
                         return true;
                     }
                     return tagName.equals(localLogRecord.getInvokeLog().getTag());
