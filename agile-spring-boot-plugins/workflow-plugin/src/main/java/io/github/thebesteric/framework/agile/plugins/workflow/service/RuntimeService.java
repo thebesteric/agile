@@ -27,8 +27,7 @@ public interface RuntimeService {
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
      * @param requester             申请人信息
-     * @param businessId            业务标识
-     * @param businessType          业务类型
+     * @param businessInfo          业务信息
      * @param desc                  描述
      * @param requestConditions     申请条件
      * @param dynamicApprovers      动态审批人
@@ -38,16 +37,15 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/14 11:02
      */
-    WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers);
+    WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, BusinessInfo businessInfo, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers);
 
     /**
      * 启动流程
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
-     * @param businessId            业务标识
-     * @param businessType          业务类型
+     * @param requester             申请人
+     * @param businessInfo          业务信息
      * @param desc                  描述
      *
      * @return WorkflowInstanceBuilder
@@ -55,14 +53,14 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/14 11:02
      */
-    WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc);
+    WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, BusinessInfo businessInfo, String desc);
 
     /**
      * 启动流程
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
+     * @param requester             申请人
      * @param desc                  描述
      * @param requestConditions     申请条件
      *
@@ -71,7 +69,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/14 11:02
      */
-    WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc, RequestConditions requestConditions);
+    WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String desc, RequestConditions requestConditions);
 
 
     /**
@@ -79,7 +77,7 @@ public interface RuntimeService {
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
+     * @param requester             申请人
      * @param desc                  描述
      *
      * @return WorkflowInstanceBuilder
@@ -87,7 +85,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/14 11:02
      */
-    WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc);
+    WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String desc);
 
     /**
      * 获取下一节点

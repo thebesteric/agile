@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.BusinessInfo;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Requester;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutorBuilder;
@@ -45,13 +46,8 @@ public class WorkflowInstanceExecutorBuilder extends AbstractExecutorBuilder<Wor
         return this;
     }
 
-    public WorkflowInstanceExecutorBuilder businessId(String businessId) {
-        this.workflowDefinitionExecutor.getWorkflowInstance().setBusinessId(businessId);
-        return this;
-    }
-
-    public WorkflowInstanceExecutorBuilder businessType(String businessType) {
-        this.workflowDefinitionExecutor.getWorkflowInstance().setBusinessType(businessType);
+    public WorkflowInstanceExecutorBuilder businessInfo(BusinessInfo businessInfo) {
+        this.workflowDefinitionExecutor.getWorkflowInstance().setBusinessInfo(businessInfo);
         return this;
     }
 

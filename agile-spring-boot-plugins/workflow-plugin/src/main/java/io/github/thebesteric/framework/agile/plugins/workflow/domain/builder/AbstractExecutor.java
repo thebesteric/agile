@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder;
 
 import cn.hutool.core.text.CharSequenceUtil;
+import cn.hutool.json.JSONUtil;
 import io.github.thebesteric.framework.agile.commons.exception.AccessDeniedException;
 import io.github.thebesteric.framework.agile.commons.exception.ExecuteErrorException;
 import io.github.thebesteric.framework.agile.commons.util.*;
@@ -507,7 +508,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
                         }
                         // 处理 JSON 类型
                         if (EntityColumn.Type.JSON == columnDomain.getType()) {
-                            value = JsonUtils.toJson(value);
+                            value = JSONUtil.toJsonStr(value);
                         }
                         // 处理 Date 类型
                         if (value instanceof Date date) {

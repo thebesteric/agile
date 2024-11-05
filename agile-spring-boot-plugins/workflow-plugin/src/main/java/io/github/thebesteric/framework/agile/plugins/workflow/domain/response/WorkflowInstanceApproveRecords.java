@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.BusinessInfo;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
@@ -129,10 +130,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private String requesterName;
         /** 流程发起人描述 */
         private String requesterDesc;
-        /** 业务类型 */
-        private String businessType;
-        /** 业务标识 */
-        private String businessId;
+        /** 业务信息 */
+        private BusinessInfo businessInfo;
         /** 请求条件 */
         private List<RequestCondition> requestConditions = new ArrayList<>();
         /** 流程状态 */
@@ -148,8 +147,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.requesterId = workflowInstance.getRequesterId();
             response.requesterName = workflowInstance.getRequesterName();
             response.requesterDesc = workflowInstance.getRequesterDesc();
-            response.businessType = workflowInstance.getBusinessType();
-            response.businessId = workflowInstance.getBusinessId();
+            response.businessInfo = workflowInstance.getBusinessInfo();
             RequestConditions requestConditions = workflowInstance.getRequestConditions();
             if (requestConditions != null) {
                 response.requestConditions = requestConditions.getRequestConditions();

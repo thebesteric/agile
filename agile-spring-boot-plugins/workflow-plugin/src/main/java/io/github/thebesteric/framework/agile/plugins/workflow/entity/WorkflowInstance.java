@@ -5,6 +5,7 @@ import cn.hutool.json.JSONUtil;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.BusinessInfo;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
@@ -47,11 +48,8 @@ public class WorkflowInstance extends BaseEntity {
     @EntityColumn(name = "requester_desc", comment = "流程发起人描述")
     private String requesterDesc;
 
-    @EntityColumn(length = 255, comment = "业务类型")
-    private String businessType;
-
-    @EntityColumn(length = 32, comment = "业务标识")
-    private String businessId;
+    @EntityColumn(name = "business_info", type = EntityColumn.Type.JSON, comment = "业务信息")
+    private BusinessInfo businessInfo;
 
     @EntityColumn(name = "req_conditions", type = EntityColumn.Type.JSON, comment = "请求条件")
     private RequestConditions requestConditions;
@@ -72,8 +70,10 @@ public class WorkflowInstance extends BaseEntity {
         workflowInstance.setRequesterId(rs.getString("requester_id"));
         workflowInstance.setRequesterName(rs.getString("requester_name"));
         workflowInstance.setRequesterDesc(rs.getString("requester_desc"));
-        workflowInstance.setBusinessType(rs.getString("business_type"));
-        workflowInstance.setBusinessId(rs.getString("business_id"));
+        String businessInfoStr = rs.getString("business_info");
+        if (CharSequenceUtil.isNotEmpty(businessInfoStr)) {
+            workflowInstance.setBusinessInfo(JSONUtil.toBean(businessInfoStr, BusinessInfo.class));
+        }
         String reqConditionsStr = rs.getString("req_conditions");
         if (CharSequenceUtil.isNotEmpty(reqConditionsStr)) {
             workflowInstance.setRequestConditions(JSONUtil.toBean(reqConditionsStr, RequestConditions.class));

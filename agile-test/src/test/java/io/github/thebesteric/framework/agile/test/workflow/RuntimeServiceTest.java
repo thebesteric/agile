@@ -4,6 +4,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.BusinessInfo;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Requester;
@@ -37,7 +38,9 @@ public class RuntimeServiceTest {
         RuntimeService runtimeService = workflowEngine.getRuntimeService();
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
-        runtimeService.start(tenantId, "test-key", Requester.of(requesterId), "123-789-3", "org.agile.workflow.Business.class", "请假申请单", requestConditions, null);
+
+        BusinessInfo businessInfo = BusinessInfo.of(String.class, "hello world");
+        runtimeService.start(tenantId, "test-key", Requester.of(requesterId), businessInfo, "请假申请单", requestConditions, null);
     }
 
     @Test

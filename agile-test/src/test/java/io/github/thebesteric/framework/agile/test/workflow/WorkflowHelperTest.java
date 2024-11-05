@@ -475,27 +475,30 @@ class WorkflowHelperTest {
         // 动态审批节点的情况下，预设：动态审批人
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
         NodeDefinition firstTaskNode = workflowServiceHelper.getFirstTaskNode(tenantId, workflowDefinition.getId());
-        List<Approver> approvers = new ArrayList<>();
+        List<Approver> dynamicApprovers = new ArrayList<>();
         if (firstTaskNode.isDynamic()) {
             Integer dynamicAssignmentNum = firstTaskNode.getDynamicAssignmentNum();
             System.out.println("需要指定审批人数量：" + dynamicAssignmentNum);
             // 未指定动态审批人数量
             if (dynamicAssignmentNum == -1) {
-                approvers.add(Approver.of("张三", "张三姓名", "张三备注"));
-                approvers.add(Approver.of("李四", "李四姓名", "李四备注"));
+                dynamicApprovers.add(Approver.of("张三", "张三姓名", "张三备注"));
+                dynamicApprovers.add(Approver.of("李四", "李四姓名", "李四备注"));
             }
             // 指定了动态审批人数量
             else {
                 for (int i = 1; i <= dynamicAssignmentNum; i++) {
-                    approvers.add(Approver.of("张三-" + i, "张三姓名-" + i, "张三备注-" + i));
+                    dynamicApprovers.add(Approver.of("张三-" + i, "张三姓名-" + i, "张三备注-" + i));
                 }
             }
-            System.out.println("审批人设置完毕：" + approvers);
+            System.out.println("审批人设置完毕：" + dynamicApprovers);
         }
 
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
-        WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, requester, "123-123", "project", "申请请假 3 天", requestConditions, approvers);
+
+        BusinessInfo businessInfo = BusinessInfo.of(requestConditions);
+
+        WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, requester, businessInfo, "申请请假 3 天", requestConditions, dynamicApprovers);
 
         // 添加附件
         RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();

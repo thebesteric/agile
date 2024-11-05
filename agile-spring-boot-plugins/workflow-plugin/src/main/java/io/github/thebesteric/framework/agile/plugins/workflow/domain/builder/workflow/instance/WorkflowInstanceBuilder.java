@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wo
 
 import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.BusinessInfo;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
@@ -45,13 +46,8 @@ public class WorkflowInstanceBuilder extends AbstractBuilder<WorkflowInstance> {
         return this;
     }
 
-    public WorkflowInstanceBuilder businessId(String businessId) {
-        this.workflowInstance.setBusinessId(businessId);
-        return this;
-    }
-
-    public WorkflowInstanceBuilder businessType(String businessType) {
-        this.workflowInstance.setBusinessId(businessType);
+    public WorkflowInstanceBuilder businessType(BusinessInfo businessInfo) {
+        this.workflowInstance.setBusinessInfo(businessInfo);
         return this;
     }
 

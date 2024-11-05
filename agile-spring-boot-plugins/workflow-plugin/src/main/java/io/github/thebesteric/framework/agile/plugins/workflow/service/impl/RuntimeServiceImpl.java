@@ -91,14 +91,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
      * @param requester             申请人
-     * @param businessId            业务标识
-     * @param businessType          业务类型
+     * @param businessInfo          业务信息
      * @param desc                  描述
      * @param requestConditions     申请条件
      * @param dynamicApprovers      动态审批人
      */
     @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String businessId, String businessType, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, BusinessInfo businessInfo, String desc, RequestConditions requestConditions, List<Approver> dynamicApprovers) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
             WorkflowDefinition workflowDefinition = getWorkflowDefinition(tenantId, workflowDefinitionKey);
@@ -111,7 +110,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 获取流程实例
             WorkflowInstanceExecutor instanceExecutor = workflowInstanceExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinition.getId())
-                    .requester(requester).businessId(businessId).businessType(businessType).requestConditions(requestConditions).status(WorkflowStatus.IN_PROGRESS).desc(desc).build();
+                    .requester(requester).businessInfo(businessInfo)
+                    .requestConditions(requestConditions).status(WorkflowStatus.IN_PROGRESS).desc(desc).build();
             WorkflowInstance workflowInstance = instanceExecutor.save();
             Integer workflowInstanceId = workflowInstance.getId();
 
@@ -295,14 +295,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
-     * @param businessId            业务标识
-     * @param businessType          业务类型
+     * @param requester             申请人
      * @param desc                  描述
      */
     @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String businessId, String businessType, String desc) {
-        return this.start(tenantId, workflowDefinitionKey, Requester.of(requesterId), businessId, businessType, desc, null, null);
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, BusinessInfo businessInfo, String desc) {
+        return this.start(tenantId, workflowDefinitionKey, requester, businessInfo, desc, null, null);
     }
 
     /**
@@ -310,13 +308,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
+     * @param requester             申请人
      * @param desc                  描述
      * @param requestConditions     申请条件
      */
     @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc, RequestConditions requestConditions) {
-        return this.start(tenantId, workflowDefinitionKey, Requester.of(requesterId), null, null, desc, requestConditions, null);
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String desc, RequestConditions requestConditions) {
+        return this.start(tenantId, workflowDefinitionKey, requester, null, desc, requestConditions, null);
     }
 
     /**
@@ -324,12 +322,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId              租户 ID
      * @param workflowDefinitionKey 流程定义 Key
-     * @param requesterId           申请人 ID
+     * @param requester             申请人
      * @param desc                  描述
      */
     @Override
-    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, String requesterId, String desc) {
-        return this.start(tenantId, workflowDefinitionKey, requesterId, desc, null);
+    public WorkflowInstance start(String tenantId, String workflowDefinitionKey, Requester requester, String desc) {
+        return this.start(tenantId, workflowDefinitionKey, requester, null, desc);
     }
 
     /**
