@@ -41,7 +41,7 @@ class WorkflowServiceTest {
         String tenantId = "8888";
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class).eq(WorkflowInstance::getTenantId, tenantId)
-                .like(WorkflowInstance::getBusinessId, "123%").orderBy(WorkflowInstance::getCreatedAt, OrderByOperator.DESC)
+                .orderBy(WorkflowInstance::getCreatedAt, OrderByOperator.DESC)
                 .page(1, 10)
                 .build();
         List<WorkflowInstance> workflowInstances = workflowService.findWorkflowInstances(query).getRecords();
