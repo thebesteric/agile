@@ -295,5 +295,6 @@
 ### v1.0.16.1
 
 - 日志插件 (feat): 本地日志记录支持按 tag 过滤
+- 工作流插件 (feat): 支持流程强制中断（未审批用户状态为中断审批）
 - 工作流插件 (feat): 流程实例支持提交 businessInfo 对象格式业务信息
 - 工作流插件 (chore): 流程实例删除 businessId 和 businessType 字段
