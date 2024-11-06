@@ -97,7 +97,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow1(tenantId, workflowDefinition);
+        createWorkflow6(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -514,11 +514,23 @@ class WorkflowHelperTest {
     }
 
     /**
+     * 审批-强制中断
+     */
+    @Test
+    void interrupt() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        runtimeServiceHelper.setCurrentUser("system-user");
+
+        runtimeServiceHelper.interrupt(tenantId, 1, "强制中断");
+    }
+
+    /**
      * 审批-同意
      */
     @Test
     void approve() {
-        String roleId = "xxx";
+        // String roleId = "xxx";
         // String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
@@ -526,7 +538,7 @@ class WorkflowHelperTest {
         // String approverId = "王五";
         // String approverId = "王五-1";
         // String approverId = "哈哈";
-        String approverId = "赵六";
+        // String approverId = "赵六";
         // String approverId = "孙七";
         // String approverId = "嘿嘿";
         // String approverId = "admin";
@@ -536,9 +548,9 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        // String roleId = "组长";
+        String roleId = "组长";
         // String approverId = "grouper-1";
-        // String approverId = "grouper-2";
+        String approverId = "grouper-2";
         // String approverId = "grouper-3";
 
         // String roleId = "负责人";
