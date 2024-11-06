@@ -98,7 +98,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow6(tenantId, workflowDefinition);
+        createWorkflow1(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -763,16 +763,17 @@ class WorkflowHelperTest {
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
 
         NodeDefinition nodeDefinition2 = workflowServiceHelper.getNode(tenantId, 2);
-        nodeDefinition2.setName("部门经理审批-1");
-        nodeDefinition2.setDesc("任务节点-1");
-        nodeDefinition2.removeApprover(Approver.of("张三"));
-        nodeDefinition2.addApprover(Approver.of("张三-1"));
-        nodeDefinition2.setSequence(3.0);
+        // nodeDefinition2.setName("部门经理审批-1");
+        // nodeDefinition2.setDesc("任务节点-1");
+        // nodeDefinition2.removeApprover(Approver.of("张三"));
+        // nodeDefinition2.addApprover(Approver.of("张三-1"));
+        nodeDefinition2.setApprovers(Set.of(Approver.of("张三1", "hhh"), Approver.of("李四")));
+        // nodeDefinition2.setSequence(3.0);
         workflowServiceHelper.updateNode(nodeDefinition2);
 
-        NodeDefinition nodeDefinition3 = workflowServiceHelper.getNode(tenantId, 4);
-        nodeDefinition3.setSequence(1.0);
-        workflowServiceHelper.updateNode(nodeDefinition3);
+        // NodeDefinition nodeDefinition3 = workflowServiceHelper.getNode(tenantId, 4);
+        // nodeDefinition3.setSequence(1.0);
+        // workflowServiceHelper.updateNode(nodeDefinition3);
 
         // NodeDefinition nodeDefinition2 = workflowServiceHelper.getNode(tenantId, 2);
         // nodeDefinition2.setRoleApprove(false);
