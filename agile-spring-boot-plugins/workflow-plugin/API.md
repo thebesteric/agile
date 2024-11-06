@@ -268,12 +268,12 @@ RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelp
 #### 4.2.1 提交审批 - `runtimeServiceHelper.start`
 - workflowDefinition: 流程定义
 - userId: 用户 ID
-- businessId: 业务 ID
-- businessType: 业务类型
+- businessInfo: 业务信息
 - comment: 备注
 ```java
 RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
-WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, businessId, businessType, "申请请假 3 天");
+BusinessInfo businessInfo = BusinessInfo.of(MapWrapper.create().put("business_id", 123).put("business_type", "项目资料").build());
+WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, userId, businessInfo, "申请请假 3 天");
 ```
 #### 4.2.2 取消提交 - `runtimeServiceHelper.findTaskInstances`
 > 取消提交的前提是，当前审批流程未发生任何审批记录时，发起者可以主动取消提交
