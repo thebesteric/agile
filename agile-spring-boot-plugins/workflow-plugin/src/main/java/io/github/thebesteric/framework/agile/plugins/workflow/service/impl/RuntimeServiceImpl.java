@@ -2542,16 +2542,29 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId, null, null);
         // 查看是否已经有人参与了审批
-        TaskApprove taskApprove = taskApproves.stream().filter(i -> ApproveStatus.IN_PROGRESS != i.getStatus()).findFirst().orElse(null);
+        TaskApprove taskApprove = taskApproves.stream()
+                .filter(i -> ApproveStatus.IN_PROGRESS != i.getStatus() && ApproveStatus.SUSPEND != i.getStatus()).findFirst().orElse(null);
         if (taskApprove != null) {
             throw new WorkflowException("流程实例已被审批: %s", taskApprove.getApproverId());
         }
 
         // 未审批的审批人节点：设置为已失效
-        List<TaskApprove> inProgressApproves = taskApproves.stream().filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus()).toList();
+        List<TaskApprove> inProgressApproves = taskApproves.stream()
+                .filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus() || ApproveStatus.SUSPEND == i.getStatus()).toList();
         inProgressApproves.forEach(inProgressApprove -> {
             inProgressApprove.convertToApproveStatusSkipped();
             taskApproveExecutor.updateById(inProgressApprove);
+            // 角色审批人
+            if (ApproverIdType.ROLE == inProgressApprove.getApproverIdType()) {
+                TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+                List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
+                taskRoleApproveRecords.forEach(taskRoleApproveRecord -> {
+                    if (ApproveStatus.IN_PROGRESS == taskRoleApproveRecord.getStatus() || ApproveStatus.SUSPEND == taskRoleApproveRecord.getStatus()) {
+                        taskRoleApproveRecord.convertToApproveStatusInterrupted();
+                        taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
+                    }
+                });
+            }
         });
 
         // 获取所有审批节点，并设置为：已取消
@@ -2581,6 +2594,80 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
         // 记录流程日志（审批取消）
         recordLogs(tenantId, workflowInstanceId, null, endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_CANCELED);
+    }
+
+    /**
+     * 审批-中断
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param comment            审批意见
+     *
+     * @author wangweijun
+     * @since 2024/11/5 21:35
+     */
+    @Override
+    public void interrupt(String tenantId, Integer workflowInstanceId, String comment) {
+        // 查看流程状态
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
+        if (WorkflowStatus.IN_PROGRESS != workflowInstance.getStatus()) {
+            throw new WorkflowException("流程实例已结束: %s", workflowInstance.getStatus().getDesc());
+        }
+
+        // 获取该流程下所有的审批人
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
+
+        // 未审批的审批人节点：设置为已失效
+        List<TaskApprove> inProgressApproves = taskApproves.stream()
+                .filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus() || ApproveStatus.SUSPEND == i.getStatus()).toList();
+        inProgressApproves.forEach(inProgressApprove -> {
+            inProgressApprove.convertToApproveStatusInterrupted(comment);
+            taskApproveExecutor.updateById(inProgressApprove);
+            // 角色审批人
+            if (ApproverIdType.ROLE == inProgressApprove.getApproverIdType()) {
+                TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+                List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
+                taskRoleApproveRecords.forEach(taskRoleApproveRecord -> {
+                    if (ApproveStatus.IN_PROGRESS == taskRoleApproveRecord.getStatus() || ApproveStatus.SUSPEND == taskRoleApproveRecord.getStatus()) {
+                        taskRoleApproveRecord.convertToApproveStatusInterrupted(comment);
+                        taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
+                    }
+                });
+            }
+        });
+
+        // 获取所有进行中的审批节点，并设置为：已取消
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        List<TaskInstance> taskInstances = taskInstanceExecutor.findByWorkflowInstanceIdAndNodeType(tenantId, workflowInstanceId, NodeType.TASK);
+        for (TaskInstance taskInstance : taskInstances) {
+            if (NodeStatus.IN_PROGRESS == taskInstance.getStatus()) {
+                taskInstance.setStatus(NodeStatus.INTERRUPTED);
+                taskInstanceExecutor.updateById(taskInstance);
+            }
+        }
+
+        // 获取结束节点
+        NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+        NodeDefinition endNodeDefinition = nodeDefinitionExecutor.getEndNode(tenantId, workflowInstance.getWorkflowDefinitionId());
+
+        // 创建取消节点实例
+        taskInstanceExecutor = taskInstanceExecutorBuilder.tenantId(tenantId)
+                .workflowInstanceId(workflowInstanceId)
+                .nodeDefinitionId(endNodeDefinition.getId())
+                .roleApprove(endNodeDefinition.isRoleApprove())
+                .status(NodeStatus.INTERRUPTED)
+                .build();
+        taskInstanceExecutor.save();
+
+        // 流程实例标记为：已中断
+        workflowInstance.setStatus(WorkflowStatus.INTERRUPTED);
+        workflowInstanceExecutor.updateById(workflowInstance);
+
+        // 记录流程日志（审批中断）
+        recordLogs(tenantId, workflowInstanceId, null, endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_INTERRUPTED);
+
     }
 
     /**

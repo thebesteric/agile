@@ -93,6 +93,27 @@ public class TaskRoleApproveRecord extends BaseEntity {
         this.setComment(comment);
     }
 
+    /**
+     * 将审批实例设置为：中断
+     *
+     * @author wangweijun
+     * @since 2024/11/6 09:51
+     */
+    public void convertToApproveStatusInterrupted() {
+        this.convertToApproveStatusInterrupted(null);
+    }
+
+    /**
+     * 将审批实例设置为：中断
+     *
+     * @author wangweijun
+     * @since 2024/11/6 09:51
+     */
+    public void convertToApproveStatusInterrupted(String comment) {
+        this.setStatus(ApproveStatus.INTERRUPTED);
+        this.setComment(comment);
+    }
+
     public static TaskRoleApproveRecord of(ResultSet rs) throws SQLException {
         TaskRoleApproveRecord taskRoleApproveRecord = new TaskRoleApproveRecord();
         taskRoleApproveRecord.setTenantId(rs.getString("tenant_id"));

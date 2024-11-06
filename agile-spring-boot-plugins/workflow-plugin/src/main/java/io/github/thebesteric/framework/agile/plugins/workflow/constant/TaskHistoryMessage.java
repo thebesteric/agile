@@ -24,6 +24,7 @@ public enum TaskHistoryMessage {
     INSTANCE_REDO("审批撤回"),
     INSTANCE_ABANDONED("审批弃权"),
     INSTANCE_CANCELED("审批取消"),
+    INSTANCE_INTERRUPTED("审批中断"),
     INSTANCE_SUBMIT_FORM("提交审批"),
 
     NODE_ASSIGNMENT_CHANGED("用户任务关联表变更"),

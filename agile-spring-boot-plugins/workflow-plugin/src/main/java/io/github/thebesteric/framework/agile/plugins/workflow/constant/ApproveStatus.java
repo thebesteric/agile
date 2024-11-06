@@ -23,7 +23,8 @@ public enum ApproveStatus implements BaseEnum {
     APPROVED(2, "已同意"),
     REJECTED(3, "已驳回"),
     ABANDONED(5, "弃权"),
-    SKIPPED(6, "跳过（也就是不需要审批）");
+    SKIPPED(6, "跳过（也就是不需要审批）"),
+    INTERRUPTED(99, "已中断（表示流程被强制结束）");
 
     @JsonValue
     @EnumValue

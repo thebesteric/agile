@@ -139,6 +139,18 @@ public class TaskApprove extends BaseEntity {
         this.setComment(comment);
     }
 
+    /**
+     * 将审批实例设置为：已中断
+     *
+     * @author wangweijun
+     * @since 2024/11/6 09:32
+     */
+    public void convertToApproveStatusInterrupted(String comment) {
+        this.setStatus(ApproveStatus.INTERRUPTED);
+        this.setActive(ActiveStatus.INACTIVE);
+        this.setComment(comment);
+    }
+
     public static TaskApprove of(ResultSet rs) throws SQLException {
         TaskApprove taskApprove = new TaskApprove();
         taskApprove.setTenantId(rs.getString("tenant_id"));

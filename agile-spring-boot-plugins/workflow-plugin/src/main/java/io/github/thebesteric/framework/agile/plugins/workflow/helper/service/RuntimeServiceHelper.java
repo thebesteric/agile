@@ -884,6 +884,20 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 审批-中断
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param comment            审批意见
+     *
+     * @author wangweijun
+     * @since 2024/11/5 21:35
+     */
+    public void interrupt(String tenantId, Integer workflowInstanceId, String comment) {
+        this.runtimeService.interrupt(tenantId, workflowInstanceId, comment);
+    }
+
+    /**
      * 更新审批人（未审批状态下）
      *
      * @param taskInstance     任务实例

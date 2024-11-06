@@ -21,7 +21,8 @@ public enum WorkflowStatus implements BaseEnum {
     IN_PROGRESS(1, "进行中"),
     COMPLETED(2, "已完成"),
     CANCELED(3, "已取消"),
-    REJECTED(4, "已驳回");
+    REJECTED(4, "已驳回"),
+    INTERRUPTED(99, "已中断（表示流程被强制结束）");
 
     @JsonValue
     @EnumValue

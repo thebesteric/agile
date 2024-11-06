@@ -145,7 +145,7 @@ public interface RuntimeService {
     void reject(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
-     * 弃权
+     * 审批-弃权
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
@@ -159,7 +159,7 @@ public interface RuntimeService {
     void abandon(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
-     * 取消流程
+     * 审批-取消流程
      *
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
@@ -168,6 +168,18 @@ public interface RuntimeService {
      * @since 2024/6/27 12:43
      */
     void cancel(String tenantId, Integer workflowInstanceId);
+
+    /**
+     * 审批-中断
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param comment            审批意见
+     *
+     * @author wangweijun
+     * @since 2024/11/5 21:35
+     */
+    void interrupt(String tenantId, Integer workflowInstanceId, String comment);
 
     /**
      * 查询审批任务
