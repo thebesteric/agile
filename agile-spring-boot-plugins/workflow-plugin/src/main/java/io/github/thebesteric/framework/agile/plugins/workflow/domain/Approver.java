@@ -75,7 +75,7 @@ public class Approver implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Approver approver = (Approver) o;
-        return new EqualsBuilder().append(id, approver.id).isEquals();
+        return new EqualsBuilder().append(roleType, approver.roleType).append(id, approver.id).append(name, approver.name).append(desc, approver.desc).isEquals();
     }
 
     @Override

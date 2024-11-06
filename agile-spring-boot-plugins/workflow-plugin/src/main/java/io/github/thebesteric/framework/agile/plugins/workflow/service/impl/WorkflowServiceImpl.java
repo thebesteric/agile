@@ -226,7 +226,27 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             Set<Approver> oldApprovers = oldNodeAssignments.stream().map(assignment -> Approver.of(assignment.getApproverId(), assignment.getDesc())).collect(Collectors.toSet());
 
             // 审批人不同
-            if (!nodeDefinition.getApprovers().containsAll(oldApprovers)) {
+            boolean isDifferentApprovers = false;
+            if (nodeDefinition.getApprovers().size() != oldApprovers.size()) {
+                isDifferentApprovers = true;
+            }
+            // 如果审核人数量相同，则判断审核人是否相同
+            if (!isDifferentApprovers) {
+                for (Approver approver : nodeDefinition.getApprovers()) {
+                    boolean matched = false;
+                    for (Approver oldApprover : oldApprovers) {
+                        if (approver.equals(oldApprover)) {
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (!matched) {
+                        isDifferentApprovers = true;
+                    }
+                }
+            }
+
+            if (isDifferentApprovers) {
                 // 删除原有的审批人
                 nodeAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinition.getId());
                 // 重新添加审批人
