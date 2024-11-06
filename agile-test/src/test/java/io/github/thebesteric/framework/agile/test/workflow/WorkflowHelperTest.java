@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.test.workflow;
 
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
+import io.github.thebesteric.framework.agile.commons.util.MapWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
@@ -496,8 +497,7 @@ class WorkflowHelperTest {
         RequestConditions requestConditions = RequestConditions.newInstance();
         requestConditions.addRequestCondition(RequestCondition.of("day", "2"));
 
-        BusinessInfo businessInfo = BusinessInfo.of(requestConditions);
-
+        BusinessInfo businessInfo = BusinessInfo.of(MapWrapper.create().put("business_id", 123).put("business_type", "项目资料").build());
         WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, requester, businessInfo, "申请请假 3 天", requestConditions, dynamicApprovers);
 
         // 添加附件
@@ -1034,6 +1034,17 @@ class WorkflowHelperTest {
         Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, "eric", WorkflowStatus.IN_PROGRESS, 1, 10);
         List<WorkflowInstance> workflowInstances = page.getRecords();
         workflowInstances.forEach(System.out::println);
+    }
+
+    @Test
+    void businessInfo() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        WorkflowInstance workflowInstance = runtimeServiceHelper.getWorkflowInstanceById(tenantId, 1);
+        BusinessInfo businessInfo = workflowInstance.getBusinessInfo();
+        System.out.println(businessInfo.getObject());
+        System.out.println(businessInfo.getObject(Map.class));
+        System.out.println(businessInfo.getBusiness());
     }
 
 }
