@@ -23,6 +23,11 @@ public class WorkflowInstanceExecutorBuilder extends AbstractExecutorBuilder<Wor
         this.workflowDefinitionExecutor = new WorkflowInstanceExecutor(jdbcTemplate);
     }
 
+    public WorkflowInstanceExecutorBuilder newInstance() {
+        this.workflowDefinitionExecutor.setWorkflowInstance(new WorkflowInstance());
+        return this;
+    }
+
     public WorkflowInstanceExecutorBuilder tenantId(String tenantId) {
         this.workflowDefinitionExecutor.getWorkflowInstance().setTenantId(tenantId);
         return this;

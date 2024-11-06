@@ -109,7 +109,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             }
 
             // 获取流程实例
-            WorkflowInstanceExecutor instanceExecutor = workflowInstanceExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinition.getId())
+            WorkflowInstanceExecutor instanceExecutor = workflowInstanceExecutorBuilder.newInstance()
+                    .tenantId(tenantId).workflowDefinitionId(workflowDefinition.getId())
                     .requester(requester).businessInfo(businessInfo)
                     .requestConditions(requestConditions).status(WorkflowStatus.IN_PROGRESS).desc(desc).build();
             WorkflowInstance workflowInstance = instanceExecutor.save();
@@ -216,7 +217,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                                         .build();
                                 taskDynamicAssignmentExecutor.save(taskDynamicAssignment);
                                 // 保存 TaskApprove
-                                TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.newEntity()
+                                TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.newInstance()
                                         .tenantId(tenantId)
                                         .workflowInstanceId(workflowInstanceId)
                                         .taskInstanceId(nextTaskInstanceId)
@@ -240,7 +241,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             int i = 0;
                             for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
                                 TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder
-                                        .newEntity()
+                                        .newInstance()
                                         .tenantId(tenantId)
                                         .workflowInstanceId(workflowInstanceId)
                                         .taskInstanceId(nextTaskInstanceId)

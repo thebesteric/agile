@@ -26,7 +26,7 @@ public class TaskApproveExecutorBuilder extends AbstractExecutorBuilder<TaskAppr
         return new TaskApproveExecutorBuilder(jdbcTemplate);
     }
 
-    public TaskApproveExecutorBuilder newEntity() {
+    public TaskApproveExecutorBuilder newInstance() {
         this.taskApproveExecutor.setTaskApprove(new TaskApprove());
         return this;
     }
