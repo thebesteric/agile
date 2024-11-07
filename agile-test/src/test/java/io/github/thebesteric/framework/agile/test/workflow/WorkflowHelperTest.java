@@ -530,10 +530,10 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        // String roleId = "xxx";
+        String roleId = "xxx";
         // String approverId = "张三";
         // String approverId = "张三-1";
-        // String approverId = "李四";
+        String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
@@ -548,9 +548,9 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        String roleId = "组长";
+        // String roleId = "组长";
         // String approverId = "grouper-1";
-        String approverId = "grouper-2";
+        // String approverId = "grouper-2";
         // String approverId = "grouper-3";
 
         // String roleId = "负责人";
