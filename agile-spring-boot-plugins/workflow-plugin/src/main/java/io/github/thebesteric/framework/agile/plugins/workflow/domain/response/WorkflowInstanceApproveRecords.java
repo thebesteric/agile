@@ -138,6 +138,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private Map<String, String> status;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间 */
+        private Date updatedAt;
 
         public static WorkflowInstanceResponse of(WorkflowInstance workflowInstance) {
             WorkflowInstanceResponse response = new WorkflowInstanceResponse();
@@ -154,6 +156,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             }
             response.status = workflowInstance.getStatus().toMap();
             response.createdAt = workflowInstance.getCreatedAt();
+            response.updatedAt = workflowInstance.getUpdatedAt();
             return response;
         }
     }
@@ -187,6 +190,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private Map<String, String> publish;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间 */
+        private Date updatedAt;
 
         public static WorkflowDefinitionResponse of(WorkflowDefinition workflowDefinition) {
             WorkflowDefinitionResponse response = new WorkflowDefinitionResponse();
@@ -202,6 +207,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.requiredComment = workflowDefinition.isRequiredComment();
             response.publish = workflowDefinition.getPublish().toMap();
             response.createdAt = workflowDefinition.getCreatedAt();
+            response.updatedAt = workflowDefinition.getUpdatedAt();
             return response;
         }
     }
@@ -239,6 +245,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private List<TaskDynamicAssignmentResponse> taskDynamicAssignmentsResponse;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间 */
+        private Date updatedAt;
 
         public static NodeDefinitionResponse of(NodeDefinition nodeDefinition, TaskInstanceResponse taskInstanceResponse,
                                                 List<NodeAssignmentResponse> nodeAssignmentsResponse,
@@ -258,6 +266,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.nodeAssignmentsResponse = nodeAssignmentsResponse;
             response.taskDynamicAssignmentsResponse = taskDynamicAssignmentsResponse;
             response.createdAt = nodeDefinition.getCreatedAt();
+            response.updatedAt = nodeDefinition.getUpdatedAt();
             return response;
         }
     }
@@ -279,6 +288,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private Integer approverSeq;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间 */
+        private Date updatedAt;
 
         public static NodeAssignmentResponse of(NodeAssignment nodeAssignment) {
             NodeAssignmentResponse response = new NodeAssignmentResponse();
@@ -288,6 +299,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.approverDesc = nodeAssignment.getApproverDesc();
             response.approverSeq = nodeAssignment.getApproverSeq();
             response.createdAt = nodeAssignment.getCreatedAt();
+            response.updatedAt = nodeAssignment.getUpdatedAt();
             return response;
         }
     }
@@ -313,6 +325,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private Integer approverSeq;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间 */
+        private Date updatedAt;
 
         public static TaskDynamicAssignmentResponse of(TaskDynamicAssignment taskDynamicAssignment) {
             TaskDynamicAssignmentResponse response = new TaskDynamicAssignmentResponse();
@@ -324,6 +338,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.approverDesc = taskDynamicAssignment.getApproverDesc();
             response.approverSeq = taskDynamicAssignment.getApproverSeq();
             response.createdAt = taskDynamicAssignment.getCreatedAt();
+            response.updatedAt = taskDynamicAssignment.getUpdatedAt();
             return response;
         }
     }
@@ -345,6 +360,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private List<TaskApproveResponse> taskApproveResponses;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间 */
+        private Date updatedAt;
 
         public static TaskInstanceResponse of(TaskInstance taskInstance, List<TaskApproveResponse> taskApproveResponses) {
             TaskInstanceResponse response = new TaskInstanceResponse();
@@ -354,6 +371,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.status = taskInstance.getStatus().toMap();
             response.taskApproveResponses = taskApproveResponses;
             response.createdAt = taskInstance.getCreatedAt();
+            response.updatedAt = taskInstance.getUpdatedAt();
             return response;
         }
     }
@@ -379,6 +397,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private boolean isSelf;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间（即审批时间） */
+        private Date updatedAt;
 
         public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment,
                                              List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
@@ -393,6 +413,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.comment = taskApprove.getComment();
             response.approveStatus = taskApprove.getStatus().toMap();
             response.createdAt = taskApprove.getCreatedAt();
+            response.updatedAt = taskApprove.getUpdatedAt();
             response.isSelf = nodeDefinition.isUserApprove() && curUserId != null && curUserId.equals(taskApprove.getApproverId());
             response.setRoleApprove(nodeDefinition.isRoleApprove());
             if (taskRoleApproveRecords != null) {
@@ -438,6 +459,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private boolean isSelf;
         /** 创建时间 */
         private Date createdAt;
+        /** 修改时间 */
+        private Date updatedAt;
 
         public static TaskRoleApproveRecordResponse of(TaskRoleApproveRecord taskRoleApproveRecord, NodeRoleAssignment nodeRoleAssignment, List<String> curRoleIds, String curUserId) {
             TaskRoleApproveRecordResponse response = new TaskRoleApproveRecordResponse();
@@ -454,6 +477,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.comment = taskRoleApproveRecord.getComment();
             response.approveStatus = taskRoleApproveRecord.getStatus();
             response.createdAt = taskRoleApproveRecord.getCreatedAt();
+            response.updatedAt = taskRoleApproveRecord.getUpdatedAt();
             response.isSelf = curUserId != null && curUserId.equals(nodeRoleAssignment.getUserId()) && curRoleIds != null && curRoleIds.contains(nodeRoleAssignment.getRoleId());
             return response;
         }
