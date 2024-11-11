@@ -679,6 +679,39 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 审批-转派
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param userId         用户 ID
+     * @param invitee        被转派人
+     * @param comment        转派意见
+     *
+     * @author wangweijun
+     * @since 2024/11/7 15:15
+     */
+    public void reassign(String tenantId, Integer taskInstanceId, String userId, Invitee invitee, String comment) {
+        this.reassign(tenantId, taskInstanceId, null, userId, invitee, comment);
+    }
+
+    /**
+     * 审批-转派
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
+     * @param invitee        被转派人
+     * @param comment        转派意见
+     *
+     * @author wangweijun
+     * @since 2024/11/7 15:15
+     */
+    public void reassign(String tenantId, Integer taskInstanceId, String roleId, String userId, Invitee invitee, String comment) {
+        this.runtimeService.reassign(tenantId, taskInstanceId, roleId, userId, invitee, comment);
+    }
+
+    /**
      * 审批-撤回
      *
      * @param taskInstance 任务实例

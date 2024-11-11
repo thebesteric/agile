@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve;
 
 import io.github.thebesteric.framework.agile.commons.exception.InvalidParamsException;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.RoleApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskRoleApproveRecord;
 
@@ -49,8 +49,8 @@ public class TaskRoleApproveRecordBuilder extends AbstractBuilder<TaskRoleApprov
         return this;
     }
 
-    public TaskRoleApproveRecordBuilder status(ApproveStatus approveStatus) {
-        this.taskRoleApproveRecord.setStatus(approveStatus);
+    public TaskRoleApproveRecordBuilder status(RoleApproveStatus roleApproveStatus) {
+        this.taskRoleApproveRecord.setStatus(roleApproveStatus);
         return this;
     }
 
@@ -65,7 +65,7 @@ public class TaskRoleApproveRecordBuilder extends AbstractBuilder<TaskRoleApprov
         Integer taskInstanceId = this.taskRoleApproveRecord.getTaskInstanceId();
         Integer taskApproveId = this.taskRoleApproveRecord.getTaskApproveId();
         Integer nodeRoleAssignmentId = this.taskRoleApproveRecord.getNodeRoleAssignmentId();
-        ApproveStatus status = this.taskRoleApproveRecord.getStatus();
+        RoleApproveStatus status = this.taskRoleApproveRecord.getStatus();
         if (tenantId == null || workflowInstanceId == null || taskInstanceId == null || taskApproveId == null || nodeRoleAssignmentId == null || status == null) {
             throw new InvalidParamsException("tenantId, workflowInstanceId, taskInstanceId, taskApproveId, nodeRoleAssignmentId, status cannot be null or empty");
         }

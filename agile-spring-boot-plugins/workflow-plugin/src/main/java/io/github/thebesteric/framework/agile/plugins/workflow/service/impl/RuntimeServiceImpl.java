@@ -27,6 +27,9 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.tas
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.history.TaskHistoryExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance.TaskInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance.TaskInstanceExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.reassign.TaskReassignRecordBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.reassign.TaskReassignRecordExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.reassign.TaskReassignRecordExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
@@ -66,6 +69,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     private final TaskHistoryExecutorBuilder taskHistoryExecutorBuilder;
     private final TaskRoleApproveRecordExecutorBuilder taskRoleApproveRecordExecutorBuilder;
     private final TaskDynamicAssignmentExecutorBuilder taskDynamicAssignmentExecutorBuilder;
+    private final TaskReassignRecordExecutorBuilder taskReassignRecordExecutorBuilder;
     private final DeploymentService deploymentService;
 
     public RuntimeServiceImpl(AgileWorkflowContext context) {
@@ -82,6 +86,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         taskHistoryExecutorBuilder = TaskHistoryExecutorBuilder.builder(jdbcTemplate);
         taskRoleApproveRecordExecutorBuilder = TaskRoleApproveRecordExecutorBuilder.builder(jdbcTemplate);
         taskDynamicAssignmentExecutorBuilder = TaskDynamicAssignmentExecutorBuilder.builder(jdbcTemplate);
+        taskReassignRecordExecutorBuilder = TaskReassignRecordExecutorBuilder.builder(jdbcTemplate);
         deploymentService = new DeploymentServiceImpl(context);
     }
 
@@ -377,7 +382,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         RoleUserApproveType roleUserApproveType = nextNodeDefinition.getRoleUserApproveType();
 
         // 查询所有角色审批人
-        List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinition.getId());
+        List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinition.getId(), NodeRoleAssignmentType.NORMAL);
         nodeRoleAssignments = new ArrayList<>(nodeRoleAssignments);
 
         // 角色和审批任务对应关系：key：roleId，value：taskApprove
@@ -413,7 +418,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                                 .setTaskInstanceId(nextTaskInstance.getId())
                                 .setTaskApproveId(approveId)
                                 .setNodeRoleAssignmentId(nodeRoleAssignment.getId())
-                                .setStatus(roleIdIndex == 0 ? ApproveStatus.IN_PROGRESS : ApproveStatus.SUSPEND);
+                                .setStatus(roleIdIndex == 0 ? RoleApproveStatus.IN_PROGRESS : RoleApproveStatus.SUSPEND);
                         taskRoleApproveRecordExecutor.save(taskRoleApproveRecord);
                     }
                     roleIdIndex++;
@@ -435,7 +440,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             .setTaskInstanceId(nextTaskInstance.getId())
                             .setTaskApproveId(approveId)
                             .setNodeRoleAssignmentId(nodeRoleAssignment.getId())
-                            .setStatus(ApproveStatus.IN_PROGRESS);
+                            .setStatus(RoleApproveStatus.IN_PROGRESS);
                     taskRoleApproveRecordExecutor.save(taskRoleApproveRecord);
                 }
             }
@@ -467,11 +472,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             .setNodeRoleAssignmentId(nodeRoleAssignment.getId());
                     // 如果角色审批类型是 ANY，每个角色的第一个角色用户为 IN_PROGRESS，其余角色用户均为 SUSPEND
                     if (RoleApproveType.ANY == roleApproveType) {
-                        taskRoleApproveRecord.setStatus(i == 0 ? ApproveStatus.IN_PROGRESS : ApproveStatus.SUSPEND);
+                        taskRoleApproveRecord.setStatus(i == 0 ? RoleApproveStatus.IN_PROGRESS : RoleApproveStatus.SUSPEND);
                     }
                     // 如果角色审批类型是 SEQ，则只有第一个角色用户为 IN_PROGRESS，其他为 SUSPEND
                     else if (RoleApproveType.SEQ == roleApproveType || RoleApproveType.ALL == roleApproveType) {
-                        taskRoleApproveRecord.setStatus(roleIdIndex == 0 && i == 0 ? ApproveStatus.IN_PROGRESS : ApproveStatus.SUSPEND);
+                        taskRoleApproveRecord.setStatus(roleIdIndex == 0 && i == 0 ? RoleApproveStatus.IN_PROGRESS : RoleApproveStatus.SUSPEND);
                     }
                     taskRoleApproveRecordExecutor.save(taskRoleApproveRecord);
                 }
@@ -504,7 +509,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             Integer nodeDefinitionId = nodeDefinition.getId();
             NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
             // 查询到所有角色下的用户
-            List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
+            List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId, NodeRoleAssignmentType.NORMAL);
             // 根据角色 ID 分组
             Map<String, List<NodeRoleAssignment>> nodeRoleAssignmentMap = nodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
             // 角色属于：或签
@@ -559,7 +564,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             Integer nodeDefinitionId = nodeDefinition.getId();
             NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
             // 查询到所有角色下的用户
-            List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
+            List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId, NodeRoleAssignmentType.NORMAL);
             // 根据角色 ID 分组
             Map<String, List<NodeRoleAssignment>> nodeRoleAssignmentMap = nodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
             // 角色属于：或签
@@ -1070,6 +1075,197 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
+     * 审批-转派
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
+     * @param invitee        被转派人
+     * @param comment        转派意见
+     *
+     * @author wangweijun
+     * @since 2024/11/7 15:15
+     */
+    @Override
+    public void reassign(String tenantId, Integer taskInstanceId, String roleId, String userId, Invitee invitee, String comment) {
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            // 参数校验
+            if (StringUtils.isEmpty(userId) || StringUtils.isEmpty(invitee.getUserId())) {
+                throw new WorkflowException("转派失败: 用户 ID 不能为空");
+            }
+
+            // 检查审批意见是否必填
+            checkIfRequiredComment(taskInstanceId, comment);
+
+            TaskReassignRecordExecutor taskReassignRecordExecutor = taskReassignRecordExecutorBuilder.build();
+
+            // 获取当前任务实例
+            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+            TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+
+            // 获取流程实例
+            WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+            WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(taskInstance.getWorkflowInstanceId());
+            // 检查流程实例是否已经结束
+            checkIfWorkflowInstanceIsFinished(workflowInstance);
+
+            // 获取当前实例的节点定义
+            NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
+            NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(taskInstance.getNodeDefinitionId());
+
+            // 获取当前审批任务
+            TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+            TaskApprove taskApprove = taskApproveExecutor.getByTaskInstanceIdAndRoleIdAndApproverId(tenantId, taskInstanceId, ActiveStatus.ACTIVE, roleId, userId);
+            if (taskApprove == null || ApproveStatus.IN_PROGRESS != taskApprove.getStatus()) {
+                throw new WorkflowException("转派失败: 当前审批任务不存在或未生效");
+            }
+
+            // 获取当前节点的审批人
+            NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+            NodeAssignment nodeAssignment = nodeAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinition.getId(), taskApprove.getApproverId());
+
+            // 将委派人封装为 inviter
+            Inviter inviter;
+            NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+            if (nodeAssignment != null) {
+                if (nodeDefinition.isRoleApprove()) {
+                    NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinition.getId(), roleId, userId, null);
+                    inviter = Inviter.of(nodeRoleAssignment);
+                } else {
+                    inviter = Inviter.of(nodeAssignment);
+                }
+            } else {
+                TaskReassignRecord toUser = taskReassignRecordExecutor.getToUser(tenantId, taskApprove.getId(), roleId, userId);
+                if (toUser == null) {
+                    throw new WorkflowException("转派失败: 转派人不存在");
+                }
+                inviter = Inviter.of(toUser);
+            }
+
+            // 角色审批
+            if (nodeDefinition.isRoleApprove()) {
+                // 审批人与转派人相同，直接结束
+                if (Objects.equals(roleId, invitee.getRoleId()) && Objects.equals(userId, invitee.getUserId())) {
+                    return;
+                }
+                if (!Objects.equals(roleId, invitee.getRoleId())) {
+                    throw new WorkflowException("转派失败: 相同角色下的用户才可以转派");
+                }
+                if (StringUtils.isEmpty(roleId) || StringUtils.isEmpty(invitee.getRoleId())) {
+                    throw new WorkflowException("转派失败: 角色 ID 不能为空");
+                }
+
+                // 检查是否重复转派
+                TaskReassignRecord taskReassignRecord = taskReassignRecordExecutor.getRecord(tenantId, taskApprove.getId(), roleId, userId, invitee.getRoleId(), invitee.getUserId());
+                if (taskReassignRecord != null) {
+                    throw new WorkflowException("转派失败: 已存在相同的转派记录");
+                }
+
+                // 获取被转派人是否已经是被转派的状态
+                TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+                TaskRoleApproveRecord inviteeTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, invitee.getRoleId(), invitee.getUserId());
+                // 检查转派状态：是否是已转派
+                if (inviteeTaskRoleApproveRecord != null) {
+                    // 同一个审批节点，转派人最终转给的还是转派人的情况：xxx -> yyy -> zzz -> xxx 的情况
+                    if (RoleApproveStatus.REASSIGNED == inviteeTaskRoleApproveRecord.getStatus()) {
+                        throw new WorkflowException("转派失败: 无法转派给已转派的角色用户");
+                    }
+                    // 同一个审批节点，审批人都转给同一个用户的情况：xxx -> yyy; zzz -> yyy；或者 yyy 本身就是改审批实例的一个审批人
+                    throw new WorkflowException("转派失败: 角色审批下，同一个审批节点，无法转派给同一个审批人");
+                }
+
+                // 新增角色审批用户（被委派人）
+                NodeRoleAssignment reassignNodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinition.getId(), invitee.getRoleId(), invitee.getUserId(), null);
+                if (reassignNodeRoleAssignment == null || (
+                        !Objects.equals(invitee.getRoleName(), reassignNodeRoleAssignment.getRoleName()) ||
+                        !Objects.equals(invitee.getRoleDesc(), reassignNodeRoleAssignment.getRoleDesc()) ||
+                        !Objects.equals(invitee.getUserName(), reassignNodeRoleAssignment.getUserName()) ||
+                        !Objects.equals(invitee.getUserDesc(), reassignNodeRoleAssignment.getUserDesc())
+                )) {
+                    reassignNodeRoleAssignment = NodeRoleAssignment.reassignFrom(nodeDefinition, taskApprove, inviter, invitee);
+                    nodeRoleAssignmentExecutor.save(reassignNodeRoleAssignment);
+                }
+
+                // 更改原角色用户审批记录：状态更改为：被委派，并更新备注
+                TaskRoleApproveRecord taskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
+                taskRoleApproveRecord.setStatus(RoleApproveStatus.REASSIGNED);
+                taskRoleApproveRecord.setComment(comment);
+
+                // 新增新角色用户审批记录：状态设置为：进行中，并指向新的审批人 ID
+                TaskRoleApproveRecord reassignTaskRoleApproveRecord = TaskRoleApproveRecord.reassignFrom(taskRoleApproveRecord);
+                reassignTaskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
+                reassignTaskRoleApproveRecord.setNodeRoleAssignmentId(reassignNodeRoleAssignment.getId());
+                taskRoleApproveRecordExecutor.save(reassignTaskRoleApproveRecord);
+
+                // 更改原角色用户审批记录：记录转派角色用户审批记录的 ID
+                taskRoleApproveRecord.setReassignedTaskRoleApproveRecordId(reassignTaskRoleApproveRecord.getId());
+                taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
+
+                // 更改审批人 ID 为被委派人的角色 ID
+                taskApprove.setApproverId(invitee.getRoleId());
+                taskApproveExecutor.updateById(taskApprove);
+
+                // 记录转派记录
+                taskReassignRecord = TaskReassignRecordBuilder.builder().ofRoleIdType(taskApprove, inviter, invitee, comment).build();
+                taskReassignRecordExecutor.save(taskReassignRecord);
+            }
+            // 用户审批
+            else {
+                // 审批人与转派人相同，直接结束
+                if (Objects.equals(userId, invitee.getUserId())) {
+                    return;
+                }
+
+                // 转派校验
+                TaskApprove reassignTaskApprove = taskApproveExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstanceId, invitee.getUserId());
+                if (reassignTaskApprove != null) {
+                    // 同一个审批节点，转派人最终转给的还是转派人的情况：xxx -> yyy -> zzz -> xxx 的情况
+                    if (ApproveStatus.REASSIGNED == reassignTaskApprove.getStatus()) {
+                        throw new WorkflowException("转派失败: 无法转派给已转派的用户");
+                    }
+                    // 同一个审批节点，审批人都转给同一个用户的情况：xxx -> yyy; zzz -> yyy；或者 yyy 本身就是改审批实例的一个审批人
+                    if (ApproveStatus.IN_PROGRESS == reassignTaskApprove.getStatus() || ApproveStatus.SUSPEND == reassignTaskApprove.getStatus()) {
+                        throw new WorkflowException("转派失败: 被转派人正处于审批或等待审批中，无法转派");
+                    }
+                }
+
+                // 新增新用户审批记录：状态设置为：进行中，并指向新的审批人 ID
+                reassignTaskApprove = TaskApprove.reassignFrom(taskApprove);
+                reassignTaskApprove.setStatus(ApproveStatus.IN_PROGRESS);
+                reassignTaskApprove.setApproverId(invitee.getUserId());
+                taskApproveExecutor.save(reassignTaskApprove);
+
+                // 更改审批人 ID 为被委派人 ID
+                taskApprove.setStatus(ApproveStatus.REASSIGNED);
+                taskApprove.setActive(ActiveStatus.INACTIVE);
+                taskApprove.setComment(comment);
+                taskApprove.setReassignedTaskApproveId(reassignTaskApprove.getId());
+                taskApproveExecutor.updateById(taskApprove);
+
+                // 记录转派记录
+                TaskReassignRecord taskReassignRecord = TaskReassignRecordBuilder.builder().ofUserIdType(reassignTaskApprove, inviter, invitee, comment).build();
+                taskReassignRecordExecutor.save(taskReassignRecord);
+            }
+        });
+    }
+
+    /**
+     * 检查流程实例是否已经结束
+     *
+     * @param workflowInstance 流程实例
+     *
+     * @author wangweijun
+     * @since 2024/11/7 17:07
+     */
+    private void checkIfWorkflowInstanceIsFinished(WorkflowInstance workflowInstance) {
+        if (WorkflowStatus.IN_PROGRESS != workflowInstance.getStatus()) {
+            throw new WorkflowException("流程实例已结束: %s", workflowInstance.getStatus().getDesc());
+        }
+    }
+
+    /**
      * 保存流程定义
      *
      * @param tenantId         租户 ID
@@ -1133,11 +1329,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             if (RoleUserApproveType.SEQ == roleUserApproveType) {
                 // 查找当前角色用户审批记录，并修改为：APPROVED
                 TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
-                if (curTaskRoleApproveRecord == null || ApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
+                if (curTaskRoleApproveRecord == null || RoleApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
                     throw new WorkflowException("角色用户审批记录不存在或状态不正确");
                 }
                 curTaskRoleApproveRecord.setComment(comment);
-                curTaskRoleApproveRecord.setStatus(ApproveStatus.APPROVED);
+                curTaskRoleApproveRecord.setStatus(RoleApproveStatus.APPROVED);
                 taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
 
                 // 查找下一个角色用户
@@ -1153,7 +1349,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     // 找到对应的角色审批记录
                     nextTaskRoleApproveRecords.stream().filter(i -> nextNodeRoleAssignment.getId().equals(i.getNodeRoleAssignmentId())).findAny().ifPresent(taskRoleApproveRecord -> {
                         // 将下一个角色用户审批记录设置为 IN_PROGRESS
-                        taskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                        taskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                         taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
                     });
                 });
@@ -1162,11 +1358,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             else if (RoleUserApproveType.ALL == roleUserApproveType) {
                 // 查找当前角色用户审批记录，并修改为：APPROVED
                 TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
-                if (curTaskRoleApproveRecord == null || ApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
+                if (curTaskRoleApproveRecord == null || RoleApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
                     throw new WorkflowException("角色用户审批记录不存在或状态不正确");
                 }
                 curTaskRoleApproveRecord.setComment(comment);
-                curTaskRoleApproveRecord.setStatus(ApproveStatus.APPROVED);
+                curTaskRoleApproveRecord.setStatus(RoleApproveStatus.APPROVED);
                 taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
             }
 
@@ -1177,7 +1373,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             List<TaskRoleApproveRecord> approvedRecords = findApprovedTaskRoleApproveRecords(tenantId, taskInstanceId);
 
             // 获取所有角色审批用户
-            List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinition.getId());
+            List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinition.getId(), NodeRoleAssignmentType.NORMAL);
             // 将角色审批用户按角色分组
             Map<String, List<NodeRoleAssignment>> nodeRoleAssignmentsByRoles = nodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
 
@@ -1226,10 +1422,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     if (RoleUserApproveType.SEQ == roleUserApproveType || RoleUserApproveType.ALL == roleUserApproveType) {
                         List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
                         // 获取所有未审核的审批记录
-                        List<TaskRoleApproveRecord> unApprovedRecords = taskRoleApproveRecords.stream().filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus() || ApproveStatus.SUSPEND == i.getStatus()).toList();
+                        List<TaskRoleApproveRecord> unApprovedRecords = taskRoleApproveRecords.stream().filter(i -> RoleApproveStatus.IN_PROGRESS == i.getStatus() || RoleApproveStatus.SUSPEND == i.getStatus()).toList();
                         // 将所有 IN_PROGRESS 的审批记录设置为 SKIPPED
                         unApprovedRecords.forEach(unApprovedRecord -> {
-                            unApprovedRecord.setStatus(ApproveStatus.SKIPPED);
+                            unApprovedRecord.setStatus(RoleApproveStatus.SKIPPED);
                             taskRoleApproveRecordExecutor.updateById(unApprovedRecord);
                         });
                     }
@@ -1241,17 +1437,17 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 查找当前角色用户审批记录，并修改为：APPROVED
             TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
-            if (curTaskRoleApproveRecord == null || ApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
+            if (curTaskRoleApproveRecord == null || RoleApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
                 throw new WorkflowException("角色用户审批记录不存在或状态不正确");
             }
             curTaskRoleApproveRecord.setComment(comment);
-            curTaskRoleApproveRecord.setStatus(ApproveStatus.APPROVED);
+            curTaskRoleApproveRecord.setStatus(RoleApproveStatus.APPROVED);
             taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
 
             // 当前角色下其他用户修改为：SKIPPED
             List<TaskRoleApproveRecord> nextTaskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndRoleIdAndStatus(tenantId, taskInstanceId, roleId, ApproveStatus.IN_PROGRESS);
             for (TaskRoleApproveRecord nextTaskRoleApproveRecord : nextTaskRoleApproveRecords) {
-                nextTaskRoleApproveRecord.setStatus(ApproveStatus.SKIPPED);
+                nextTaskRoleApproveRecord.setStatus(RoleApproveStatus.SKIPPED);
                 taskRoleApproveRecordExecutor.updateById(nextTaskRoleApproveRecord);
             }
 
@@ -1266,7 +1462,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 NodeRoleAssignment curNodeRoleAssignment = nodeRoleAssignmentExecutor.getById(curTaskRoleApproveRecord.getNodeRoleAssignmentId());
 
                 // 获取所有角色审批用户
-                List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinition.getId());
+                List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinition.getId(), NodeRoleAssignmentType.NORMAL);
                 // 从 nodeRoleAssignments 去除当前的 roleId，然后找到 roleSeq 最小的角色 ID
                 nodeRoleAssignments.stream().filter(i -> !i.getRoleId().equals(roleId))
                         .filter(i -> i.getRoleSeq() > curNodeRoleAssignment.getRoleSeq())
@@ -1276,7 +1472,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             List<TaskRoleApproveRecord> nextRoleTaskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndRoleId(tenantId, taskInstanceId, nextRoleId);
                             // 将下一个角色的用户审批记录设置为：IN_PROGRESS
                             for (TaskRoleApproveRecord nextRoleTaskRoleApproveRecord : nextRoleTaskRoleApproveRecords) {
-                                nextRoleTaskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                                nextRoleTaskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                                 taskRoleApproveRecordExecutor.updateById(nextRoleTaskRoleApproveRecord);
                             }
                         });
@@ -1290,7 +1486,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 获取所有角色审批用户
             approvedRecords.forEach(i -> {
-                if (ApproveStatus.APPROVED == i.getStatus()) {
+                if (RoleApproveStatus.APPROVED == i.getStatus()) {
                     NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getById(i.getNodeRoleAssignmentId());
                     roleApprovedMap.computeIfAbsent(nodeRoleAssignment.getRoleId(), k -> new ArrayList<>()).add(nodeRoleAssignment);
                 }
@@ -1314,11 +1510,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 角色审批类型为 SEQ
             // 查找当前角色用户审批记录，并修改为：APPROVED
             TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
-            if (curTaskRoleApproveRecord == null || ApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
+            if (curTaskRoleApproveRecord == null || RoleApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
                 throw new WorkflowException("角色用户审批记录不存在或状态不正确");
             }
             curTaskRoleApproveRecord.setComment(comment);
-            curTaskRoleApproveRecord.setStatus(ApproveStatus.APPROVED);
+            curTaskRoleApproveRecord.setStatus(RoleApproveStatus.APPROVED);
             taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
 
             // 如果当前角色审批类型为：SEQ
@@ -1330,7 +1526,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 当前角色下所有用户都已经审批完成，此时需要看是否有其他角色待审核
                 if (nodeRoleAssignmentsByRole.size() == approvedTaskRoleApproveRecords.size()) {
                     // 获取所有角色审批用户
-                    List<NodeRoleAssignment> allNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinition.getId());
+                    List<NodeRoleAssignment> allNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinition.getId(), NodeRoleAssignmentType.NORMAL);
                     // 已经完成审核的角色用户审批记录
                     List<TaskRoleApproveRecord> approveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndStatuses(tenantId, taskInstanceId, Arrays.asList(ApproveStatus.APPROVED, ApproveStatus.ABANDONED));
 
@@ -1361,7 +1557,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 获取所有角色审批记录中，审批通过的用户，并按角色进行分组
             List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
             List<TaskRoleApproveRecord> approvedRecords = taskRoleApproveRecords.stream()
-                    .filter(i -> ApproveStatus.APPROVED == i.getStatus() || ApproveStatus.ABANDONED == i.getStatus()).toList();
+                    .filter(i -> RoleApproveStatus.APPROVED == i.getStatus() || RoleApproveStatus.ABANDONED == i.getStatus()).toList();
 
             // 记录已经审核过的角色用户
             Map<String, List<NodeRoleAssignment>> roleApprovedMap = new HashMap<>();
@@ -1376,7 +1572,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             List<NodeRoleAssignment> approvedNodeRoleAssignments = roleApprovedMap.get(roleId);
 
             // 获取所有角色审批用户，并按角色分组
-            List<NodeRoleAssignment> nodeRoleAssignmentsByRole = findNodeRoleAssignmentsByRoleId(tenantId, nodeDefinition.getId(), roleId);
+            List<NodeRoleAssignment> nodeRoleAssignmentsByRole = findNodeRoleAssignmentsByRoleId(tenantId, nodeDefinition.getId(), roleId, NodeRoleAssignmentType.NORMAL);
 
             // 当前角色下所有用户都已经审批通过
             if (Objects.equals(approvedNodeRoleAssignments.size(), nodeRoleAssignmentsByRole.size())) {
@@ -1395,16 +1591,16 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         else if (RoleApproveType.ANY != roleApproveType && RoleUserApproveType.SEQ == roleUserApproveType) {
             // 查找当前角色用户审批记录，并修改为：APPROVED
             TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
-            if (curTaskRoleApproveRecord == null || ApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
+            if (curTaskRoleApproveRecord == null || RoleApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
                 throw new WorkflowException("角色用户审批记录不存在或状态不正确");
             }
             curTaskRoleApproveRecord.setComment(comment);
-            curTaskRoleApproveRecord.setStatus(ApproveStatus.APPROVED);
+            curTaskRoleApproveRecord.setStatus(RoleApproveStatus.APPROVED);
             taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
 
             // 查找下一个角色用户审批记录
             List<NodeRoleAssignment> nextNodeRoleAssignments = new ArrayList<>();
-            List<TaskRoleApproveRecord> nextTaskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndStatus(tenantId, taskInstanceId, ApproveStatus.SUSPEND);
+            List<TaskRoleApproveRecord> nextTaskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndStatus(tenantId, taskInstanceId, RoleApproveStatus.SUSPEND);
             for (TaskRoleApproveRecord nextTaskRoleApproveRecord : nextTaskRoleApproveRecords) {
                 Integer nodeRoleAssignmentId = nextTaskRoleApproveRecord.getNodeRoleAssignmentId();
                 NodeRoleAssignment nextNodeRoleAssignment = nodeRoleAssignmentExecutor.getById(nodeRoleAssignmentId);
@@ -1415,7 +1611,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 找到对应的角色审批记录
                 nextTaskRoleApproveRecords.stream().filter(i -> nextNodeRoleAssignment.getId().equals(i.getNodeRoleAssignmentId())).findAny().ifPresent(taskRoleApproveRecord -> {
                     // 将下一个角色用户审批记录设置为 IN_PROGRESS
-                    taskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                    taskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                     taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
                 });
             });
@@ -1425,7 +1621,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 获取所有角色审批记录中，审批通过的用户，并按角色进行分组
             List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
-            List<TaskRoleApproveRecord> approvedRecords = taskRoleApproveRecords.stream().filter(i -> ApproveStatus.APPROVED == i.getStatus() || ApproveStatus.ABANDONED == i.getStatus()).toList();
+            List<TaskRoleApproveRecord> approvedRecords = taskRoleApproveRecords.stream().filter(i -> RoleApproveStatus.APPROVED == i.getStatus() || RoleApproveStatus.ABANDONED == i.getStatus()).toList();
 
             // 记录已经审核过的角色用户
             Map<String, List<NodeRoleAssignment>> roleApprovedMapByRole = new HashMap<>();
@@ -1440,7 +1636,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             List<NodeRoleAssignment> approvedNodeRoleAssignments = roleApprovedMapByRole.get(roleId);
 
             // 获取所有角色审批用户，并按角色分组
-            List<NodeRoleAssignment> nodeRoleAssignmentsByRole = findNodeRoleAssignmentsByRoleId(tenantId, nodeDefinition.getId(), roleId);
+            List<NodeRoleAssignment> nodeRoleAssignmentsByRole = findNodeRoleAssignmentsByRoleId(tenantId, nodeDefinition.getId(), roleId, NodeRoleAssignmentType.NORMAL);
 
             // 当前角色下所有用户都已经审批通过
             if (Objects.equals(approvedNodeRoleAssignments.size(), nodeRoleAssignmentsByRole.size())) {
@@ -1459,11 +1655,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         else if (RoleApproveType.ANY == roleApproveType && RoleUserApproveType.ANY == roleUserApproveType) {
             // 查找当前角色用户审批记录，并修改为：APPROVED
             TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
-            if (curTaskRoleApproveRecord == null || ApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
+            if (curTaskRoleApproveRecord == null || RoleApproveStatus.IN_PROGRESS != curTaskRoleApproveRecord.getStatus()) {
                 throw new WorkflowException("角色用户审批记录不存在或状态不正确");
             }
             curTaskRoleApproveRecord.setComment(comment);
-            curTaskRoleApproveRecord.setStatus(ApproveStatus.APPROVED);
+            curTaskRoleApproveRecord.setStatus(RoleApproveStatus.APPROVED);
             taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
 
             // 审批人数 +1
@@ -1471,9 +1667,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 获取所有角色审批记录，将剩余的审批记录设置为 SKIPPED
             List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
-            taskRoleApproveRecords.stream().filter(i -> !curTaskRoleApproveRecord.getId().equals(i.getId())).filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus())
+            taskRoleApproveRecords.stream().filter(i -> !curTaskRoleApproveRecord.getId().equals(i.getId())).filter(i -> RoleApproveStatus.IN_PROGRESS == i.getStatus())
                     .forEach(otherTaskRoleApproveRecord -> {
-                        otherTaskRoleApproveRecord.setStatus(ApproveStatus.SKIPPED);
+                        otherTaskRoleApproveRecord.setStatus(RoleApproveStatus.SKIPPED);
                         taskRoleApproveRecordExecutor.updateById(otherTaskRoleApproveRecord);
                     });
 
@@ -1510,25 +1706,26 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
         List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceId(tenantId, taskInstanceId);
         // 放弃也是一种审核通过
-        return taskRoleApproveRecords.stream().filter(i -> ApproveStatus.APPROVED == i.getStatus() || ApproveStatus.ABANDONED == i.getStatus()).toList();
+        return taskRoleApproveRecords.stream().filter(i -> RoleApproveStatus.APPROVED == i.getStatus() || RoleApproveStatus.ABANDONED == i.getStatus()).toList();
     }
 
     /**
      * 根据角色 ID 获取所有角色用户
      *
-     * @param tenantId         租户 ID
-     * @param nodeDefinitionId 节点定义 ID
-     * @param roleId           角色 ID
+     * @param tenantId               租户 ID
+     * @param nodeDefinitionId       节点定义 ID
+     * @param roleId                 角色 ID
+     * @param nodeRoleAssignmentType 角色用户类型
      *
      * @return List<NodeRoleAssignment>
      *
      * @author wangweijun
      * @since 2024/9/19 10:56
      */
-    private List<NodeRoleAssignment> findNodeRoleAssignmentsByRoleId(String tenantId, Integer nodeDefinitionId, String roleId) {
+    private List<NodeRoleAssignment> findNodeRoleAssignmentsByRoleId(String tenantId, Integer nodeDefinitionId, String roleId, NodeRoleAssignmentType nodeRoleAssignmentType) {
         // 获取所有角色审批用户，并按角色分组
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
+        List<NodeRoleAssignment> nodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId, nodeRoleAssignmentType);
         Map<String, List<NodeRoleAssignment>> nodeRoleAssignmentsByRoles = nodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
         return nodeRoleAssignmentsByRoles.get(roleId);
     }
@@ -1547,7 +1744,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     private List<NodeRoleAssignment> findNodeRoleAssignments(String tenantId, Integer nodeDefinitionId) {
         // 获取所有角色审批用户
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        return new ArrayList<>(nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId));
+        return new ArrayList<>(nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId, NodeRoleAssignmentType.NORMAL));
     }
 
     /**
@@ -1747,13 +1944,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         RoleUserApproveType roleUserApproveType = nodeDefinition.getRoleUserApproveType();
 
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
+        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId, null);
         if (nodeRoleAssignment == null) {
             throw new WorkflowException("未查询到相关角色用户，请确认是否审批人是否正确");
         }
 
         // 获取所有的角色审批人
-        List<NodeRoleAssignment> allNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
+        List<NodeRoleAssignment> allNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId, NodeRoleAssignmentType.NORMAL);
         // 按角色 ID 分组
         Map<String, List<NodeRoleAssignment>> nodeRoleAssignmentMap = allNodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
         List<NodeRoleAssignment> nodeRoleAssignmentsByRole = nodeRoleAssignmentMap.get(roleId);
@@ -1787,7 +1984,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 获取当前角色的审批用户
             List<NodeRoleAssignment> nodeRoleAssignments = new ArrayList<>();
             for (TaskRoleApproveRecord roleApproveRecord : taskRoleApproveRecordsByRole) {
-                if (ApproveStatus.APPROVED == roleApproveRecord.getStatus() || ApproveStatus.ABANDONED == roleApproveRecord.getStatus()) {
+                if (RoleApproveStatus.APPROVED == roleApproveRecord.getStatus() || RoleApproveStatus.ABANDONED == roleApproveRecord.getStatus()) {
                     Integer nodeRoleAssignmentId = roleApproveRecord.getNodeRoleAssignmentId();
                     nodeRoleAssignments.add(nodeRoleAssignmentExecutor.getById(nodeRoleAssignmentId));
                 }
@@ -1799,7 +1996,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 找到已经完成审批，且和当前用户一致的记录
             taskRoleApproveRecord = taskRoleApproveRecordsByRole.stream()
-                    .filter(i -> ApproveStatus.APPROVED.equals(i.getStatus()) || ApproveStatus.ABANDONED.equals(i.getStatus()))
+                    .filter(i -> RoleApproveStatus.APPROVED == i.getStatus() || RoleApproveStatus.ABANDONED == i.getStatus())
                     .filter(i -> {
                         Integer nodeRoleAssignmentId = i.getNodeRoleAssignmentId();
                         return nodeRoleAssignmentId.equals(curNodeRoleAssignment.getId());
@@ -1809,7 +2006,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         else {
             // 获取审批状态为审批通过，且创建时间最近的一条记录
             taskRoleApproveRecord = taskRoleApproveRecordsByRole.stream()
-                    .filter(i -> ApproveStatus.APPROVED.equals(i.getStatus()) || ApproveStatus.ABANDONED.equals(i.getStatus()))
+                    .filter(i -> RoleApproveStatus.APPROVED == i.getStatus() || RoleApproveStatus.ABANDONED == i.getStatus())
                     .max(Comparator.comparing(TaskRoleApproveRecord::getUpdatedAt).thenComparing(TaskRoleApproveRecord::getCreatedAt))
                     .orElseThrow(() -> new WorkflowException("未查询到相关审批记录"));
         }
@@ -1831,11 +2028,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 将所有的角色审批记录都设置为：IN_PROGRESS
                 for (TaskRoleApproveRecord approveRecord : allTaskInstanceApproveRecords) {
                     // 记录撤回的审批意见
-                    if (ApproveStatus.APPROVED == approveRecord.getStatus()) {
+                    if (RoleApproveStatus.APPROVED == approveRecord.getStatus()) {
                         approveRecord.setComment(comment);
                     }
                     // 更新为：IN_PROGRESS
-                    approveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                    approveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                     taskRoleApproveRecordExecutor.updateById(approveRecord);
                 }
             }
@@ -1843,7 +2040,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             else if (RoleUserApproveType.ALL == roleUserApproveType) {
                 // 获取当前角色下已经审批的记录
                 List<TaskRoleApproveRecord> approvedRecords = taskRoleApproveRecordsByRole.stream()
-                        .filter(i -> ApproveStatus.APPROVED == i.getStatus() || ApproveStatus.ABANDONED == i.getStatus()).toList();
+                        .filter(i -> RoleApproveStatus.APPROVED == i.getStatus() || RoleApproveStatus.ABANDONED == i.getStatus()).toList();
 
                 // 找到当前的审批记录，并设置为：IN_PROGRESS
                 TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
@@ -1856,8 +2053,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     List<TaskRoleApproveRecord> otherRoleTaskRoleApproveRecords = allTaskInstanceApproveRecords.stream().filter(i -> !i.getTaskApproveId().equals(taskApprove.getId())).toList();
                     for (TaskRoleApproveRecord otherRoleTaskRoleApproveRecord : otherRoleTaskRoleApproveRecords) {
                         // 将状态为 SKIPPED 的记录设置为：IN_PROGRESS
-                        if (ApproveStatus.SKIPPED == otherRoleTaskRoleApproveRecord.getStatus()) {
-                            otherRoleTaskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                        if (RoleApproveStatus.SKIPPED == otherRoleTaskRoleApproveRecord.getStatus()) {
+                            otherRoleTaskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                             taskRoleApproveRecordExecutor.updateById(otherRoleTaskRoleApproveRecord);
                         }
                     }
@@ -1869,7 +2066,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 找到当前的审批记录，并设置为：IN_PROGRESS
                 TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
                 curTaskRoleApproveRecord.setComment(comment);
-                curTaskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                curTaskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                 taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
 
                 // 获取该角色的最后一个角色审批人
@@ -1904,33 +2101,33 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         if (firstApproveRecordOptional.isPresent()) {
                             TaskRoleApproveRecord firstApproveRecord = firstApproveRecordOptional.get();
                             // 第一个审批节点是：SKIPPED，则修改为：IN_PROGRESS，剩下的节点全部设置为：SUSPEND
-                            if (ApproveStatus.SKIPPED == firstApproveRecord.getStatus()) {
-                                firstApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                            if (RoleApproveStatus.SKIPPED == firstApproveRecord.getStatus()) {
+                                firstApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                                 taskRoleApproveRecordExecutor.updateById(firstApproveRecord);
                                 // 剩下的节点全部设置为：SUSPEND
                                 otherTaskRoleApproveRecords.stream().filter(i -> !i.getNodeRoleAssignmentId().equals(firstNodeRoleAssignment.getId())).forEach(i -> {
-                                    i.setStatus(ApproveStatus.SUSPEND);
+                                    i.setStatus(RoleApproveStatus.SUSPEND);
                                     taskRoleApproveRecordExecutor.updateById(i);
                                 });
                             }
                             // 第一个审批节点是：APPROVED，则将下一个 SKIPPED 状态的审批节点设置为：IN_PROGRESS，剩下的设置为：SUSPEND
-                            else if (ApproveStatus.APPROVED == firstApproveRecord.getStatus() && otherNodeRoleAssignments.size() > 1) {
+                            else if (RoleApproveStatus.APPROVED == firstApproveRecord.getStatus() && otherNodeRoleAssignments.size() > 1) {
                                 // 下一个 SKIPPED 状态的审批节点设置为：IN_PROGRESS
-                                Optional<TaskRoleApproveRecord> firstSkippedOptional = otherTaskRoleApproveRecords.stream().filter(i -> ApproveStatus.SKIPPED == i.getStatus()).findFirst();
+                                Optional<TaskRoleApproveRecord> firstSkippedOptional = otherTaskRoleApproveRecords.stream().filter(i -> RoleApproveStatus.SKIPPED == i.getStatus()).findFirst();
                                 if (firstSkippedOptional.isPresent()) {
                                     // 下一个 SKIPPED 状态的审批节点设置为：IN_PROGRESS
                                     TaskRoleApproveRecord firstSkippedApproveRecord = firstSkippedOptional.get();
-                                    firstSkippedApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                                    firstSkippedApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                                     taskRoleApproveRecordExecutor.updateById(firstSkippedApproveRecord);
                                     // 剩下的设置为：SUSPEND
                                     otherTaskRoleApproveRecords.stream()
                                             // 过滤掉第一个 SKIPPED 状态的节点
                                             .filter(i -> !firstSkippedApproveRecord.getId().equals(i.getId()))
                                             // 获取其他所有 SKIPPED 状态的节点
-                                            .filter(i -> ApproveStatus.SKIPPED == i.getStatus())
+                                            .filter(i -> RoleApproveStatus.SKIPPED == i.getStatus())
                                             // 剩下的设置为：SUSPEND
                                             .forEach(i -> {
-                                                i.setStatus(ApproveStatus.SUSPEND);
+                                                i.setStatus(RoleApproveStatus.SUSPEND);
                                                 taskRoleApproveRecordExecutor.updateById(i);
                                             });
                                 }
@@ -1944,18 +2141,18 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     // 获取 userSeq 大于 当前审批人 userSeq 的审批人
                     List<NodeRoleAssignment> others = nodeRoleAssignmentsByRole.stream().filter(i -> i.getUserSeq() > curNodeRoleAssignment.getUserSeq()).toList();
                     // 将其他审批人设置为 SUSPEND
-                    others.forEach(other -> taskRoleApproveRecordsByRole.stream().filter(i -> i.getNodeRoleAssignmentId().equals(other.getId()) && ApproveStatus.SUSPEND != i.getStatus())
+                    others.forEach(other -> taskRoleApproveRecordsByRole.stream().filter(i -> i.getNodeRoleAssignmentId().equals(other.getId()) && RoleApproveStatus.SUSPEND != i.getStatus())
                             .findFirst()
                             .ifPresent(approveRecord -> {
-                                approveRecord.setStatus(ApproveStatus.SUSPEND);
+                                approveRecord.setStatus(RoleApproveStatus.SUSPEND);
                                 taskRoleApproveRecordExecutor.updateById(approveRecord);
                             }));
                 }
 
                 // 将所有 SKIPPED 状态的审批记录修改为：SUSPEND
-                List<TaskRoleApproveRecord> skippedTaskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndStatus(tenantId, taskInstanceId, ApproveStatus.SKIPPED);
+                List<TaskRoleApproveRecord> skippedTaskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndStatus(tenantId, taskInstanceId, RoleApproveStatus.SKIPPED);
                 for (TaskRoleApproveRecord skippedTaskRoleApproveRecord : skippedTaskRoleApproveRecords) {
-                    skippedTaskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                    skippedTaskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                     taskRoleApproveRecordExecutor.updateById(skippedTaskRoleApproveRecord);
                 }
             }
@@ -2003,7 +2200,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 当前角色下，所有的角色审批用户，均设置为：IN_PROGRESS
                 for (TaskRoleApproveRecord approveRecord : taskRoleApproveRecordsByRole) {
                     // 审批状态为：APPROVED 的角色用户设置为：IN_PROGRESS
-                    if (ApproveStatus.APPROVED == approveRecord.getStatus()) {
+                    if (RoleApproveStatus.APPROVED == approveRecord.getStatus()) {
                         approveRecord.convertToApproveStatusInProgress(comment);
                     }
                     // 其他状态为：SKIPPED 的角色用户设置为：IN_PROGRESS
@@ -2039,7 +2236,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
 
                 // 查询该角色下所有已完成审核的审批记录
-                List<TaskRoleApproveRecord> approvedRecords = taskRoleApproveRecordsByRole.stream().filter(i -> ApproveStatus.APPROVED == i.getStatus() || ApproveStatus.ABANDONED == i.getStatus()).toList();
+                List<TaskRoleApproveRecord> approvedRecords = taskRoleApproveRecordsByRole.stream().filter(i -> RoleApproveStatus.APPROVED == i.getStatus() || RoleApproveStatus.ABANDONED == i.getStatus()).toList();
 
                 // 表示此时撤销的是当前角色下最后一个用户，则需要将下一个角色的用户均设置为：SUSPEND
                 if (approvedRecords.size() == nodeRoleAssignmentsByRole.size() - 1) {
@@ -2053,7 +2250,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                                 // 将所有对应的角色审批记录设置为：SUSPEND
                                 if (CollectionUtils.isNotEmpty(nextTaskRoleApproveRecords)) {
                                     for (TaskRoleApproveRecord nextTaskRoleApproveRecord : nextTaskRoleApproveRecords) {
-                                        if (ApproveStatus.APPROVED == nextTaskRoleApproveRecord.getStatus() || ApproveStatus.ABANDONED == nextTaskRoleApproveRecord.getStatus()) {
+                                        if (RoleApproveStatus.APPROVED == nextTaskRoleApproveRecord.getStatus() || RoleApproveStatus.ABANDONED == nextTaskRoleApproveRecord.getStatus()) {
                                             throw new WorkflowException("下个审批流程已经完成审核，无法撤回");
                                         }
                                         nextTaskRoleApproveRecord.convertToApproveStatusSuspended();
@@ -2090,7 +2287,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         .filter(i -> Objects.equals(i.getNodeRoleAssignmentId(), otherNodeRoleAssignment.getId()))
                         .findAny()
                         .ifPresent(otherTaskRoleApproveRecord -> {
-                            otherTaskRoleApproveRecord.setStatus(ApproveStatus.SUSPEND);
+                            otherTaskRoleApproveRecord.setStatus(RoleApproveStatus.SUSPEND);
                             taskRoleApproveRecordExecutor.updateById(otherTaskRoleApproveRecord);
                         });
             }
@@ -2102,10 +2299,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 过滤掉当前的审批记录，并将 IN_PROGRESS 的记录更新为 SUSPEND
                 sameTaskInstanceApproveRecords.stream()
                         .filter(i -> !Objects.equals(i.getTaskApproveId(), taskApprove.getId()))
-                        .filter(i -> ApproveStatus.IN_PROGRESS == i.getStatus())
+                        .filter(i -> RoleApproveStatus.IN_PROGRESS == i.getStatus())
                         .findFirst()
                         .ifPresent(ameTaskInstanceApproveRecord -> {
-                            ameTaskInstanceApproveRecord.setStatus(ApproveStatus.SUSPEND);
+                            ameTaskInstanceApproveRecord.setStatus(RoleApproveStatus.SUSPEND);
                             taskRoleApproveRecordExecutor.updateById(ameTaskInstanceApproveRecord);
                         });
             }
@@ -2226,10 +2423,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 过滤掉当前记录
                 .filter(i -> !i.getId().equals(curTaskRoleApproveRecord.getId()))
                 // 获取 SUSPEND 和 IN_PROGRESS 状态的节点
-                .filter(i -> ApproveStatus.SUSPEND == i.getStatus() || ApproveStatus.IN_PROGRESS == i.getStatus())
+                .filter(i -> RoleApproveStatus.SUSPEND == i.getStatus() || RoleApproveStatus.IN_PROGRESS == i.getStatus())
                 // 设置为 SKIPPED
                 .forEach(taskRoleApproveRecord -> {
-                    taskRoleApproveRecord.setStatus(ApproveStatus.SKIPPED);
+                    taskRoleApproveRecord.setStatus(RoleApproveStatus.SKIPPED);
                     taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
                 });
 
@@ -2355,9 +2552,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
         // 获取所有角色用户
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        List<NodeRoleAssignment> allNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId);
+        List<NodeRoleAssignment> allNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId, NodeRoleAssignmentType.NORMAL);
         // 当前角色用户
-        NodeRoleAssignment curNodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
+        NodeRoleAssignment curNodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId, null);
 
         // 角色审批用户按角色分组
         Map<String, List<NodeRoleAssignment>> roleAssignmentsRoleMap = allNodeRoleAssignments.stream().collect(Collectors.groupingBy(NodeRoleAssignment::getRoleId));
@@ -2376,7 +2573,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 角色用户审批类型为：ALL
             if (RoleUserApproveType.ALL == roleUserApproveType) {
                 // 获取该角色下已经放弃审批的审批记录
-                List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = taskRoleApproveRecordsByRole.stream().filter(i -> ApproveStatus.ABANDONED == i.getStatus()).toList();
+                List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = taskRoleApproveRecordsByRole.stream().filter(i -> RoleApproveStatus.ABANDONED == i.getStatus()).toList();
                 if (abandonedApproveRecordsByRole.size() == nodeRoleAssignmentsByRole.size() - 1) {
                     throw new WorkflowException("最后一个审批人无法放弃审批");
                 }
@@ -2384,7 +2581,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 获取当前的审批记录
                 TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
                 curTaskRoleApproveRecord.setComment(comment);
-                curTaskRoleApproveRecord.setStatus(ApproveStatus.ABANDONED);
+                curTaskRoleApproveRecord.setStatus(RoleApproveStatus.ABANDONED);
                 taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
             }
         }
@@ -2393,7 +2590,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 角色用户审批类型为：ANY
             if (RoleUserApproveType.ANY == roleUserApproveType) {
                 // 获取该角色下已经放弃审批的审批记录
-                List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = taskRoleApproveRecordsByRole.stream().filter(i -> ApproveStatus.ABANDONED == i.getStatus()).toList();
+                List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = taskRoleApproveRecordsByRole.stream().filter(i -> RoleApproveStatus.ABANDONED == i.getStatus()).toList();
                 if (abandonedApproveRecordsByRole.size() == nodeRoleAssignmentsByRole.size() - 1) {
                     throw new WorkflowException("最后一个审批人无法放弃审批");
                 }
@@ -2401,13 +2598,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 获取当前的审批记录
                 TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
                 curTaskRoleApproveRecord.setComment(comment);
-                curTaskRoleApproveRecord.setStatus(ApproveStatus.ABANDONED);
+                curTaskRoleApproveRecord.setStatus(RoleApproveStatus.ABANDONED);
                 taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
             }
             // 角色用户审批类型为：ALL
             else if (RoleUserApproveType.ALL == roleUserApproveType) {
                 // 获取已经放弃审批的审批记录
-                List<TaskRoleApproveRecord> abandonedApproveRecords = allTaskRoleApproveRecords.stream().filter(i -> ApproveStatus.ABANDONED == i.getStatus()).toList();
+                List<TaskRoleApproveRecord> abandonedApproveRecords = allTaskRoleApproveRecords.stream().filter(i -> RoleApproveStatus.ABANDONED == i.getStatus()).toList();
                 if (abandonedApproveRecords.size() == allNodeRoleAssignments.size() - 1) {
                     throw new WorkflowException("最后一个审批人无法放弃审批");
                 }
@@ -2415,7 +2612,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 获取当前的审批记录
                 TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
                 curTaskRoleApproveRecord.setComment(comment);
-                curTaskRoleApproveRecord.setStatus(ApproveStatus.ABANDONED);
+                curTaskRoleApproveRecord.setStatus(RoleApproveStatus.ABANDONED);
                 taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
             }
         }
@@ -2426,7 +2623,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 角色审批类型为：ANY
             if (RoleApproveType.ANY == roleApproveType) {
                 // 获取该角色下已经放弃审批的审批记录
-                List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = taskRoleApproveRecordsByRole.stream().filter(i -> ApproveStatus.ABANDONED == i.getStatus()).toList();
+                List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = taskRoleApproveRecordsByRole.stream().filter(i -> RoleApproveStatus.ABANDONED == i.getStatus()).toList();
                 if (abandonedApproveRecordsByRole.size() == nodeRoleAssignmentsByRole.size() - 1) {
                     throw new WorkflowException("最后一个审批人无法放弃审批");
                 }
@@ -2435,7 +2632,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 获取当前的审批记录
             TaskRoleApproveRecord curTaskRoleApproveRecord = taskRoleApproveRecordExecutor.getByTaskInstanceIdAndRoleIdAndUserId(tenantId, taskInstanceId, roleId, userId);
             curTaskRoleApproveRecord.setComment(comment);
-            curTaskRoleApproveRecord.setStatus(ApproveStatus.ABANDONED);
+            curTaskRoleApproveRecord.setStatus(RoleApproveStatus.ABANDONED);
             taskRoleApproveRecordExecutor.updateById(curTaskRoleApproveRecord);
 
             // 查询 userSeq 大于当前角色用户的角色用户
@@ -2443,9 +2640,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     .filter(i -> i.getUserSeq() > curNodeRoleAssignment.getUserSeq()).min(Comparator.comparingInt(NodeRoleAssignment::getUserSeq)).orElse(null);
             // 将最近的一个 SUSPEND 的审批记录设置为：IN_PROGRESS
             if (nodeRoleAssignment != null) {
-                taskRoleApproveRecordsByRole.stream().filter(i -> i.getId().equals(nodeRoleAssignment.getId())).filter(i -> ApproveStatus.SUSPEND == i.getStatus())
+                taskRoleApproveRecordsByRole.stream().filter(i -> i.getId().equals(nodeRoleAssignment.getId())).filter(i -> RoleApproveStatus.SUSPEND == i.getStatus())
                         .findFirst().ifPresent(taskRoleApproveRecord -> {
-                            taskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                            taskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                             taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
                         });
             }
@@ -2475,7 +2672,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     if (nextNodeRoleAssignment != null) {
                         allTaskRoleApproveRecords.stream().filter(i -> i.getNodeRoleAssignmentId().equals(nextNodeRoleAssignment.getId())).findFirst().
                                 ifPresent(otherTaskRoleApproveRecord -> {
-                                    otherTaskRoleApproveRecord.setStatus(ApproveStatus.IN_PROGRESS);
+                                    otherTaskRoleApproveRecord.setStatus(RoleApproveStatus.IN_PROGRESS);
                                     taskRoleApproveRecordExecutor.updateById(otherTaskRoleApproveRecord);
                                 });
                     }
@@ -2487,9 +2684,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 获取当前任务下所有角色的审批记录
         List<TaskRoleApproveRecord> taskRoleApproveRecordByRole = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndRoleId(tenantId, taskInstanceId, roleId);
         // 同角色下已经通过审批的用户
-        List<TaskRoleApproveRecord> approvedApproveRecordsByRole = taskRoleApproveRecordByRole.stream().filter(i -> ApproveStatus.ABANDONED == i.getStatus() || ApproveStatus.APPROVED == i.getStatus()).toList();
+        List<TaskRoleApproveRecord> approvedApproveRecordsByRole = taskRoleApproveRecordByRole.stream().filter(i -> RoleApproveStatus.ABANDONED == i.getStatus() || RoleApproveStatus.APPROVED == i.getStatus()).toList();
         // 同角色下全部放弃审批的用户
-        List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = approvedApproveRecordsByRole.stream().filter(i -> ApproveStatus.ABANDONED == i.getStatus()).toList();
+        List<TaskRoleApproveRecord> abandonedApproveRecordsByRole = approvedApproveRecordsByRole.stream().filter(i -> RoleApproveStatus.ABANDONED == i.getStatus()).toList();
 
         // 角色审批类型为：ALL 或 SEQ，角色用户审批类型为：ANY，则不增加审批人数，同时判断是会否是相同角色下，最后一个审批人
         if (RoleApproveType.ANY != roleApproveType && RoleUserApproveType.ANY == roleUserApproveType) {
@@ -2535,9 +2732,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 查看流程状态
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
-        if (WorkflowStatus.IN_PROGRESS != workflowInstance.getStatus()) {
-            throw new WorkflowException("流程实例已结束: %s", workflowInstance.getStatus().getDesc());
-        }
+        // 检查流程实例是否已经结束
+        checkIfWorkflowInstanceIsFinished(workflowInstance);
 
         // 获取该流程下所有的审批人
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
@@ -2560,8 +2756,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
                 List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
                 taskRoleApproveRecords.forEach(taskRoleApproveRecord -> {
-                    if (ApproveStatus.IN_PROGRESS == taskRoleApproveRecord.getStatus() || ApproveStatus.SUSPEND == taskRoleApproveRecord.getStatus()) {
-                        taskRoleApproveRecord.convertToApproveStatusInterrupted();
+                    if (RoleApproveStatus.IN_PROGRESS == taskRoleApproveRecord.getStatus() || RoleApproveStatus.SUSPEND == taskRoleApproveRecord.getStatus()) {
+                        taskRoleApproveRecord.convertToApproveStatusSkipped();
                         taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
                     }
                 });
@@ -2612,9 +2808,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 查看流程状态
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
-        if (WorkflowStatus.IN_PROGRESS != workflowInstance.getStatus()) {
-            throw new WorkflowException("流程实例已结束: %s", workflowInstance.getStatus().getDesc());
-        }
+        // 检查流程实例是否已经结束
+        checkIfWorkflowInstanceIsFinished(workflowInstance);
 
         // 获取该流程下所有的审批人
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
@@ -2631,7 +2826,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
                 List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
                 taskRoleApproveRecords.forEach(taskRoleApproveRecord -> {
-                    if (ApproveStatus.IN_PROGRESS == taskRoleApproveRecord.getStatus() || ApproveStatus.SUSPEND == taskRoleApproveRecord.getStatus()) {
+                    if (RoleApproveStatus.IN_PROGRESS == taskRoleApproveRecord.getStatus() || RoleApproveStatus.SUSPEND == taskRoleApproveRecord.getStatus()) {
                         taskRoleApproveRecord.convertToApproveStatusInterrupted(comment);
                         taskRoleApproveRecordExecutor.updateById(taskRoleApproveRecord);
                     }
@@ -2668,7 +2863,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
         // 记录流程日志（审批中断）
         recordLogs(tenantId, workflowInstanceId, null, endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_INTERRUPTED);
-
     }
 
     /**
@@ -3007,41 +3201,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
-     * 保存角色审批记录
-     *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param nodeDefinitionId   节点定义 ID
-     * @param taskInstanceId     任务实例 ID
-     * @param taskApproveId      审批实例 ID
-     * @param roleId             角色 ID
-     * @param userId             用户 ID
-     * @param comment            审批意见
-     * @param approveStatus      审批状态
-     *
-     * @author wangweijun
-     * @since 2024/9/14 16:24
-     */
-    private TaskRoleApproveRecord saveTaskRoleApproveRecord(String tenantId, Integer workflowInstanceId, Integer nodeDefinitionId, Integer taskInstanceId, Integer taskApproveId, String roleId, String userId, String comment, ApproveStatus approveStatus) {
-        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
-        if (nodeRoleAssignment == null) {
-            throw new WorkflowException("角色审批人未定义");
-        }
-        TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
-        TaskRoleApproveRecord taskRoleApproveRecord = TaskRoleApproveRecordBuilder.builder()
-                .tenantId(tenantId)
-                .workflowInstanceId(workflowInstanceId)
-                .taskInstanceId(taskInstanceId)
-                .taskApproveId(taskApproveId)
-                .nodeRoleAssignmentId(nodeRoleAssignment.getId())
-                .comment(comment)
-                .status(approveStatus)
-                .build();
-        return taskRoleApproveRecordExecutor.save(taskRoleApproveRecord);
-    }
-
-    /**
      * 根据租户 ID 和 流程定义 Key 获取流程定义
      *
      * @param tenantId              租户 ID
@@ -3054,22 +3213,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     private WorkflowDefinition getWorkflowDefinition(String tenantId, String workflowDefinitionKey) {
         WorkflowDefinitionExecutor definitionExecutor = workflowDefinitionExecutorBuilder.tenantId(tenantId).key(workflowDefinitionKey).build();
-        return definitionExecutor.getByTenantAndKey();
-    }
-
-    /**
-     * 根据租户 ID 和 流程定义 Key 获取流程定义
-     *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 Key
-     *
-     * @return WorkflowDefinition
-     *
-     * @author wangweijun
-     * @since 2024/6/24 11:24
-     */
-    private WorkflowDefinition getWorkflowDefinition(String tenantId, Integer workflowDefinitionId) {
-        WorkflowDefinitionExecutor definitionExecutor = workflowDefinitionExecutorBuilder.tenantId(tenantId).id(workflowDefinitionId).build();
         return definitionExecutor.getByTenantAndKey();
     }
 
@@ -3182,21 +3325,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
         List<NodeAssignment> nodeAssignments = nodeAssignmentExecutor.findByWorkflowInstanceId(tenantId, workflowInstanceId);
 
-        // 节点定义与节点审批人的对应关系
-        Map<NodeDefinition, NodeAssignment> nodeDefAndNodeAssignmentMap = new HashMap<>();
-
         // 节点定义动态节点审批人的对应关系
         TaskDynamicAssignmentExecutor taskDynamicAssignmentExecutor = taskDynamicAssignmentExecutorBuilder.build();
-        Map<NodeDefinition, List<TaskDynamicAssignment>> nodeDefAndTaskDynamicAssignmentMap = new HashMap<>();
+        Map<NodeDefinition, List<TaskDynamicAssignment>> nodeDefAndTaskDynamicAssignmentMap = new LinkedHashMap<>();
 
         List<Pair<NodeDefinition, TaskInstance>> nodeDefAndTasks = new ArrayList<>();
         for (NodeDefinition nodeDefinition : nodeDefinitions) {
             TaskInstance taskInstance = taskInstanceExecutor.getByWorkflowInstanceIdAndNodeDefinitionId(tenantId, workflowInstanceId, nodeDefinition.getId());
             nodeDefAndTasks.add(Pair.of(nodeDefinition, taskInstance));
-
-            // 封装：节点定义与节点审批人的对应关系
-            Optional<NodeAssignment> nodeAssignmentOptional = nodeAssignments.stream().filter(nodeAssignment -> nodeDefinition.getId().equals(nodeAssignment.getNodeDefinitionId())).findFirst();
-            nodeAssignmentOptional.ifPresent(assignment -> nodeDefAndNodeAssignmentMap.put(nodeDefinition, assignment));
 
             // 封装：节点定义动态节点审批人的对应关系
             List<TaskDynamicAssignment> taskDynamicAssignments = new ArrayList<>();
@@ -3211,12 +3347,20 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, workflowInstanceId);
 
 
-        // 审批记录与角色审批记录对应表
+        // 用户审批情况：审批记录与节点审批人的对应关系
+        Map<TaskApprove, NodeAssignment> taskApproveAndNodeAssignmentMap = new LinkedHashMap<>();
+
+        // 角色审批情况：审批记录与角色审批记录对应表
         TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
-        Map<TaskApprove, List<TaskRoleApproveRecord>> taskApproveAndRoleApproveRecordsMap = new HashMap<>();
+        Map<TaskApprove, List<TaskRoleApproveRecord>> taskApproveAndRoleApproveRecordsMap = new LinkedHashMap<>();
+
         // 角色审批记录与角色用户对应表
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
-        Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap = new HashMap<>();
+        Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap = new LinkedHashMap<>();
+
+        // 节点审批人与委派用户关系
+        TaskReassignRecordExecutor taskReassignRecordExecutor = taskReassignRecordExecutorBuilder.build();
+        Map<TaskApprove, TaskReassignRecord> taskApproveAndTaskReassignMap = new LinkedHashMap<>();
 
         for (TaskApprove taskApprove : taskApproves) {
             Integer taskInstanceId = taskApprove.getTaskInstanceId();
@@ -3224,6 +3368,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
             NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(nodeDefinitionId);
             List<TaskRoleApproveRecord> taskRoleApproveRecords = null;
+            // 角色审批
             if (nodeDefinition.isRoleApprove()) {
                 taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTaskInstanceIdAndRoleId(tenantId, taskInstanceId, taskApprove.getApproverId());
                 taskRoleApproveRecords.forEach(taskRoleApproveRecord -> {
@@ -3231,13 +3376,28 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     taskRoleRecordAndNodeRoleAssignmentMap.put(taskRoleApproveRecord, nodeRoleAssignment);
                 });
             }
+            NodeAssignment nodeAssignment = nodeAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, taskApprove.getApproverId());
+            taskApproveAndNodeAssignmentMap.put(taskApprove, nodeAssignment);
             taskApproveAndRoleApproveRecordsMap.put(taskApprove, taskRoleApproveRecords);
+
+            // 表示没有找到审批人节点，即发生了委派审批
+            if (nodeAssignment == null) {
+                TaskReassignRecord latestTaskReassignRecord = taskReassignRecordExecutor.getByLatestTaskApproveId(tenantId, taskApprove.getId());
+                if (latestTaskReassignRecord != null) {
+                    taskApproveAndTaskReassignMap.put(taskApprove, latestTaskReassignRecord);
+                }
+            }
         }
 
-        // 返回 WorkflowInstanceApproveRecords
-        return WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves,
-                nodeDefAndNodeAssignmentMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeDefAndTaskDynamicAssignmentMap,
+        // 构建 WorkflowInstanceApproveRecords
+        workflowInstanceApproveRecords = WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves,
+                taskApproveAndNodeAssignmentMap, taskApproveAndTaskReassignMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeDefAndTaskDynamicAssignmentMap,
                 nodeAssignments, curRoleIds, curUserId);
+        if (workflowInstance.isFinished() && workflowInstance.getApproveRecords() == null) {
+            workflowInstance.setApproveRecords(workflowInstanceApproveRecords);
+            workflowInstanceExecutor.updateById(workflowInstance);
+        }
+        return workflowInstanceApproveRecords;
     }
 
     /**
@@ -3269,14 +3429,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowInstanceId) {
-        WorkflowInstance workflowInstance = getWorkflowInstanceById(tenantId, workflowInstanceId);
+        // 流程实例
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
         if (workflowInstance == null) {
-            throw new WorkflowException("流程定义不存在");
+            WorkflowException.throwWorkflowInstanceNotFoundException();
         }
         if (workflowInstance.getFlowSchema() != null) {
             return workflowInstance.getFlowSchema();
         }
-        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowInstance.getWorkflowDefinitionId());
+        WorkflowDefinitionFlowSchema flowSchema = this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowInstance.getWorkflowDefinitionId());
+        if (workflowInstance.isFinished() && workflowInstance.getFlowSchema() == null) {
+            workflowInstance.setFlowSchema(flowSchema);
+            workflowInstanceExecutor.updateById(workflowInstance);
+        }
+        return flowSchema;
     }
 
     /**

@@ -117,6 +117,21 @@ public interface RuntimeService {
     void approve(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
+     * 审批-转派
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
+     * @param invitee        被转派人
+     * @param comment        转派意见
+     *
+     * @author wangweijun
+     * @since 2024/11/7 15:15
+     */
+    void reassign(String tenantId, Integer taskInstanceId, String roleId, String userId, Invitee invitee, String comment);
+
+    /**
      * 审批-撤销
      *
      * @param tenantId       租户 ID

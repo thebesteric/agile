@@ -63,6 +63,17 @@ public class WorkflowInstance extends BaseEntity {
     @EntityColumn(name = "approve_records", type = EntityColumn.Type.JSON, comment = "流程实例审批记录")
     private WorkflowInstanceApproveRecords approveRecords;
 
+    /**
+     * 流程是否已经完成
+     *
+     * @return boolean
+     * @author wangweijun
+     * @since 2024/11/7 19:09
+     */
+    public boolean isFinished() {
+        return WorkflowStatus.IN_PROGRESS != this.status;
+    }
+
     public static WorkflowInstance of(ResultSet rs) throws SQLException {
         WorkflowInstance workflowInstance = new WorkflowInstance();
         workflowInstance.setTenantId(rs.getString("tenant_id"));

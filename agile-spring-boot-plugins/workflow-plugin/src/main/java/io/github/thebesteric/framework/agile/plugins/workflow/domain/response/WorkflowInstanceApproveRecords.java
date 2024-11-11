@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.BusinessInfo;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
@@ -11,10 +11,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 流程实例审批记录
@@ -42,7 +39,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
      * @param workflowInstance                       流程实例
      * @param nodeDefAndTasks                        节点定义与流程实例对应关系
      * @param taskApproves                           审批任务
-     * @param nodeDefAndNodeAssignmentMap            节点定义与节点审批人的对应关系
+     * @param taskApproveAndNodeAssignmentMap        审批任务与节点审批人的对应关系
+     * @param taskApproveAndTaskReassignRecordMap    审批任务与委派人的对应关系
      * @param taskApproveAndRoleApproveRecordsMap    审批任务与角色审批记录对应关系
      * @param taskRoleRecordAndNodeRoleAssignmentMap 角色审批记录与角色用户对应关系
      * @param nodeDefAndDynamicNodeAssignmentMap     节点定义动态节点审批人的对应关系
@@ -58,7 +56,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
     public static WorkflowInstanceApproveRecords of(WorkflowDefinition workflowDefinition, WorkflowInstance workflowInstance,
                                                     List<Pair<NodeDefinition, TaskInstance>> nodeDefAndTasks,
                                                     List<TaskApprove> taskApproves,
-                                                    Map<NodeDefinition, NodeAssignment> nodeDefAndNodeAssignmentMap,
+                                                    Map<TaskApprove, NodeAssignment> taskApproveAndNodeAssignmentMap,
+                                                    Map<TaskApprove, TaskReassignRecord> taskApproveAndTaskReassignRecordMap,
                                                     Map<TaskApprove, List<TaskRoleApproveRecord>> taskApproveAndRoleApproveRecordsMap,
                                                     Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
                                                     Map<NodeDefinition, List<TaskDynamicAssignment>> nodeDefAndDynamicNodeAssignmentMap,
@@ -87,10 +86,14 @@ public class WorkflowInstanceApproveRecords implements Serializable {
                 List<TaskApprove> currTaskApproves = taskApproves.stream().filter(approve -> taskInstance.getId().equals(approve.getTaskInstanceId())).toList();
                 if (!currTaskApproves.isEmpty()) {
                     List<TaskApproveResponse> taskApproveResponses = currTaskApproves.stream().map(taskApprove -> {
-                        NodeAssignment nodeAssignment = nodeDefAndNodeAssignmentMap.get(nodeDefinition);
-                        List<TaskRoleApproveRecord> taskRoleApproveRecords = taskApproveAndRoleApproveRecordsMap.get(taskApprove);
-                        return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleIds, curUserId);
-                    }).toList();
+                                NodeAssignment nodeAssignment = taskApproveAndNodeAssignmentMap.get(taskApprove);
+                                TaskReassignRecord taskReassignRecord = taskApproveAndTaskReassignRecordMap.get(taskApprove);
+                                List<TaskRoleApproveRecord> taskRoleApproveRecords = taskApproveAndRoleApproveRecordsMap.get(taskApprove);
+                                return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskReassignRecord, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleIds, curUserId);
+                            })
+                            .sorted(Comparator.comparing(TaskApproveResponse::getApproverSeq, Comparator.nullsLast(Comparator.naturalOrder()))
+                                    .thenComparing(TaskApproveResponse::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                            .toList();
                     // 封装任务实例
                     taskInstanceResponse = TaskInstanceResponse.of(taskInstance, taskApproveResponses);
                 }
@@ -137,8 +140,10 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 流程状态 */
         private Map<String, String> status;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
         public static WorkflowInstanceResponse of(WorkflowInstance workflowInstance) {
@@ -189,8 +194,10 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 发布状态 */
         private Map<String, String> publish;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
         public static WorkflowDefinitionResponse of(WorkflowDefinition workflowDefinition) {
@@ -244,8 +251,10 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 动态审批人 */
         private List<TaskDynamicAssignmentResponse> taskDynamicAssignmentsResponse;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
         public static NodeDefinitionResponse of(NodeDefinition nodeDefinition, TaskInstanceResponse taskInstanceResponse,
@@ -287,8 +296,10 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 审批顺序 */
         private Integer approverSeq;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
         public static NodeAssignmentResponse of(NodeAssignment nodeAssignment) {
@@ -324,8 +335,10 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 审批顺序 */
         private Integer approverSeq;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
         public static TaskDynamicAssignmentResponse of(TaskDynamicAssignment taskDynamicAssignment) {
@@ -359,11 +372,19 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 审批节点 */
         private List<TaskApproveResponse> taskApproveResponses;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
         public static TaskInstanceResponse of(TaskInstance taskInstance, List<TaskApproveResponse> taskApproveResponses) {
+            // taskApproveResponses 先按 approverSeq 排序，再按 createdAt 排序
+            taskApproveResponses = new ArrayList<>(taskApproveResponses);
+            taskApproveResponses.sort(
+                    Comparator.comparing(TaskApproveResponse::getApproverSeq, Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(TaskApproveResponse::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+            );
             TaskInstanceResponse response = new TaskInstanceResponse();
             response.id = taskInstance.getId();
             response.approvedCount = taskInstance.getApprovedCount();
@@ -381,14 +402,24 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = 7710466011285696446L;
 
+        /** 审批记录 ID */
+        private Integer taskApproveId;
         /** 审核人 ID（根据 roleApprove 来对应 NodeAssignment 或 NodeRoleAssignment 中的 ID） */
         private String userId;
-        /** 审批记录 ID */
+        /** 审批人 ID */
         private String approverId;
+        /** 审批人姓名 */
+        private String approverName;
+        /** 审批人顺序 */
+        private Integer approverSeq;
+        /** 审批人备注 */
+        private String approverDesc;
         /** 审核意见 */
         private String comment;
         /** 审核结果 */
         private Map<String, String> approveStatus;
+        /** 被委派的任务实例审批记录 ID */
+        private Integer reassignedTaskApproveId;
         /** 是否时角色审批 */
         private boolean roleApprove;
         /** 角色审批人列表 */
@@ -396,38 +427,57 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 是否为当前用户 */
         private boolean isSelf;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间（即审批时间） */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
-        public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment,
+        public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment, TaskReassignRecord taskReassignRecord,
                                              List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
                                              List<String> curRoleIds, String curUserId) {
             TaskApproveResponse response = new TaskApproveResponse();
-            if (nodeDefinition.isUserApprove()) {
-                response.userId = nodeAssignment.getId().toString();
-            } else {
-                response.userId = taskApprove.getApproverId();
-            }
+            response.taskApproveId = taskApprove.getId();
             response.approverId = taskApprove.getApproverId();
+            if (nodeAssignment != null) {
+                // 用户审批（取的是用户定义表 ID），角色审批（取的是角色 ID）
+                response.userId = nodeDefinition.isUserApprove() ? nodeAssignment.getId().toString() : taskApprove.getApproverId();
+                response.approverName = nodeAssignment.getApproverName();
+                response.approverSeq = nodeAssignment.getApproverSeq();
+                response.approverDesc = nodeAssignment.getApproverDesc();
+            }
+
+            // 表示是用户级别的审批委派
+            if (taskReassignRecord != null && nodeDefinition.isUserApprove()) {
+                response.userId = taskReassignRecord.getId().toString();
+                response.approverName = taskReassignRecord.getToUserName();
+                response.approverSeq = taskReassignRecord.getToUserSeq();
+                response.approverDesc = taskReassignRecord.getToUserDesc();
+            }
+
             response.comment = taskApprove.getComment();
             response.approveStatus = taskApprove.getStatus().toMap();
+            response.reassignedTaskApproveId = taskApprove.getReassignedTaskApproveId();
             response.createdAt = taskApprove.getCreatedAt();
             response.updatedAt = taskApprove.getUpdatedAt();
             response.isSelf = nodeDefinition.isUserApprove() && curUserId != null && curUserId.equals(taskApprove.getApproverId());
             response.setRoleApprove(nodeDefinition.isRoleApprove());
             if (taskRoleApproveRecords != null) {
-                response.taskRoleApproveRecordResponses = taskRoleApproveRecords.stream().map(taskRoleApproveRecord -> {
-                    NodeRoleAssignment nodeRoleAssignment = taskRoleRecordAndNodeRoleAssignmentMap.get(taskRoleApproveRecord);
-                    return TaskRoleApproveRecordResponse.of(taskRoleApproveRecord, nodeRoleAssignment, curRoleIds, curUserId);
-                }).toList();
+                response.taskRoleApproveRecordResponses = taskRoleApproveRecords.stream()
+                        .map(taskRoleApproveRecord -> {
+                            NodeRoleAssignment nodeRoleAssignment = taskRoleRecordAndNodeRoleAssignmentMap.get(taskRoleApproveRecord);
+                            return TaskRoleApproveRecordResponse.of(taskRoleApproveRecord, nodeRoleAssignment, curRoleIds, curUserId);
+                        })
+                        .sorted(Comparator.comparing(TaskRoleApproveRecordResponse::getRoleSeq, Comparator.nullsLast(Comparator.naturalOrder()))
+                                .thenComparing(TaskRoleApproveRecordResponse::getUserSeq, Comparator.nullsLast(Comparator.naturalOrder())))
+                        .toList();
             }
             return response;
         }
     }
 
     @Data
-    public static class TaskRoleApproveRecordResponse implements Serializable{
+    public static class TaskRoleApproveRecordResponse implements Serializable {
         @Serial
         private static final long serialVersionUID = 332412407655337100L;
 
@@ -454,12 +504,16 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         /** 审核意见 */
         private String comment;
         /** 审核结果 */
-        private ApproveStatus approveStatus;
+        private Map<String, String> roleApproveStatus;
+        /** 被委派的角色任务实例审批记录 ID */
+        private Integer reassignedTaskRoleApproveRecordId;
         /** 是否为当前用户 */
         private boolean isSelf;
         /** 创建时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date createdAt;
         /** 修改时间 */
+        @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
         public static TaskRoleApproveRecordResponse of(TaskRoleApproveRecord taskRoleApproveRecord, NodeRoleAssignment nodeRoleAssignment, List<String> curRoleIds, String curUserId) {
@@ -475,7 +529,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.userSeq = nodeRoleAssignment.getUserSeq();
             response.userDesc = nodeRoleAssignment.getUserDesc();
             response.comment = taskRoleApproveRecord.getComment();
-            response.approveStatus = taskRoleApproveRecord.getStatus();
+            response.roleApproveStatus = taskRoleApproveRecord.getStatus().toMap();
+            response.reassignedTaskRoleApproveRecordId = taskRoleApproveRecord.getReassignedTaskRoleApproveRecordId();
             response.createdAt = taskRoleApproveRecord.getCreatedAt();
             response.updatedAt = taskRoleApproveRecord.getUpdatedAt();
             response.isSelf = curUserId != null && curUserId.equals(nodeRoleAssignment.getUserId()) && curRoleIds != null && curRoleIds.contains(nodeRoleAssignment.getRoleId());

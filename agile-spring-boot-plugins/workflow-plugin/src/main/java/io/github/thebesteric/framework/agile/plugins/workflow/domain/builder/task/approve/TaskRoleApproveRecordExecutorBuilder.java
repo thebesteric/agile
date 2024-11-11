@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve;
 
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.RoleApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskRoleApproveRecord;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -44,8 +44,8 @@ public class TaskRoleApproveRecordExecutorBuilder extends AbstractExecutorBuilde
         return this;
     }
 
-    public TaskRoleApproveRecordExecutorBuilder status(ApproveStatus approveStatus) {
-        this.taskRoleApproveRecordExecutor.getTaskRoleApproveRecord().setStatus(approveStatus);
+    public TaskRoleApproveRecordExecutorBuilder status(RoleApproveStatus roleApproveStatus) {
+        this.taskRoleApproveRecordExecutor.getTaskRoleApproveRecord().setStatus(roleApproveStatus);
         return this;
     }
 

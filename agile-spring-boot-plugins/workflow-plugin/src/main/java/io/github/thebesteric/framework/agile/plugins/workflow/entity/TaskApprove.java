@@ -2,15 +2,13 @@ package io.github.thebesteric.framework.agile.plugins.workflow.entity;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproverIdType;
-import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.springframework.beans.BeanUtils;
 
 import java.io.Serial;
 import java.sql.ResultSet;
@@ -51,11 +49,30 @@ public class TaskApprove extends BaseEntity {
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批状态")
     private ApproveStatus status = ApproveStatus.IN_PROGRESS;
 
+    @EntityColumn(name = "reassigned_task_approve_id", comment = "被委派的任务实例审批记录 ID")
+    private Integer reassignedTaskApproveId;
+
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "活动状态")
     private ActiveStatus active = ActiveStatus.ACTIVE;
 
     @EntityColumn(length = 255, comment = "审批意见")
     private String comment;
+
+
+    /**
+     * 创建委派记录
+     *
+     * @param from 被委派的审批记录
+     *
+     * @author wangweijun
+     * @since 2024/11/11 16:49
+     */
+    public static TaskApprove reassignFrom(TaskApprove from) {
+        TaskApprove reassignTo = new TaskApprove();
+        BeanUtils.copyProperties(from, reassignTo, "id", "approverId", "status", "comment", "createdAt", "updatedAt", "createdBy", "updatedBy", "version");
+        reassignTo.setStatus(ApproveStatus.IN_PROGRESS);
+        return reassignTo;
+    }
 
     /**
      * 是否未设置指定审批人
@@ -164,6 +181,11 @@ public class TaskApprove extends BaseEntity {
         }
         taskApprove.setApproverIdType(ApproverIdType.of(rs.getInt("approver_id_type")));
         taskApprove.setStatus(ApproveStatus.of(rs.getInt("status")));
+        // 解决 rs.getInt("xxx") null 值会返回 0 的问题
+        Object reassignedTaskApproveIdObject = rs.getObject("reassigned_task_approve_id");
+        if (reassignedTaskApproveIdObject != null) {
+            taskApprove.setReassignedTaskApproveId((Integer) reassignedTaskApproveIdObject);
+        }
         taskApprove.setActive(ActiveStatus.of(rs.getInt("active")));
         taskApprove.setComment(rs.getString("comment"));
         return of(taskApprove, rs);

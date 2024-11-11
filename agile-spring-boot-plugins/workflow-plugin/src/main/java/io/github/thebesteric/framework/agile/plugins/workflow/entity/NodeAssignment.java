@@ -7,6 +7,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEn
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serial;
 import java.sql.ResultSet;
@@ -42,10 +44,10 @@ public class NodeAssignment extends BaseEntity {
     @EntityColumn(name = "approver_seq", type = EntityColumn.Type.SMALL_INT, comment = "审批顺序")
     private Integer approverSeq;
 
-    @EntityColumn(name = "approver_desc", comment = "审批人名称")
+    @EntityColumn(name = "approver_desc", comment = "审批人描述")
     private String approverDesc;
 
-    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批人 ID 类型")
+    @EntityColumn(name = "approver_id_type", type = EntityColumn.Type.TINY_INT, nullable = false, comment = "审批人 ID 类型")
     private ApproverIdType approverIdType = ApproverIdType.USER;
 
     public static NodeAssignment of(ResultSet rs) throws SQLException {
@@ -62,5 +64,18 @@ public class NodeAssignment extends BaseEntity {
         }
         nodeAssignment.setApproverIdType(ApproverIdType.of(rs.getInt("approver_id_type")));
         return of(nodeAssignment, rs);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NodeAssignment that = (NodeAssignment) o;
+        return new EqualsBuilder().appendSuper(super.equals(o)).append(id, that.id).isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).appendSuper(super.hashCode()).append(id).toHashCode();
     }
 }

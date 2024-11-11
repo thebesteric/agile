@@ -10,14 +10,14 @@ import lombok.Getter;
 import java.util.Arrays;
 
 /**
- * 审批状态
+ * 角色审批状态
  *
  * @author wangweijun
  * @version v1.0
- * @since 2024-06-11 21:28:54
+ * @since 2024-11-08 14:30:16
  */
 @Getter
-public enum ApproveStatus implements BaseEnum {
+public enum RoleApproveStatus implements BaseEnum {
     SUSPEND(0, "挂起（等待进入 IN_PROGRESS 状态，只有顺序审批有这个状态）"),
     IN_PROGRESS(1, "进行中"),
     APPROVED(2, "已同意"),
@@ -32,13 +32,13 @@ public enum ApproveStatus implements BaseEnum {
     private final Integer code;
     private final String desc;
 
-    ApproveStatus(Integer code, String desc) {
+    RoleApproveStatus(Integer code, String desc) {
         this.code = code;
         this.desc = desc;
     }
 
     @JsonCreator
-    public static ApproveStatus of(Integer code) {
-        return Arrays.stream(ApproveStatus.values()).filter(i -> ObjectUtil.equals(i.getCode(), code)).findFirst().orElse(null);
+    public static RoleApproveStatus of(Integer code) {
+        return Arrays.stream(RoleApproveStatus.values()).filter(i -> ObjectUtil.equals(i.getCode(), code)).findFirst().orElse(null);
     }
 }

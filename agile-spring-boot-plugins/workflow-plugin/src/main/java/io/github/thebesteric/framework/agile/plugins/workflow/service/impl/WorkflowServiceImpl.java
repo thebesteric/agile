@@ -253,8 +253,9 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(tenantId, nodeDefinition.getId());
                 ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
                 ApproveType approveType = nodeDefinition.getApproveType();
+                RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
                 for (Approver approver : nodeDefinition.getApprovers()) {
-                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, approver.getId(), approver.getName(), approver.getDesc()).build();
+                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, approver.getId(), approver.getName(), approver.getDesc()).build();
                     NodeAssignmentExecutor assignmentExecutor = nodeAssignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
                     assignmentExecutor.save();
                 }

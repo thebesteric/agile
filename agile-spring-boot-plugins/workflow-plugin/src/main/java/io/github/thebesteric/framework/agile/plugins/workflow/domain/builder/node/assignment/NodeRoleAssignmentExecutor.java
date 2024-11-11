@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment;
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeRoleAssignmentType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
 import io.vavr.control.Try;
@@ -42,7 +43,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
         Integer nodeDefinitionId = nodeRoleAssignment.getNodeDefinitionId();
         String roleId = nodeRoleAssignment.getRoleId();
         String userId = nodeRoleAssignment.getUserId();
-        NodeRoleAssignment existsNodeRoleAssignment = this.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId);
+        NodeRoleAssignment existsNodeRoleAssignment = this.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId, NodeRoleAssignmentType.NORMAL);
         if (existsNodeRoleAssignment != null) {
             throw new DataExistsException("已存在相同的节点审批人");
         }
@@ -64,7 +65,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
     public List<NodeRoleAssignment> findByNodeDefinitionIdRoleId(String tenantId, Integer nodeDefinitionId, String roleId) {
         final String selectSql = """
                 SELECT * FROM awf_node_role_assignment 
-                WHERE `tenant_id` = ? AND `node_def_id` = ? AND `role_id` = ? AND `state` = 1
+                WHERE `tenant_id` = ? AND `node_def_id` = ? AND `role_id` = ? AND `state` = 1 AND `type` = 1
                 ORDER BY `role_seq` ASC, `user_seq` ASC
                 """;
         RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
@@ -78,19 +79,24 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
      * @param nodeDefinitionId 节点定义 ID
      * @param roleId           角色 ID
      * @param userId           审批人 ID
+     * @param assignmentType   审批人类型
      *
      * @return NodeRoleUserAssignment
      *
      * @author wangweijun
      * @since 2024/9/13 09:58
      */
-    public NodeRoleAssignment getByNodeDefinitionIdAndRoleIdAndApproverId(String tenantId, Integer nodeDefinitionId, String roleId, String userId) {
-        final String selectSql = """
+    public NodeRoleAssignment getByNodeDefinitionIdAndRoleIdAndApproverId(String tenantId, Integer nodeDefinitionId, String roleId, String userId, NodeRoleAssignmentType assignmentType) {
+        String selectSql = """
                 SELECT * FROM awf_node_role_assignment 
                 WHERE `tenant_id` = ? AND `node_def_id` = ? AND `role_id` = ? AND `user_id` = ? AND `state` = 1
                 """;
+        if (assignmentType != null) {
+            selectSql += " AND `type` = " + assignmentType.getCode();
+        }
+        final String finalSql = selectSql;
         RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
-        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, rowMapper, tenantId, nodeDefinitionId, roleId, userId)).getOrNull();
+        return Try.of(() -> this.jdbcTemplate.queryForObject(finalSql, rowMapper, tenantId, nodeDefinitionId, roleId, userId)).getOrNull();
     }
 
     /**
@@ -108,7 +114,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
     public NodeRoleAssignment getByNodeDefinitionIdAndApproverId(String tenantId, Integer nodeDefinitionId, String userId) {
         final String selectSql = """
                 SELECT * FROM awf_node_role_assignment 
-                WHERE `tenant_id` = ? AND `node_def_id` = ? AND `user_id` = ? AND `state` = 1
+                WHERE `type` = 1 AND `tenant_id` = ? AND `node_def_id` = ? AND `user_id` = ? AND `state` = 1
                 """;
         RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
         return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, rowMapper, tenantId, nodeDefinitionId, userId)).getOrNull();
@@ -120,18 +126,22 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
      *
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
+     * @param assignmentType   用户角色类型
      *
      * @return List<NodeRoleUserAssignment>
      *
      * @author wangweijun
      * @since 2024/9/13 09:59
      */
-    public List<NodeRoleAssignment> findByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
-        final String selectSql = """
+    public List<NodeRoleAssignment> findByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, NodeRoleAssignmentType assignmentType) {
+        String selectSql = """
                 SELECT * FROM awf_node_role_assignment 
-                WHERE `tenant_id` = ? AND `node_def_id` = ? AND `state` = 1 
-                ORDER BY `role_seq` ASC, `user_seq` ASC
+                WHERE `tenant_id` = ? AND `node_def_id` = ? AND `state` = 1
                 """;
+        if (assignmentType != null) {
+            selectSql += " AND `type` = " + assignmentType.getCode();
+        }
+        selectSql += " ORDER BY `role_seq` ASC, `user_seq` ASC ";
         RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, nodeDefinitionId).stream().toList();
     }
@@ -153,7 +163,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
                     LEFT JOIN awf_node_definition nd ON nd.`id` = na.`node_def_id`
                     LEFT JOIN awf_wf_definition wd ON wd.`id` = nd.`wf_def_id`
                     LEFT JOIN awf_wf_instance wi ON wi.`wf_def_id` = wd.`id`
-                WHERE wi.`tenant_id` = ? AND wi.`id` = ?
+                WHERE na.`type` = 1 AND wi.`tenant_id` = ? AND wi.`id` = ?
                 """;
         RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowInstanceId).stream().toList();
@@ -175,7 +185,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
                 SELECT na.* FROM awf_node_role_assignment na
                     LEFT JOIN awf_node_definition nd ON nd.`id` = na.`node_def_id`
                     LEFT JOIN awf_wf_definition wd ON wd.`id` = nd.`wf_def_id`
-                WHERE wd.`tenant_id` = ? AND wd.`id` = ?
+                WHERE na.`type` = 1 AND wd.`tenant_id` = ? AND wd.`id` = ?
                 """;
         RowMapper<NodeRoleAssignment> rowMapper = (ResultSet rs, int rowNum) -> NodeRoleAssignment.of(rs);
         return jdbcTemplate.query(selectSql, rowMapper, tenantId, workflowDefinitionId).stream().toList();
@@ -193,7 +203,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
      */
     public void deleteByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
         final String deleteSql = """
-                DELETE FROM awf_node_role_assignment WHERE `tenant_id` = ? AND `node_def_id` = ?
+                DELETE FROM awf_node_role_assignment WHERE na.`type` = 1 AND `tenant_id` = ? AND `node_def_id` = ?
                 """;
         jdbcTemplate.update(deleteSql, tenantId, nodeDefinitionId);
     }

@@ -2,9 +2,11 @@ package io.github.thebesteric.framework.agile.plugins.workflow.entity;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeRoleAssignmentType;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Invitee;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.Inviter;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -51,11 +53,30 @@ public class NodeRoleAssignment extends BaseEntity {
     @EntityColumn(name = "user_name", length = 64, comment = "用户 ID")
     private String userName;
 
-    @EntityColumn(name = "user_seq", type = EntityColumn.Type.SMALL_INT, comment = "用户审批顺序")
+    @EntityColumn(name = "user_seq", type = EntityColumn.Type.SMALL_INT, comment = "角色用户审批顺序")
     private Integer userSeq;
 
     @EntityColumn(name = "user_desc", comment = "用户描述")
     private String userDesc;
+
+    @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "角色用户类型")
+    private NodeRoleAssignmentType type = NodeRoleAssignmentType.NORMAL;
+
+    public static NodeRoleAssignment reassignFrom(NodeDefinition nodeDefinition, TaskApprove taskApprove, Inviter inviter, Invitee invitee) {
+        NodeRoleAssignment nodeRoleAssignment = new NodeRoleAssignment();
+        nodeRoleAssignment.setTenantId(taskApprove.getTenantId());
+        nodeRoleAssignment.setNodeDefinitionId(nodeDefinition.getId());
+        nodeRoleAssignment.setRoleId(invitee.getRoleId());
+        nodeRoleAssignment.setRoleName(invitee.getRoleName());
+        nodeRoleAssignment.setRoleDesc(invitee.getRoleDesc());
+        nodeRoleAssignment.setRoleSeq(inviter.getRoleSeq());
+        nodeRoleAssignment.setUserId(invitee.getUserId());
+        nodeRoleAssignment.setUserName(invitee.getUserName());
+        nodeRoleAssignment.setUserDesc(invitee.getUserDesc());
+        nodeRoleAssignment.setUserSeq(inviter.getUserSeq());
+        nodeRoleAssignment.setType(NodeRoleAssignmentType.REASSIGN);
+        return nodeRoleAssignment;
+    }
 
     public static NodeRoleAssignment of(ResultSet rs) throws SQLException {
         NodeRoleAssignment nodeRoleAssignment = new NodeRoleAssignment();
@@ -67,6 +88,7 @@ public class NodeRoleAssignment extends BaseEntity {
         nodeRoleAssignment.setUserId(rs.getString("user_id"));
         nodeRoleAssignment.setUserName(rs.getString("user_name"));
         nodeRoleAssignment.setUserDesc(rs.getString("user_desc"));
+        nodeRoleAssignment.setType(NodeRoleAssignmentType.of(rs.getInt("type")));
         // 解决 rs.getInt("xxx") null 值会返回 0 的问题
         Object userSeqObject = rs.getObject("user_seq");
         if (userSeqObject != null) {

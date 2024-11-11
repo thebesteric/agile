@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.ta
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.RoleApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskRoleApproveRecord;
 import io.vavr.control.Try;
@@ -104,7 +105,7 @@ public class TaskRoleApproveRecordExecutor extends AbstractExecutor<TaskRoleAppr
      * @author wangweijun
      * @since 2024/9/18 10:37
      */
-    public List<TaskRoleApproveRecord> findByTaskInstanceIdAndStatus(String tenantId, Integer taskInstanceId, ApproveStatus approveStatus) {
+    public List<TaskRoleApproveRecord> findByTaskInstanceIdAndStatus(String tenantId, Integer taskInstanceId, RoleApproveStatus approveStatus) {
         Query query = QueryBuilderWrapper.createLambda(TaskRoleApproveRecord.class)
                 .eq(TaskRoleApproveRecord::getTenantId, tenantId)
                 .eq(TaskRoleApproveRecord::getTaskInstanceId, taskInstanceId)

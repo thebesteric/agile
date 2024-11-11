@@ -124,18 +124,20 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
             }
             NodeRoleAssignmentBuilder.resetSeq();
 
-
             // 将 approvers 设置为角色用户
-            approvers = roleApprovers.stream().map(roleApprover -> Approver.of(roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc())).collect(Collectors.toSet());
+            for (RoleApprover roleApprover : roleApprovers) {
+                approvers.add(Approver.of(roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc(), true));
+            }
         }
 
         // 设置节点审批人
         ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
         ApproveType approveType = nodeDefinition.getApproveType();
+        RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
         NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
         NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
         for (Approver approver : approvers) {
-            NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, approver.getId(), approver.getName(), approver.getDesc()).build();
+            NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, approver.getId(), approver.getName(), approver.getDesc()).build();
             NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
             assignmentExecutor.save();
         }
@@ -434,7 +436,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      */
     public Set<RoleApprover> findRoleApproversByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
         NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = new NodeRoleAssignmentExecutor(jdbcTemplate);
-        return nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId)
+        return nodeRoleAssignmentExecutor.findByNodeDefinitionId(tenantId, nodeDefinitionId, NodeRoleAssignmentType.NORMAL)
                 .stream().map(RoleApprover::of).collect(Collectors.toSet());
     }
 
