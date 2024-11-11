@@ -98,7 +98,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow1(tenantId, workflowDefinition);
+        createWorkflow6(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -112,16 +112,16 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
-                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ALL)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.SEQ)
                 .approver(Approver.of("张三", "张三姓名", "张三备注")).approver(Approver.of("李四", "李四姓名", "李四备注"));
         nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
 
-        nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
-                .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
-                .approver(Approver.of("王五", "王五姓名"));
-        nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
-        System.out.println(nodeDefinition);
+        // nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+        //         .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
+        //         .approver(Approver.of("王五", "王五姓名"));
+        // nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
+        // System.out.println(nodeDefinition);
 
         nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("总经理审批").desc("任务节点").approveType(ApproveType.ANY)
@@ -337,26 +337,27 @@ class WorkflowHelperTest {
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门主管审批").desc("任务节点")
                 .roleApprove(true)
-                .roleApproveType(RoleApproveType.SEQ)
+                .roleApproveType(RoleApproveType.ALL)
                 .roleUserApproveType(RoleUserApproveType.ALL)
-                .roleApprovers(List.of(RoleApprover.of("组长", groupSet), RoleApprover.of("经理", manageSet)))
+                // .roleApprovers(List.of(RoleApprover.of("组长", "组长组名称", "组长组备注", groupSet), RoleApprover.of("经理", "经理组名称", "经理组备注", manageSet)))
+                .roleApprovers(List.of(RoleApprover.of("组长", "组长组名称", "组长组备注", groupSet)))
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
 
-        // nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
-        //         .name("总监审批").desc("任务节点")
-        //         .roleApprove(true)
-        //         .roleApproveType(RoleApproveType.ANY)
-        //         .roleUserApproveType(RoleUserApproveType.SEQ)
-        //         .roleApprovers(List.of(RoleApprover.of("总监", majorSet)))
-        //         .build();
-        // nodeDefinition = workflowService.createNode(nodeDefinition);
-        // System.out.println(nodeDefinition);
+        nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("总监审批").desc("任务节点")
+                .roleApprove(true)
+                .roleApproveType(RoleApproveType.ANY)
+                .roleUserApproveType(RoleUserApproveType.SEQ)
+                .roleApprovers(List.of(RoleApprover.of("总监", majorSet)))
+                .build();
+        nodeDefinition = workflowService.createNode(nodeDefinition);
+        System.out.println(nodeDefinition);
 
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
-                .approverId("张三")
+                .approver(Approver.of("张三", "张三姓名", "张三备注"))
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -526,14 +527,70 @@ class WorkflowHelperTest {
     }
 
     /**
+     * 审批-转派
+     */
+    @Test
+    void reassignUser() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        runtimeServiceHelper.setCurrentUser("system-user");
+
+        // runtimeServiceHelper.reassign(tenantId, 2, "张三", Invitee.of("小王", "小王名字", "小王备注"), "我出差了，转给小王");
+        // runtimeServiceHelper.reassign(tenantId, 2, "小王", Invitee.of("张三", "张三名字", "张三备注"), "我出差了，转给张三");
+        // runtimeServiceHelper.reassign(tenantId, 2, "小王", Invitee.of("李四", "李四名字", "李四备注"), "我出差了，转给李四");
+        // runtimeServiceHelper.reassign(tenantId, 2, "小王", Invitee.of("大王", "大王名字", "大王备注"), "我出差了，转给大王");
+
+        // runtimeServiceHelper.reassign(tenantId, 2, "李四", Invitee.of("小王", "小王名字", "小王备注"), "我出差了，转给小王");
+        // runtimeServiceHelper.reassign(tenantId, 2, "李四", Invitee.of("大王", "大王名字", "大王备注"), "我出差了，转给大王");
+
+        runtimeServiceHelper.reassign(tenantId, 3, "赵六", Invitee.of("小王", "小王名字", "小王备注"), "我出差了，转给小王");
+    }
+
+    /**
+     * 审批-转派
+     */
+    @Test
+    void reassignRoleUser() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        runtimeServiceHelper.setCurrentUser("system-user");
+
+        // runtimeServiceHelper.reassign(tenantId, 2, "组长", "grouper-1", Invitee.of(
+        //         "组长", "大组长名称", "大组长备注",
+        //         "大王", "大王名字", "大王备注"), "我出差了，转给大王");
+
+        // runtimeServiceHelper.reassign(tenantId, 2, "组长", "grouper-2", Invitee.of(
+        //         "组长", "大组长名称", "大组长备注",
+        //         "大王", "大王名字", "大王备注"), "我出差了，转给大王");
+
+        // runtimeServiceHelper.reassign(tenantId, 2, "组长", "grouper-2", Invitee.of(
+        //         "组长", "大组长名称", "大组长备注",
+        //         "大王-1", "大王-1名字", "大王-1备注"), "我出差了，转给大王-1");
+
+        runtimeServiceHelper.reassign(tenantId, 3, "总监", "major-1", Invitee.of(
+                "总监", "总监组名称", "总监组备注",
+                "大王", "大王名字", "大王备注"), "我出差了，转给大王");
+
+        // runtimeServiceHelper.reassign(tenantId, 2, "组长", "大王", Invitee.of(
+        //         "组长", "组长名称", "组长备注",
+        //         "大王-1", "大王名字-1", "大王备注-1"), "我出差了，转给大王-1");
+
+        // runtimeServiceHelper.reassign(tenantId, 2, "组长", "大王-1", Invitee.of(
+        //         "组长", "组长名称", "组长备注",
+        //         "grouper-1", "组长1", "组长1备注"), "我出差了，转给大王-1");
+    }
+
+    /**
      * 审批-同意
      */
     @Test
     void approve() {
         String roleId = "xxx";
-        // String approverId = "张三";
+        // String approverId = "小王";
+        // String approverId = "大王";
+        String approverId = "张三";
         // String approverId = "张三-1";
-        String approverId = "李四";
+        // String approverId = "李四";
         // String approverId = "小明";
         // String approverId = "王五";
         // String approverId = "王五-1";
@@ -549,6 +606,7 @@ class WorkflowHelperTest {
         // String approverId = "manager-2";
 
         // String roleId = "组长";
+        // String approverId = "大王";
         // String approverId = "grouper-1";
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
@@ -558,6 +616,7 @@ class WorkflowHelperTest {
         // String approverId = "major-2";
 
         // String roleId = "总监";
+        // String approverId = "大王";
         // String approverId = "major-1";
         // String approverId = "major-2";
 
@@ -859,10 +918,10 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
-        List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理"), "manager-1");
-        System.out.println("===============================");
-        System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
-        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 2, List.of("经理", "组长"), "manager-1");
+        // List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理"), "manager-1");
+        // System.out.println("===============================");
+        // System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
+        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理", "组长"), "manager-1");
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecord));
     }
