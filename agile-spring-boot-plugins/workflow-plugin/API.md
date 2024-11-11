@@ -318,9 +318,35 @@ runtimeServiceHelper.reject(taskInstance, roleId, approverId, "不同意");
 - approverId: 审批人 ID
 - comment: 审批意见
 ```java
-untimeServiceHelper.abandon(taskInstance, roleId, approverId, "放弃审批");
+runtimeServiceHelper.abandon(taskInstance, roleId, approverId, "放弃审批");
 ```
-### 4.2.7 获取审批历史记录 - `runtimeServiceHelper.getWorkflowInstanceApproveRecords`
+#### 4.2.7 审批-转派（用户审批节点） - `runtimeServiceHelper.reassign`
+> 审批转派，是指当前审批人将自己的审批权限转给其他人，转派后，被转派人可以继续审批  
+> - 约束-1：无法转派已转派的用户，即：张三转给李四，那么李四无法再转给张三
+> - 约束-2：被转派人正处于审批或等待审批中，无法转派
+- tenantId: 租户 ID
+- taskInstanceId: 任务实例 ID
+- userId: 用户 ID
+- invitee: 被转派人（用户ID 必须填写）
+- comment: 审批意见
+```java
+runtimeServiceHelper.reassign(tenantId, taskInstanceId, userId, invitee, comment);
+```
+#### 4.2.8 审批-转派（角色审批节点） - `runtimeServiceHelper.reassign`
+> 审批转派，是指当前审批人将自己的审批权限转给其他人，转派后，被转派人可以继续审批
+> - 约束-1：无法转派已转派的用户，即：张三转给李四，那么李四无法再转给张三
+> - 约束-2：角色审批下，同一个审批节点，无法转派给同一个审批人，即：张三转给李四，那么相同审批节点下，任何人都无法再转给李四
+> - 约束-3：相同角色下的用户才可以转派
+- tenantId: 租户 ID
+- taskInstanceId: 任务实例 ID
+- roleId: 角色 ID
+- userId: 用户 ID
+- invitee: 被转派人（角色 ID 、用户ID 必须填写）
+- comment: 审批意见
+```java
+runtimeServiceHelper.reassign(tenantId, taskInstanceId, roleId, userId, invitee, comment);
+```
+### 4.2.9 获取审批历史记录 - `runtimeServiceHelper.getWorkflowInstanceApproveRecords`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 - roleIds: 角色 ID 集合
@@ -328,38 +354,38 @@ untimeServiceHelper.abandon(taskInstance, roleId, approverId, "放弃审批");
 ```java
 WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, roleIds, userId);
 ```
-#### 4.2.8 获取当前流程实例下生效的审批任务实例 - `runtimeServiceHelper.getInCurrentlyEffectTaskInstance`
+#### 4.2.10 获取当前流程实例下生效的审批任务实例 - `runtimeServiceHelper.getInCurrentlyEffectTaskInstance`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 ```java
 TaskInstance taskInstance = runtimeServiceHelper.getInCurrentlyEffectTaskInstance(tenantId, workflowInstanceId);
 ```
-#### 4.2.9 获取当前流程实例下生效的节点定义 - `runtimeServiceHelper.getInCurrentlyEffectNodeDefinition`
+#### 4.2.11 获取当前流程实例下生效的节点定义 - `runtimeServiceHelper.getInCurrentlyEffectNodeDefinition`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 ```java
 NodeDefinition nodeDefinition = runtimeServiceHelper.getInCurrentlyEffectNodeDefinition(tenantId, workflowInstanceId);
 ```
-#### 4.2.10 获取当前流程实例下生效的审批人 - `runtimeServiceHelper.findInCurrentlyEffectApprovers`
+#### 4.2.12 获取当前流程实例下生效的审批人 - `runtimeServiceHelper.findInCurrentlyEffectApprovers`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 ```java
 List<Approver> approvers = runtimeServiceHelper.findInCurrentlyEffectApprovers(tenantId, workflowInstanceId);
 ```
-#### 4.2.10 获取当前流程实例下生效的角色审批人 - `runtimeServiceHelper.findInCurrentlyEffectRoleApprovers`
+#### 4.2.13 获取当前流程实例下生效的角色审批人 - `runtimeServiceHelper.findInCurrentlyEffectRoleApprovers`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 ```java
 List<RoleApprover> roleApprovers = runtimeServiceHelper.findInCurrentlyEffectRoleApprovers(tenantId, workflowInstanceId);
 ```
-#### 4.2.11 获取用户审批记录 - `runtimeServiceHelper.getTaskApprove`
+#### 4.2.14 获取用户审批记录 - `runtimeServiceHelper.getTaskApprove`
 - tenantId: 租户 ID
 - taskInstanceId: 任务实例 ID
 - userId: 用户 ID
 ```java
 TaskApprove taskApprove = runtimeServiceHelper.getTaskApprove(tenantId, taskInstanceId, userId);
 ```
-#### 4.2.12 获取角色用户审批记录 - `runtimeServiceHelper.getTaskRoleApprove`
+#### 4.2.15 获取角色用户审批记录 - `runtimeServiceHelper.getTaskRoleApprove`
 - tenantId: 租户 ID
 - taskInstanceId: 任务实例 ID
 - roleId: 角色 ID
@@ -367,33 +393,33 @@ TaskApprove taskApprove = runtimeServiceHelper.getTaskApprove(tenantId, taskInst
 ```java
 TaskRoleApprove taskRoleApprove = runtimeServiceHelper.getTaskRoleApprove(tenantId, taskInstanceId, roleId, userId);
 ```
-#### 4.2.13 获取流程实例下所有审批记录 - `runtimeServiceHelper.findTaskApproves`
+#### 4.2.16 获取流程实例下所有审批记录 - `runtimeServiceHelper.findTaskApproves`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 - userId: 用户 ID
 ```java
 List<TaskApprove> taskApproves = runtimeServiceHelper.findTaskApproves(tenantId, workflowInstanceId);
 ```
-#### 4.2.14 获取流程实例下所有角色审批记录 - `runtimeServiceHelper.findTaskRoleApproves`
+#### 4.2.17 获取流程实例下所有角色审批记录 - `runtimeServiceHelper.findTaskRoleApproves`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 - userId: 用户 ID
 ```java
 List<TaskRoleApprove> taskRoleApproves = runtimeServiceHelper.findTaskRoleApproves(tenantId, workflowInstanceId);
 ```
-#### 4.2.15 获取流程实例-根据流程实例 ID 获取 - `runtimeServiceHelper.getWorkflowInstanceById`
+#### 4.2.18 获取流程实例-根据流程实例 ID 获取 - `runtimeServiceHelper.getWorkflowInstanceById`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 ```java
 WorkflowInstance workflowInstance = runtimeServiceHelper.getWorkflowInstanceById(tenantId, workflowInstanceId);
 ```
-#### 4.2.16 获取流程实例-根据任务实例 ID 获取 - `runtimeServiceHelper.getWorkflowInstanceByTaskInstanceId`
+#### 4.2.19 获取流程实例-根据任务实例 ID 获取 - `runtimeServiceHelper.getWorkflowInstanceByTaskInstanceId`
 - tenantId: 租户 ID
 - taskInstanceId: 任务实例 ID
 ```java
 WorkflowInstance workflowInstance = runtimeServiceHelper.getWorkflowInstanceByTaskInstanceId(tenantId, taskInstanceId);
 ```
-#### 4.2.17 获取流程实例-根据提交人 ID 获取 - `runtimeServiceHelper.findWorkflowInstancesByRequestId`
+#### 4.2.20 获取流程实例-根据提交人 ID 获取 - `runtimeServiceHelper.findWorkflowInstancesByRequestId`
 - tenantId: 租户 ID
 - requesterId: 提交人 ID
 - workflowStatus: 流程状态
@@ -402,14 +428,14 @@ WorkflowInstance workflowInstance = runtimeServiceHelper.getWorkflowInstanceByTa
 ```java
 Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, requesterId, workflowStatus, page, pageSize);
 ```
-#### 4.2.18 获取流程实例 - `runtimeServiceHelper.findWorkflowInstances`
+#### 4.2.21 获取流程实例 - `runtimeServiceHelper.findWorkflowInstances`
 - tenantId: 租户 ID
 - workflowStatus: 流程实例状态
 - workflowDefinitionId: 流程定义 ID
 ```java
 List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstances(tenantId, workflowStatus, workflowDefinitionId);
 ```
-#### 4。2.19 获取审核日志 - `taskHistoryServiceHelper.findTaskHistories`
+#### 4。2.22 获取审核日志 - `taskHistoryServiceHelper.findTaskHistories`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 - page: 当前页
@@ -417,7 +443,7 @@ List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInst
 ```java
 Page<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, workflowInstanceId, page, pageSize);
 ```
-#### 4。2.20 获取流程定义纲要 - `runtimeServiceHelper.schema`
+#### 4。2.23 获取流程定义纲要 - `runtimeServiceHelper.schema`
 - tenantId: 租户 ID
 - workflowInstanceId: 流程实例 ID
 ```java
