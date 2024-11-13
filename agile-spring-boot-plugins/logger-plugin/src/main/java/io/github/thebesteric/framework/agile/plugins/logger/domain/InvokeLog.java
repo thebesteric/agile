@@ -48,6 +48,9 @@ public class InvokeLog {
     /** 执行结果 */
     protected Object result;
 
+    /** 异常类 */
+    protected Class<?> exceptionClass;
+
     /** 异常信息 */
     protected String exception;
 
@@ -154,6 +157,11 @@ public class InvokeLog {
 
         public Builder exception(String exception) {
             this.invokeLog.exception = exception;
+            return this;
+        }
+
+        public Builder exceptionClass(Class<?> exceptionClass) {
+            this.invokeLog.exceptionClass = exceptionClass;
             return this;
         }
 
