@@ -11,12 +11,11 @@ import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.lang.Nullable;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * LocalLogRecorder
@@ -31,6 +30,15 @@ public class LocalLogRecorder extends AbstractUtils {
             .maximumSize(1000)
             .build();
 
+    /**
+     * 记录日志
+     *
+     * @param config         配置信息
+     * @param localLogRecord 日志记录对象
+     *
+     * @author wangweijun
+     * @since 2024/11/13 16:57
+     */
     public static void record(AgileLoggerProperties.LocalLogRecorderConfig config, LocalLogRecord localLogRecord) {
         if (config == null || !config.isEnable()) {
             return;
@@ -54,20 +62,100 @@ public class LocalLogRecorder extends AbstractUtils {
         }
     }
 
+    /**
+     * 根据日志 ID 查询
+     *
+     * @param logId 日志 ID
+     *
+     * @return LocalLogRecord
+     *
+     * @author wangweijun
+     * @since 2024/11/13 16:57
+     */
     public static LocalLogRecord logId(String logId) {
         return CACHE.getIfPresent(logId);
     }
 
+    /**
+     * 根据链路 ID 查询
+     *
+     * @param trackId 链路 ID
+     *
+     * @return List<LocalLogRecord>
+     *
+     * @author wangweijun
+     * @since 2024/11/13 16:57
+     */
     public static List<LocalLogRecord> trackId(String trackId) {
         List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
         return sortedLocalLogRecords.stream().filter(localLogRecord -> trackId.equals(localLogRecord.getInvokeLog().getTrackId())).toList();
     }
 
+    /**
+     * 根据日志标签查询
+     *
+     * @param tagName 日志标签
+     *
+     * @return List<LocalLogRecord>
+     *
+     * @author wangweijun
+     * @since 2024/11/13 16:57
+     */
     public static List<LocalLogRecord> tagName(String tagName) {
         List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
         return sortedLocalLogRecords.stream().filter(localLogRecord -> tagName.equals(localLogRecord.getInvokeLog().getTag())).toList();
     }
 
+    /**
+     * 按异常类型分类统计
+     *
+     * @param exceptionClassName 异常名称
+     *
+     * @return ExceptionLogInfo
+     *
+     * @author wangweijun
+     * @since 2024/11/13 17:04
+     */
+    public static ExceptionLogInfo classifyException(@Nullable String exceptionClassName) {
+        ExceptionLogInfo exceptionLogInfo = ExceptionLogInfo.newInstance();
+        Map<Class<?>, ExceptionLogItem> exceptionLogItems = exceptionLogInfo.getExceptionLogItems();
+
+        List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
+        for (LocalLogRecord localLogRecord : sortedLocalLogRecords) {
+            Class<?> exceptionClass = localLogRecord.getInvokeLog().getExceptionClass();
+            if (exceptionClass != null) {
+                ExceptionLogItem exceptionLogItem = exceptionLogItems.getOrDefault(exceptionClass, ExceptionLogItem.newInstance());
+                // 存在指定异常类型
+                if (exceptionClassName != null) {
+                    if (exceptionClass.getName().contains(exceptionClassName)) {
+                        exceptionLogInfo.increment();
+                        exceptionLogItem.addRecord(localLogRecord);
+                        exceptionLogItems.put(exceptionClass, exceptionLogItem);
+                    }
+                    continue;
+                }
+                // 没有指定异常类型
+                exceptionLogInfo.increment();
+                exceptionLogItem.addRecord(localLogRecord);
+                exceptionLogItems.put(exceptionClass, exceptionLogItem);
+            }
+        }
+        return exceptionLogInfo;
+    }
+
+    /**
+     * 分页查询
+     *
+     * @param logLevel 日志级别
+     * @param tagName  日志标签
+     * @param current  当前页
+     * @param size     每页大小
+     *
+     * @return PagingResponse<LocalLogRecord>
+     *
+     * @author wangweijun
+     * @since 2024/11/13 16:57
+     */
     public static PagingResponse<LocalLogRecord> list(LogLevel logLevel, String tagName, int current, int size) {
         List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
         List<LocalLogRecord> totalRecords = sortedLocalLogRecords.stream()
@@ -140,6 +228,49 @@ public class LocalLogRecorder extends AbstractUtils {
             public LocalLogRecord build() {
                 return this.localLogRecord;
             }
+        }
+    }
+
+    @Data
+    public static class ExceptionLogInfo {
+        /** 总数 */
+        private AtomicInteger total;
+        /** 异常类型统计 */
+        private Map<Class<?>, ExceptionLogItem> exceptionLogItems;
+
+        private ExceptionLogInfo() {
+            this.total = new AtomicInteger(0);
+            this.exceptionLogItems = new LinkedHashMap<>();
+        }
+
+        public static ExceptionLogInfo newInstance() {
+            return new ExceptionLogInfo();
+        }
+
+        public int increment() {
+            return this.total.incrementAndGet();
+        }
+    }
+
+    @Data
+    public static class ExceptionLogItem {
+        /** 数量 */
+        private AtomicInteger count;
+        /** 日志记录 */
+        private Set<LocalLogRecord> localLogRecords;
+
+        private ExceptionLogItem() {
+            this.count = new AtomicInteger(0);
+            this.localLogRecords = new LinkedHashSet<>();
+        }
+
+        public static ExceptionLogItem newInstance() {
+            return new ExceptionLogItem();
+        }
+
+        public void addRecord(LocalLogRecord localLogRecord) {
+            this.count.incrementAndGet();
+            this.localLogRecords.add(localLogRecord);
         }
     }
 }

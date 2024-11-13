@@ -54,6 +54,11 @@ public class HelloController {
         return R.success();
     }
 
+    @GetMapping("/ex2")
+    public R<Void> ex2() {
+        throw new RuntimeException("ex2");
+    }
+
     @CrossOrigin
     @GetMapping("/foo")
     public R<String> foo(String name) {

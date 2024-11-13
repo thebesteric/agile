@@ -28,6 +28,16 @@ public class LocalLogRecordController {
         return LocalLogRecorder.trackId(trackId);
     }
 
+    @GetMapping("/tag/{tagName}")
+    public List<LocalLogRecorder.LocalLogRecord> tagName(@PathVariable String tagName) {
+        return LocalLogRecorder.tagName(tagName);
+    }
+
+    @GetMapping("/classify/exception")
+    public LocalLogRecorder.ExceptionLogInfo classifyException(@RequestParam(required = false) String name) {
+        return LocalLogRecorder.classifyException(name);
+    }
+
     @GetMapping("/list")
     public PagingResponse<LocalLogRecorder.LocalLogRecord> list(@RequestParam(required = false) String logLevel,
                                                                 @RequestParam(required = false) String tagName,
