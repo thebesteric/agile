@@ -585,10 +585,10 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        String roleId = "xxx";
+        // String roleId = "xxx";
         // String approverId = "小王";
         // String approverId = "大王";
-        String approverId = "张三";
+        // String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
@@ -605,11 +605,11 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        // String roleId = "组长";
+        String roleId = "组长";
         // String approverId = "大王";
         // String approverId = "grouper-1";
         // String approverId = "grouper-2";
-        // String approverId = "grouper-3";
+        String approverId = "grouper-3";
 
         // String roleId = "负责人";
         // String approverId = "major-1";
@@ -641,7 +641,7 @@ class WorkflowHelperTest {
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
-        // int ex = 1/0;
+        int ex = 1/0;
 
         taskInstances.forEach(taskInstance -> {
             String comment = "同意";
