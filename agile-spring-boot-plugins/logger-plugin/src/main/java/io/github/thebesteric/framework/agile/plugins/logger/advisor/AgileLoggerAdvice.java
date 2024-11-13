@@ -61,6 +61,7 @@ public class AgileLoggerAdvice implements MethodInterceptor {
             localLogRecordBuilder.exception(throwable);
             // 异常处理
             invokeLogBuilder.exception(ExceptionUtils.getSimpleMessage(throwable));
+            invokeLogBuilder.exceptionClass(throwable.getClass());
             invokeLogBuilder.level(LogLevel.ERROR);
             throw throwable;
         } finally {
@@ -82,7 +83,7 @@ public class AgileLoggerAdvice implements MethodInterceptor {
             currentRecorder.process(invokeLog);
             // 记录本地日志
             AgileLoggerProperties.LocalLogRecorderConfig localLogRecorderConfig = properties.getLocalLogRecorderConfig();
-            if (localLogRecorderConfig.isEnable()) {
+            if (localLogRecorderConfig.isEnable() && agileLoggerContext.getLocalLogRecordPostProcessor().postProcessBeforeRecord(invokeLog)) {
                 localLogRecordBuilder.invokeLog(invokeLog);
                 LocalLogRecorder.record(localLogRecorderConfig, localLogRecordBuilder.build());
             }

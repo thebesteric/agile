@@ -72,9 +72,11 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
 
         // 开始计时
         String durationTag = DurationWatcher.start();
+        Exception exception = null;
         try {
             filterChain.doFilter(requestWrapper, responseWrapper);
         } catch (Exception ex) {
+            exception = ex;
             // 本地日志增加异常信息
             localLogRecordBuilder.exception(ex);
             // Program exceptions
@@ -90,11 +92,12 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
 
             // Process non-program exceptions, For example: code != 200
             ResponseSuccessDefineProcessor responseSuccessDefineProcessor = agileLoggerContext.getResponseSuccessDefineProcessor();
-            String exception = responseSuccessDefineProcessor.processor(requestLog.getResult());
+            String exceptionInfo = responseSuccessDefineProcessor.processor(requestLog.getResult());
             if (exception != null) {
-                requestLog.setException(exception);
+                requestLog.setException(exceptionInfo);
                 requestLog.setLevel(LogLevel.ERROR);
             }
+            requestLog.setExceptionClass(exception == null ? null : exception.getClass());
 
             // 处理需要忽略的请求参数
             List<RequestIgnoreProcessor> requestIgnoreProcessors = agileLoggerContext.getRequestIgnoreProcessors();
@@ -112,7 +115,8 @@ public class AgileLoggerFilter extends AbstractAgileLoggerFilter {
             // 记录本地日志
             AgileLoggerProperties properties = agileLoggerContext.getProperties();
             AgileLoggerProperties.LocalLogRecorderConfig localLogRecorderConfig = properties.getLocalLogRecorderConfig();
-            if (localLogRecorderConfig.isEnable()) {
+            // 开启状态，并且 beforeRecord 返回 true
+            if (localLogRecorderConfig.isEnable() && agileLoggerContext.getLocalLogRecordPostProcessor().postProcessBeforeRecord(requestLog)) {
                 localLogRecordBuilder.invokeLog(requestLog);
                 LocalLogRecorder.record(localLogRecorderConfig, localLogRecordBuilder.build());
             }

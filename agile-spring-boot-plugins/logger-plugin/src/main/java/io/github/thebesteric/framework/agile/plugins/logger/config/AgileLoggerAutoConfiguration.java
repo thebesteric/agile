@@ -15,9 +15,12 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.i
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.StdoutRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.scaner.AgileLoggerControllerScanner;
 import io.github.thebesteric.framework.agile.plugins.logger.recorder.LocalLogRecordController;
+import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.LocalLogRecordPostProcessor;
+import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.impl.DefaultLocalLogRecordPostProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -64,8 +67,8 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
 
     @Bean
     public AgileLoggerContext agileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders,
-                                                 List<RequestIgnoreProcessor> requestIgnoreProcessors) {
-        return new AgileLoggerContext(applicationContext, properties, recorders, requestIgnoreProcessors);
+                                                 List<RequestIgnoreProcessor> requestIgnoreProcessors, LocalLogRecordPostProcessor localLogRecordPostProcessor) {
+        return new AgileLoggerContext(applicationContext, properties, recorders, requestIgnoreProcessors, localLogRecordPostProcessor);
     }
 
     @Bean
@@ -100,6 +103,12 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
     @Bean
     public LocalLogRecordController localLogRecordController() {
         return new LocalLogRecordController();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public LocalLogRecordPostProcessor localLogRecordPostProcessor() {
+        return new DefaultLocalLogRecordPostProcessor();
     }
 
     @Configuration

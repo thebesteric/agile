@@ -19,6 +19,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.request.Re
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.impl.DefaultRequestLoggerProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.response.ResponseSuccessDefineProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.response.impl.DefaultResponseSuccessDefineProcessorProcessor;
+import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.LocalLogRecordPostProcessor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -47,14 +48,15 @@ public class AgileLoggerContext extends AbstractAgileContext {
     private final List<MethodMatcher> methodMatchers;
     private final List<RequestIgnoreProcessor> requestIgnoreProcessors;
 
-
     private final Queue<String> parentIdQueue = new LinkedList<>();
     private final Recorder currentRecorder;
     private final RequestLoggerProcessor requestLoggerProcessor;
     private final ResponseSuccessDefineProcessor responseSuccessDefineProcessor;
     private final String contextPath;
 
-    public AgileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders, List<RequestIgnoreProcessor> requestIgnoreProcessors) {
+    private final LocalLogRecordPostProcessor localLogRecordPostProcessor;
+
+    public AgileLoggerContext(ApplicationContext applicationContext, AgileLoggerProperties properties, List<Recorder> recorders, List<RequestIgnoreProcessor> requestIgnoreProcessors, LocalLogRecordPostProcessor localLogRecordPostProcessor) {
         super((GenericApplicationContext) applicationContext);
         this.properties = properties;
         this.recorders = recorders;
@@ -65,6 +67,7 @@ public class AgileLoggerContext extends AbstractAgileContext {
         this.requestLoggerProcessor = getBeanOrDefault(RequestLoggerProcessor.class, new DefaultRequestLoggerProcessor());
         this.responseSuccessDefineProcessor = generateResponseSuccessDefineProcessor();
         this.contextPath = applicationContext.getEnvironment().getProperty("server.servlet.context-path");
+        this.localLogRecordPostProcessor = localLogRecordPostProcessor;
     }
 
     /**

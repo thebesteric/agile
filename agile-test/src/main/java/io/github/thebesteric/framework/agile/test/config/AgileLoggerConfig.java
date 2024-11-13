@@ -25,6 +25,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.imp
 import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.impl.ParameterIgnoreProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.CustomRecorder;
+import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.LocalLogRecordPostProcessor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -165,6 +166,20 @@ public class AgileLoggerConfig {
             public void onMethodParasiticRegistered(Parasitic parasitic) {
                 String annotation = parasitic.getAnnotation().annotationType().getName();
                 System.out.println("onMethodParasiticRegistered: " + annotation + " - " + parasitic.getClazz().getName() + " - " + parasitic.getMethod().getName());
+            }
+        };
+    }
+
+    @Bean
+    public LocalLogRecordPostProcessor customLocalLogRecordPostProcessor() {
+        return new LocalLogRecordPostProcessor() {
+            @Override
+            public boolean postProcessBeforeRecord(InvokeLog invokeLog) {
+                Class<?> exceptionClass = invokeLog.getExceptionClass();
+                if (exceptionClass == ArithmeticException.class) {
+                    return false;
+                }
+                return true;
             }
         };
     }

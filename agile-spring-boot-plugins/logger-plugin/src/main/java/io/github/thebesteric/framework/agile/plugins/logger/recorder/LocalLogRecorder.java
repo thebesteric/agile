@@ -48,7 +48,7 @@ public class LocalLogRecorder extends AbstractUtils {
         Set<String> recordTags = config.getRecordTags();
         String logTag = invokeLog.getTag();
 
-        // 符合日志级别或标签，则记录
+        // 符合需要记录的日志级别或标签，则记录
         if (recordLevels.contains(logLevel) || recordTags.contains(logTag)) {
             CACHE.put(invokeLog.getLogId(), localLogRecord);
         }
