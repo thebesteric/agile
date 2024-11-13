@@ -325,3 +325,4 @@
 ### v1.0.16.7
 - 日志插件 (feat): 日志增加异常类的字段
 - 日志插件 (feat): 本地日志增加回调函数 LocalLogRecordPostProcessor 支持
+- 日志插件 (feat): 增加日志异常信息统计接口
