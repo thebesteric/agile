@@ -9,6 +9,7 @@ import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
+import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.lang.Nullable;
@@ -104,6 +105,27 @@ public class LocalLogRecorder extends AbstractUtils {
     public static List<LocalLogRecord> tagName(String tagName) {
         List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
         return sortedLocalLogRecords.stream().filter(localLogRecord -> tagName.equals(localLogRecord.getInvokeLog().getTag())).toList();
+    }
+
+    /**
+     * 根据 URI 名称查询
+     *
+     * @param uriName URI 名称
+     *
+     * @return List<LocalLogRecord>
+     *
+     * @author wangweijun
+     * @since 2024/11/13 16:57
+     */
+    public static List<LocalLogRecord> uriName(String uriName) {
+        List<LocalLogRecord> sortedLocalLogRecords = sortedLocalLogRecords();
+        return sortedLocalLogRecords.stream().filter(localLogRecord -> {
+            InvokeLog invokeLog = localLogRecord.getInvokeLog();
+            if (invokeLog instanceof RequestLog requestLog) {
+                return requestLog.getUri().contains(uriName);
+            }
+            return false;
+        }).toList();
     }
 
     /**

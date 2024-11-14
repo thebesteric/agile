@@ -33,6 +33,11 @@ public class LocalLogRecordController {
         return LocalLogRecorder.tagName(tagName);
     }
 
+    @GetMapping("/uri/{uriName}")
+    public List<LocalLogRecorder.LocalLogRecord> uriName(@PathVariable String uriName) {
+        return LocalLogRecorder.uriName(uriName);
+    }
+
     @GetMapping("/classify/exception")
     public LocalLogRecorder.ExceptionLogInfo classifyException(@RequestParam(required = false) String name) {
         return LocalLogRecorder.classifyException(name);
