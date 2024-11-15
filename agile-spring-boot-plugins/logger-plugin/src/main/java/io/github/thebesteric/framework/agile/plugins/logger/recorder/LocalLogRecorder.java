@@ -203,6 +203,16 @@ public class LocalLogRecorder extends AbstractUtils {
         return map.values().stream().sorted((o1, o2) -> o2.getInvokeLog().getCreatedAt().compareTo(o1.getInvokeLog().getCreatedAt())).toList();
     }
 
+    /**
+     * 清空缓存
+     *
+     * @author wangweijun
+     * @since 2024/11/15 15:26
+     */
+    public static void clear() {
+        CACHE.cleanUp();
+    }
+
     @Data
     public static class LocalLogRecord {
         /** 日志 ID */
