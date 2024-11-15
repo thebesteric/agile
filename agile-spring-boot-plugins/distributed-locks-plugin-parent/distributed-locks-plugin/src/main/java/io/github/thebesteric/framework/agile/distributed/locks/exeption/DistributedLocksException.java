@@ -16,6 +16,7 @@ public class DistributedLocksException extends RuntimeException {
     public DistributedLocksException() {
         super("Distributed locks exception");
     }
+
     public DistributedLocksException(String message, Object... params) {
         super(String.format(message, params));
     }
