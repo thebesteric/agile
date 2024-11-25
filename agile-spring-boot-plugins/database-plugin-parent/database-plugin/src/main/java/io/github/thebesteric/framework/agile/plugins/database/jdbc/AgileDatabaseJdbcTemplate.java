@@ -67,7 +67,8 @@ public class AgileDatabaseJdbcTemplate {
             for (Class<?> clazz : entityClasses) {
                 EntityClassDomain entityClassDomain = EntityClassDomain.of(properties.getTableNamePrefix(), clazz);
                 String tableName = entityClassDomain.getTableName();
-                ResultSet resultSet = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
+                String catalog = connection.getCatalog();
+                ResultSet resultSet = metaData.getTables(catalog, null, tableName, new String[]{"TABLE"});
                 if (!resultSet.next()) {
                     createTable(entityClassDomain);
                 } else {
