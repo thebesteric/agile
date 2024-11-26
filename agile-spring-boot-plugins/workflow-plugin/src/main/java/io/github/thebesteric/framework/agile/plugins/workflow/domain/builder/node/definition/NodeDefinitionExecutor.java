@@ -68,15 +68,18 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
 
         // 获取节点审批人
         Set<Approver> approvers = nodeDefinition.getApprovers();
+        Set<RoleApprover> roleApprovers = nodeDefinition.getRoleApprovers();
         NodeType nodeType = nodeDefinition.getNodeType();
 
         // 节点定义不是开始或结束节点，非自动审批条件下，审批人为空的情况
-        if (nodeType != NodeType.START && nodeType != NodeType.END && !workflowDefinition.isAllowEmptyAutoApprove() && approvers.isEmpty()) {
+        if (nodeType != NodeType.START && nodeType != NodeType.END && !workflowDefinition.isAllowEmptyAutoApprove()) {
             // 默认审批人为空
             if (workflowDefinition.getWhenEmptyApprover() == null) {
-                throw new WorkflowException("非自动审批条件下，审批人不能为空");
+                if ((nodeDefinition.isUserApprove() && approvers.isEmpty()) || (nodeDefinition.isRoleApprove() && roleApprovers.isEmpty())) {
+                    throw new WorkflowException("非自动审批条件下，审批人不能为空");
+                }
             }
-            // 不是角色审批节点，设置审批人为流程定义的默认审批人
+            // 用户审批节点，设置审批人为流程定义的默认审批人
             if (nodeDefinition.isUserApprove()) {
                 approvers = Set.of(workflowDefinition.getWhenEmptyApprover());
             }
@@ -85,7 +88,6 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         // 角色审批
         if (nodeDefinition.isRoleApprove()) {
             // 记录角色用户对应关系
-            Set<RoleApprover> roleApprovers = nodeDefinition.getRoleApprovers();
             NodeRoleAssignmentExecutorBuilder nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
 
             // 按角色分组并保存
