@@ -286,6 +286,9 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
             NodeDefinition nodeDefinition = getNode(tenantId, nodeDefinitionId);
+            if (nodeDefinition == null) {
+                throw new WorkflowException("节点删除失败: 节点不存在");
+            }
 
             // 判断是否是开始或结束节点
             if (NodeType.START == nodeDefinition.getNodeType() || NodeType.END == nodeDefinition.getNodeType()) {
@@ -294,7 +297,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 获取任务节点
             List<NodeDefinition> taskNodes = findTaskNodes(tenantId, nodeDefinition.getWorkflowDefinitionId());
-            if (CollectionUtils.isEmpty(taskNodes)) {
+            if (taskNodes.size() == 1) {
                 throw new WorkflowException("节点删除失败: 节点定义必须至少存在一个任务节点");
             }
 
