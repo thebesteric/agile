@@ -54,7 +54,7 @@ class WorkflowHelperTest {
                 // 没有条件节点符合时的处理策略
                 .conditionNotMatchedAnyStrategy(ConditionNotMatchedAnyStrategy.PROCESS_CONTINUE_TO_NEXT)
                 // 是否允许节点审批人为空的时候，自动通过
-                .allowEmptyAutoApprove(false)
+                .allowEmptyAutoApprove(true)
                 // 当节点审批人为空的时候，使用的默认审批人
                 .whenEmptyApprover(Approver.of("admin", "系统管理员", "系统管理员描述"))
                 .allowRedo(true)
