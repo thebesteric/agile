@@ -1,9 +1,9 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment;
 
-import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeRoleAssignmentType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
@@ -45,7 +45,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
         String userId = nodeRoleAssignment.getUserId();
         NodeRoleAssignment existsNodeRoleAssignment = this.getByNodeDefinitionIdAndRoleIdAndApproverId(tenantId, nodeDefinitionId, roleId, userId, NodeRoleAssignmentType.NORMAL);
         if (existsNodeRoleAssignment != null) {
-            throw new DataExistsException("已存在相同的节点审批人");
+            throw new WorkflowException("已存在相同的节点审批人");
         }
         return super.save(nodeRoleAssignment);
     }

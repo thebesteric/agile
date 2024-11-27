@@ -1,6 +1,5 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance;
 
-import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
@@ -46,7 +45,7 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
         // 检查是否有已存在的节点定义
         TaskInstance existsTaskInstance = this.getByWorkflowInstanceIdAndNodeDefinitionId();
         if (existsTaskInstance != null) {
-            throw new DataExistsException("已存在相同的任务实例");
+            throw new WorkflowException("已存在相同的任务实例");
         }
         return super.save(taskInstance);
     }

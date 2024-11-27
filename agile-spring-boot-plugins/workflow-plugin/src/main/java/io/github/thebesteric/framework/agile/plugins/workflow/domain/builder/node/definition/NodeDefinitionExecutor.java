@@ -1,6 +1,5 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition;
 
-import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
@@ -57,7 +56,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         // 检查是否有已存在的节点定义
         NodeDefinition existsNodeDefinition = this.getByWorkflowDefinitionIdAndName();
         if (existsNodeDefinition != null) {
-            throw new DataExistsException("已存在相同的节点定义");
+            throw new WorkflowException("已存在相同的节点定义");
         }
         // 创建节点定义
         nodeDefinition = super.save(nodeDefinition);

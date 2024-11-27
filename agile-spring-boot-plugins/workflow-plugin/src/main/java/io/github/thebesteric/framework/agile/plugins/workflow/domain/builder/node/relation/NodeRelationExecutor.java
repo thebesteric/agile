@@ -1,12 +1,12 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.relation;
 
-import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRelation;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +40,7 @@ public class NodeRelationExecutor extends AbstractExecutor<NodeRelation> {
         // 检查是否有已存在的节点定义
         NodeRelation existsNodeRelation = this.getByWorkflowDefinitionIdAndFromNodeAndToNode();
         if (existsNodeRelation != null) {
-            throw new DataExistsException("已存在相同的节点关系");
+            throw new WorkflowException("已存在相同的节点关系");
         }
         return super.save(nodeRelation);
     }

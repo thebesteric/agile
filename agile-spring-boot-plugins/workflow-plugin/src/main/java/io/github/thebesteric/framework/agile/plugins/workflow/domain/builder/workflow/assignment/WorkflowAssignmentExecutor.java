@@ -1,8 +1,8 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.assignment;
 
-import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowAssignment;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,7 +39,7 @@ public class WorkflowAssignmentExecutor extends AbstractExecutor<WorkflowAssignm
         // 检查是否有已存在的流程定义
         WorkflowAssignment existsWorkflowAssignment = this.getByWorkflowDefinitionIdAndApproverId();
         if (existsWorkflowAssignment != null) {
-            throw new DataExistsException("已存在相同的流程审批人");
+            throw new WorkflowException("已存在相同的流程审批人");
         }
         return super.save(workflowAssignment);
     }

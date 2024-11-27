@@ -1,6 +1,5 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition;
 
-import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance.TaskInstanceExecutor;
@@ -11,6 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstanc
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.Setter;
@@ -55,7 +55,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
         // 检查是否有已存在的流程定义
         WorkflowDefinition existsWorkflowDefinition = this.getByTenantAndKey();
         if (existsWorkflowDefinition != null) {
-            throw new DataExistsException("已存在相同的流程定义");
+            throw new WorkflowException("已存在相同的流程定义");
         }
         // 保存流程定义
         workflowDefinition = super.save(workflowDefinition);

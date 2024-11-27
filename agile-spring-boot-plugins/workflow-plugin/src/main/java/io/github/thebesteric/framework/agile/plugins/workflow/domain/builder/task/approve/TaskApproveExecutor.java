@@ -1,6 +1,5 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.approve;
 
-import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ActiveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
@@ -52,7 +51,7 @@ public class TaskApproveExecutor extends AbstractExecutor<TaskApprove> {
         // 检查是否有已存在的节点定义
         TaskApprove existsTaskApprove = this.getByTaskInstanceIdAndApproverId();
         if (existsTaskApprove != null) {
-            throw new DataExistsException("已存在相同的节点审批人");
+            throw new WorkflowException("已存在相同的节点审批人");
         }
         return super.save(taskApprove);
     }

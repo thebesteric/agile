@@ -51,7 +51,7 @@ public class WorkflowDefinitionFlowSchema implements Serializable {
     /** 创建日期 */
     private Date createdAt;
 
-    /** 流程定义 */
+    /** 流程定义（条件节点会存在多个节点定义） */
     private List<List<NodeDefinitionResponse>> nodeDefinitionResponses = new ArrayList<>();
 
     /**
