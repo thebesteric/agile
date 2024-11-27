@@ -167,6 +167,18 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         NodeDefinition prevNodeDefinition = executor.getById(nodeDefinition.getTenantId(), prevNodeDefinitionId);
         // 查找后置节点
         NodeDefinition nextNodeDefinition = executor.getById(nodeDefinition.getTenantId(), nextNodeDefinitionId);
+
+        if (prevNodeDefinition == null || nextNodeDefinition == null) {
+            throw new WorkflowException("节点插入失败: 前置节点或后置节点不存在");
+        }
+
+        // 获取当前流程下所有节点
+        List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutorBuilder.build().findByWorkflowDefinitionId(nodeDefinition.getTenantId(), nodeDefinition.getWorkflowDefinitionId());
+        // 判断 prevNodeDefinition 和 nextNodeDefinition 是否是相邻的两个节点
+        if (nodeDefinitions.indexOf(nextNodeDefinition) - nodeDefinitions.indexOf(prevNodeDefinition) != 1) {
+            throw new WorkflowException("节点插入失败: 前置节点和后置节点顺序错误，或之间含有其他节点");
+        }
+
         // 计算 sequence
         double sequence = (prevNodeDefinition.getSequence() + nextNodeDefinition.getSequence()) / 2;
         nodeDefinition.setSequence(sequence);
