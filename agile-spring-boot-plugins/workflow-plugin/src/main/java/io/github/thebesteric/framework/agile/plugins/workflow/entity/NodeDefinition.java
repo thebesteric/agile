@@ -296,6 +296,45 @@ public class NodeDefinition extends BaseEntity {
         this.roleApprovers.clear();
     }
 
+    public void convertToUserApproveType(String name, ApproveType approveType, Set<Approver> approvers, Conditions conditions) {
+        this.name = name;
+        this.roleApprove = false;
+        this.roleApproveType = RoleApproveType.ANY;
+        this.roleUserApproveType = RoleUserApproveType.ANY;
+        this.roleApprovers = new LinkedHashSet<>();
+        this.approveType = approveType;
+        this.approvers = approvers;
+        this.dynamic = false;
+        this.dynamicAssignmentNum = 0;
+        this.conditions = conditions;
+    }
+
+    public void convertToRoleApproveType(String name, RoleApproveType roleApproveType, RoleUserApproveType roleUserApproveType, Set<RoleApprover> roleApprovers, Conditions conditions) {
+        this.name = name;
+        this.roleApprove = true;
+        this.roleApproveType = roleApproveType;
+        this.roleUserApproveType = roleUserApproveType;
+        this.roleApprovers = roleApprovers;
+        this.approveType = ApproveType.ANY;
+        this.approvers = new LinkedHashSet<>();
+        this.dynamic = false;
+        this.dynamicAssignmentNum = 0;
+        this.conditions = conditions;
+    }
+
+    public void convertToDynamicApproveType(String name, Integer dynamicAssignmentNum, Conditions conditions) {
+        this.name = name;
+        this.roleApprove = false;
+        this.roleApproveType = RoleApproveType.ANY;
+        this.roleUserApproveType = RoleUserApproveType.ANY;
+        this.roleApprovers = new LinkedHashSet<>();
+        this.approveType = ApproveType.ANY;
+        this.approvers = new LinkedHashSet<>();
+        this.dynamic = true;
+        this.dynamicAssignmentNum = dynamicAssignmentNum;
+        this.conditions = conditions;
+    }
+
     private void throwUserApproveUpdateApproverException() {
         throw new WorkflowException("角色审批节点不允许修改用户审批人");
     }

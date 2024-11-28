@@ -298,6 +298,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         return jdbcTemplateHelper.executeInTransaction(() -> {
             NodeDefinition nodeDefinition = getNode(tenantId, nodeDefinitionId);
+            // 判断节点是否存在
             if (nodeDefinition == null) {
                 throw new WorkflowException("节点删除失败: 节点不存在");
             }
