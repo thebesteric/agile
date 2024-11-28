@@ -203,7 +203,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
      */
     public void deleteByNodeDefinitionId(String tenantId, Integer nodeDefinitionId) {
         final String deleteSql = """
-                DELETE FROM awf_node_role_assignment WHERE na.`type` = 1 AND `tenant_id` = ? AND `node_def_id` = ?
+                DELETE FROM awf_node_role_assignment WHERE `type` = 1 AND `tenant_id` = ? AND `node_def_id` = ?
                 """;
         jdbcTemplate.update(deleteSql, tenantId, nodeDefinitionId);
     }
