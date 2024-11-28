@@ -231,9 +231,6 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             // 检查当前流程定义是否有正在进行的实例
             throwExceptionWhenWorkflowDefinitionHasInProcessInstances(tenantId, workflowDefinition.getId());
 
-            // 获取原有的节点定义
-            NodeDefinition oldNodeDefinition = nodeDefinitionExecutor.getById(nodeDefinition.getId());
-
             // 删除原有的审批人：用户
             nodeAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinition.getId());
             // 删除原有的审批人：角色用户
@@ -244,7 +241,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 保存角色用户审批人
             if (nodeDefinition.isRoleApprove()) {
-                nodeDefinitionExecutor.saveRoleApprovers(roleApprovers);
+                nodeDefinitionExecutor.saveRoleApprovers(nodeDefinition, roleApprovers);
                 // 将 approvers 设置为角色用户
                 for (RoleApprover roleApprover : roleApprovers) {
                     approvers.add(Approver.of(roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc(), true));
@@ -255,7 +252,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
             ApproveType approveType = nodeDefinition.getApproveType();
             RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
-            nodeDefinitionExecutor.saveApprovers(approverIdType, approveType, roleApproveType, approvers);
+            nodeDefinitionExecutor.saveApprovers(nodeDefinition, approverIdType, approveType, roleApproveType, approvers);
 
             // 更新节点定义
             nodeDefinitionExecutor.updateById(nodeDefinition);

@@ -87,7 +87,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         // 角色审批
         if (nodeDefinition.isRoleApprove()) {
             // 保存角色审批人
-            this.saveRoleApprovers(roleApprovers);
+            this.saveRoleApprovers(nodeDefinition, roleApprovers);
             // 将 approvers 设置为角色用户
             for (RoleApprover roleApprover : roleApprovers) {
                 approvers.add(Approver.of(roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc(), true));
@@ -98,7 +98,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
         ApproveType approveType = nodeDefinition.getApproveType();
         RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
-        this.saveApprovers(approverIdType, approveType, roleApproveType, approvers);
+        this.saveApprovers(nodeDefinition, approverIdType, approveType, roleApproveType, approvers);
 
         return nodeDefinition;
     }
@@ -106,6 +106,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
     /**
      * 保存节点审批人
      *
+     * @param nodeDefinition  节点定义
      * @param approverIdType  审批人 ID 类型
      * @param approveType     审批类型
      * @param roleApproveType 角色审批类型
@@ -114,7 +115,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      * @author wangweijun
      * @since 2024/11/28 15:24
      */
-    public void saveApprovers(ApproverIdType approverIdType, ApproveType approveType, RoleApproveType roleApproveType, Set<Approver> approvers) {
+    public void saveApprovers(NodeDefinition nodeDefinition, ApproverIdType approverIdType, ApproveType approveType, RoleApproveType roleApproveType, Set<Approver> approvers) {
         if (approvers == null || approvers.isEmpty()) {
             return;
         }
@@ -123,7 +124,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
         NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.build();
         for (Approver approver : approvers) {
             NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, approver.getId(), approver.getName(), approver.getDesc()).build();
-            assignmentExecutor.save(nodeAssignment);
+            assignmentExecutor.saveNodeAssignment(nodeAssignment);
         }
         nodeAssignmentBuilder.resetSeq();
     }
@@ -131,12 +132,13 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
     /**
      * 保存角色审批人
      *
-     * @param roleApprovers 角色审批人
+     * @param nodeDefinition 节点定义
+     * @param roleApprovers  角色审批人
      *
      * @author wangweijun
      * @since 2024/11/28 15:25
      */
-    public void saveRoleApprovers(Set<RoleApprover> roleApprovers) {
+    public void saveRoleApprovers(NodeDefinition nodeDefinition, Set<RoleApprover> roleApprovers) {
         if (roleApprovers == null || roleApprovers.isEmpty()) {
             return;
         }
@@ -161,7 +163,7 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                         .userInfo(userSeqValue, roleApprover.getUserId(), roleApprover.getUserName(), roleApprover.getUserDesc())
                         .roleInfo(roleSeqValue, roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc())
                         .build();
-                nodeRoleUserAssignmentExecutor.save(nodeRoleAssignment);
+                nodeRoleUserAssignmentExecutor.saveNodeRoleAssignment(nodeRoleAssignment);
             }
             // 如果角色审批是：ANY，则需要保证每个角色用户都有自己的顺序
             if (RoleApproveType.ANY == nodeDefinition.getRoleApproveType()) {
