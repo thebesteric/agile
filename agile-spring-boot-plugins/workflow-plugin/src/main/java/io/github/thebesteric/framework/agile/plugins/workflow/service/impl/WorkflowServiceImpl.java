@@ -222,6 +222,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
             NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+            NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
             NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
 
             // 查找所属流程定义
@@ -233,46 +234,28 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             // 获取原有的节点定义
             NodeDefinition oldNodeDefinition = nodeDefinitionExecutor.getById(nodeDefinition.getId());
 
-            // 获取原有的审批人
-            List<NodeAssignment> oldNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, oldNodeDefinition.getId());
-            Set<Approver> oldApprovers = oldNodeAssignments.stream().map(assignment -> Approver.of(assignment.getApproverId(), assignment.getDesc())).collect(Collectors.toSet());
+            // 删除原有的审批人：用户
+            nodeAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinition.getId());
+            // 删除原有的审批人：角色用户
+            nodeRoleAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinition.getId());
 
-            // 审批人不同
-            boolean isDifferentApprovers = false;
-            if (nodeDefinition.getApprovers().size() != oldApprovers.size()) {
-                isDifferentApprovers = true;
-            }
-            // 如果审核人数量相同，则判断审核人是否相同
-            if (!isDifferentApprovers) {
-                for (Approver approver : nodeDefinition.getApprovers()) {
-                    boolean matched = false;
-                    for (Approver oldApprover : oldApprovers) {
-                        if (approver.equals(oldApprover)) {
-                            matched = true;
-                            break;
-                        }
-                    }
-                    if (!matched) {
-                        isDifferentApprovers = true;
-                    }
+            Set<RoleApprover> roleApprovers = nodeDefinition.getRoleApprovers();
+            Set<Approver> approvers = nodeDefinition.getApprovers();
+
+            // 保存角色用户审批人
+            if (nodeDefinition.isRoleApprove()) {
+                nodeDefinitionExecutor.saveRoleApprovers(roleApprovers);
+                // 将 approvers 设置为角色用户
+                for (RoleApprover roleApprover : roleApprovers) {
+                    approvers.add(Approver.of(roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc(), true));
                 }
             }
 
-            if (isDifferentApprovers) {
-                // 删除原有的审批人
-                nodeAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinition.getId());
-                // 重新添加审批人
-                NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(tenantId, nodeDefinition.getId());
-                ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
-                ApproveType approveType = nodeDefinition.getApproveType();
-                RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
-                for (Approver approver : nodeDefinition.getApprovers()) {
-                    NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, approver.getId(), approver.getName(), approver.getDesc()).build();
-                    NodeAssignmentExecutor assignmentExecutor = nodeAssignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
-                    assignmentExecutor.save();
-                }
-                nodeAssignmentBuilder.resetSeq();
-            }
+            // 重新添加审批人
+            ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
+            ApproveType approveType = nodeDefinition.getApproveType();
+            RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
+            nodeDefinitionExecutor.saveApprovers(approverIdType, approveType, roleApproveType, approvers);
 
             // 更新节点定义
             nodeDefinitionExecutor.updateById(nodeDefinition);

@@ -86,65 +86,98 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
 
         // 角色审批
         if (nodeDefinition.isRoleApprove()) {
-            // 记录角色用户对应关系
-            NodeRoleAssignmentExecutorBuilder nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
-
-            // 按角色分组并保存
-            Map<String, List<RoleApprover>> approversByRoleId = roleApprovers.stream().collect(Collectors.groupingBy(RoleApprover::getRoleId));
-
-            for (Map.Entry<String, List<RoleApprover>> entry : approversByRoleId.entrySet()) {
-                List<RoleApprover> list = entry.getValue();
-                NodeRoleAssignmentBuilder nodeRoleAssignmentBuilder = NodeRoleAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
-                AtomicInteger userSeq = NodeRoleAssignmentBuilder.userSeq;
-                AtomicInteger roleSeq = NodeRoleAssignmentBuilder.roleSeq;
-                // 角色的顺序
-                int roleSeqValue = roleSeq.getAndIncrement();
-                for (RoleApprover roleApprover : list) {
-                    // 角色用户的顺序
-                    int userSeqValue = userSeq.getAndIncrement();
-                    NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentBuilder
-                            .userInfo(userSeqValue, roleApprover.getUserId(), roleApprover.getUserName(), roleApprover.getUserDesc())
-                            .roleInfo(roleSeqValue, roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc())
-                            .build();
-                    NodeRoleAssignmentExecutor nodeRoleUserAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.nodeRoleUserAssignment(nodeRoleAssignment).build();
-                    nodeRoleUserAssignmentExecutor.save();
-                }
-                // 如果角色审批是：ANY，则需要保证每个角色用户都有自己的顺序
-                if (RoleApproveType.ANY == nodeDefinition.getRoleApproveType()) {
-                    NodeRoleAssignmentBuilder.resetUserSeq();
-                    NodeRoleAssignmentBuilder.resetRoleSeq();
-                }
-                // 如果角色审批是：ALL，则需要保证所有角色用户都有统一的顺序
-                else if (RoleApproveType.ALL == nodeDefinition.getRoleApproveType()) {
-                    NodeRoleAssignmentBuilder.resetRoleSeq();
-                }
-                // 如果角色审批是：SEQ，则需要保证每个角色和每个角色用户都有自己的顺序
-                else if (RoleApproveType.SEQ == nodeDefinition.getRoleApproveType()) {
-                    NodeRoleAssignmentBuilder.resetUserSeq();
-                }
-            }
-            NodeRoleAssignmentBuilder.resetSeq();
-
+            // 保存角色审批人
+            this.saveRoleApprovers(roleApprovers);
             // 将 approvers 设置为角色用户
             for (RoleApprover roleApprover : roleApprovers) {
                 approvers.add(Approver.of(roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc(), true));
             }
         }
 
-        // 设置节点审批人
+        // 保存节点审批人
         ApproverIdType approverIdType = nodeDefinition.isRoleApprove() ? ApproverIdType.ROLE : ApproverIdType.USER;
         ApproveType approveType = nodeDefinition.getApproveType();
         RoleApproveType roleApproveType = nodeDefinition.getRoleApproveType();
-        NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
-        NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
-        for (Approver approver : approvers) {
-            NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, approver.getId(), approver.getName(), approver.getDesc()).build();
-            NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.nodeAssignment(nodeAssignment).build();
-            assignmentExecutor.save();
-        }
-        nodeAssignmentBuilder.resetSeq();
+        this.saveApprovers(approverIdType, approveType, roleApproveType, approvers);
 
         return nodeDefinition;
+    }
+
+    /**
+     * 保存节点审批人
+     *
+     * @param approverIdType  审批人 ID 类型
+     * @param approveType     审批类型
+     * @param roleApproveType 角色审批类型
+     * @param approvers       审批人
+     *
+     * @author wangweijun
+     * @since 2024/11/28 15:24
+     */
+    public void saveApprovers(ApproverIdType approverIdType, ApproveType approveType, RoleApproveType roleApproveType, Set<Approver> approvers) {
+        if (approvers == null || approvers.isEmpty()) {
+            return;
+        }
+        NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
+        NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
+        NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.build();
+        for (Approver approver : approvers) {
+            NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, approver.getId(), approver.getName(), approver.getDesc()).build();
+            assignmentExecutor.save(nodeAssignment);
+        }
+        nodeAssignmentBuilder.resetSeq();
+    }
+
+    /**
+     * 保存角色审批人
+     *
+     * @param roleApprovers 角色审批人
+     *
+     * @author wangweijun
+     * @since 2024/11/28 15:25
+     */
+    public void saveRoleApprovers(Set<RoleApprover> roleApprovers) {
+        if (roleApprovers == null || roleApprovers.isEmpty()) {
+            return;
+        }
+        // 记录角色用户对应关系
+        NodeRoleAssignmentExecutorBuilder nodeRoleAssignmentExecutorBuilder = NodeRoleAssignmentExecutorBuilder.builder(jdbcTemplate);
+        NodeRoleAssignmentExecutor nodeRoleUserAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+
+        // 按角色分组并保存
+        Map<String, List<RoleApprover>> approversByRoleId = roleApprovers.stream().collect(Collectors.groupingBy(RoleApprover::getRoleId));
+
+        for (Map.Entry<String, List<RoleApprover>> entry : approversByRoleId.entrySet()) {
+            List<RoleApprover> list = entry.getValue();
+            NodeRoleAssignmentBuilder nodeRoleAssignmentBuilder = NodeRoleAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
+            AtomicInteger userSeq = NodeRoleAssignmentBuilder.userSeq;
+            AtomicInteger roleSeq = NodeRoleAssignmentBuilder.roleSeq;
+            // 角色的顺序
+            int roleSeqValue = roleSeq.getAndIncrement();
+            for (RoleApprover roleApprover : list) {
+                // 角色用户的顺序
+                int userSeqValue = userSeq.getAndIncrement();
+                NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentBuilder
+                        .userInfo(userSeqValue, roleApprover.getUserId(), roleApprover.getUserName(), roleApprover.getUserDesc())
+                        .roleInfo(roleSeqValue, roleApprover.getRoleId(), roleApprover.getRoleName(), roleApprover.getRoleDesc())
+                        .build();
+                nodeRoleUserAssignmentExecutor.save(nodeRoleAssignment);
+            }
+            // 如果角色审批是：ANY，则需要保证每个角色用户都有自己的顺序
+            if (RoleApproveType.ANY == nodeDefinition.getRoleApproveType()) {
+                NodeRoleAssignmentBuilder.resetUserSeq();
+                NodeRoleAssignmentBuilder.resetRoleSeq();
+            }
+            // 如果角色审批是：ALL，则需要保证所有角色用户都有统一的顺序
+            else if (RoleApproveType.ALL == nodeDefinition.getRoleApproveType()) {
+                NodeRoleAssignmentBuilder.resetRoleSeq();
+            }
+            // 如果角色审批是：SEQ，则需要保证每个角色和每个角色用户都有自己的顺序
+            else if (RoleApproveType.SEQ == nodeDefinition.getRoleApproveType()) {
+                NodeRoleAssignmentBuilder.resetUserSeq();
+            }
+        }
+        NodeRoleAssignmentBuilder.resetSeq();
     }
 
     /**

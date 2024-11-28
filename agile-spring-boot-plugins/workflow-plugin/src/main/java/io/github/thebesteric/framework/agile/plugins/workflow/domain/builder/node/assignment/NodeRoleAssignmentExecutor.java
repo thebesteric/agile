@@ -37,7 +37,7 @@ public class NodeRoleAssignmentExecutor extends AbstractExecutor<NodeRoleAssignm
      * @author wangweijun
      * @since 2024/6/18 16:25
      */
-    public NodeRoleAssignment save() {
+    public NodeRoleAssignment saveNodeRoleAssignment(NodeRoleAssignment nodeRoleAssignment) {
         // 检查是否有已存在的节点定义
         String tenantId = nodeRoleAssignment.getTenantId();
         Integer nodeDefinitionId = nodeRoleAssignment.getNodeDefinitionId();

@@ -296,6 +296,17 @@ public class NodeDefinition extends BaseEntity {
         this.roleApprovers.clear();
     }
 
+    /**
+     * 转换为用户审批节点
+     *
+     * @param name        节点名称
+     * @param approveType 审批方式
+     * @param approvers   审批人
+     * @param conditions  条件
+     *
+     * @author wangweijun
+     * @since 2024/11/28 13:40
+     */
     public void convertToUserApproveType(String name, ApproveType approveType, Set<Approver> approvers, Conditions conditions) {
         this.name = name;
         this.roleApprove = false;
@@ -309,6 +320,18 @@ public class NodeDefinition extends BaseEntity {
         this.conditions = conditions;
     }
 
+    /**
+     * 转换为角色审批节点
+     *
+     * @param name                节点名称
+     * @param roleApproveType     角色审批方式
+     * @param roleUserApproveType 角色用户审批方式
+     * @param roleApprovers       审批角色
+     * @param conditions          条件
+     *
+     * @author wangweijun
+     * @since 2024/11/28 13:40
+     */
     public void convertToRoleApproveType(String name, RoleApproveType roleApproveType, RoleUserApproveType roleUserApproveType, Set<RoleApprover> roleApprovers, Conditions conditions) {
         this.name = name;
         this.roleApprove = true;
@@ -322,16 +345,30 @@ public class NodeDefinition extends BaseEntity {
         this.conditions = conditions;
     }
 
-    public void convertToDynamicApproveType(String name, Integer dynamicAssignmentNum, Conditions conditions) {
+    /**
+     * 转换为动态审批节点
+     *
+     * @param name                 节点名称
+     * @param approveType          审批方式
+     * @param dynamicAssignmentNum 动态审批人数量，-1：表示不限制数量
+     * @param conditions           条件
+     *
+     * @author wangweijun
+     * @since 2024/11/28 13:42
+     */
+    public void convertToDynamicApproveType(String name, ApproveType approveType, Integer dynamicAssignmentNum, Conditions conditions) {
         this.name = name;
         this.roleApprove = false;
         this.roleApproveType = RoleApproveType.ANY;
         this.roleUserApproveType = RoleUserApproveType.ANY;
         this.roleApprovers = new LinkedHashSet<>();
-        this.approveType = ApproveType.ANY;
+        this.approveType = approveType;
         this.approvers = new LinkedHashSet<>();
         this.dynamic = true;
-        this.dynamicAssignmentNum = dynamicAssignmentNum;
+        if (dynamicAssignmentNum == 0) {
+            throw new WorkflowException("动态审批节点审批人数量不能为 0");
+        }
+        this.dynamicAssignmentNum = dynamicAssignmentNum < 0 ? -1 : dynamicAssignmentNum;
         this.conditions = conditions;
     }
 

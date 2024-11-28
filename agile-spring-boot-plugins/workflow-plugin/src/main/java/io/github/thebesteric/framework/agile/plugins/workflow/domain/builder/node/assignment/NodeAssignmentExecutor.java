@@ -36,7 +36,7 @@ public class NodeAssignmentExecutor extends AbstractExecutor<NodeAssignment> {
      * @author wangweijun
      * @since 2024/6/18 16:25
      */
-    public NodeAssignment save() {
+    public NodeAssignment saveNodeAssignment(NodeAssignment nodeAssignment) {
         // 检查是否有已存在的节点定义
         NodeAssignment existsNodeAssignment = this.getByNodeDefinitionIdAndApproverId();
         if (existsNodeAssignment != null) {
