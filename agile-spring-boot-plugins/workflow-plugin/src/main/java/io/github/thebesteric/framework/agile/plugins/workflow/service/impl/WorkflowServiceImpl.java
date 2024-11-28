@@ -200,7 +200,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 if (nodeDefinition.isRoleApprove() && CollectionUtils.isEmpty(nodeDefinition.getRoleApprovers())) {
                     throw new WorkflowException("角色审批节点: 角色审批用户不能为空");
                 }
-                if (nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
+                if (!nodeDefinition.isDynamic() && nodeDefinition.isUserApprove() && CollectionUtils.isEmpty(nodeDefinition.getApprovers())) {
                     throw new WorkflowException("用户审批节点: 审批用户不能为空");
                 }
             }
