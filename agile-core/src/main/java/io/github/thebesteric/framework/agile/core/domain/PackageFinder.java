@@ -27,7 +27,7 @@ public class PackageFinder {
 
     public static void init(Class<?> startupClass) {
         ComponentScan componentScan = startupClass.getAnnotation(ComponentScan.class);
-        if (componentScan != null && componentScan.basePackages().length > 0) {
+        if (componentScan != null && (componentScan.basePackages().length > 0 || componentScan.value().length > 0)) {
             packageNames.addAll(Arrays.asList(parseComponentScanAnnotation(componentScan)));
         }
 
@@ -44,8 +44,13 @@ public class PackageFinder {
     }
 
     private static String[] parseComponentScanAnnotation(ComponentScan componentScan) {
-        if (componentScan != null && componentScan.basePackages().length > 0) {
-            return componentScan.basePackages();
+        if (componentScan != null) {
+            if (componentScan.value().length > 0) {
+                return componentScan.basePackages();
+            }
+            if (componentScan.basePackages().length > 0) {
+                return componentScan.basePackages();
+            }
         }
         return new String[0];
     }
