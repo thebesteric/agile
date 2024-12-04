@@ -263,10 +263,10 @@ class NodeDefinitionTest {
     }
 
     @Test
-    void find() {
+    void findNodes() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
-        List<NodeDefinition> nodes = workflowServiceHelper.getNodes(tenantId, key);
+        List<NodeDefinition> nodes = workflowServiceHelper.findNodes(tenantId, key);
         nodes.forEach(System.out::println);
     }
 
@@ -318,7 +318,7 @@ class NodeDefinitionTest {
         nodeDefinition.setSequence(1.0);
         workflowService.updateNode(nodeDefinition);
 
-        List<NodeDefinition> nodeDefinitions = workflowService.getNodes(tenantId, List.of(2, 3));
+        List<NodeDefinition> nodeDefinitions = workflowService.findNodes(tenantId, List.of(2, 3));
         for (NodeDefinition definition : nodeDefinitions) {
             definition.setSequence(2.0);
             workflowService.updateNode(definition);

@@ -184,8 +184,8 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/8 16:01
      */
-    public List<NodeDefinition> getNodes(String tenantId, List<Integer> nodeDefinitionIds) {
-        return this.workflowService.getNodes(tenantId, nodeDefinitionIds);
+    public List<NodeDefinition> findNodes(String tenantId, List<Integer> nodeDefinitionIds) {
+        return this.workflowService.findNodes(tenantId, nodeDefinitionIds);
     }
 
     /**
@@ -199,9 +199,9 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/8 16:01
      */
-    public List<NodeDefinition> getNodes(String tenantId, String workflowDefinitionKey) {
+    public List<NodeDefinition> findNodes(String tenantId, String workflowDefinitionKey) {
         WorkflowDefinition workflowDefinition = this.workflowService.getWorkflowDefinition(tenantId, workflowDefinitionKey);
-        return this.workflowService.getNodes(tenantId, workflowDefinition.getId());
+        return this.workflowService.findNodes(tenantId, workflowDefinition.getId());
     }
 
     /**
@@ -306,7 +306,7 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/9 13:13
      */
     public List<NodeDefinition> findTaskNodes(String tenantId, Integer workflowDefinitionId) {
-        List<NodeDefinition> nodes = this.workflowService.getNodes(tenantId, workflowDefinitionId);
+        List<NodeDefinition> nodes = this.workflowService.findNodes(tenantId, workflowDefinitionId);
         return nodes.stream().filter(node -> node.getNodeType() == NodeType.TASK).toList();
     }
 

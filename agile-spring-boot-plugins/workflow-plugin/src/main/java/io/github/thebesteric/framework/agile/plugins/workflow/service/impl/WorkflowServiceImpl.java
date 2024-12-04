@@ -375,7 +375,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @param workflowDefinitionId 流程定义 ID
      */
     @Override
-    public List<NodeDefinition> getNodes(String tenantId, Integer workflowDefinitionId) {
+    public List<NodeDefinition> findNodes(String tenantId, Integer workflowDefinitionId) {
         NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).workflowDefinitionId(workflowDefinitionId).build();
         return executor.findByWorkflowDefinitionId();
     }
@@ -387,7 +387,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @param nodeDefinitionIds 节点定义 IDs
      */
     @Override
-    public List<NodeDefinition> getNodes(String tenantId, List<Integer> nodeDefinitionIds) {
+    public List<NodeDefinition> findNodes(String tenantId, List<Integer> nodeDefinitionIds) {
         List<NodeDefinition> nodeDefinitions = new ArrayList<>();
         for (Integer nodeDefinitionId : nodeDefinitionIds) {
             NodeDefinition nodeDefinition = this.getNode(tenantId, nodeDefinitionId);

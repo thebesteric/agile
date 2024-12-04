@@ -124,7 +124,7 @@ public interface WorkflowService {
      * @author wangweijun
      * @since 2024/6/18 17:41
      */
-    List<NodeDefinition> getNodes(String tenantId, List<Integer> nodeDefinitionIds);
+    List<NodeDefinition> findNodes(String tenantId, List<Integer> nodeDefinitionIds);
 
     /**
      * 获取节点定义
@@ -137,7 +137,7 @@ public interface WorkflowService {
      * @author wangweijun
      * @since 2024/6/18 17:41
      */
-    List<NodeDefinition> getNodes(String tenantId, Integer workflowDefinitionId);
+    List<NodeDefinition> findNodes(String tenantId, Integer workflowDefinitionId);
 
     /**
      * 获取开始节点定义
