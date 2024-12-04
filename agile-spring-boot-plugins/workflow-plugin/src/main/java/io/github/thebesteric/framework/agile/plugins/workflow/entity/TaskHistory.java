@@ -39,7 +39,7 @@ public class TaskHistory extends BaseEntity {
     @EntityColumn(name = "title", length = 64, comment = "日志标题")
     private String title;
 
-    @EntityColumn(type = EntityColumn.Type.VARCHAR, length = 255, nullable = false, comment = "日志信息")
+    @EntityColumn(type = EntityColumn.Type.VARCHAR, length = 2048, nullable = false, comment = "日志信息")
     private TaskHistoryMessage message;
 
     public static TaskHistory of(ResultSet rs) throws SQLException {

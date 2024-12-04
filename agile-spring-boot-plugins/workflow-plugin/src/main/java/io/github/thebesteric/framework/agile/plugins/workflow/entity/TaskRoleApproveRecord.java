@@ -71,6 +71,12 @@ public class TaskRoleApproveRecord extends BaseEntity {
         return reassignTo;
     }
 
+    public static TaskRoleApproveRecord copyOf(TaskRoleApproveRecord source) {
+        TaskRoleApproveRecord target = new TaskRoleApproveRecord();
+        BeanUtils.copyProperties(source, target, IGNORE_COPY_FIELD_NAMES);
+        return target;
+    }
+
     /**
      * 将审批实例设置为：进行中
      *

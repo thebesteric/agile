@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.springframework.beans.BeanUtils;
 
 import java.io.Serial;
 import java.sql.ResultSet;
@@ -32,7 +33,7 @@ public class NodeRoleAssignment extends BaseEntity {
     @EntityColumn(name = "tenant_id", length = 32, nullable = false, comment = "租户 ID")
     private String tenantId;
 
-    @EntityColumn(name="node_def_id", nullable = false, comment = "节点定义 ID")
+    @EntityColumn(name = "node_def_id", nullable = false, comment = "节点定义 ID")
     private Integer nodeDefinitionId;
 
     @EntityColumn(name = "role_id", length = 32, nullable = false, comment = "角色 ID")
@@ -99,6 +100,12 @@ public class NodeRoleAssignment extends BaseEntity {
             nodeRoleAssignment.setRoleSeq((Integer) roleSeqObject);
         }
         return of(nodeRoleAssignment, rs);
+    }
+
+    public static NodeRoleAssignment copyOf(NodeRoleAssignment source) {
+        NodeRoleAssignment target = new NodeRoleAssignment();
+        BeanUtils.copyProperties(source, target, IGNORE_COPY_FIELD_NAMES);
+        return target;
     }
 
     @Override

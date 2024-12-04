@@ -112,16 +112,16 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
-                .name("部门主管审批").desc("任务节点").approveType(ApproveType.SEQ)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ALL)
                 .approver(Approver.of("张三", "张三姓名", "张三备注")).approver(Approver.of("李四", "李四姓名", "李四备注"));
         nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
         System.out.println(nodeDefinition);
 
-        // nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
-        //         .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
-        //         .approver(Approver.of("王五", "王五姓名"));
-        // nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
-        // System.out.println(nodeDefinition);
+        nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
+                .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
+                .approver(Approver.of("王五", "王五姓名"));
+        nodeDefinition = workflowServiceHelper.createTaskNode(nodeDefinitionBuilder);
+        System.out.println(nodeDefinition);
 
         nodeDefinitionBuilder = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 3)
                 .name("总经理审批").desc("任务节点").approveType(ApproveType.ANY)
@@ -605,11 +605,14 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        String roleId = "组长";
+        String roleId = "组长1";
+        String approverId = "grouper-100";
+
+        // String roleId = "组长";
         // String approverId = "大王";
         // String approverId = "grouper-1";
         // String approverId = "grouper-2";
-        String approverId = "grouper-3";
+        // String approverId = "grouper-3";
 
         // String roleId = "负责人";
         // String approverId = "major-1";
@@ -636,12 +639,15 @@ class WorkflowHelperTest {
         List<NodeStatus> nodeStatuses = List.of(NodeStatus.IN_PROGRESS);
         List<ApproveStatus> approveStatuses = List.of(ApproveStatus.IN_PROGRESS);
 
+        List<RoleApprover> inCurrentlyEffectRoleApprovers = runtimeServiceHelper.findInCurrentlyEffectRoleApprovers(tenantId, 1);
+        System.out.println(inCurrentlyEffectRoleApprovers);
+
         // 查找待审批待实例
         Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, List.of(roleId), approverId, nodeStatuses, approveStatuses, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
-        int ex = 1/0;
+        // int ex = 1/0;
 
         taskInstances.forEach(taskInstance -> {
             String comment = "同意";
@@ -718,8 +724,9 @@ class WorkflowHelperTest {
     @Test
     void reject() {
         String roleId = null;
+        String approverId = "test";
         // String approverId = "张三";
-        String approverId = "李四";
+        // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
 
@@ -904,7 +911,24 @@ class WorkflowHelperTest {
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
 
-        runtimeServiceHelper.updateApprover(tenantId, "admin", "test");
+        List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstances(tenantId, WorkflowStatus.IN_PROGRESS, workflowKey);
+        for (WorkflowInstance workflowInstance : workflowInstances) {
+            runtimeServiceHelper.updateApprover(workflowInstance, "张三", Approver.of("test", "测试用户", "测试描述"));
+        }
+    }
+
+    @Test
+    void updateRoleApprover() {
+        String approverId = "admin";
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        runtimeServiceHelper.setCurrentUser(approverId);
+
+        List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstances(tenantId, WorkflowStatus.IN_PROGRESS, workflowKey);
+        for (WorkflowInstance workflowInstance : workflowInstances) {
+            runtimeServiceHelper.updateRoleApprover(workflowInstance, "组长", "grouper-2",
+                    RoleApprover.of("组长1", "组长1组名称", "组长1组描述", Approver.of("grouper-100", "组长99", "组长99描述")));
+        }
     }
 
     /**

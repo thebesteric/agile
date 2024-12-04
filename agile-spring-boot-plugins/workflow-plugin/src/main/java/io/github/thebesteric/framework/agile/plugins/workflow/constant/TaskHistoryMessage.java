@@ -28,6 +28,7 @@ public enum TaskHistoryMessage {
     INSTANCE_SUBMIT_FORM("提交审批"),
 
     NODE_ASSIGNMENT_CHANGED("用户任务关联表变更"),
+    NODE_ROLE_ASSIGNMENT_CHANGED("角色用户关联表变更"),
     TASK_APPROVE_CHANGED("任务审批人变更"),
 
     CUSTOM("%s");

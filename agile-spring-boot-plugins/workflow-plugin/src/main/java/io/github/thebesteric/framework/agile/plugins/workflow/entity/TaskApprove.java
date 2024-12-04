@@ -74,6 +74,12 @@ public class TaskApprove extends BaseEntity {
         return reassignTo;
     }
 
+    public static TaskApprove copyOf(TaskApprove source) {
+        TaskApprove target = new TaskApprove();
+        BeanUtils.copyProperties(source, target, IGNORE_COPY_FIELD_NAMES);
+        return target;
+    }
+
     /**
      * 是否未设置指定审批人
      *

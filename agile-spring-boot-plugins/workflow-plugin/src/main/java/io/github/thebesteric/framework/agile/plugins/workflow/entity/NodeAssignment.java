@@ -9,6 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.springframework.beans.BeanUtils;
 
 import java.io.Serial;
 import java.sql.ResultSet;
@@ -64,6 +65,12 @@ public class NodeAssignment extends BaseEntity {
         }
         nodeAssignment.setApproverIdType(ApproverIdType.of(rs.getInt("approver_id_type")));
         return of(nodeAssignment, rs);
+    }
+
+    public static NodeAssignment copyOf(NodeAssignment source) {
+        NodeAssignment target = new NodeAssignment();
+        BeanUtils.copyProperties(source, target, IGNORE_COPY_FIELD_NAMES);
+        return target;
     }
 
     @Override

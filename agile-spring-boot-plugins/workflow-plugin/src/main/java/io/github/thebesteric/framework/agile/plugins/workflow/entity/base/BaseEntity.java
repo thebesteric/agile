@@ -22,6 +22,8 @@ public abstract class BaseEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 1746619105652547202L;
 
+    public static final String[] IGNORE_COPY_FIELD_NAMES = {"id", "createdAt", "updatedAt", "createdBy", "updatedBy", "desc", "version"};
+
     @EntityColumn(primary = true, autoIncrement = true, comment = "主键")
     protected Integer id;
 

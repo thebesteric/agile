@@ -3554,16 +3554,15 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId         租户 ID
      * @param sourceApproverId 原审批人
-     * @param targetApproverId 新审批人
+     * @param targetApprover   新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
     @Override
-    public void updateApprover(String tenantId, String sourceApproverId, String targetApproverId) {
+    public void updateApprover(String tenantId, String sourceApproverId, Approver targetApprover) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
-
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
             Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
                     .eq(TaskInstance::getTenantId, tenantId)
@@ -3577,7 +3576,39 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             }
 
             // 执行更新
-            doUpdateApprover(tenantId, taskInstances, sourceApproverId, targetApproverId);
+            doUpdateApprover(tenantId, taskInstances, sourceApproverId, targetApprover);
+        });
+    }
+
+    /**
+     * 更新审批人（未审批状态下）
+     *
+     * @param tenantId             租户 ID
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    @Override
+    public void updateRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+            Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
+                    .eq(TaskInstance::getTenantId, tenantId)
+                    .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
+                    .eq(TaskInstance::getState, 1)
+                    .build();
+            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            List<TaskInstance> taskInstances = taskInstancePage.getRecords();
+            if (taskInstances.isEmpty()) {
+                WorkflowException.throwWorkflowInstanceNotFoundException();
+            }
+
+            // 执行更新
+            doUpdateRoleApprover(tenantId, taskInstances, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
         });
     }
 
@@ -3586,25 +3617,49 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param taskInstance     任务实例
      * @param sourceApproverId 原审批人
-     * @param targetApproverId 新审批人
+     * @param targetApprover   新审批人
      *
      * @author wangweijun
      * @since 2024/9/12 11:21
      */
     @Override
-    public void updateApprover(TaskInstance taskInstance, String sourceApproverId, String targetApproverId) {
+    public void updateApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
-
             String tenantId = taskInstance.getTenantId();
-
             NodeStatus nodeStatus = taskInstance.getStatus();
             if (nodeStatus != NodeStatus.IN_PROGRESS) {
                 throw new WorkflowException("节点状态异常，当前节点状态：%s", nodeStatus.getDesc());
             }
 
             // 执行更新
-            doUpdateApprover(tenantId, Collections.singletonList(taskInstance), sourceApproverId, targetApproverId);
+            doUpdateApprover(tenantId, Collections.singletonList(taskInstance), sourceApproverId, targetApprover);
+        });
+    }
+
+    /**
+     * 更新角色审批人（未审批状态下）
+     *
+     * @param taskInstance         任务实例
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/12/3 17:23
+     */
+    @Override
+    public void updateRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            String tenantId = taskInstance.getTenantId();
+            NodeStatus nodeStatus = taskInstance.getStatus();
+            if (nodeStatus != NodeStatus.IN_PROGRESS) {
+                throw new WorkflowException("节点状态异常，当前节点状态：%s", nodeStatus.getDesc());
+            }
+
+            // 执行更新
+            doUpdateRoleApprover(tenantId, Collections.singletonList(taskInstance), sourceApproverRoleId, sourceApproverId, targetRoleApprover);
         });
     }
 
@@ -3613,16 +3668,15 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param workflowInstance 流程实例
      * @param sourceApproverId 原审批人
-     * @param targetApproverId 新审批人
+     * @param targetApprover   新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
     @Override
-    public void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, String targetApproverId) {
+    public void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
-
             String tenantId = workflowInstance.getTenantId();
             Integer workflowInstanceId = workflowInstance.getId();
 
@@ -3642,7 +3696,45 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             }
 
             // 执行更新
-            doUpdateApprover(tenantId, taskInstances, sourceApproverId, targetApproverId);
+            doUpdateApprover(tenantId, taskInstances, sourceApproverId, targetApprover);
+        });
+    }
+
+    /**
+     * 更新角色审批人（未审批状态下）
+     *
+     * @param workflowInstance     流程实例
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    @Override
+    public void updateRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            String tenantId = workflowInstance.getTenantId();
+            Integer workflowInstanceId = workflowInstance.getId();
+
+            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+            QueryBuilderWrapper.Builder<TaskInstance> builder = QueryBuilderWrapper.createLambda(TaskInstance.class)
+                    .eq(TaskInstance::getTenantId, tenantId)
+                    .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
+                    .eq(TaskInstance::getState, 1);
+            if (workflowInstanceId != null) {
+                builder.eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId);
+            }
+            Query query = builder.build();
+            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            List<TaskInstance> taskInstances = taskInstancePage.getRecords();
+            if (taskInstances.isEmpty()) {
+                WorkflowException.throwWorkflowInstanceNotFoundException();
+            }
+
+            // 执行更新
+            doUpdateRoleApprover(tenantId, taskInstances, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
         });
     }
 
@@ -3982,18 +4074,22 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param tenantId         租户 ID
      * @param taskInstances    流程实例列表
      * @param sourceApproverId 原审批人
-     * @param targetApproverId 新审批人
+     * @param targetApprover   新审批人
      *
      * @author wangweijun
      * @since 2024/9/12 11:10
      */
-    private void doUpdateApprover(String tenantId, List<TaskInstance> taskInstances, String sourceApproverId, String targetApproverId) {
+    private void doUpdateApprover(String tenantId, List<TaskInstance> taskInstances, String sourceApproverId, Approver targetApprover) {
         NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
         TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
 
         for (TaskInstance taskInstance : taskInstances) {
+            // 角色审批节点
+            if (taskInstance.isRoleApprove()) {
+                throw new WorkflowException("方法调用错误，请使用角色审批人更新接口");
+            }
             Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
-            // 查询用户任务关联表
+            // 更新用户任务关联表
             Query query = QueryBuilderWrapper.createLambda(NodeAssignment.class)
                     .eq(NodeAssignment::getTenantId, tenantId)
                     .eq(NodeAssignment::getNodeDefinitionId, nodeDefinitionId)
@@ -4005,16 +4101,17 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             if (CollectionUtils.isNotEmpty(nodeAssignments)) {
                 for (NodeAssignment nodeAssignment : nodeAssignments) {
                     // 设置为目标值
-                    nodeAssignment.setApproverId(targetApproverId);
+                    nodeAssignment.setApproverId(targetApprover.getId());
+                    nodeAssignment.setApproverName(targetApprover.getName());
+                    nodeAssignment.setApproverDesc(targetApprover.getDesc());
                     // 更新
                     nodeAssignmentExecutor.updateById(nodeAssignment);
                     // 记录日志
-                    String message = String.format("用户任务关联表 ID: %s, 原审批人: %s，现审批人: %s", nodeAssignment.getId(), sourceApproverId, targetApproverId);
+                    String message = String.format("用户任务关联表 ID: %s, 原审批人: [%s]，现审批人: [%s]", nodeAssignment.getId(), sourceApproverId, targetApprover);
                     recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.NODE_ASSIGNMENT_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
                 }
             }
-
-            // 查询审批人
+            // 更新审批人
             query = QueryBuilderWrapper.createLambda(TaskApprove.class)
                     .eq(TaskApprove::getTenantId, tenantId)
                     .eq(TaskApprove::getWorkflowInstanceId, taskInstance.getWorkflowInstanceId())
@@ -4029,16 +4126,182 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             if (CollectionUtils.isNotEmpty(taskApproves)) {
                 for (TaskApprove taskApprove : taskApproves) {
                     // 设置为目标值
-                    taskApprove.setApproverId(targetApproverId);
+                    taskApprove.setApproverId(targetApprover.getId());
+                    taskApprove.setApproverIdType(ApproverIdType.USER);
                     // 更新
                     taskApproveExecutor.updateById(taskApprove);
                     // 记录日志
-                    String message = String.format("任务实例审批表 ID: %s, 原审批人: %s, 现审批人: %s", taskApprove.getId(), sourceApproverId, targetApproverId);
+                    String message = String.format("任务实例审批表 ID: %s, 原审批人: [%s], 现审批人: [%s]", taskApprove.getId(), sourceApproverId, targetApprover);
                     recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.TASK_APPROVE_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
                 }
             }
         }
     }
+
+    private void doUpdateRoleApprover(String tenantId, List<TaskInstance> taskInstances, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+        TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+
+        for (TaskInstance taskInstance : taskInstances) {
+            // 角色审批节点
+            if (!taskInstance.isRoleApprove()) {
+                throw new WorkflowException("方法调用错误，请使用用户审批人更新接口");
+            }
+            Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
+
+            // 更新角色用户关联表：NodeRoleAssignment
+            Query query = QueryBuilderWrapper.createLambda(NodeRoleAssignment.class)
+                    .eq(NodeRoleAssignment::getTenantId, tenantId)
+                    .eq(NodeRoleAssignment::getNodeDefinitionId, nodeDefinitionId)
+                    .eq(NodeRoleAssignment::getRoleId, sourceApproverRoleId)
+                    .eq(NodeRoleAssignment::getUserId, sourceApproverId)
+                    .eq(NodeRoleAssignment::getState, 1)
+                    .build();
+            NodeRoleAssignment nodeRoleAssignment = nodeRoleAssignmentExecutor.get(query);
+            if (nodeRoleAssignment == null) {
+                throw new WorkflowException("角色用户不存在: 角色 ID: %s, 用户 ID: %s", sourceApproverRoleId, sourceApproverId);
+            }
+
+            query = QueryBuilderWrapper.createLambda(NodeRoleAssignment.class)
+                    .eq(NodeRoleAssignment::getTenantId, tenantId)
+                    .eq(NodeRoleAssignment::getNodeDefinitionId, nodeDefinitionId)
+                    .eq(NodeRoleAssignment::getRoleId, targetRoleApprover.getRoleId())
+                    .eq(NodeRoleAssignment::getUserId, targetRoleApprover.getUserId())
+                    .eq(NodeRoleAssignment::getState, 1)
+                    .build();
+            NodeRoleAssignment targetNodeRoleAssignment = nodeRoleAssignmentExecutor.get(query);
+            if (targetNodeRoleAssignment != null) {
+                throw new WorkflowException("目标角色用户已存在: 角色 ID: %s, 用户 ID: %s", targetRoleApprover.getRoleId(), targetRoleApprover.getUserId());
+            }
+
+            // 创建：新 NodeRoleAssignment
+            targetNodeRoleAssignment = NodeRoleAssignment.copyOf(nodeRoleAssignment);
+            targetNodeRoleAssignment.setRoleId(targetRoleApprover.getRoleId());
+            targetNodeRoleAssignment.setRoleName(targetRoleApprover.getRoleName());
+            targetNodeRoleAssignment.setRoleDesc(targetRoleApprover.getRoleDesc());
+            targetNodeRoleAssignment.setUserId(targetRoleApprover.getUserId());
+            targetNodeRoleAssignment.setUserName(targetRoleApprover.getUserName());
+            targetNodeRoleAssignment.setUserDesc(targetRoleApprover.getUserDesc());
+            // 新增：新 NodeRoleAssignment
+            nodeRoleAssignmentExecutor.save(targetNodeRoleAssignment);
+            // 删除：原 NodeRoleAssignment
+            nodeRoleAssignmentExecutor.delete(nodeRoleAssignment);
+            // 记录日志
+            String message = String.format("角色用户关联表 ID: %s, 原审批人: [%s, %s]，现审批人: [%s， %s]", targetNodeRoleAssignment.getId(), sourceApproverRoleId, sourceApproverId, targetNodeRoleAssignment.getRoleId(), targetNodeRoleAssignment.getUserId());
+            recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.NODE_ROLE_ASSIGNMENT_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
+
+            // 更新审批人
+            query = QueryBuilderWrapper.createLambda(TaskApprove.class)
+                    .eq(TaskApprove::getTenantId, tenantId)
+                    .eq(TaskApprove::getWorkflowInstanceId, taskInstance.getWorkflowInstanceId())
+                    .eq(TaskApprove::getTaskInstanceId, taskInstance.getId())
+                    .eq(TaskApprove::getApproverId, sourceApproverRoleId)
+                    .eq(TaskApprove::getStatus, ApproveStatus.IN_PROGRESS.getCode())
+                    .eq(TaskApprove::getActive, ActiveStatus.ACTIVE.getCode())
+                    .eq(TaskApprove::getState, 1)
+                    .build();
+            TaskApprove taskApprove = taskApproveExecutor.get(query);
+            if (taskApprove == null) {
+                throw new WorkflowException("任务实例审批人不存在: TaskApprove");
+            }
+            // 原角色审批人和目标角色审批人角色不同
+            TaskApprove targetTaskApprove = taskApprove;
+            if (!Objects.equals(sourceApproverRoleId, targetRoleApprover.getRoleId())) {
+                // 如果角色用户为空，则删除
+                List<NodeRoleAssignment> sourceNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionIdRoleId(tenantId, nodeDefinitionId, sourceApproverRoleId);
+                if (sourceNodeRoleAssignments.isEmpty()) {
+                    taskApproveExecutor.delete(taskApprove);
+                }
+                // 查询目标组是否存在
+                query = QueryBuilderWrapper.createLambda(TaskApprove.class)
+                        .eq(TaskApprove::getTenantId, tenantId)
+                        .eq(TaskApprove::getWorkflowInstanceId, taskInstance.getWorkflowInstanceId())
+                        .eq(TaskApprove::getTaskInstanceId, taskInstance.getId())
+                        .eq(TaskApprove::getApproverId, targetRoleApprover.getRoleId())
+                        .eq(TaskApprove::getStatus, ApproveStatus.IN_PROGRESS.getCode())
+                        .eq(TaskApprove::getActive, ActiveStatus.ACTIVE.getCode())
+                        .eq(TaskApprove::getState, 1)
+                        .build();
+                targetTaskApprove = taskApproveExecutor.get(query);
+                if (targetTaskApprove == null) {
+                    // 新增：新 TaskApprove
+                    targetTaskApprove = TaskApprove.copyOf(taskApprove);
+                    targetTaskApprove.setApproverId(targetRoleApprover.getRoleId());
+                    targetTaskApprove.setApproverIdType(ApproverIdType.ROLE);
+                    taskApproveExecutor.save(targetTaskApprove);
+                    // 记录日志
+                    message = String.format("任务实例审批表 ID: %s, 原审批人: [%s], 现审批人: [%s]", taskApprove.getId(), sourceApproverId, targetRoleApprover);
+                    recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.TASK_APPROVE_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
+                }
+            }
+
+            // 更新角色审批记录：TaskRoleApproveRecord
+            query = QueryBuilderWrapper.createLambda(TaskRoleApproveRecord.class)
+                    .eq(TaskRoleApproveRecord::getTenantId, tenantId)
+                    .eq(TaskRoleApproveRecord::getWorkflowInstanceId, taskInstance.getWorkflowInstanceId())
+                    .eq(TaskRoleApproveRecord::getTaskInstanceId, taskInstance.getId())
+                    .eq(TaskRoleApproveRecord::getTaskApproveId, taskApprove.getId())
+                    .eq(TaskRoleApproveRecord::getNodeRoleAssignmentId, nodeRoleAssignment.getId())
+                    .eq(TaskRoleApproveRecord::getState, 1)
+                    .build();
+            TaskRoleApproveRecord taskRoleApproveRecord = taskRoleApproveRecordExecutor.get(query);
+            if (taskRoleApproveRecord == null) {
+                throw new WorkflowException("角色任务实例审批记录不存在: TaskRoleApproveRecord");
+            }
+            // 新增：新 TaskRoleApproveRecord
+            TaskRoleApproveRecord newTaskRoleApproveRecord = TaskRoleApproveRecord.copyOf(taskRoleApproveRecord);
+            newTaskRoleApproveRecord.setTaskApproveId(targetTaskApprove.getId());
+            newTaskRoleApproveRecord.setNodeRoleAssignmentId(targetNodeRoleAssignment.getId());
+            taskRoleApproveRecordExecutor.save(newTaskRoleApproveRecord);
+            // 删除：旧 TaskRoleApproveRecord
+            taskRoleApproveRecordExecutor.delete(taskRoleApproveRecord);
+
+            // 更新用户任务关联表：NodeAssignment
+            query = QueryBuilderWrapper.createLambda(NodeAssignment.class)
+                    .eq(NodeAssignment::getTenantId, tenantId)
+                    .eq(NodeAssignment::getNodeDefinitionId, nodeDefinitionId)
+                    .eq(NodeAssignment::getApproverId, sourceApproverRoleId)
+                    .eq(NodeAssignment::getState, 1)
+                    .build();
+            NodeAssignment nodeAssignment = nodeAssignmentExecutor.get(query);
+            if (nodeAssignment == null) {
+                throw new WorkflowException("节点用户定义不存在: NodeAssignment");
+            }
+            // 原角色审批人和目标角色审批人角色不同
+            NodeAssignment targetNodeAssignment = nodeAssignment;
+            if (!Objects.equals(sourceApproverRoleId, targetRoleApprover.getRoleId())) {
+                query = QueryBuilderWrapper.createLambda(NodeAssignment.class)
+                        .eq(NodeAssignment::getTenantId, tenantId)
+                        .eq(NodeAssignment::getNodeDefinitionId, nodeDefinitionId)
+                        .eq(NodeAssignment::getApproverId, targetRoleApprover.getRoleId())
+                        .eq(NodeAssignment::getState, 1)
+                        .build();
+                targetNodeAssignment = nodeAssignmentExecutor.get(query);
+                if (targetNodeAssignment == null) {
+                    // 设置为目标值
+                    targetNodeAssignment = NodeAssignment.copyOf(nodeAssignment);
+                    targetNodeAssignment.setApproverId(targetRoleApprover.getRoleId());
+                    targetNodeAssignment.setApproverName(targetRoleApprover.getRoleName());
+                    targetNodeAssignment.setApproverDesc(targetRoleApprover.getRoleDesc());
+                    // 新增：新 NodeAssignment
+                    nodeAssignmentExecutor.save(targetNodeAssignment);
+                }
+                // 如果角色用户为空，则删除
+                List<NodeRoleAssignment> sourceNodeRoleAssignments = nodeRoleAssignmentExecutor.findByNodeDefinitionIdRoleId(tenantId, nodeDefinitionId, sourceApproverRoleId);
+                if (sourceNodeRoleAssignments.isEmpty()) {
+                    // 删除：原 NodeAssignment
+                    nodeAssignmentExecutor.delete(nodeAssignment);
+                }
+
+                // 记录日志
+                message = String.format("用户任务关联表 ID: %s, 原审批人: [%s, %s]，现审批人: [%s]", nodeAssignment.getId(), sourceApproverRoleId, sourceApproverId, targetRoleApprover);
+                recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstance.getId(), TaskHistoryMessage.NODE_ASSIGNMENT_CHANGED.getTemplate(), TaskHistoryMessage.custom(message));
+            }
+        }
+    }
+
 
     /**
      * 检查是否是顺序审批

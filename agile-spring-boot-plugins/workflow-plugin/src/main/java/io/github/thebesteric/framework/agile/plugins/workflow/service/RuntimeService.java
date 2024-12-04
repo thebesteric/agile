@@ -588,36 +588,75 @@ public interface RuntimeService {
      *
      * @param taskInstance     任务实例
      * @param sourceApproverId 原审批人
-     * @param targetApproverId 新审批人
+     * @param targetApprover   新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateApprover(TaskInstance taskInstance, String sourceApproverId, String targetApproverId);
+    void updateApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover);
 
     /**
      * 更新审批人（未审批状态下）
      *
      * @param workflowInstance 流程实例
      * @param sourceApproverId 原审批人
-     * @param targetApproverId 新审批人
+     * @param targetApprover   新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, String targetApproverId);
+    void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover);
 
     /**
      * 更新审批人（未审批状态下）
      *
      * @param tenantId         租户 ID
      * @param sourceApproverId 原审批人
-     * @param targetApproverId 新审批人
+     * @param targetApprover   新审批人
      *
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateApprover(String tenantId, String sourceApproverId, String targetApproverId);
+    void updateApprover(String tenantId, String sourceApproverId, Approver targetApprover);
+
+    /**
+     * 更新角色审批人（未审批状态下）
+     *
+     * @param taskInstance         任务实例
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/12/3 17:23
+     */
+    void updateRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
+
+    /**
+     * 更新角色审批人（未审批状态下）
+     *
+     * @param workflowInstance     流程实例
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    void updateRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
+
+    /**
+     * 更新角色审批人（未审批状态下）
+     *
+     * @param tenantId             租户 ID
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    void updateRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
 
     /**
      * 是否是角色审批实例
