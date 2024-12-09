@@ -223,7 +223,7 @@ class WorkflowHelperTest {
 
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
                 .name("部门主管审批").desc("任务节点").approveType(ApproveType.SEQ)
-                .dynamicAssignmentApproversNum(-1) // 预设 2 个审批人
+                .dynamicAssignmentApproversNum(-1) // 不预设审批人
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -338,9 +338,9 @@ class WorkflowHelperTest {
                 .name("部门主管审批").desc("任务节点")
                 .roleApprove(true)
                 .roleApproveType(RoleApproveType.ALL)
-                .roleUserApproveType(RoleUserApproveType.ALL)
-                // .roleApprovers(List.of(RoleApprover.of("组长", "组长组名称", "组长组备注", groupSet), RoleApprover.of("经理", "经理组名称", "经理组备注", manageSet)))
-                .roleApprovers(List.of(RoleApprover.of("组长", "组长组名称", "组长组备注", groupSet)))
+                .roleUserApproveType(RoleUserApproveType.ANY)
+                .roleApprovers(List.of(RoleApprover.of("组长", "组长组名称", "组长组备注", groupSet), RoleApprover.of("经理", "经理组名称", "经理组备注", manageSet)))
+                // .roleApprovers(List.of(RoleApprover.of("组长", "组长组名称", "组长组备注", groupSet)))
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -605,8 +605,8 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        String roleId = "组长1";
-        String approverId = "grouper-100";
+        // String roleId = "组长1";
+        // String approverId = "grouper-100";
 
         // String roleId = "组长";
         // String approverId = "大王";
@@ -614,8 +614,8 @@ class WorkflowHelperTest {
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
 
-        // String roleId = "负责人";
-        // String approverId = "major-1";
+        String roleId = "负责人";
+        String approverId = "major-1";
         // String approverId = "major-2";
 
         // String roleId = "总监";

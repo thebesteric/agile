@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
+import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowContext;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.repository.WorkflowRepositoryExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.repository.WorkflowRepositoryExecutorBuilder;
@@ -41,8 +42,11 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      */
     @Override
     public void addAttachment(WorkflowRepository attachment) {
-        WorkflowRepositoryExecutor executor = workflowRepositoryExecutorBuilder.build();
-        executor.save(attachment);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            WorkflowRepositoryExecutor executor = workflowRepositoryExecutorBuilder.build();
+            executor.save(attachment);
+        });
     }
 
     /**
@@ -82,11 +86,14 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      */
     @Override
     public Integer clearAttachmentByWorkflowInstanceId(String tenantId, Integer workflowInstanceId) {
-        Query query = QueryBuilderWrapper.createLambda(WorkflowRepository.class)
-                .eq(WorkflowRepository::getTenantId, tenantId)
-                .eq(WorkflowRepository::getWorkflowInstanceId, workflowInstanceId)
-                .build();
-        return workflowRepositoryExecutorBuilder.build().delete(query);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        return jdbcTemplateHelper.executeInTransaction(() -> {
+            Query query = QueryBuilderWrapper.createLambda(WorkflowRepository.class)
+                    .eq(WorkflowRepository::getTenantId, tenantId)
+                    .eq(WorkflowRepository::getWorkflowInstanceId, workflowInstanceId)
+                    .build();
+            return workflowRepositoryExecutorBuilder.build().delete(query);
+        });
     }
 
     /**
@@ -142,12 +149,15 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      */
     @Override
     public Integer deleteAttachment(String tenantId, Integer workflowInstanceId, Integer attachmentId) {
-        Query query = QueryBuilderWrapper.createLambda(WorkflowRepository.class)
-                .eq(WorkflowRepository::getTenantId, tenantId)
-                .eq(WorkflowRepository::getWorkflowInstanceId, workflowInstanceId)
-                .eq(WorkflowRepository::getId, attachmentId)
-                .build();
-        return workflowRepositoryExecutorBuilder.build().delete(query);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        return jdbcTemplateHelper.executeInTransaction(() -> {
+            Query query = QueryBuilderWrapper.createLambda(WorkflowRepository.class)
+                    .eq(WorkflowRepository::getTenantId, tenantId)
+                    .eq(WorkflowRepository::getWorkflowInstanceId, workflowInstanceId)
+                    .eq(WorkflowRepository::getId, attachmentId)
+                    .build();
+            return workflowRepositoryExecutorBuilder.build().delete(query);
+        });
     }
 
     /**

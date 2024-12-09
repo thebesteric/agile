@@ -162,28 +162,31 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      */
     @Override
     public NodeDefinition insertNode(NodeDefinition nodeDefinition, Integer prevNodeDefinitionId, Integer nextNodeDefinitionId) {
-        NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.nodeDefinition(nodeDefinition).build();
-        // 查找前置节点
-        NodeDefinition prevNodeDefinition = executor.getById(nodeDefinition.getTenantId(), prevNodeDefinitionId);
-        // 查找后置节点
-        NodeDefinition nextNodeDefinition = executor.getById(nodeDefinition.getTenantId(), nextNodeDefinitionId);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        return jdbcTemplateHelper.executeInTransaction(() -> {
+            NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.nodeDefinition(nodeDefinition).build();
+            // 查找前置节点
+            NodeDefinition prevNodeDefinition = executor.getById(nodeDefinition.getTenantId(), prevNodeDefinitionId);
+            // 查找后置节点
+            NodeDefinition nextNodeDefinition = executor.getById(nodeDefinition.getTenantId(), nextNodeDefinitionId);
 
-        if (prevNodeDefinition == null || nextNodeDefinition == null) {
-            throw new WorkflowException("节点插入失败: 前置节点或后置节点不存在");
-        }
+            if (prevNodeDefinition == null || nextNodeDefinition == null) {
+                throw new WorkflowException("节点插入失败: 前置节点或后置节点不存在");
+            }
 
-        // 获取当前流程下所有节点
-        List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutorBuilder.build().findByWorkflowDefinitionId(nodeDefinition.getTenantId(), nodeDefinition.getWorkflowDefinitionId());
-        // 判断 prevNodeDefinition 和 nextNodeDefinition 是否是相邻的两个节点
-        if (nodeDefinitions.indexOf(nextNodeDefinition) - nodeDefinitions.indexOf(prevNodeDefinition) != 1) {
-            throw new WorkflowException("节点插入失败: 前置节点和后置节点顺序错误，或之间含有其他节点");
-        }
+            // 获取当前流程下所有节点
+            List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutorBuilder.build().findByWorkflowDefinitionId(nodeDefinition.getTenantId(), nodeDefinition.getWorkflowDefinitionId());
+            // 判断 prevNodeDefinition 和 nextNodeDefinition 是否是相邻的两个节点
+            if (nodeDefinitions.indexOf(nextNodeDefinition) - nodeDefinitions.indexOf(prevNodeDefinition) != 1) {
+                throw new WorkflowException("节点插入失败: 前置节点和后置节点顺序错误，或之间含有其他节点");
+            }
 
-        // 计算 sequence
-        double sequence = (prevNodeDefinition.getSequence() + nextNodeDefinition.getSequence()) / 2;
-        nodeDefinition.setSequence(sequence);
-        // 创建节点
-        return this.createNode(nodeDefinition);
+            // 计算 sequence
+            double sequence = (prevNodeDefinition.getSequence() + nextNodeDefinition.getSequence()) / 2;
+            nodeDefinition.setSequence(sequence);
+            // 创建节点
+            return this.createNode(nodeDefinition);
+        });
     }
 
     /**
@@ -510,7 +513,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
             // 将流程定义设置为发布状态
             this.deploymentService.publish(workflowDefinition);
 
-        }, true);
+        });
     }
 
 
@@ -544,8 +547,11 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @since 2024/10/8 14:33
      */
     private void createRelation(NodeRelation nodeRelation) {
-        NodeRelationExecutor executor = nodeRelationExecutorBuilder.nodeRelation(nodeRelation).build();
-        executor.save();
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            NodeRelationExecutor executor = nodeRelationExecutorBuilder.nodeRelation(nodeRelation).build();
+            executor.save();
+        });
     }
 
     /**
@@ -558,8 +564,11 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @since 2024/10/8 14:35
      */
     private void inactiveRelations(String tenantId, Integer workflowDefinitionId) {
-        NodeRelationExecutor executor = nodeRelationExecutorBuilder.build();
-        executor.inactiveByWorkflowDefinitionId(tenantId, workflowDefinitionId);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            NodeRelationExecutor executor = nodeRelationExecutorBuilder.build();
+            executor.inactiveByWorkflowDefinitionId(tenantId, workflowDefinitionId);
+        });
     }
 
     /**
@@ -575,16 +584,19 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @since 2024/10/8 10:15
      */
     private void recordNodeDefinitionHistory(String tenantId, Integer nodeDefinitionId, DMLOperator dmlOperator, NodeDefinition beforeObj, NodeDefinition currentObj, String desc) {
-        NodeDefinitionHistory history = NodeDefinitionHistoryBuilder.builder()
-                .tenantId(tenantId)
-                .nodeDefinitionId(nodeDefinitionId)
-                .dmlOperator(dmlOperator)
-                .beforeObj(beforeObj)
-                .currentObj(currentObj)
-                .desc(desc)
-                .build();
-        NodeDefinitionHistoryExecutor historyExecutor = this.nodeDefinitionHistoryExecutorBuilder.build();
-        historyExecutor.save(history);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            NodeDefinitionHistory history = NodeDefinitionHistoryBuilder.builder()
+                    .tenantId(tenantId)
+                    .nodeDefinitionId(nodeDefinitionId)
+                    .dmlOperator(dmlOperator)
+                    .beforeObj(beforeObj)
+                    .currentObj(currentObj)
+                    .desc(desc)
+                    .build();
+            NodeDefinitionHistoryExecutor historyExecutor = this.nodeDefinitionHistoryExecutorBuilder.build();
+            historyExecutor.save(history);
+        });
     }
 
     /**

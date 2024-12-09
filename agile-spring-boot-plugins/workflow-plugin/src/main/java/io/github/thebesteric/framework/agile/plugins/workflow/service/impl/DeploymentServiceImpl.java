@@ -97,17 +97,20 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void delete(String tenantId, String key) {
-        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
-        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
-                .eq(WorkflowDefinition::getTenantId, tenantId)
-                .eq(WorkflowDefinition::getKey, key).build();
-        WorkflowDefinition workflowDefinition = executor.get(query);
-        // 检查是否有正在进行的流程实例
-        this.throwExceptionWhenWorkflowDefinitionHasInProcessInstances(workflowDefinition);
-        // 删除流程定义
-        executor.delete(workflowDefinition);
-        // 记录日志
-        this.recordWorkflowDefinitionHistory(tenantId, workflowDefinition.getId(), DMLOperator.DELETE, workflowDefinition, null, "流程删除");
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+            Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                    .eq(WorkflowDefinition::getTenantId, tenantId)
+                    .eq(WorkflowDefinition::getKey, key).build();
+            WorkflowDefinition workflowDefinition = executor.get(query);
+            // 检查是否有正在进行的流程实例
+            this.throwExceptionWhenWorkflowDefinitionHasInProcessInstances(workflowDefinition);
+            // 删除流程定义
+            executor.delete(workflowDefinition);
+            // 记录日志
+            this.recordWorkflowDefinitionHistory(tenantId, workflowDefinition.getId(), DMLOperator.DELETE, workflowDefinition, null, "流程删除");
+        });
     }
 
     /**
@@ -168,17 +171,19 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void disable(String tenantId, String key) {
-        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
-        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
-                .eq(WorkflowDefinition::getTenantId, tenantId)
-                .eq(WorkflowDefinition::getKey, key).build();
-        WorkflowDefinition workflowDefinition = executor.get(query);
-        if (workflowDefinition.getState() == 0) {
-            return;
-        }
-        workflowDefinition.setState(0);
-        this.update(workflowDefinition, "流程禁用");
-
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+            Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                    .eq(WorkflowDefinition::getTenantId, tenantId)
+                    .eq(WorkflowDefinition::getKey, key).build();
+            WorkflowDefinition workflowDefinition = executor.get(query);
+            if (workflowDefinition.getState() == 0) {
+                return;
+            }
+            workflowDefinition.setState(0);
+            this.update(workflowDefinition, "流程禁用");
+        });
     }
 
     /**
@@ -189,16 +194,19 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void enable(String tenantId, String key) {
-        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
-        Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
-                .eq(WorkflowDefinition::getTenantId, tenantId)
-                .eq(WorkflowDefinition::getKey, key).build();
-        WorkflowDefinition workflowDefinition = executor.get(query);
-        if (workflowDefinition.getState() == 1) {
-            return;
-        }
-        workflowDefinition.setState(1);
-        this.update(workflowDefinition, "流程启用");
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+            Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
+                    .eq(WorkflowDefinition::getTenantId, tenantId)
+                    .eq(WorkflowDefinition::getKey, key).build();
+            WorkflowDefinition workflowDefinition = executor.get(query);
+            if (workflowDefinition.getState() == 1) {
+                return;
+            }
+            workflowDefinition.setState(1);
+            this.update(workflowDefinition, "流程启用");
+        });
     }
 
     /**
@@ -211,11 +219,14 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void publish(WorkflowDefinition workflowDefinition) {
-        if (workflowDefinition.isPublished()) {
-            return;
-        }
-        workflowDefinition.setPublish(PublishStatus.PUBLISHED);
-        this.update(workflowDefinition, "流程发布");
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            if (workflowDefinition.isPublished()) {
+                return;
+            }
+            workflowDefinition.setPublish(PublishStatus.PUBLISHED);
+            this.update(workflowDefinition, "流程发布");
+        });
     }
 
     /**
@@ -228,11 +239,14 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void unPublish(WorkflowDefinition workflowDefinition) {
-        if (!workflowDefinition.isPublished()) {
-            return;
-        }
-        workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
-        this.update(workflowDefinition, "流程取消发布");
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            if (!workflowDefinition.isPublished()) {
+                return;
+            }
+            workflowDefinition.setPublish(PublishStatus.UNPUBLISHED);
+            this.update(workflowDefinition, "流程取消发布");
+        });
     }
 
     /**
@@ -253,16 +267,19 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public void update(WorkflowDefinition workflowDefinition, String desc) {
-        // 检查是否有正在进行的流程实例
-        this.throwExceptionWhenWorkflowDefinitionHasInProcessInstances(workflowDefinition);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            // 检查是否有正在进行的流程实例
+            this.throwExceptionWhenWorkflowDefinitionHasInProcessInstances(workflowDefinition);
 
-        // 更新流程定义
-        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
-        WorkflowDefinition beforeObj = executor.getById(workflowDefinition.getId());
-        executor.updateById(workflowDefinition);
+            // 更新流程定义
+            WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+            WorkflowDefinition beforeObj = executor.getById(workflowDefinition.getId());
+            executor.updateById(workflowDefinition);
 
-        // 记录日志
-        this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.UPDATE, beforeObj, workflowDefinition, desc);
+            // 记录日志
+            this.recordWorkflowDefinitionHistory(workflowDefinition.getTenantId(), workflowDefinition.getId(), DMLOperator.UPDATE, beforeObj, workflowDefinition, desc);
+        });
     }
 
     /**
@@ -328,16 +345,19 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @since 2024/10/8 10:15
      */
     public void recordWorkflowDefinitionHistory(String tenantId, Integer workflowDefinitionId, DMLOperator dmlOperator, WorkflowDefinition beforeObj, WorkflowDefinition currentObj, String desc) {
-        WorkflowDefinitionHistory history = WorkflowDefinitionHistoryBuilder.builder()
-                .tenantId(tenantId)
-                .workflowDefinitionId(workflowDefinitionId)
-                .dmlOperator(dmlOperator)
-                .beforeObj(beforeObj)
-                .currentObj(currentObj)
-                .desc(desc)
-                .build();
-        WorkflowDefinitionHistoryExecutor historyExecutor = workflowDefinitionHistoryExecutorBuilder.build();
-        historyExecutor.save(history);
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            WorkflowDefinitionHistory history = WorkflowDefinitionHistoryBuilder.builder()
+                    .tenantId(tenantId)
+                    .workflowDefinitionId(workflowDefinitionId)
+                    .dmlOperator(dmlOperator)
+                    .beforeObj(beforeObj)
+                    .currentObj(currentObj)
+                    .desc(desc)
+                    .build();
+            WorkflowDefinitionHistoryExecutor historyExecutor = workflowDefinitionHistoryExecutorBuilder.build();
+            historyExecutor.save(history);
+        });
     }
 
     /**
