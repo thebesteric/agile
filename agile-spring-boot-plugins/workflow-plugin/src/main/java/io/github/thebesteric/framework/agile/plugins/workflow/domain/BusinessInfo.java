@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 import cn.hutool.json.JSONUtil;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
 import lombok.Data;
+import lombok.SneakyThrows;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -42,9 +43,13 @@ public class BusinessInfo implements Serializable {
         }
     }
 
+    @SneakyThrows
     @SuppressWarnings("unchecked")
     public <T> T getObject(Class<T> clazz) {
-        if (ReflectUtils.isPrimitiveOrWarp(clazz) || ReflectUtils.isStringType(clazz)) {
+        if (ReflectUtils.isPrimitiveOrWarp(clazz)) {
+            return clazz.getDeclaredConstructor(String.class).newInstance(business.toString());
+        }
+        else if (ReflectUtils.isStringType(clazz)) {
             return (T) business;
         }
         return JSONUtil.toBean(business.toString(), clazz);
