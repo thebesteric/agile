@@ -4075,6 +4075,24 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
+     * 设置业务信息
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param businessInfo       业务信息
+     *
+     * @author wangweijun
+     * @since 2024/12/9 19:39
+     */
+    @Override
+    public void setBusinessInfo(String tenantId, Integer workflowInstanceId, BusinessInfo businessInfo) {
+        WorkflowInstance workflowInstance = getWorkflowInstanceById(tenantId, workflowInstanceId);
+        workflowInstance.setBusinessInfo(businessInfo);
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        workflowInstanceExecutor.updateById(workflowInstance);
+    }
+
+    /**
      * doUpdateApprover
      *
      * @param tenantId         租户 ID

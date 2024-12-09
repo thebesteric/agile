@@ -1270,4 +1270,21 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
         WorkflowInstance workflowInstance = getWorkflowInstanceById(tenantId, workflowInstanceId);
         return workflowInstance.getBusinessInfo();
     }
+
+    /**
+     * 获取业务信息
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return BusinessInfo
+     *
+     * @author wangweijun
+     * @since 2024/12/9 11:34
+     */
+    public void setBusinessInfo(String tenantId, Integer workflowInstanceId, BusinessInfo businessInfo) {
+        WorkflowInstance workflowInstance = getWorkflowInstanceById(tenantId, workflowInstanceId);
+        workflowInstance.setBusinessInfo(businessInfo);
+        this.runtimeService.setBusinessInfo(tenantId, workflowInstanceId, businessInfo);
+    }
 }

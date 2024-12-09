@@ -848,4 +848,16 @@ public interface RuntimeService {
      * @since 2024/10/22 11:50
      */
     List<WorkflowInstance> findWorkflowInstances(String tenantId, WorkflowStatus workflowStatus, String workflowDefinitionKey);
+
+    /**
+     * 设置业务信息
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param businessInfo       业务信息
+     *
+     * @author wangweijun
+     * @since 2024/12/9 19:39
+     */
+    void setBusinessInfo(String tenantId, Integer workflowInstanceId, BusinessInfo businessInfo);
 }
