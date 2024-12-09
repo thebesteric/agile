@@ -1125,8 +1125,11 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         BusinessInfo businessInfo = runtimeServiceHelper.getBusinessInfo(tenantId, 1);
+        if (businessInfo == null) {
+            runtimeServiceHelper.setBusinessInfo(tenantId, 1, BusinessInfo.of(1L));
+        }
         System.out.println(businessInfo.getObject());
-        System.out.println(businessInfo.getObject(Map.class));
+        System.out.println(businessInfo.getObject(Long.class));
         System.out.println(businessInfo.getBusiness());
     }
 
