@@ -347,4 +347,5 @@
 - 工作流插件 (pref): 部分方法，增加事务判断
 - 工作流插件 (feat): 审批人更新：支持角色用户修改，支持跨组更新
 - 工作流插件 (feat): 增加获取业务信息 API
+- 工作流插件 (feat): 增加设置 BusinessInfo 的 API
 - 数据库插件 (pref): 包路径扫描时增加对 @ComponentScan 的 value 属性支持
