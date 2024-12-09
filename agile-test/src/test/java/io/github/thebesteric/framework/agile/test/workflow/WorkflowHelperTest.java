@@ -723,8 +723,8 @@ class WorkflowHelperTest {
      */
     @Test
     void reject() {
-        String roleId = null;
-        String approverId = "test";
+        // String roleId = null;
+        // String approverId = "test";
         // String approverId = "张三";
         // String approverId = "李四";
         // String approverId = "王五";
@@ -734,8 +734,8 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        // String roleId = "组长";
-        // String approverId = "grouper-1";
+        String roleId = "组长";
+        String approverId = "grouper-1";
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -873,7 +873,7 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         WorkflowServiceHelper workflowServiceHelper = workflowHelper.getWorkflowServiceHelper();
 
-        workflowServiceHelper.deleteNode(tenantId, 4);
+        workflowServiceHelper.deleteNode(tenantId, 3);
     }
 
 

@@ -309,9 +309,17 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 this.deploymentService.unPublish(workflowDefinition);
             }
 
+            // 删除节点用户
+            NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
+            nodeAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinitionId);
+            if (nodeDefinition.isRoleApprove()) {
+                NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+                nodeRoleAssignmentExecutor.deleteByNodeDefinitionId(tenantId, nodeDefinitionId);
+            }
+
+            // 删除节点
             NodeDefinitionExecutor executor = nodeDefinitionExecutorBuilder.tenantId(tenantId).id(nodeDefinitionId).build();
             boolean isDeleted = executor.deleteById();
-
 
             // 记录日志
             this.recordNodeDefinitionHistory(tenantId, nodeDefinitionId, DMLOperator.DELETE, nodeDefinition, null, "节点删除");
