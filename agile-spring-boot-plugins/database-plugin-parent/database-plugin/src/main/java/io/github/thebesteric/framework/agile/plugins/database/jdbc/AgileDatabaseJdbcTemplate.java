@@ -68,9 +68,11 @@ public class AgileDatabaseJdbcTemplate {
             initTableMeta();
             for (Class<?> clazz : entityClasses) {
                 EntityClass entityClass = clazz.getAnnotation(EntityClass.class);
-                String[] schemas = entityClass.schemas();
-                if (schemas.length > 0 && Arrays.stream(schemas).noneMatch(schema -> Objects.equals(schema, databaseName))) {
-                    continue;
+                if (entityClass != null) {
+                    String[] schemas = entityClass.schemas();
+                    if (schemas.length > 0 && Arrays.stream(schemas).noneMatch(schema -> Objects.equals(schema, databaseName))) {
+                        continue;
+                    }
                 }
                 EntityClassDomain entityClassDomain = EntityClassDomain.of(properties.getTableNamePrefix(), clazz);
                 String tableName = entityClassDomain.getTableName();
