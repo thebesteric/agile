@@ -10,7 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.*;
  * @version v1.0
  * @since 2024-05-23 10:26:12
  */
-@EntityClass(value = "bar", comment = "The bar")
+@EntityClass(value = "bar", comment = "The bar", schemas = "test")
 @Unique(column = "a")
 @Unique(column = "b")
 @UniqueGroup(columns = {"a", "b"})
