@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * EntityClass
+ * EntityClassDomain
  *
  * @author wangweijun
  * @version v1.0
