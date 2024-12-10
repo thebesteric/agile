@@ -4,6 +4,10 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.ChangeFields;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassCreateListener;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassUpdateListener;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -17,7 +21,7 @@ import java.util.Date;
  */
 @TableName("foo")
 @EntityClass(comment = "测试表")
-public class Foo extends BaseEntity {
+public class Foo extends BaseEntity implements EntityClassCreateListener, EntityClassUpdateListener {
 
     @EntityColumn(length = 32, unique = true, nullable = false, defaultExpression = "'foo'")
     private String name;
@@ -67,4 +71,26 @@ public class Foo extends BaseEntity {
 
     @EntityColumn(length = 32, index = true)
     private String f;
+
+    @Override
+    public EntityClassDomain preCreateTable(EntityClassDomain entityClassDomain) {
+        System.out.println("==================创建前==================");
+        return entityClassDomain;
+    }
+
+    @Override
+    public void postCreateTable() {
+        System.out.println("==================创建后=================");
+    }
+
+    @Override
+    public ChangeFields preUpdateTable(ChangeFields changeFields) {
+        System.out.println("==================更新前==================");
+        return changeFields;
+    }
+
+    @Override
+    public void postUpdateTable() {
+        System.out.println("==================更新后==================");
+    }
 }
