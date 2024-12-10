@@ -349,3 +349,4 @@
 - 工作流插件 (feat): 增加获取业务信息 API
 - 工作流插件 (feat): 增加设置 BusinessInfo 的 API
 - 数据库插件 (pref): 包路径扫描时增加对 @ComponentScan 的 value 属性支持
+- 数据库插件 (feat): 支持在指定数据库下创建表
