@@ -5,6 +5,7 @@ import cn.hutool.core.text.CharSequenceUtil;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseContext;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseProperties;
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ReferenceDomain;
@@ -57,6 +58,7 @@ public class AgileDatabaseJdbcTemplate {
         boolean update = AgileDatabaseProperties.DDLAuto.UPDATE == ddlAuto;
 
         DataSource dataSource = jdbcTemplate.getDataSource();
+        String databaseName = jdbcTemplateHelper.getDatabaseName();
         assert dataSource != null;
         Set<Class<?>> entityClasses = context.getEntityClasses();
 
@@ -65,6 +67,11 @@ public class AgileDatabaseJdbcTemplate {
             // 初始化元数据表
             initTableMeta();
             for (Class<?> clazz : entityClasses) {
+                EntityClass entityClass = clazz.getAnnotation(EntityClass.class);
+                String[] schemas = entityClass.schemas();
+                if (schemas.length > 0 && Arrays.stream(schemas).noneMatch(schema -> Objects.equals(schema, databaseName))) {
+                    continue;
+                }
                 EntityClassDomain entityClassDomain = EntityClassDomain.of(properties.getTableNamePrefix(), clazz);
                 String tableName = entityClassDomain.getTableName();
                 String catalog = connection.getCatalog();

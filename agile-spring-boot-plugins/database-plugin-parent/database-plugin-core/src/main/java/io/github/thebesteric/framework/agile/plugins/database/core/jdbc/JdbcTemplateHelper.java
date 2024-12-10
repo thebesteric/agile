@@ -28,6 +28,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * JdbcTemplateHelper
@@ -99,6 +101,27 @@ public class JdbcTemplateHelper {
             consumer.accept(connection.getMetaData());
         }
     }
+
+    /**
+     * 获取数据库名称
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2024/12/10 11:25
+     */
+    public String getDatabaseName() {
+        if (jdbcUrl == null || jdbcUrl.isEmpty()) {
+            throw new IllegalArgumentException("JDBC URL cannot be null or empty");
+        }
+        Pattern mysqlPattern = Pattern.compile("jdbc:mysql://[^/]+/(\\w+)(\\?.*)?");
+        Matcher mysqlMatcher = mysqlPattern.matcher(jdbcUrl);
+        if (mysqlMatcher.matches()) {
+            return mysqlMatcher.group(1);
+        }
+        throw new IllegalArgumentException("Unsupported JDBC URL format: " + jdbcUrl);
+    }
+
 
     /**
      * 在事务中执行（有返回值）默认不会创建新的事务

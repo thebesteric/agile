@@ -21,4 +21,7 @@ public @interface EntityClass {
 
     /** 忽略创建表 */
     boolean ignore() default false;
+
+    /** 指定数据库（默认表示所有库都会创建） */
+    String[] schemas() default {};
 }
