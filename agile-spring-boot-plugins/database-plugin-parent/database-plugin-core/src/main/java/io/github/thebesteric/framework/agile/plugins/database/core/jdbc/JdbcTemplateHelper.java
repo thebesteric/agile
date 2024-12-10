@@ -114,14 +114,13 @@ public class JdbcTemplateHelper {
         if (jdbcUrl == null || jdbcUrl.isEmpty()) {
             throw new IllegalArgumentException("JDBC URL cannot be null or empty");
         }
-        Pattern mysqlPattern = Pattern.compile("jdbc:mysql://[^/]+/(\\w+)(\\?.*)?");
-        Matcher mysqlMatcher = mysqlPattern.matcher(jdbcUrl);
-        if (mysqlMatcher.matches()) {
-            return mysqlMatcher.group(1);
+        Pattern pattern = Pattern.compile("jdbc:mysql://[^/]+/([^/?]+)(\\?.*)?");
+        Matcher matcher = pattern.matcher(jdbcUrl);
+        if (matcher.matches()) {
+            return matcher.group(1);
         }
         throw new IllegalArgumentException("Unsupported JDBC URL format: " + jdbcUrl);
     }
-
 
     /**
      * 在事务中执行（有返回值）默认不会创建新的事务
