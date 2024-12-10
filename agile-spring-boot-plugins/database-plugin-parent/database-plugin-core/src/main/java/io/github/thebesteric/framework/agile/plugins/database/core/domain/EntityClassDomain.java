@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 public class EntityClassDomain {
     private String tableName;
     private String comment;
+    private List<String> schemas = new ArrayList<>();
     private Class<?> entityClass;
     private List<Field> entityFields = new ArrayList<>();
     private List<ColumnDomain> columnDomains = new ArrayList<>();
@@ -60,7 +61,6 @@ public class EntityClassDomain {
             comment = name;
         }
 
-
         // 生成完整表名
         String tableName;
         tableNamePrefix = tableNamePrefix == null ? "" : tableNamePrefix.trim();
@@ -70,8 +70,15 @@ public class EntityClassDomain {
             tableName = tableNamePrefix + CharSequenceUtil.toUnderlineCase(entityClass.getSimpleName());
         }
 
+        // 获取 schemas
+        List<String> schemas = new ArrayList<>();
+        if (entityClassAnno != null) {
+            schemas = Arrays.stream(entityClassAnno.schemas()).toList();
+        }
+
         entityClassDomain.tableName = tableName;
         entityClassDomain.comment = comment;
+        entityClassDomain.schemas = schemas;
         entityClassDomain.entityClass = entityClass;
         entityClassDomain.entityFields = entityFields(entityClass);
 
@@ -79,7 +86,6 @@ public class EntityClassDomain {
         for (Field entityField : entityClassDomain.entityFields) {
             entityClassDomain.columnDomains.add(ColumnDomain.of(tableName, entityField));
         }
-
 
         // 唯一索引
         if (uniqueAnnotations.length > 0) {
