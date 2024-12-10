@@ -46,7 +46,7 @@ public class PackageFinder {
     private static String[] parseComponentScanAnnotation(ComponentScan componentScan) {
         if (componentScan != null) {
             if (componentScan.value().length > 0) {
-                return componentScan.basePackages();
+                return componentScan.value();
             }
             if (componentScan.basePackages().length > 0) {
                 return componentScan.basePackages();
