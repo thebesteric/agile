@@ -18,6 +18,7 @@ import java.util.Arrays;
  */
 @Getter
 public enum WorkflowStatus implements BaseEnum {
+    WAITING(0, "待审批"),
     IN_PROGRESS(1, "进行中"),
     COMPLETED(2, "已完成"),
     CANCELED(3, "已取消"),

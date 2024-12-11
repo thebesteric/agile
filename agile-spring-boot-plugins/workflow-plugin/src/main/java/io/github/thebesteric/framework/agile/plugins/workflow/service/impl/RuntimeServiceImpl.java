@@ -117,7 +117,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             WorkflowInstanceExecutor instanceExecutor = workflowInstanceExecutorBuilder.newInstance()
                     .tenantId(tenantId).workflowDefinitionId(workflowDefinition.getId())
                     .requester(requester).businessInfo(businessInfo)
-                    .requestConditions(requestConditions).status(WorkflowStatus.IN_PROGRESS).desc(desc).build();
+                    .requestConditions(requestConditions).status(WorkflowStatus.WAITING).desc(desc).build();
             WorkflowInstance workflowInstance = instanceExecutor.save();
             Integer workflowInstanceId = workflowInstance.getId();
 
@@ -930,20 +930,26 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
             TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
 
+            // 设置流程实例状态为：进行中
+            WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+            WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(taskInstance.getWorkflowInstanceId());
+            if (WorkflowStatus.WAITING == workflowInstance.getStatus()) {
+                workflowInstance.setStatus(WorkflowStatus.IN_PROGRESS);
+                workflowInstanceExecutor.updateById(workflowInstance);
+            }
+
             // 获取当前审批任务
             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
             TaskApprove taskApprove;
             // 自动审批的情况
             if (WorkflowConstants.AUTO_APPROVER_ID.equals(userId)) {
-                Integer workflowInstanceId = taskInstance.getWorkflowInstanceId();
-                WorkflowInstance workflowInstance = getWorkflowInstanceById(tenantId, workflowInstanceId);
                 Integer workflowDefinitionId = workflowInstance.getWorkflowDefinitionId();
                 // 获取默认审批人
                 Approver defaultApprover = this.getDefaultApprover(tenantId, workflowDefinitionId);
                 // 创建一个 approver
                 taskApprove = TaskApproveBuilder.builder()
                         .tenantId(tenantId)
-                        .workflowInstanceId(workflowInstanceId)
+                        .workflowInstanceId(workflowInstance.getId())
                         .taskInstanceId(taskInstanceId)
                         .approverId(defaultApprover.getId())
                         .active(ActiveStatus.INACTIVE)
@@ -1059,9 +1065,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         .build();
                 taskInstanceExecutor.save();
 
-                // 获取流程实例
-                WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
-                WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
+                // 获取最新状态
+                workflowInstance = workflowInstanceExecutor.getById(taskInstance.getWorkflowInstanceId());
 
                 // 保存流程定义
                 this.saveWorkflowSchema(tenantId, workflowInstance);
@@ -1913,6 +1918,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             currTaskInstance.setStatus(NodeStatus.IN_PROGRESS);
             taskInstanceExecutor.updateById(currTaskInstance);
 
+            // 判断是否是第一个审批节点，是否需要将流程实例状态修改为：WAITING
+            List<NodeDefinition> taskNodes = nodeDefinitionExecutor.findTaskNodes(tenantId, workflowDefinition.getId());
+            NodeDefinition firstNode = taskNodes.stream().min(Comparator.comparingDouble(NodeDefinition::getSequence)).orElseThrow(() -> new WorkflowException("节点定义不存在"));
+            if (Objects.equals(firstNode.getId(), nodeDefinition.getId()) && currTaskInstance.getApprovedCount() == 0) {
+                workflowInstance.setStatus(WorkflowStatus.WAITING);
+                workflowInstanceExecutor.updateById(workflowInstance);
+            }
+
             // 记录流程日志（审批撤回）
             recordLogs(tenantId, workflowInstanceId, taskInstanceId, nodeDefinition.getName(), TaskHistoryMessage.INSTANCE_REDO);
         });
@@ -2452,9 +2465,17 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
             NodeDefinitionExecutor nodeDefinitionExecutor = nodeDefinitionExecutorBuilder.build();
             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+            WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
 
             // 任务实例
             TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+
+            // 流程实例
+            WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(taskInstance.getWorkflowInstanceId());
+            if (WorkflowStatus.WAITING == workflowInstance.getStatus()) {
+                workflowInstance.setStatus(WorkflowStatus.IN_PROGRESS);
+                workflowInstanceExecutor.updateById(workflowInstance);
+            }
 
             // 获取节点定义，找到审批类型
             NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(taskInstance.getNodeDefinitionId());

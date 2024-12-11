@@ -55,7 +55,7 @@ public class WorkflowInstance extends BaseEntity {
     private RequestConditions requestConditions;
 
     @EntityColumn(name = "status", type = EntityColumn.Type.TINY_INT, nullable = false, comment = "流程状态")
-    private WorkflowStatus status;
+    private WorkflowStatus status = WorkflowStatus.WAITING;
 
     @EntityColumn(name = "flow_schema", type = EntityColumn.Type.JSON, comment = "流程定义")
     private WorkflowDefinitionFlowSchema flowSchema;
