@@ -83,6 +83,9 @@ public class ColumnDomain {
     /** 外键 */
     private ReferenceDomain reference;
 
+    /** 字段排序 */
+    private int sequence;
+
     /** 是否是数据库字段 */
     private boolean exist = true;
 
@@ -115,6 +118,7 @@ public class ColumnDomain {
         domain.autoIncrement = autoIncrement(field, column);
         domain.forUpdate = column != null ? column.forUpdate() : null;
         domain.reference = referenceDomain(tableName, domain.name, column);
+        domain.sequence = column != null ? column.sequence() : Integer.MAX_VALUE;
         domain.exist = columnExist(field, column);
         return domain;
     }

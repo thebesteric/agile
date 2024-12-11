@@ -87,6 +87,18 @@ public class EntityClassDomain {
             entityClassDomain.columnDomains.add(ColumnDomain.of(tableName, entityField));
         }
 
+        // 字段排序
+        List<Field> sortedEntityFields = new ArrayList<>(entityClassDomain.entityFields.size());
+        entityClassDomain.columnDomains.sort(Comparator.comparingInt(ColumnDomain::getSequence));
+        for (ColumnDomain columnDomain : entityClassDomain.columnDomains) {
+            Class<?> fieldType = columnDomain.getFieldType();
+            String fieldName = columnDomain.getFieldName();
+            Field field = entityClassDomain.entityFields.stream().filter(f -> fieldName.equals(f.getName()) && fieldType == f.getType())
+                    .findFirst().orElseThrow(() -> new IllegalArgumentException("字段类型解析错误，请核实"));
+            sortedEntityFields.add(field);
+        }
+        entityClassDomain.entityFields = sortedEntityFields;
+
         // 唯一索引
         if (uniqueAnnotations.length > 0) {
             entityClassDomain.onClassUniqueColumns = new ArrayList<>(Arrays.stream(uniqueAnnotations).map(Unique::column).toList());

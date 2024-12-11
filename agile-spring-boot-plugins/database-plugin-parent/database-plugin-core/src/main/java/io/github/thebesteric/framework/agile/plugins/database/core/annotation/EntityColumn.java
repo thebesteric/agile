@@ -69,6 +69,9 @@ public @interface EntityColumn {
     /** 外键引用关系 */
     Reference reference() default @Reference();
 
+    /** 字段排序 */
+    int sequence() default Integer.MIN_VALUE;
+
 
     @Getter
     enum Type {
