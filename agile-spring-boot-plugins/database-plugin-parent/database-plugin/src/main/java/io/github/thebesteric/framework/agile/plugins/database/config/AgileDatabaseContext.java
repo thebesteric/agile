@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
+import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.List;
@@ -59,7 +60,13 @@ public class AgileDatabaseContext extends AbstractAgileContext {
                 }
                 if (CharSequenceUtil.isEmpty(tableName)) {
                     TableName tableNameAnno = clazz.getAnnotation(TableName.class);
-                    tableName = tableNameAnno.value();
+                    if (tableNameAnno != null) {
+                        tableName = tableNameAnno.value();
+                    }
+                }
+                if (CharSequenceUtil.isEmpty(tableName)) {
+                    String simpleClassName = clazz.getSimpleName();
+                    tableName = Introspector.decapitalize(simpleClassName);
                 }
                 // 判断表名是否重复
                 if (tableNames.contains(tableName)) {
