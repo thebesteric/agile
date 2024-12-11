@@ -601,8 +601,8 @@ class WorkflowHelperTest {
         // String approverId = "admin";
         // String approverId = "admin-1";
 
-        // String roleId = "经理";
-        // String approverId = "manager-1";
+        String roleId = "经理";
+        String approverId = "manager-1";
         // String approverId = "manager-2";
 
         // String roleId = "组长1";
@@ -614,8 +614,8 @@ class WorkflowHelperTest {
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
 
-        String roleId = "负责人";
-        String approverId = "major-1";
+        // String roleId = "负责人";
+        // String approverId = "major-1";
         // String approverId = "major-2";
 
         // String roleId = "总监";
@@ -690,17 +690,17 @@ class WorkflowHelperTest {
      */
     @Test
     void redo() {
-        String roleId = null;
+        // String roleId = null;
         // String approverId = "张三";
-        String approverId = "李四";
+        // String approverId = "李四";
         // String approverId = "王五";
         // String approverId = "赵六";
 
         // String roleId = "经理";
         // String approverId = "manager-1";
         // String approverId = "manager-2";
-        // String roleId = "组长";
-        // String approverId = "grouper-1";
+        String roleId = "组长";
+        String approverId = "grouper-1";
         // String approverId = "grouper-2";
         // String approverId = "grouper-3";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
@@ -735,8 +735,8 @@ class WorkflowHelperTest {
         // String approverId = "manager-2";
 
         String roleId = "组长";
-        String approverId = "grouper-1";
-        // String approverId = "grouper-2";
+        // String approverId = "grouper-1";
+        String approverId = "grouper-2";
         // String approverId = "grouper-3";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
@@ -769,8 +769,8 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
         String roleId = "组长";
-        // String approverId = "grouper-1";
-        String approverId = "grouper-2";
+        String approverId = "grouper-1";
+        // String approverId = "grouper-2";
         // String approverId = "grouper-3";
 
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
