@@ -53,9 +53,6 @@ public class AgileDatabaseJdbcTemplate {
             return;
         }
 
-        // 是否需要更新表结构
-        boolean update = AgileDatabaseProperties.DDLAuto.UPDATE == ddlAuto;
-
         DataSource dataSource = jdbcTemplate.getDataSource();
         String databaseName = jdbcTemplateHelper.getDatabaseName();
         assert dataSource != null;
@@ -77,6 +74,7 @@ public class AgileDatabaseJdbcTemplate {
                 String tableName = entityClassDomain.getTableName();
                 String catalog = connection.getCatalog();
                 ResultSet resultSet = metaData.getTables(catalog, null, tableName, new String[]{"TABLE"});
+                // 创建表：数据库中表不存在
                 if (!resultSet.next()) {
                     EntityClassCreateListener createListener = null;
                     // 创建表：执行前置处理
@@ -92,24 +90,23 @@ public class AgileDatabaseJdbcTemplate {
                     if (createListener != null) {
                         createListener.postCreateTable();
                     }
-                } else {
-                    if (update) {
-                        ChangeFields changeFields = getChangeFields(entityClassDomain, metaData);
-                        EntityClassUpdateListener updateListener = null;
-                        // 更新表：执行前置处理
-                        if (EntityClassUpdateListener.class.isAssignableFrom(clazz)) {
-                            updateListener = (EntityClassUpdateListener) clazz.getDeclaredConstructor().newInstance();
-                            changeFields = updateListener.preUpdateTable(changeFields);
-                        }
-                        // 更新表
-                        if (changeFields != null) {
-                            updateTable(changeFields, metaData);
-                        }
-                        // 更新表：执行后置处理
-                        if (updateListener != null) {
-                            updateListener.postUpdateTable();
-                        }
-
+                }
+                // 更新表
+                else if (AgileDatabaseProperties.DDLAuto.UPDATE == ddlAuto) {
+                    ChangeFields changeFields = getChangeFields(entityClassDomain, metaData);
+                    EntityClassUpdateListener updateListener = null;
+                    // 更新表：执行前置处理
+                    if (EntityClassUpdateListener.class.isAssignableFrom(clazz)) {
+                        updateListener = (EntityClassUpdateListener) clazz.getDeclaredConstructor().newInstance();
+                        changeFields = updateListener.preUpdateTable(changeFields);
+                    }
+                    // 更新表
+                    if (changeFields != null) {
+                        updateTable(changeFields, metaData);
+                    }
+                    // 更新表：执行后置处理
+                    if (updateListener != null) {
+                        updateListener.postUpdateTable();
                     }
                 }
             }
