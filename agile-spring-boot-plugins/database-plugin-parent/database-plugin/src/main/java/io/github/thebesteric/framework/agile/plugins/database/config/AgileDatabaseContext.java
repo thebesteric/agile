@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.database.config;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.github.thebesteric.framework.agile.commons.exception.DuplicateParamsException;
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
 import io.github.thebesteric.framework.agile.core.scaner.AnnotationTypeCandidateComponentScanner;
@@ -51,6 +52,7 @@ public class AgileDatabaseContext extends AbstractAgileContext {
                 // 不需要创建表的实体类
                 EntityClass entityClassAnno = clazz.getAnnotation(EntityClass.class);
                 if (entityClassAnno != null && entityClassAnno.ignore()) {
+                    LoggerPrinter.info("Ignore entity class: " + entityClassAnno);
                     continue;
                 }
                 // 获取表名
