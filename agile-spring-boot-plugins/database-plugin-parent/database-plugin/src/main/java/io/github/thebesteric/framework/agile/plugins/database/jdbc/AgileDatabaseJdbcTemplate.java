@@ -80,7 +80,7 @@ public class AgileDatabaseJdbcTemplate {
                     // 创建表：执行前置处理
                     if (EntityClassCreateListener.class.isAssignableFrom(clazz)) {
                         createListener = (EntityClassCreateListener) clazz.getDeclaredConstructor().newInstance();
-                        entityClassDomain = createListener.preCreateTable(entityClassDomain);
+                        entityClassDomain = createListener.preCreateTable(entityClassDomain, jdbcTemplateHelper);
                     }
                     // 创建表
                     if (entityClassDomain != null) {
@@ -88,7 +88,7 @@ public class AgileDatabaseJdbcTemplate {
                     }
                     // 创建表：执行后置处理
                     if (createListener != null) {
-                        createListener.postCreateTable();
+                        createListener.postCreateTable(jdbcTemplateHelper);
                     }
                 }
                 // 更新表
@@ -98,7 +98,7 @@ public class AgileDatabaseJdbcTemplate {
                     // 更新表：执行前置处理
                     if (EntityClassUpdateListener.class.isAssignableFrom(clazz)) {
                         updateListener = (EntityClassUpdateListener) clazz.getDeclaredConstructor().newInstance();
-                        changeFields = updateListener.preUpdateTable(changeFields);
+                        changeFields = updateListener.preUpdateTable(changeFields, jdbcTemplateHelper);
                     }
                     // 更新表
                     if (changeFields != null) {
@@ -106,7 +106,7 @@ public class AgileDatabaseJdbcTemplate {
                     }
                     // 更新表：执行后置处理
                     if (updateListener != null) {
-                        updateListener.postUpdateTable();
+                        updateListener.postUpdateTable(jdbcTemplateHelper);
                     }
                 }
             }

@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.database.core.listener;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ChangeFields;
+import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 
 /**
  * 表更新处理器
@@ -13,21 +14,24 @@ public interface EntityClassUpdateListener {
     /**
      * 表更新之前
      *
-     * @param changeFields changeFields
+     * @param changeFields       changeFields
+     * @param jdbcTemplateHelper jdbcTemplateHelper
      *
      * @return 返回 null，则不进行任何更新
      *
      * @author wangweijun
      * @since 2024/12/10 18:33
      */
-    ChangeFields preUpdateTable(ChangeFields changeFields);
+    ChangeFields preUpdateTable(ChangeFields changeFields, JdbcTemplateHelper jdbcTemplateHelper);
 
     /**
      * 表更新之后
      *
+     * @param jdbcTemplateHelper jdbcTemplateHelper
+     *
      * @author wangweijun
      * @since 2024/12/10 18:33
      */
-    void postUpdateTable();
+    void postUpdateTable(JdbcTemplateHelper jdbcTemplateHelper);
 
 }
