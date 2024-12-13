@@ -358,3 +358,13 @@
 ### v1.0.16.10
 
 - 数据库插件 (bugfix): 修复 @ComponentScan 获取 value 属性时，取值错误的问题
+
+### v1.0.17
+
+- 数据库插件 (bugfix): 修复 @EntityClass 获取 schema 抛出空指针的问题
+- 数据库插件 (bugfix): 修复只使用 @EntityClass 注解时，解析表名失败的问题
+- 数据库插件 (feat): 增加 EntityClassDomain 中的 schemas 属性
+- 数据库插件 (feat): 增加创建表和更新表的监听器
+- 数据库插件 (feat): 支持创建表时，进行字段排序
+- 工作流插件 (feat): 流程实例增加待审批状态
+- 工作流插件 (feat): 流程定义增加 lock 属性，影响是否可以提交新的流程
