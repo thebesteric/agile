@@ -22,7 +22,9 @@ public interface EntityClassUpdateListener {
      * @author wangweijun
      * @since 2024/12/10 18:33
      */
-    ChangeFields preUpdateTable(ChangeFields changeFields, JdbcTemplateHelper jdbcTemplateHelper);
+    default ChangeFields preUpdateTable(ChangeFields changeFields, JdbcTemplateHelper jdbcTemplateHelper) {
+        return changeFields;
+    }
 
     /**
      * 表更新之后
@@ -32,6 +34,7 @@ public interface EntityClassUpdateListener {
      * @author wangweijun
      * @since 2024/12/10 18:33
      */
-    void postUpdateTable(JdbcTemplateHelper jdbcTemplateHelper);
+    default void postUpdateTable(JdbcTemplateHelper jdbcTemplateHelper) {
+    }
 
 }

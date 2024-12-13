@@ -23,7 +23,9 @@ public interface EntityClassCreateListener {
      * @author wangweijun
      * @since 2024/12/10 18:33
      */
-    EntityClassDomain preCreateTable(EntityClassDomain entityClassDomain, JdbcTemplateHelper jdbcTemplateHelper);
+    default EntityClassDomain preCreateTable(EntityClassDomain entityClassDomain, JdbcTemplateHelper jdbcTemplateHelper) {
+        return entityClassDomain;
+    }
 
     /**
      * 表创建之后
@@ -33,6 +35,7 @@ public interface EntityClassCreateListener {
      * @author wangweijun
      * @since 2024/12/10 18:33
      */
-    void postCreateTable(JdbcTemplateHelper jdbcTemplateHelper);
+    default void postCreateTable(JdbcTemplateHelper jdbcTemplateHelper) {
+    }
 
 }
