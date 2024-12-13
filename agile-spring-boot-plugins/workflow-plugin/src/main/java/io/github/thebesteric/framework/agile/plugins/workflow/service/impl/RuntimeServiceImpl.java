@@ -112,6 +112,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             if (PublishStatus.UNPUBLISHED == workflowDefinition.getPublish()) {
                 throw new WorkflowException("流程尚未发布，请先发布流程后重试");
             }
+            if (workflowDefinition.isLock()) {
+                throw new WorkflowException("流程已锁定，请稍后重试");
+            }
 
             // 获取流程实例
             WorkflowInstanceExecutor instanceExecutor = workflowInstanceExecutorBuilder.newInstance()
@@ -3239,8 +3242,24 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/6/24 11:24
      */
     private WorkflowDefinition getWorkflowDefinition(String tenantId, String workflowDefinitionKey) {
-        WorkflowDefinitionExecutor definitionExecutor = workflowDefinitionExecutorBuilder.tenantId(tenantId).key(workflowDefinitionKey).build();
-        return definitionExecutor.getByTenantAndKey();
+        WorkflowDefinitionExecutor definitionExecutor = workflowDefinitionExecutorBuilder.build();
+        return definitionExecutor.getByTenantAndKey(tenantId, workflowDefinitionKey);
+    }
+
+    /**
+     * 根据租户 ID 和 流程定义 Key 获取流程定义
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     *
+     * @return WorkflowDefinition
+     *
+     * @author wangweijun
+     * @since 2024/6/24 11:24
+     */
+    private WorkflowDefinition getWorkflowDefinition(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinitionExecutor definitionExecutor = workflowDefinitionExecutorBuilder.build();
+        return definitionExecutor.getByTenantAndId(tenantId, workflowDefinitionId);
     }
 
     /**
@@ -3577,7 +3596,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param tenantId         租户 ID
      * @param sourceApproverId 原审批人
@@ -3587,7 +3606,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/10 19:36
      */
     @Override
-    public void updateApprover(String tenantId, String sourceApproverId, Approver targetApprover) {
+    public void replaceApprover(String tenantId, String sourceApproverId, Approver targetApprover) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
@@ -3610,38 +3629,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     /**
      * 更新审批人（未审批状态下）
      *
-     * @param tenantId             租户 ID
-     * @param sourceApproverRoleId 原审批角色
-     * @param sourceApproverId     原审批人
-     * @param targetRoleApprover   新审批人
-     *
-     * @author wangweijun
-     * @since 2024/9/10 19:36
-     */
-    @Override
-    public void updateRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
-        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
-        jdbcTemplateHelper.executeInTransaction(() -> {
-            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
-            Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
-                    .eq(TaskInstance::getTenantId, tenantId)
-                    .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
-                    .eq(TaskInstance::getState, 1)
-                    .build();
-            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
-            List<TaskInstance> taskInstances = taskInstancePage.getRecords();
-            if (taskInstances.isEmpty()) {
-                WorkflowException.throwWorkflowInstanceNotFoundException();
-            }
-
-            // 执行更新
-            doUpdateRoleApprover(tenantId, taskInstances, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
-        });
-    }
-
-    /**
-     * 更新审批人（未审批状态下）
-     *
      * @param taskInstance     任务实例
      * @param sourceApproverId 原审批人
      * @param targetApprover   新审批人
@@ -3650,7 +3637,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/12 11:21
      */
     @Override
-    public void updateApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover) {
+    public void replaceApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
             String tenantId = taskInstance.getTenantId();
@@ -3665,33 +3652,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
-     * 更新角色审批人（未审批状态下）
-     *
-     * @param taskInstance         任务实例
-     * @param sourceApproverRoleId 原审批角色
-     * @param sourceApproverId     原审批人
-     * @param targetRoleApprover   新审批人
-     *
-     * @author wangweijun
-     * @since 2024/12/3 17:23
-     */
-    @Override
-    public void updateRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
-        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
-        jdbcTemplateHelper.executeInTransaction(() -> {
-            String tenantId = taskInstance.getTenantId();
-            NodeStatus nodeStatus = taskInstance.getStatus();
-            if (nodeStatus != NodeStatus.IN_PROGRESS) {
-                throw new WorkflowException("节点状态异常，当前节点状态：%s", nodeStatus.getDesc());
-            }
-
-            // 执行更新
-            doUpdateRoleApprover(tenantId, Collections.singletonList(taskInstance), sourceApproverRoleId, sourceApproverId, targetRoleApprover);
-        });
-    }
-
-    /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param workflowInstance 流程实例
      * @param sourceApproverId 原审批人
@@ -3701,7 +3662,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/10 19:36
      */
     @Override
-    public void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover) {
+    public void replaceApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
             String tenantId = workflowInstance.getTenantId();
@@ -3728,7 +3689,65 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     }
 
     /**
+     * 替换审批人（未审批状态下）
+     *
+     * @param tenantId             租户 ID
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    @Override
+    public void replaceRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+            Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
+                    .eq(TaskInstance::getTenantId, tenantId)
+                    .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
+                    .eq(TaskInstance::getState, 1)
+                    .build();
+            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            List<TaskInstance> taskInstances = taskInstancePage.getRecords();
+            if (taskInstances.isEmpty()) {
+                WorkflowException.throwWorkflowInstanceNotFoundException();
+            }
+
+            // 执行更新
+            doUpdateRoleApprover(tenantId, taskInstances, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
+        });
+    }
+
+    /**
      * 更新角色审批人（未审批状态下）
+     *
+     * @param taskInstance         任务实例
+     * @param sourceApproverRoleId 原审批角色
+     * @param sourceApproverId     原审批人
+     * @param targetRoleApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/12/3 17:23
+     */
+    @Override
+    public void replaceRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
+        jdbcTemplateHelper.executeInTransaction(() -> {
+            String tenantId = taskInstance.getTenantId();
+            NodeStatus nodeStatus = taskInstance.getStatus();
+            if (nodeStatus != NodeStatus.IN_PROGRESS) {
+                throw new WorkflowException("节点状态异常，当前节点状态：%s", nodeStatus.getDesc());
+            }
+
+            // 执行更新
+            doUpdateRoleApprover(tenantId, Collections.singletonList(taskInstance), sourceApproverRoleId, sourceApproverId, targetRoleApprover);
+        });
+    }
+
+    /**
+     * 替换角色审批人（未审批状态下）
      *
      * @param workflowInstance     流程实例
      * @param sourceApproverRoleId 原审批角色
@@ -3739,7 +3758,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/10 19:36
      */
     @Override
-    public void updateRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+    public void replaceRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
             String tenantId = workflowInstance.getTenantId();
@@ -4111,6 +4130,82 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         workflowInstance.setBusinessInfo(businessInfo);
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         workflowInstanceExecutor.updateById(workflowInstance);
+    }
+
+    /**
+     * 锁定流程定义（不会改变流程发布状态）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    @Override
+    public void lock(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinition workflowDefinition = getWorkflowDefinition(tenantId, workflowDefinitionId);
+        this.doLock(workflowDefinition);
+    }
+
+    /**
+     * 锁定流程定义（不会改变流程发布状态）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     */
+    @Override
+    public void lock(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        this.doLock(workflowDefinition);
+    }
+
+    /**
+     * 解锁流程定义（不会更新流程定义）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    @Override
+    public void unlock(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinition workflowDefinition = getWorkflowDefinition(tenantId, workflowDefinitionId);
+        this.doUnlock(workflowDefinition);
+    }
+
+    /**
+     * 解锁流程定义（不会更新流程定义）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     */
+    @Override
+    public void unlock(String tenantId, String workflowDefinitionKey) {
+        WorkflowDefinition workflowDefinition = getWorkflowDefinition(tenantId, workflowDefinitionKey);
+        this.doUnlock(workflowDefinition);
+    }
+
+    /**
+     * 锁定
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @author wangweijun
+     * @since 2024/12/13 15:01
+     */
+    private void doLock(WorkflowDefinition workflowDefinition) {
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        workflowDefinition.setLock(true);
+        workflowDefinitionExecutor.updateById(workflowDefinition);
+    }
+
+    /**
+     * 解锁
+     *
+     * @param workflowDefinition 流程定义
+     *
+     * @author wangweijun
+     * @since 2024/12/13 15:01
+     */
+    private void doUnlock(WorkflowDefinition workflowDefinition) {
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        workflowDefinition.setLock(false);
+        workflowDefinitionExecutor.updateById(workflowDefinition);
     }
 
     /**

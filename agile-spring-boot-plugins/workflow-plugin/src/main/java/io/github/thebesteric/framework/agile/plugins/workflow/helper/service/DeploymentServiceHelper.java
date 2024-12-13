@@ -46,85 +46,85 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
     /**
      * 部署流程
      *
-     * @param tenantId 租户 ID
-     * @param name     流程名称
-     * @param key      流程唯一标识
-     * @param type     流程类型
-     * @param desc     流氓描述
+     * @param tenantId              租户 ID
+     * @param name                  流程名称
+     * @param workflowDefinitionKey 流程唯一标识
+     * @param type                  流程类型
+     * @param desc                  流氓描述
      *
      * @return WorkflowDefinition
      *
      * @author wangweijun
      * @since 2024/7/8 14:40
      */
-    public WorkflowDefinition deploy(String tenantId, String name, String key, String type, String desc) {
+    public WorkflowDefinition deploy(String tenantId, String name, String workflowDefinitionKey, String type, String desc) {
         WorkflowDefinitionBuilder workflowDefinitionBuilder = WorkflowDefinitionBuilder.builder()
-                .tenantId(tenantId).name(name).key(key).type(type).desc(desc);
+                .tenantId(tenantId).name(name).key(workflowDefinitionKey).type(type).desc(desc);
         return this.deploy(workflowDefinitionBuilder);
     }
 
     /**
      * 部署流程
      *
-     * @param tenantId 租户 ID
-     * @param name     流程名称
-     * @param key      流程唯一标识
-     * @param type     流程类型
+     * @param tenantId              租户 ID
+     * @param name                  流程名称
+     * @param workflowDefinitionKey 流程唯一标识
+     * @param type                  流程类型
      *
      * @return WorkflowDefinition
      *
      * @author wangweijun
      * @since 2024/7/8 14:40
      */
-    public WorkflowDefinition deploy(String tenantId, String name, String key, String type) {
-        return this.deploy(tenantId, name, key, type, null);
+    public WorkflowDefinition deploy(String tenantId, String name, String workflowDefinitionKey, String type) {
+        return this.deploy(tenantId, name, workflowDefinitionKey, type, null);
     }
 
     /**
      * 部署流程
      *
-     * @param tenantId 租户 ID
-     * @param name     流程名称
-     * @param key      流程唯一标识
+     * @param tenantId              租户 ID
+     * @param name                  流程名称
+     * @param workflowDefinitionKey 流程唯一标识
      *
      * @return WorkflowDefinition
      *
      * @author wangweijun
      * @since 2024/7/8 14:40
      */
-    public WorkflowDefinition deploy(String tenantId, String name, String key) {
-        return this.deploy(tenantId, name, key, null);
+    public WorkflowDefinition deploy(String tenantId, String name, String workflowDefinitionKey) {
+        return this.deploy(tenantId, name, workflowDefinitionKey, null);
     }
 
 
     /**
      * 获取流程定义
      *
-     * @param tenantId 租户 ID
-     * @param key      流程唯一标识
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程唯一标识
      *
      * @return WorkflowDefinition
      *
      * @author wangweijun
      * @since 2024/7/8 16:26
      */
-    public WorkflowDefinition getByKey(String tenantId, String key) {
-        return this.deploymentService.getByKey(tenantId, key);
+    public WorkflowDefinition getByKey(String tenantId, String workflowDefinitionKey) {
+        return this.deploymentService.getByKey(tenantId, workflowDefinitionKey);
     }
 
     /**
      * 获取流程定义
      *
-     * @param tenantId 租户 ID
-     * @param id       id
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId workflowDefinitionId
      *
      * @return WorkflowDefinition
      *
      * @author wangweijun
      * @since 2024/9/10 17:23
      */
-    public WorkflowDefinition getById(String tenantId, Integer id) {
-        return this.deploymentService.getById(tenantId, id);
+    public WorkflowDefinition getById(String tenantId, Integer workflowDefinitionId) {
+        return this.deploymentService.getById(tenantId, workflowDefinitionId);
     }
 
     /**
@@ -184,44 +184,44 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
     }
 
     /**
-     * 禁用流程定义
+     * 禁用流程定义（会改变流程发布状态）
      *
-     * @param tenantId 租户 ID
-     * @param key      流程唯一标识
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程唯一标识
      */
-    public void disable(String tenantId, String key) {
-        this.deploymentService.disable(tenantId, key);
+    public void disable(String tenantId, String workflowDefinitionKey) {
+        this.deploymentService.disable(tenantId, workflowDefinitionKey);
     }
 
     /**
-     * 禁用流程定义
+     * 禁用流程定义（会改变流程发布状态）
      *
-     * @param tenantId 租户 ID
-     * @param id       流程 ID
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
      */
-    public void disable(String tenantId, Integer id) {
-        WorkflowDefinition workflowDefinition = getById(tenantId, id);
+    public void disable(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinition workflowDefinition = getById(tenantId, workflowDefinitionId);
         this.disable(tenantId, workflowDefinition.getKey());
     }
 
     /**
-     * 启用流程定义
+     * 启用流程定义（启用后会更新流程定义）
      *
-     * @param tenantId 租户 ID
-     * @param key      流程唯一标识
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程唯一标识
      */
-    public void enable(String tenantId, String key) {
-        this.deploymentService.enable(tenantId, key);
+    public void enable(String tenantId, String workflowDefinitionKey) {
+        this.deploymentService.enable(tenantId, workflowDefinitionKey);
     }
 
     /**
-     * 启用流程定义
+     * 启用流程定义（启用后会更新流程定义）
      *
-     * @param tenantId 租户 ID
-     * @param id       流程 ID
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程 ID
      */
-    public void enable(String tenantId, Integer id) {
-        WorkflowDefinition workflowDefinition = getById(tenantId, id);
+    public void enable(String tenantId, Integer workflowDefinitionId) {
+        WorkflowDefinition workflowDefinition = getById(tenantId, workflowDefinitionId);
         this.enable(tenantId, workflowDefinition.getKey());
     }
 
@@ -243,16 +243,16 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
     /**
      * 获取流程定义流程图
      *
-     * @param tenantId 租户 ID
-     * @param key      流程唯一标识
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程唯一标识
      *
      * @return WorkflowDefinitionFlowSchema
      *
      * @author wangweijun
      * @since 2024/9/29 18:31
      */
-    public WorkflowDefinitionFlowSchema schema(String tenantId, String key) {
-        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, key);
+    public WorkflowDefinitionFlowSchema schema(String tenantId, String workflowDefinitionKey) {
+        return this.deploymentService.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinitionKey);
     }
 
     /**

@@ -53,7 +53,7 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
      */
     public WorkflowDefinition save() {
         // 检查是否有已存在的流程定义
-        WorkflowDefinition existsWorkflowDefinition = this.getByTenantAndKey();
+        WorkflowDefinition existsWorkflowDefinition = this.getByTenantAndKey(workflowDefinition.getTenantId(), workflowDefinition.getKey());
         if (existsWorkflowDefinition != null) {
             throw new WorkflowException("已存在相同的流程定义");
         }
@@ -99,18 +99,6 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
      * @author wangweijun
      * @since 2024/6/17 15:23
      */
-    public WorkflowDefinition getByTenantAndKey() {
-        return getByTenantAndKey(workflowDefinition.getTenantId(), workflowDefinition.getKey());
-    }
-
-    /**
-     * 根据租户 ID 和 key 获取流程定义
-     *
-     * @return WorkflowDefinition
-     *
-     * @author wangweijun
-     * @since 2024/6/17 15:23
-     */
     public WorkflowDefinition getByTenantAndKey(String tenantId, String key) {
         final String selectSql = """
                 SELECT * FROM awf_wf_definition WHERE `tenant_id` = ? AND `key` = ? AND `state` = 1
@@ -120,6 +108,25 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
             packageDefaultApprover(wfd);
             return wfd;
         }, tenantId, key)).getOrNull();
+    }
+
+    /**
+     * 根据租户 ID 和 流程 ID 获取流程定义
+     *
+     * @return WorkflowDefinition
+     *
+     * @author wangweijun
+     * @since 2024/12/13 14:54
+     */
+    public WorkflowDefinition getByTenantAndId(String tenantId, Integer id) {
+        final String selectSql = """
+                SELECT * FROM awf_wf_definition WHERE `tenant_id` = ? AND `id` = ? AND `state` = 1
+                """;
+        return Try.of(() -> this.jdbcTemplate.queryForObject(selectSql, (rs, rowNum) -> {
+            WorkflowDefinition wfd = WorkflowDefinition.of(rs);
+            packageDefaultApprover(wfd);
+            return wfd;
+        }, tenantId, id)).getOrNull();
     }
 
     /**

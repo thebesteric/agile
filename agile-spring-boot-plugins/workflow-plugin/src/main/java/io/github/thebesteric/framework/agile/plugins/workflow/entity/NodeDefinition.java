@@ -110,6 +110,48 @@ public class NodeDefinition extends BaseEntity {
     }
 
     /**
+     * 匹配审批用户
+     *
+     * @param newApprovers 新的审批用户
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/12/13 13:35
+     */
+    public boolean matchApprovers(Set<Approver> newApprovers) {
+        if (this.isRoleApprove()) {
+            throw new WorkflowException("非用户审批节点");
+        }
+        Set<Approver> unContainsApprovers = new LinkedHashSet<>();
+        if (CollectionUtils.isNotEmpty(newApprovers)) {
+            unContainsApprovers = newApprovers.stream().filter(approver -> !this.approvers.contains(approver)).collect(Collectors.toSet());
+        }
+        return !CollectionUtils.isNotEmpty(unContainsApprovers);
+    }
+
+    /**
+     * 匹配角色审批用户
+     *
+     * @param newRoleApprovers 新的角色审批用户
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/12/13 13:35
+     */
+    public boolean matchRoleApprovers(Set<RoleApprover> newRoleApprovers) {
+        if (this.isUserApprove()) {
+            throw new WorkflowException("非角色审批节点");
+        }
+        Set<RoleApprover> unContainsRoleApprovers = new LinkedHashSet<>();
+        if (CollectionUtils.isNotEmpty(newRoleApprovers)) {
+            unContainsRoleApprovers = newRoleApprovers.stream().filter(roleApprover -> !this.roleApprovers.contains(roleApprover)).collect(Collectors.toSet());
+        }
+        return !CollectionUtils.isNotEmpty(unContainsRoleApprovers);
+    }
+
+    /**
      * 添加审批人
      *
      * @param approver 审批人

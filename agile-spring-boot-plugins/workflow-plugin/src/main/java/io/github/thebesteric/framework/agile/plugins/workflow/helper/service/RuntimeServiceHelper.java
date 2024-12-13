@@ -159,6 +159,46 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 锁定流程定义（不会改变流程发布状态）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程唯一标识
+     */
+    public void lock(String tenantId, String workflowDefinitionKey) {
+        this.runtimeService.lock(tenantId, workflowDefinitionKey);
+    }
+
+    /**
+     * 锁定流程定义（不会改变流程发布状态）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    public void lock(String tenantId, Integer workflowDefinitionId) {
+        this.runtimeService.lock(tenantId, workflowDefinitionId);
+    }
+
+    /**
+     * 解锁流程定义（不会更新流程定义）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程唯一标识
+     */
+    public void unlock(String tenantId, String workflowDefinitionKey) {
+        this.runtimeService.unlock(tenantId, workflowDefinitionKey);
+    }
+
+    /**
+     * 解锁流程定义（不会更新流程定义）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    public void unlock(String tenantId, Integer workflowDefinitionId) {
+        this.runtimeService.unlock(tenantId, workflowDefinitionId);
+    }
+
+    /**
      * 查找审批实例
      *
      * @param tenantId                     租户 ID
@@ -931,7 +971,7 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param taskInstance     任务实例
      * @param sourceApproverId 原审批人
@@ -940,12 +980,40 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    public void updateApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover) {
-        this.runtimeService.updateApprover(taskInstance, sourceApproverId, targetApprover);
+    public void replaceApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover) {
+        this.runtimeService.replaceApprover(taskInstance, sourceApproverId, targetApprover);
     }
 
     /**
-     * updateApprover
+     * 替换审批人（未审批状态下）
+     *
+     * @param workflowInstance 流程实例
+     * @param sourceApproverId 原审批人
+     * @param targetApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    public void replaceApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover) {
+        this.runtimeService.replaceApprover(workflowInstance, sourceApproverId, targetApprover);
+    }
+
+    /**
+     * 替换审批人（未审批状态下）
+     *
+     * @param tenantId         租户 ID
+     * @param sourceApproverId 原审批人
+     * @param targetApprover   新审批人
+     *
+     * @author wangweijun
+     * @since 2024/9/10 19:36
+     */
+    public void replaceApprover(String tenantId, String sourceApproverId, Approver targetApprover) {
+        this.runtimeService.replaceApprover(tenantId, sourceApproverId, targetApprover);
+    }
+
+    /**
+     * 替换审批人（未审批状态下）
      *
      * @param taskInstance         任务实例
      * @param sourceApproverRoleId 原审批角色
@@ -955,26 +1023,12 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/12/3 17:23
      */
-    public void updateRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
-        this.runtimeService.updateRoleApprover(taskInstance, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
+    public void replaceRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        this.runtimeService.replaceRoleApprover(taskInstance, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
     }
 
     /**
-     * 更新审批人（未审批状态下）
-     *
-     * @param workflowInstance 流程实例
-     * @param sourceApproverId 原审批人
-     * @param targetApprover   新审批人
-     *
-     * @author wangweijun
-     * @since 2024/9/10 19:36
-     */
-    public void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover) {
-        this.runtimeService.updateApprover(workflowInstance, sourceApproverId, targetApprover);
-    }
-
-    /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param workflowInstance     流程实例
      * @param sourceApproverRoleId 原审批角色
@@ -984,26 +1038,12 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    public void updateRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
-        this.runtimeService.updateRoleApprover(workflowInstance, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
+    public void replaceRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        this.runtimeService.replaceRoleApprover(workflowInstance, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
     }
 
     /**
-     * 更新审批人（未审批状态下）
-     *
-     * @param tenantId         租户 ID
-     * @param sourceApproverId 原审批人
-     * @param targetApprover   新审批人
-     *
-     * @author wangweijun
-     * @since 2024/9/10 19:36
-     */
-    public void updateApprover(String tenantId, String sourceApproverId, Approver targetApprover) {
-        this.runtimeService.updateApprover(tenantId, sourceApproverId, targetApprover);
-    }
-
-    /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param tenantId             租户 ID
      * @param sourceApproverRoleId 原审批角色
@@ -1013,8 +1053,8 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    public void updateRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
-        this.runtimeService.updateRoleApprover(tenantId, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
+    public void replaceRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover) {
+        this.runtimeService.replaceRoleApprover(tenantId, sourceApproverRoleId, sourceApproverId, targetRoleApprover);
     }
 
     /**

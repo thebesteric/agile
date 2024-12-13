@@ -584,7 +584,7 @@ public interface RuntimeService {
     void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, List<Approver> approvers);
 
     /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param taskInstance     任务实例
      * @param sourceApproverId 原审批人
@@ -593,10 +593,10 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover);
+    void replaceApprover(TaskInstance taskInstance, String sourceApproverId, Approver targetApprover);
 
     /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param workflowInstance 流程实例
      * @param sourceApproverId 原审批人
@@ -605,10 +605,10 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover);
+    void replaceApprover(WorkflowInstance workflowInstance, String sourceApproverId, Approver targetApprover);
 
     /**
-     * 更新审批人（未审批状态下）
+     * 替换审批人（未审批状态下）
      *
      * @param tenantId         租户 ID
      * @param sourceApproverId 原审批人
@@ -617,10 +617,10 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateApprover(String tenantId, String sourceApproverId, Approver targetApprover);
+    void replaceApprover(String tenantId, String sourceApproverId, Approver targetApprover);
 
     /**
-     * 更新角色审批人（未审批状态下）
+     * 替换角色审批人（未审批状态下）
      *
      * @param taskInstance         任务实例
      * @param sourceApproverRoleId 原审批角色
@@ -630,10 +630,10 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/12/3 17:23
      */
-    void updateRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
+    void replaceRoleApprover(TaskInstance taskInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
 
     /**
-     * 更新角色审批人（未审批状态下）
+     * 替换角色审批人（未审批状态下）
      *
      * @param workflowInstance     流程实例
      * @param sourceApproverRoleId 原审批角色
@@ -643,7 +643,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
+    void replaceRoleApprover(WorkflowInstance workflowInstance, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
 
     /**
      * 更新角色审批人（未审批状态下）
@@ -656,7 +656,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/9/10 19:36
      */
-    void updateRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
+    void replaceRoleApprover(String tenantId, String sourceApproverRoleId, String sourceApproverId, RoleApprover targetRoleApprover);
 
     /**
      * 是否是角色审批实例
@@ -860,4 +860,36 @@ public interface RuntimeService {
      * @since 2024/12/9 19:39
      */
     void setBusinessInfo(String tenantId, Integer workflowInstanceId, BusinessInfo businessInfo);
+
+    /**
+     * 锁定流程定义（不会改变流程发布状态）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    void lock(String tenantId, Integer workflowDefinitionId);
+
+    /**
+     * 锁定流程定义（不会改变流程发布状态）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     */
+    void lock(String tenantId, String workflowDefinitionKey);
+
+    /**
+     * 解锁流程定义（不会更新流程定义）
+     *
+     * @param tenantId             租户 ID
+     * @param workflowDefinitionId 流程定义 ID
+     */
+    void unlock(String tenantId, Integer workflowDefinitionId);
+
+    /**
+     * 解锁流程定义（不会更新流程定义）
+     *
+     * @param tenantId              租户 ID
+     * @param workflowDefinitionKey 流程定义 key
+     */
+    void unlock(String tenantId, String workflowDefinitionKey);
 }

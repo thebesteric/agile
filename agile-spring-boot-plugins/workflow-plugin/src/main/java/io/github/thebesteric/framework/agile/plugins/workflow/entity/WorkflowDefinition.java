@@ -60,6 +60,9 @@ public class WorkflowDefinition extends BaseEntity {
     @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否必须填写审批意见")
     private boolean requiredComment = false;
 
+    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否锁定（解锁不会更新流程定义）")
+    private boolean lock = false;
+
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "发布状态")
     private PublishStatus publish = PublishStatus.UNPUBLISHED;
 
@@ -90,6 +93,7 @@ public class WorkflowDefinition extends BaseEntity {
         workflowDefinition.setAllowEmptyAutoApprove(rs.getInt("allow_empty_auto_approve") == 1);
         workflowDefinition.setAllowRedo(rs.getInt("allow_redo") == 1);
         workflowDefinition.setRequiredComment(rs.getInt("required_comment") == 1);
+        workflowDefinition.setLock(rs.getInt("lock") == 1);
         workflowDefinition.setPublish(PublishStatus.of(rs.getInt("publish")));
         workflowDefinition.setCreatedAt(DateUtils.parseToDateTime(rs.getString("published_at")));
         return of(workflowDefinition, rs);

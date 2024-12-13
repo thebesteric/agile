@@ -121,8 +121,8 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      */
     @Override
     public WorkflowDefinition getByKey(String tenantId, String key) {
-        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.tenantId(tenantId).key(key).build();
-        return executor.getByTenantAndKey();
+        WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
+        return executor.getByTenantAndKey(tenantId, key);
     }
 
     /**
@@ -183,6 +183,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
             }
             workflowDefinition.setState(0);
             this.update(workflowDefinition, "流程禁用");
+            this.unPublish(workflowDefinition);
         });
     }
 
@@ -206,6 +207,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
             }
             workflowDefinition.setState(1);
             this.update(workflowDefinition, "流程启用");
+            this.publish(workflowDefinition);
         });
     }
 
