@@ -457,6 +457,16 @@ class WorkflowHelperTest {
         workflowServiceHelper.publish(workflowDefinition);
     }
 
+    @Test
+    void lock() {
+        WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
+        DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
+        WorkflowDefinition workflowDefinition = deploymentServiceHelper.getByKey(tenantId, workflowKey);
+        RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
+        // runtimeServiceHelper.lock(tenantId, workflowDefinition.getId());
+        runtimeServiceHelper.unlock(tenantId, workflowDefinition.getId());
+    }
+
     /**
      * 启动流程
      */
@@ -585,10 +595,10 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        // String roleId = "xxx";
+        String roleId = "xxx";
         // String approverId = "小王";
         // String approverId = "大王";
-        // String approverId = "张三";
+        String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
@@ -601,8 +611,8 @@ class WorkflowHelperTest {
         // String approverId = "admin";
         // String approverId = "admin-1";
 
-        String roleId = "经理";
-        String approverId = "manager-1";
+        // String roleId = "经理";
+        // String approverId = "manager-1";
         // String approverId = "manager-2";
 
         // String roleId = "组长1";
@@ -650,6 +660,7 @@ class WorkflowHelperTest {
         // int ex = 1/0;
 
         taskInstances.forEach(taskInstance -> {
+
             String comment = "同意";
             runtimeServiceHelper.approve(taskInstance, roleId, approverId, comment);
             System.out.println(approverId + ": " + comment);
@@ -905,7 +916,7 @@ class WorkflowHelperTest {
     }
 
     @Test
-    void updateApprover() {
+    void replaceApprover() {
         String approverId = "admin";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
@@ -913,12 +924,12 @@ class WorkflowHelperTest {
 
         List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstances(tenantId, WorkflowStatus.IN_PROGRESS, workflowKey);
         for (WorkflowInstance workflowInstance : workflowInstances) {
-            runtimeServiceHelper.updateApprover(workflowInstance, "张三", Approver.of("test", "测试用户", "测试描述"));
+            runtimeServiceHelper.replaceApprover(workflowInstance, "张三", Approver.of("test", "测试用户", "测试描述"));
         }
     }
 
     @Test
-    void updateRoleApprover() {
+    void replaceRoleApprover() {
         String approverId = "admin";
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
@@ -926,7 +937,7 @@ class WorkflowHelperTest {
 
         List<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstances(tenantId, WorkflowStatus.IN_PROGRESS, workflowKey);
         for (WorkflowInstance workflowInstance : workflowInstances) {
-            runtimeServiceHelper.updateRoleApprover(workflowInstance, "组长", "grouper-2",
+            runtimeServiceHelper.replaceRoleApprover(workflowInstance, "组长", "grouper-2",
                     RoleApprover.of("组长1", "组长1组名称", "组长1组描述", Approver.of("grouper-100", "组长99", "组长99描述")));
         }
     }

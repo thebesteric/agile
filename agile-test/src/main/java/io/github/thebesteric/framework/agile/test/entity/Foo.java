@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ChangeFields;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassCreateListener;
 import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassUpdateListener;
 
@@ -73,24 +74,24 @@ public class Foo extends BaseEntity implements EntityClassCreateListener, Entity
     private String f;
 
     @Override
-    public EntityClassDomain preCreateTable(EntityClassDomain entityClassDomain) {
+    public EntityClassDomain preCreateTable(EntityClassDomain entityClassDomain, JdbcTemplateHelper jdbcTemplateHelper) {
         System.out.println("==================创建前==================");
         return entityClassDomain;
     }
 
     @Override
-    public void postCreateTable() {
+    public void postCreateTable(JdbcTemplateHelper jdbcTemplateHelper) {
         System.out.println("==================创建后=================");
     }
 
     @Override
-    public ChangeFields preUpdateTable(ChangeFields changeFields) {
+    public ChangeFields preUpdateTable(ChangeFields changeFields, JdbcTemplateHelper jdbcTemplateHelper) {
         System.out.println("==================更新前==================");
         return changeFields;
     }
 
     @Override
-    public void postUpdateTable() {
+    public void postUpdateTable(JdbcTemplateHelper jdbcTemplateHelper) {
         System.out.println("==================更新后==================");
     }
 }
