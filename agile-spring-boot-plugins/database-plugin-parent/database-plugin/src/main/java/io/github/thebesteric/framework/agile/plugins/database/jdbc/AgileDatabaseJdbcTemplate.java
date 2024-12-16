@@ -11,6 +11,8 @@ import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemp
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.TableMetadataHelper;
 import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassCreateListener;
 import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassUpdateListener;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableCreateListener;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableUpdateListener;
 import io.github.thebesteric.framework.agile.plugins.database.entity.AgileTableMetadata;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -77,36 +79,68 @@ public class AgileDatabaseJdbcTemplate {
                 // 创建表：数据库中表不存在
                 if (!resultSet.next()) {
                     EntityClassCreateListener createListener = null;
+                    List<TableCreateListener> tableCreateListeners = context.getTableCreateListeners();
                     // 创建表：执行前置处理
                     if (EntityClassCreateListener.class.isAssignableFrom(clazz)) {
                         createListener = (EntityClassCreateListener) clazz.getDeclaredConstructor().newInstance();
                         entityClassDomain = createListener.preCreateTable(entityClassDomain, jdbcTemplateHelper);
                     }
-                    // 创建表
+                    boolean executeTableCreateListener = true;
                     if (entityClassDomain != null) {
-                        createTable(entityClassDomain);
+                        for (TableCreateListener tableCreateListener : tableCreateListeners) {
+                            if (!tableCreateListener.preCreateTable(tableName, jdbcTemplateHelper)) {
+                                executeTableCreateListener = false;
+                                break;
+                            }
+                        }
+                        if (executeTableCreateListener) {
+                            // 创建表
+                            createTable(entityClassDomain);
+                        }
                     }
                     // 创建表：执行后置处理
-                    if (createListener != null) {
+                    boolean shouldExecutePostTableCreate = entityClassDomain != null && executeTableCreateListener;
+                    if (createListener != null && shouldExecutePostTableCreate) {
                         createListener.postCreateTable(jdbcTemplateHelper);
+                    }
+                    if (shouldExecutePostTableCreate) {
+                        for (TableCreateListener tableCreateListener : tableCreateListeners) {
+                            tableCreateListener.postCreateTable(tableName, jdbcTemplateHelper);
+                        }
                     }
                 }
                 // 更新表
                 else if (AgileDatabaseProperties.DDLAuto.UPDATE == ddlAuto) {
                     ChangeFields changeFields = getChangeFields(entityClassDomain, metaData);
                     EntityClassUpdateListener updateListener = null;
+                    List<TableUpdateListener> tableUpdateListeners = context.getTableUpdateListeners();
                     // 更新表：执行前置处理
                     if (EntityClassUpdateListener.class.isAssignableFrom(clazz)) {
                         updateListener = (EntityClassUpdateListener) clazz.getDeclaredConstructor().newInstance();
                         changeFields = updateListener.preUpdateTable(changeFields, jdbcTemplateHelper);
                     }
-                    // 更新表
+                    boolean executeTableUpdateListener = true;
                     if (changeFields != null) {
-                        updateTable(changeFields, metaData);
+                        for (TableUpdateListener tableUpdateListener : tableUpdateListeners) {
+                            if (!tableUpdateListener.preUpdateTable(tableName, jdbcTemplateHelper)) {
+                                executeTableUpdateListener = false;
+                                break;
+                            }
+                        }
+                        if (executeTableUpdateListener) {
+                            // 更新表
+                            updateTable(changeFields, metaData);
+                        }
                     }
                     // 更新表：执行后置处理
-                    if (updateListener != null) {
+                    boolean shouldExecutePostTableUpdate = changeFields != null && executeTableUpdateListener;
+                    if (updateListener != null && shouldExecutePostTableUpdate) {
                         updateListener.postUpdateTable(jdbcTemplateHelper);
+                    }
+                    if (shouldExecutePostTableUpdate) {
+                        for (TableUpdateListener tableUpdateListener : tableUpdateListeners) {
+                            tableUpdateListener.postUpdateTable(tableName, jdbcTemplateHelper);
+                        }
                     }
                 }
             }

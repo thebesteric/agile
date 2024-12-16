@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.GenericApplicationContext;
 
+import java.util.List;
+
 /**
  * AbstractAgileContext
  *
@@ -22,6 +24,14 @@ public abstract class AbstractAgileContext {
         this.applicationContext = applicationContext;
     }
 
+    /**
+     * Get bean, using the default value if null
+     *
+     * @param beanType     Class<T>
+     * @param defaultValue defaultValue
+     *
+     * @return T
+     */
     public <T> T getBeanOrDefault(Class<T> beanType, T defaultValue) {
         T obj = null;
         try {
@@ -57,6 +67,20 @@ public abstract class AbstractAgileContext {
             }
         }
         return obj;
+    }
+
+    /**
+     * Get beans for type
+     *
+     * @param beanType beanType
+     *
+     * @return List<T>
+     *
+     * @author wangweijun
+     * @since 2024/12/16 09:37
+     */
+    public <T> List<T> getBeans(Class<T> beanType) {
+        return this.applicationContext.getBeansOfType(beanType).values().stream().toList();
     }
 
 }

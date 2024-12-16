@@ -8,6 +8,8 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
 import io.github.thebesteric.framework.agile.core.scaner.AnnotationTypeCandidateComponentScanner;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableCreateListener;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableUpdateListener;
 import io.vavr.control.Try;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,11 +35,15 @@ public class AgileDatabaseContext extends AbstractAgileContext {
 
     private final Set<Class<?>> entityClasses = new HashSet<>();
     private final AgileDatabaseProperties properties;
+    private final List<TableCreateListener> tableCreateListeners;
+    private final List<TableUpdateListener> tableUpdateListeners;
 
     public AgileDatabaseContext(ApplicationContext applicationContext, AgileDatabaseProperties properties) {
         super((GenericApplicationContext) applicationContext);
         this.properties = properties;
         findEntityClasses();
+        this.tableCreateListeners = this.getBeans(TableCreateListener.class);
+        this.tableUpdateListeners = this.getBeans(TableUpdateListener.class);
     }
 
     private void findEntityClasses() {
