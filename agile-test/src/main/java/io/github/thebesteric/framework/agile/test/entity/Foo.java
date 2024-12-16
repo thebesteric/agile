@@ -75,23 +75,23 @@ public class Foo extends BaseEntity implements EntityClassCreateListener, Entity
 
     @Override
     public EntityClassDomain preCreateTable(EntityClassDomain entityClassDomain, JdbcTemplateHelper jdbcTemplateHelper) {
-        System.out.println("==================创建前==================");
+        System.out.println("Foo ==================创建前==================");
         return entityClassDomain;
     }
 
     @Override
     public void postCreateTable(JdbcTemplateHelper jdbcTemplateHelper) {
-        System.out.println("==================创建后=================");
+        System.out.println("Foo ==================创建后=================");
     }
 
     @Override
     public ChangeFields preUpdateTable(ChangeFields changeFields, JdbcTemplateHelper jdbcTemplateHelper) {
-        System.out.println("==================更新前==================");
+        System.out.println("Foo ==================更新前==================");
         return changeFields;
     }
 
     @Override
     public void postUpdateTable(JdbcTemplateHelper jdbcTemplateHelper) {
-        System.out.println("==================更新后==================");
+        System.out.println("Foo ==================更新后==================");
     }
 }
