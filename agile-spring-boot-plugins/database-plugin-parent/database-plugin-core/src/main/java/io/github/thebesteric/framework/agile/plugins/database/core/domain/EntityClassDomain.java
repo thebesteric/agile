@@ -181,8 +181,7 @@ public class EntityClassDomain {
     public Map<String, List<String>> indexGroups() {
         Map<String, List<String>> indexGroups = new HashMap<>();
         // 获取所有字段上的索引组
-        List<ColumnDomain> columnDomains = tableColumnDomains();
-        Map<String, List<ColumnDomain>> group = columnDomains.stream().filter(columnDomain -> CharSequenceUtil.isNotEmpty(columnDomain.getIndexGroup()))
+        Map<String, List<ColumnDomain>> group = tableColumnDomains().stream().filter(columnDomain -> CharSequenceUtil.isNotEmpty(columnDomain.getIndexGroup()))
                 .collect(Collectors.groupingBy(ColumnDomain::getIndexGroup));
         for (Map.Entry<String, List<ColumnDomain>> entry : group.entrySet()) {
             String groupIndexName = ColumnDomain.generateIndexKeyName(tableName, entry.getKey());
@@ -229,8 +228,7 @@ public class EntityClassDomain {
     public Map<String, List<String>> uniqueGroups() {
         Map<String, List<String>> uniqueGroups = new HashMap<>();
         // 获取所有字段上的唯一索引组
-        List<ColumnDomain> columnDomains = tableColumnDomains();
-        Map<String, List<ColumnDomain>> group = columnDomains.stream().filter(columnDomain -> CharSequenceUtil.isNotEmpty(columnDomain.getUniqueGroup()))
+        Map<String, List<ColumnDomain>> group = tableColumnDomains().stream().filter(columnDomain -> CharSequenceUtil.isNotEmpty(columnDomain.getUniqueGroup()))
                 .collect(Collectors.groupingBy(ColumnDomain::getUniqueGroup));
         for (Map.Entry<String, List<ColumnDomain>> entry : group.entrySet()) {
             String groupUniqueName = ColumnDomain.generateUniqueKeyName(tableName, entry.getKey());

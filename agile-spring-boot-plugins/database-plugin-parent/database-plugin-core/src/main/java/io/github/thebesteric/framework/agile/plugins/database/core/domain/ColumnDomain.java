@@ -3,15 +3,19 @@ package io.github.thebesteric.framework.agile.plugins.database.core.domain;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.domain.None;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.IgnoredEntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.Reference;
 import lombok.Data;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Transient;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ColumnDomain
@@ -20,6 +24,7 @@ import java.lang.reflect.Field;
  * @version v1.0
  * @since 2024-05-13 17:14:20
  */
+@Slf4j
 @Data
 @Accessors(chain = true)
 public class ColumnDomain {
@@ -89,10 +94,12 @@ public class ColumnDomain {
     /** 是否是数据库字段 */
     private boolean exist = true;
 
-    public static final String PRIMARY_KEY_PREFIX_SUFFIX = "_pk_";
-    public static final String FOREIGN_KEY_PREFIX_SUFFIX = "_fk_";
-    public static final String UNIQUE_KEY_PREFIX_SUFFIX = "_uk_";
-    public static final String INDEX_KEY_PREFIX_SUFFIX = "_index_";
+    public static final String UNDERLINE = "_";
+    public static final String PRIMARY_KEY_PREFIX_SUFFIX = UNDERLINE + "pk" + UNDERLINE;
+    public static final String FOREIGN_KEY_PREFIX_SUFFIX = UNDERLINE + "fk" + UNDERLINE;
+    public static final String UNIQUE_KEY_PREFIX_SUFFIX = UNDERLINE + "uk" + UNDERLINE;
+    public static final String INDEX_KEY_PREFIX_SUFFIX = UNDERLINE + "index" + UNDERLINE;
+
 
     public static ColumnDomain of(String tableName, Field field) {
         EntityColumn column = field.getAnnotation(EntityColumn.class);
@@ -197,18 +204,50 @@ public class ColumnDomain {
     }
 
     public static String generatePrimaryKeyName(String tableName, String columnName) {
-        return tableName + PRIMARY_KEY_PREFIX_SUFFIX + columnName;
+        String key = tableName + PRIMARY_KEY_PREFIX_SUFFIX + columnName;
+        return validateKeyName(tableName, key, columnName);
     }
 
     public static String generateForeignKeyName(String tableName, String columnName, String targetTableName, String targetColumnName) {
-        return tableName + "_" + columnName + FOREIGN_KEY_PREFIX_SUFFIX + targetTableName + "_" + targetColumnName;
+        String key = tableName + UNDERLINE + columnName + FOREIGN_KEY_PREFIX_SUFFIX + targetTableName + UNDERLINE + targetColumnName;
+        return validateKeyName(tableName, key, columnName);
     }
 
     public static String generateUniqueKeyName(String tableName, String columnName) {
-        return tableName + UNIQUE_KEY_PREFIX_SUFFIX + columnName;
+        String key = tableName + UNIQUE_KEY_PREFIX_SUFFIX + columnName;
+        return validateKeyName(tableName, key, columnName);
     }
 
     public static String generateIndexKeyName(String tableName, String columnName) {
-        return tableName + INDEX_KEY_PREFIX_SUFFIX + columnName;
+        String key = tableName + INDEX_KEY_PREFIX_SUFFIX + columnName;
+        return validateKeyName(tableName, key, columnName);
+    }
+
+    /**
+     * 超过 64 位，则取每个单词的首字母加上下划线作为 key
+     *
+     * @param tableName  表名
+     * @param key        key
+     * @param columnName columnName
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2024/12/17 16:29
+     */
+    private static String validateKeyName(String tableName, String key, String columnName) {
+        if (key.length() > 64) {
+            String[] words = columnName.split(UNDERLINE);
+            List<String> columns = new ArrayList<>();
+            for (String word : words) {
+                columns.add(String.valueOf(word.charAt(0)));
+            }
+            key = String.join(UNDERLINE, columns);
+            if (key.length() > 64) {
+                key = key.substring(0, 64);
+            }
+            LoggerPrinter.warn(log, "The table {}'s key name is too long, so it is truncated to {}", tableName, key);
+        }
+        return key;
     }
 }
