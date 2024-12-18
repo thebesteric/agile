@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.commons.util;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Constructor;
@@ -40,7 +41,8 @@ public class DataValidator extends AbstractUtils {
 
     @Getter
     public static class Builder {
-        private final boolean throwImmediately;
+        @Setter
+        private boolean throwImmediately;
         private final Class<? extends RuntimeException> defaultExceptionClass;
         private final List<RuntimeException> exceptions = new CopyOnWriteArrayList<>();
 
@@ -70,7 +72,6 @@ public class DataValidator extends AbstractUtils {
             E ex = supplier.get();
             return validate(ex == null, ex);
         }
-
 
         public <E extends RuntimeException> DataValidator.Builder validate(boolean validated, E ex) {
             if (!validated) {
