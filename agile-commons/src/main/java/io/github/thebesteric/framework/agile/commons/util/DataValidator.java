@@ -7,6 +7,7 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 /**
  * 数据校验器
@@ -54,6 +55,11 @@ public class DataValidator extends AbstractUtils {
         public DataValidator.Builder validate(boolean validated) {
             RuntimeException ex = defaultExceptionClass.getDeclaredConstructor().newInstance();
             return validate(validated, ex);
+        }
+
+        public <E extends RuntimeException> DataValidator.Builder validate(Supplier<E> supplier) {
+            E ex = supplier.get();
+            return validate(ex == null, ex);
         }
 
         public <E extends RuntimeException> DataValidator.Builder validate(boolean validated, E ex) {
