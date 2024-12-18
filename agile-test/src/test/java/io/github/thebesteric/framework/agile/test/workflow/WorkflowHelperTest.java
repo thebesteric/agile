@@ -98,7 +98,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow6(tenantId, workflowDefinition);
+        createWorkflow3(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -222,7 +222,7 @@ class WorkflowHelperTest {
         System.out.println(nodeDefinition);
 
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 1)
-                .name("部门主管审批").desc("任务节点").approveType(ApproveType.SEQ)
+                .name("部门主管审批").desc("任务节点").approveType(ApproveType.ANY)
                 .dynamicAssignmentApproversNum(-1) // 不预设审批人
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
@@ -511,6 +511,7 @@ class WorkflowHelperTest {
         BusinessInfo businessInfo = BusinessInfo.of(MapWrapper.create().put("business_id", 123).put("business_type", "项目资料").build());
         WorkflowInstance workflowInstance = runtimeServiceHelper.start(workflowDefinition, requester, businessInfo, "申请请假 3 天", requestConditions, dynamicApprovers);
 
+        System.out.println("审批人：" + runtimeServiceHelper.findInCurrentlyEffectApprovers(tenantId, workflowInstance.getId()));
         // 添加附件
         RepositoryServiceHelper repositoryServiceHelper = workflowHelper.getRepositoryServiceHelper();
         repositoryServiceHelper.addAttachment(workflowInstance, "文本", "123456", "test.txt", "txt", "/attachment/test.txt");
