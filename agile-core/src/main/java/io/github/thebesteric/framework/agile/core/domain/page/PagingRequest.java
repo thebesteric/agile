@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.core.domain.page;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,10 +22,10 @@ public abstract class PagingRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = 2067724472495543463L;
 
-    /** 每页显示数量，默认：10 */
+    @Schema(description = "每页显示数量，，默认：10")
     protected long size = 10;
 
-    /** 当前页，默认：1 */
+    @Schema(description = "当前页，默认：1")
     protected long current = 1;
 
     public void setSize(long size) {

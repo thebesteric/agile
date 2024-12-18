@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.core.domain.page;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,22 +26,17 @@ public class PagingResponse<T> implements Serializable {
     @Serial
     private static final long serialVersionUID = -5719788927570427145L;
 
-    /** 记录 */
+    @Schema(description = "记录")
     private List<T> records;
-
-    /** 总记录数 */
+    @Schema(description = "总记录数")
     private long total;
-
-    /** 每页显示数量 */
+    @Schema(description = "每页显示数量")
     private long size;
-
-    /** 当前页 */
+    @Schema(description = "当前页")
     private long current;
-
-    /** 总页数 */
+    @Schema(description = "总页数")
     private long pages;
-
-    /** 扩展字段 */
+    @Schema(description = "扩展字段")
     private transient Map<String, Object> extension;
 
     public PagingResponse(long current, long size, long total, List<T> records) {
