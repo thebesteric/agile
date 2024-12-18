@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
 import cn.hutool.json.JSONUtil;
 import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.SneakyThrows;
 
@@ -20,7 +21,9 @@ public class BusinessInfo implements Serializable {
     @Serial
     private static final long serialVersionUID = -7887802703132244350L;
 
+    @Schema(description = "业务类名")
     private String className;
+    @Schema(description = "业务对象")
     private Object business;
 
     public static BusinessInfo of(Class<?> clazz, Object business) {

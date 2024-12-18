@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -17,18 +18,18 @@ public class Invitee implements Serializable {
     @Serial
     private static final long serialVersionUID = -3846539328354530647L;
 
-    /** 审批角色唯一标识 */
+    @Schema(description = "审批角色唯一标识")
     private String roleId;
-    /** 审批角色名称 */
+    @Schema(description = "审批角色名称")
     private String roleName;
-    /** 审批角色描述 */
+    @Schema(description = "审批角色描述")
     private String roleDesc;
 
-    /** 审批人唯一标识 */
+    @Schema(description = "审批人唯一标识")
     private String userId;
-    /** 审批人名称 */
+    @Schema(description = "审批人名称")
     private String userName;
-    /** 审批人描述 */
+    @Schema(description = "审批人描述")
     private String userDesc;
 
     public static Invitee of(String userId, String userName) {

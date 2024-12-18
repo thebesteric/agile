@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskApprove;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskRoleApproveRecord;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -16,10 +17,11 @@ import lombok.Data;
 public class TaskRoleApprove {
 
     /** 角色审批记录 */
+    @Schema(description = "角色审批记录")
     private TaskRoleApproveRecord taskRoleApproveRecord;
-    /** 角色审批记录-审批记录 */
+    @Schema(description = "角色审批记录-审批记录")
     private TaskApprove taskApprove;
-    /** 角色审批记录-角色用户 */
+    @Schema(description = "角色审批记录-角色用户")
     private NodeRoleAssignment nodeRoleAssignment;
 
     public static TaskRoleApprove of(TaskRoleApproveRecord taskRoleApproveRecord, TaskApprove taskApprove, NodeRoleAssignment nodeRoleAssignment) {

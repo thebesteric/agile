@@ -61,7 +61,7 @@
         <slf4j.version>2.0.12</slf4j.version>
         <jackson.version>2.16.1</jackson.version>
         <commons.lang3.version>3.13.0</commons.lang3.version>
-        <commons.io.version>2.13.0</commons.io.version>
+        <commons.io.version>2.18.0</commons.io.version>
         <commons.collections4.version>4.4</commons.collections4.version>
         <junit.jupiter.version>5.10.0</junit.jupiter.version>
         <guava.version>33.0.0-jre</guava.version>
@@ -72,7 +72,7 @@
         <hutool.version>5.8.27</hutool.version>
         <mybatis-plus.version>3.5.9</mybatis-plus.version>
         <mybatis.version>3.5.17</mybatis.version>
-        <swagger-annotations-jakarta.version>2.2.22</swagger-annotations-jakarta.version>
+        <swagger-annotations-jakarta.version>2.2.27</swagger-annotations-jakarta.version>
     </properties>
 
     <dependencies>

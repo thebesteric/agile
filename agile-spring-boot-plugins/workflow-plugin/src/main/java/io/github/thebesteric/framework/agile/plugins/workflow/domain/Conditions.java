@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
 import cn.hutool.core.collection.CollUtil;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.LogicOperator;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -25,11 +26,11 @@ public class Conditions implements Serializable {
     @Serial
     private static final long serialVersionUID = -4187125409333209523L;
 
-    /** 条件 */
+    @Schema(description = "条件集合")
     private List<Condition> conditions = new ArrayList<>();
-    /** 逻辑运算符 */
+    @Schema(description = "逻辑运算符")
     private LogicOperator logicOperator;
-    /** 优先级 */
+    @Schema(description = "优先级")
     private Integer priority;
 
     private Conditions(LogicOperator logicOperator, Integer priority) {

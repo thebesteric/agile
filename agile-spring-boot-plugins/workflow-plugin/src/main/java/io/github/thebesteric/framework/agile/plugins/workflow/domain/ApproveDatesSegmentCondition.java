@@ -1,6 +1,8 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.thebesteric.framework.agile.commons.util.DateUtils;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
@@ -18,13 +20,17 @@ import java.util.Date;
 @Accessors(chain = true)
 public class ApproveDatesSegmentCondition {
 
-    /** 提交时间-开始时间 */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "提交时间-开始时间")
     private Date submitStartDate;
-    /** 提交时间-结束时间 */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "提交时间-结束时间")
     private Date submitEndDate;
-    /** 审批时间-开始时间 */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "审批时间-开始时间")
     private Date approveStartDate;
-    /** 审批时间-结束时间 */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "审批时间-结束时间")
     private Date approveEndDate;
 
     public ApproveDatesSegmentCondition setSubmitStartDate(Date submitStartDate) {

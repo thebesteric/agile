@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -16,11 +17,12 @@ import java.io.Serializable;
 public class Requester implements Serializable {
     @Serial
     private static final long serialVersionUID = 3075812511525576814L;
-    /** 发起人唯一标识 */
+
+    @Schema(description = "发起人唯一标识")
     private String id;
-    /** 发起人名称 */
+    @Schema(description = "发起人名称")
     private String name;
-    /** 发起人描述 */
+    @Schema(description = "发起人描述")
     private String desc;
 
     public static Requester of(String id) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskDynamicAssignment;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -23,14 +24,13 @@ public class Approver implements Serializable {
     @Serial
     private static final long serialVersionUID = -3246995224601408891L;
 
-    /** 审批人唯一标识 */
+    @Schema(description = "审批人唯一标识")
     private String id;
-    /** 审批人名称 */
+    @Schema(description = "审批人名称")
     private String name;
-    /** 审批人描述 */
+    @Schema(description = "审批人描述")
     private String desc;
-
-    /** 是否是角色 */
+    @Schema(description = "是否是角色")
     private boolean roleType = false;
 
     public static Approver of(String id, String name, String desc, boolean roleType) {

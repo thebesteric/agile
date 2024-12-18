@@ -1,10 +1,12 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -24,31 +26,32 @@ public class WorkflowDefinitionFlowSchema implements Serializable {
     @Serial
     private static final long serialVersionUID = 8622244089008695940L;
 
-    /** 流程定义ID */
+    @Schema(description = "流程定义ID")
     private Integer id;
-    /** 租户 ID */
+    @Schema(description = "租户 ID")
     private String tenantId;
-    /** 流程标识 */
+    @Schema(description = "流程标识")
     private String key;
-    /** 流程名称 */
+    @Schema(description = "流程名称")
     private String name;
-    /** 流程类型（用于类型分类） */
+    @Schema(description = "流程类型（用于类型分类）")
     private String type = "default";
-    /** 连续审批方式：默认每个节点都需要审批 */
+    @Schema(description = "连续审批方式：默认每个节点都需要审批")
     private Map<String, String> continuousApproveMode;
-    /** 审批人为空时，是否允许自动审批 */
+    @Schema(description = "审批人为空时，是否允许自动审批")
     private boolean allowEmptyAutoApprove = false;
-    /** 是否允许撤回 */
+    @Schema(description = "是否允许撤回")
     private boolean allowRedo = true;
-    /** 是否必须填写审批意见 */
+    @Schema(description = "是否必须填写审批意见")
     private boolean requiredComment = false;
-    /** 发布状态 */
+    @Schema(description = "发布状态")
     private Map<String, String> publish;
-    /** 发布日期 */
+    @Schema(description = "发布日期")
     private Date publishedAt;
-    /** 为空时的审批人 */
+    @Schema(description = "为空时的审批人")
     private Approver whenEmptyApprover;
-    /** 创建日期 */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "创建日期")
     private Date createdAt;
 
     /** 流程定义（条件节点会存在多个节点定义） */
@@ -148,34 +151,34 @@ public class WorkflowDefinitionFlowSchema implements Serializable {
         @Serial
         private static final long serialVersionUID = -2416352782055701117L;
 
-        /** 节点定义ID */
+        @Schema(description = "节点定义ID")
         private Integer id;
-        /** 流程名称 */
+        @Schema(description = "流程名称")
         private String name;
-        /** 节点类型 */
+        @Schema(description = "节点类型")
         private Map<String, String> nodeType;
-        /** 审批类型 */
+        @Schema(description = "审批类型")
         private Map<String, String> approveType;
-        /** 条件定义 */
+        @Schema(description = "条件定义")
         private Conditions conditions;
-        /** 排序 */
+        @Schema(description = "排序")
         private Double sequence;
-        /** 是否是动态指定审批人 */
+        @Schema(description = "是否是动态指定审批人")
         private boolean dynamic = false;
-        /** 是否是动态指定审批人 */
+        @Schema(description = "是否是角色审批")
         private boolean roleApprove = false;
-        /** 是否是动态指定审批人 */
+        @Schema(description = "角色用户审批类型")
         private Map<String, String> roleUserApproveType;
-        /** 角色审批类型 */
+        @Schema(description = "角色审批类型")
         private Map<String, String> roleApproveType;
-        /** 审批人 */
+        @Schema(description = "审批人")
         private Set<Approver> approvers = new LinkedHashSet<>();
-        /** 角色审批人 */
+        @Schema(description = "角色审批人")
         private Set<RoleApprover> roleApprovers = new LinkedHashSet<>();
 
-        /** 审批人对应关系 */
+        @Schema(description = "审批人对应关系")
         private List<NodeAssignmentResponse> nodeAssignmentResponses = new ArrayList<>();
-        /** 角色审批人对应关系 */
+        @Schema(description = "角色审批人对应关系")
         private List<NodeRoleAssignmentResponse> nodeRoleAssignmentResponses = new ArrayList<>();
 
         public static NodeDefinitionResponse of(NodeDefinition nodeDefinition, List<NodeAssignment> nodeAssignments, List<NodeRoleAssignment> nodeRoleAssignments) {
@@ -207,17 +210,17 @@ public class WorkflowDefinitionFlowSchema implements Serializable {
         @Serial
         private static final long serialVersionUID = -7225604582591287563L;
 
-        /** ID */
+        @Schema(description = "节点用户定义 ID")
         private Integer id;
-        /** 审批人 ID */
+        @Schema(description = "审批人 ID")
         private String approverId;
-        /** 审批人名称 */
+        @Schema(description = "审批人名称")
         private String approverName;
-        /** 审批顺序 */
+        @Schema(description = "审批顺序")
         private Integer approverSeq;
-        /** 审批人描述 */
+        @Schema(description = "审批人描述")
         private String approverDesc;
-        /** 审批人 ID 类型 */
+        @Schema(description = "审批人 ID 类型")
         private ApproverIdType approverIdType;
 
         private static NodeAssignmentResponse of(NodeAssignment nodeAssignment) {
@@ -237,23 +240,23 @@ public class WorkflowDefinitionFlowSchema implements Serializable {
         @Serial
         private static final long serialVersionUID = -8716668936512338775L;
 
-        /** ID */
+        @Schema(description = "节点角色用户定义 ID")
         private Integer id;
-        /** 角色 ID */
+        @Schema(description = "角色 ID")
         private String roleId;
-        /** 角色名称 */
+        @Schema(description = "角色名称")
         private String roleName;
-        /** 角色审批顺序 */
+        @Schema(description = "角色审批顺序")
         private Integer roleSeq;
-        /** 角色描述 */
+        @Schema(description = "角色描述")
         private String roleDesc;
-        /** 用户 ID */
+        @Schema(description = "用户 ID")
         private String userId;
-        /** 用户名称 */
+        @Schema(description = "用户名称")
         private String userName;
-        /** 用户 ID */
+        @Schema(description = "用户审批顺序")
         private Integer userSeq;
-        /** 用户描述 */
+        @Schema(description = "用户描述")
         private String userDesc;
 
         private static NodeRoleAssignmentResponse of(NodeRoleAssignment nodeRoleAssignment) {

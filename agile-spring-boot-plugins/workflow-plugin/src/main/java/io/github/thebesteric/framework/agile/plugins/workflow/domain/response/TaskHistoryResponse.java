@@ -1,9 +1,11 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.TaskHistoryMessage;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskHistory;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -22,40 +24,30 @@ public class TaskHistoryResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = -5646814701512110017L;
 
-    // 主键
+    @Schema(description = "ID")
     protected Integer id;
-
-    // 流程定义 ID
+    @Schema(description = "流程定义 ID")
     private Integer workflowDefinitionId;
-
-    // 流程定义 KEY
+    @Schema(description = "流程定义 KEY")
     private String workflowDefinitionKey;
-
-    // 流程定义名称
+    @Schema(description = "流程定义名称")
     private String workflowDefinitionName;
-
-    // 流程实例 ID
+    @Schema(description = "流程实例 ID")
     private Integer workflowInstanceId;
-
-    // 流程实例描述
+    @Schema(description = "流程实例描述")
     private String workflowInstanceDesc;
-
-    // 租户 ID
+    @Schema(description = "租户 ID")
     private String tenantId;
-
-    // 任务实例 ID
+    @Schema(description = "任务实例 ID")
     private Integer taskInstanceId;
-
-    // 日志标题
+    @Schema(description = "日志标题")
     private String title;
-
-    // 日志信息
+    @Schema(description = "日志信息")
     private TaskHistoryMessage message;
-
-    // 创建人
+    @Schema(description = "创建人")
     protected String createdBy;
-
-    // 创建时间
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+    @Schema(description = "创建时间")
     protected Date createdAt;
 
     public static TaskHistoryResponse of(WorkflowDefinition workflowDefinition, WorkflowInstance workflowInstance, TaskHistory taskHistory) {

@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -24,17 +25,17 @@ public class RoleApprover implements Serializable {
     @Serial
     private static final long serialVersionUID = -461153416109482175L;
 
-    /** 角色唯一标识 */
+    @Schema(description = "角色唯一标识")
     private String roleId;
-    /** 角色名称 */
+    @Schema(description = "角色名称")
     private String roleName;
-    /** 角色描述 */
+    @Schema(description = "角色描述")
     private String roleDesc;
-    /** 审批人唯一标识 */
+    @Schema(description = "审批人唯一标识")
     private String userId;
-    /** 审批人名称 */
+    @Schema(description = "审批人名称")
     private String userName;
-    /** 审批人描述 */
+    @Schema(description = "审批人描述")
     private String userDesc;
 
     public static RoleApprover of(NodeRoleAssignment nodeRoleAssignment) {

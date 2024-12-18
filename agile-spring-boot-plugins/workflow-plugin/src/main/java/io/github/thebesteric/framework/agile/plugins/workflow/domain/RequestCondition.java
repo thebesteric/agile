@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -17,7 +18,9 @@ public class RequestCondition implements Serializable {
     @Serial
     private static final long serialVersionUID = -1826250458013487985L;
 
+    @Schema(description = "键")
     private String key;
+    @Schema(description = "值")
     private String value;
 
     public static RequestCondition of(String key, String value) {

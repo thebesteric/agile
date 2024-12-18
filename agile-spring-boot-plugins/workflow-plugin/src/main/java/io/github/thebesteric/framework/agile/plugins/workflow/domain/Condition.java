@@ -1,6 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.Operator;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -18,9 +19,13 @@ public class Condition implements Serializable {
     @Serial
     private static final long serialVersionUID = 5707313372537270971L;
 
+    @Schema(description = "字段名")
     private String key;
+    @Schema(description = "值")
     private String value;
+    @Schema(description = "操作符")
     private Operator operator;
+    @Schema(description = "描述")
     private String desc;
 
     public static Condition of(String key, String value, Operator operator) {

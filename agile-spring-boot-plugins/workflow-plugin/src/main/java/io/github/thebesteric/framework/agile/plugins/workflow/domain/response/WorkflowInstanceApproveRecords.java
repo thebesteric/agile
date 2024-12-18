@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestCondition;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RequestConditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -25,11 +26,11 @@ public class WorkflowInstanceApproveRecords implements Serializable {
     @Serial
     private static final long serialVersionUID = 4516285379098113700L;
 
-    /** 流程实例 ID */
+    @Schema(description = "流程实例")
     private WorkflowInstanceResponse workflowInstance;
-    /** 流程定义 */
+    @Schema(description = "流程定义")
     private WorkflowDefinitionResponse workflowDefinition;
-    /** 流程节点 */
+    @Schema(description = "流程节点")
     private List<NodeDefinitionResponse> nodeDefinitionResponses;
 
     /**
@@ -121,29 +122,29 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = 8027852454113775015L;
 
-        /** 流程实例 ID */
+        @Schema(description = "流程实例 ID")
         private Integer id;
-        /** 租户 ID */
+        @Schema(description = "租户 ID")
         private String tenantId;
-        /** 流程定义 ID */
+        @Schema(description = "流程定义 ID")
         private Integer workflowDefinitionId;
-        /** 流程发起人 ID */
+        @Schema(description = "流程发起人 ID")
         private String requesterId;
-        /** 流程发起人名称 */
+        @Schema(description = "流程发起人名称")
         private String requesterName;
-        /** 流程发起人描述 */
+        @Schema(description = "流程发起人描述")
         private String requesterDesc;
-        /** 业务信息 */
+        @Schema(description = "业务信息")
         private BusinessInfo businessInfo;
-        /** 请求条件 */
+        @Schema(description = "请求条件")
         private List<RequestCondition> requestConditions = new ArrayList<>();
-        /** 流程状态 */
+        @Schema(description = "流程状态")
         private Map<String, String> status;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "修改时间")
         private Date updatedAt;
 
         public static WorkflowInstanceResponse of(WorkflowInstance workflowInstance) {
@@ -171,32 +172,32 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = 6449586499506204689L;
 
-        /** 流程定义 ID */
+        @Schema(description = "流程定义 ID")
         private Integer id;
-        /** 租户 ID */
+        @Schema(description = "租户 ID")
         private String tenantId;
-        /** 流程标识 */
+        @Schema(description = "流程标识")
         private String key;
-        /** 流程名称 */
+        @Schema(description = "流程名称")
         private String name;
-        /** 流程类型（用于类型分类） */
+        @Schema(description = "流程类型（用于类型分类）")
         private String type;
-        /** 连续审批方式：默认每个节点都需要审批 */
+        @Schema(description = "连续审批方式：默认每个节点都需要审批")
         private Map<String, String> continuousApproveMode;
-        /** 没有条件节点符合时的处理策略: 默认抛出异常 */
+        @Schema(description = "没有条件节点符合时的处理策略: 默认抛出异常")
         private Map<String, String> conditionNotMatchedAnyStrategy;
-        /** 审批人为空时，是否允许自动审批 */
+        @Schema(description = "审批人为空时，是否允许自动审批")
         private boolean allowEmptyAutoApprove = false;
-        /** 是否允许撤回 */
+        @Schema(description = "是否允许撤回")
         private boolean allowRedo = true;
-        /** 是否必须填写审批意见 */
+        @Schema(description = "是否必须填写审批意见")
         private boolean requiredComment = false;
-        /** 发布状态 */
+        @Schema(description = "发布状态")
         private Map<String, String> publish;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间 */
+        @Schema(description = "修改时间")
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
         private Date updatedAt;
 
@@ -224,37 +225,37 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = -8280161498012703611L;
 
-        /** 节点定义 ID */
+        @Schema(description = "节点定义 ID")
         private Integer id;
-        /** 节点名称 */
+        @Schema(description = "节点名称")
         private String name;
-        /** 节点类型 */
+        @Schema(description = "节点类型")
         private Map<String, String> nodeType;
-        /** 是否是动态指定审批节点 */
+        @Schema(description = "是否是动态指定审批节点")
         private boolean dynamic = false;
-        /** 动态审批人数量 */
+        @Schema(description = "动态审批人数量")
         private Integer dynamicAssignmentNum = 0;
-        /** 条件定义 */
+        @Schema(description = "条件定义")
         private Conditions conditions;
-        /** 排序 */
+        @Schema(description = "排序")
         private Double sequence;
-        /** 是否是角色审批节点 */
+        @Schema(description = "是否是角色审批节点")
         private boolean roleApprove = false;
-        /** 角色用户审批类型 */
+        @Schema(description = "角色用户审批类型")
         private Map<String, String> roleUserApproveType;
-        /** 角色审批类型 */
+        @Schema(description = "角色审批类型")
         private Map<String, String> roleApproveType;
-        /** 节点实例 */
+        @Schema(description = "节点实例")
         private TaskInstanceResponse taskInstanceResponse;
-        /** 审批人 */
+        @Schema(description = "审批人")
         private List<NodeAssignmentResponse> nodeAssignmentsResponse;
-        /** 动态审批人 */
+        @Schema(description = "动态审批人")
         private List<TaskDynamicAssignmentResponse> taskDynamicAssignmentsResponse;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "修改时间")
         private Date updatedAt;
 
         public static NodeDefinitionResponse of(NodeDefinition nodeDefinition, TaskInstanceResponse taskInstanceResponse,
@@ -285,21 +286,21 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = -725062203728064396L;
 
-        /** 审批人 ID */
+        @Schema(description = "用户任务关联 ID")
         private Integer id;
-        /** 审批人 */
+        @Schema(description = "审批人 ID")
         private String approverId;
-        /** 审批人名称 */
+        @Schema(description = "审批人名称")
         private String approverName;
-        /** 审批人备注 */
+        @Schema(description = "审批人描述")
         private String approverDesc;
-        /** 审批顺序 */
+        @Schema(description = "审批顺序")
         private Integer approverSeq;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "修改时间")
         private Date updatedAt;
 
         public static NodeAssignmentResponse of(NodeAssignment nodeAssignment) {
@@ -320,25 +321,25 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = 6895044462882392326L;
 
-        /** 动态审批人 ID */
+        @Schema(description = "动态审批人 ID")
         private Integer id;
-        /** 节点定义 ID */
+        @Schema(description = "节点定义 ID")
         private Integer nodeDefinitionId;
-        /** 任务实例 ID */
+        @Schema(description = "任务实例 ID")
         private Integer taskInstanceId;
-        /** 审批人 */
+        @Schema(description = "审批人 ID")
         private String approverId;
-        /** 审批人名称 */
+        @Schema(description = "审批人名称")
         private String approverName;
-        /** 审批人备注 */
+        @Schema(description = "审批人描述")
         private String approverDesc;
-        /** 审批顺序 */
+        @Schema(description = "审批顺序")
         private Integer approverSeq;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "修改时间")
         private Date updatedAt;
 
         public static TaskDynamicAssignmentResponse of(TaskDynamicAssignment taskDynamicAssignment) {
@@ -361,21 +362,21 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = 706922113015404374L;
 
-        /** 节点实例 ID */
+        @Schema(description = "节点实例 ID")
         private Integer id;
-        /** 审批人数 */
+        @Schema(description = "审批人数")
         private Integer approvedCount;
-        /** 应审批总人数 */
+        @Schema(description = "应审批总人数")
         private Integer totalCount;
-        /** 审核结果 */
+        @Schema(description = "审核结果")
         private Map<String, String> status;
-        /** 审批节点 */
+        @Schema(description = "审批节点")
         private List<TaskApproveResponse> taskApproveResponses;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "修改时间")
         private Date updatedAt;
 
         public static TaskInstanceResponse of(TaskInstance taskInstance, List<TaskApproveResponse> taskApproveResponses) {
@@ -402,35 +403,35 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = 7710466011285696446L;
 
-        /** 审批记录 ID */
+        @Schema(description = "审批记录 ID")
         private Integer taskApproveId;
-        /** 审核人 ID（根据 roleApprove 来对应 NodeAssignment 或 NodeRoleAssignment 中的 ID） */
+        @Schema(description = "审核人 ID（根据 roleApprove 来对应 NodeAssignment 或 NodeRoleAssignment 中的 ID）")
         private String userId;
-        /** 审批人 ID */
+        @Schema(description = "审批人 ID")
         private String approverId;
-        /** 审批人姓名 */
+        @Schema(description = "审批人姓名")
         private String approverName;
-        /** 审批人顺序 */
+        @Schema(description = "审批人顺序")
         private Integer approverSeq;
-        /** 审批人备注 */
+        @Schema(description = "审批人描述")
         private String approverDesc;
-        /** 审核意见 */
+        @Schema(description = "审批意见")
         private String comment;
-        /** 审核结果 */
+        @Schema(description = "审核结果")
         private Map<String, String> approveStatus;
-        /** 被委派的任务实例审批记录 ID */
+        @Schema(description = "被委派的任务实例审批记录 ID")
         private Integer reassignedTaskApproveId;
-        /** 是否时角色审批 */
+        @Schema(description = "是否时角色审批")
         private boolean roleApprove;
-        /** 角色审批人列表 */
+        @Schema(description = "角色审批人列表")
         private List<TaskRoleApproveRecordResponse> taskRoleApproveRecordResponses;
-        /** 是否为当前用户 */
+        @Schema(description = "是否为当前用户")
         private boolean isSelf;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间（即审批时间） */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "修改时间")
         private Date updatedAt;
 
         public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment, TaskReassignRecord taskReassignRecord,
@@ -481,39 +482,39 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Serial
         private static final long serialVersionUID = 332412407655337100L;
 
-        /** 角色审批记录 ID */
+        @Schema(description = "角色审批记录 ID")
         private Integer taskRoleApproveRecordId;
-        /** 角色用户 ID */
+        @Schema(description = "角色用户 ID")
         private Integer nodeRoleAssignmentId;
-        /** 角色 ID */
+        @Schema(description = "角色 ID")
         private String roleId;
-        /** 角色名称 */
+        @Schema(description = "角色名称")
         private String roleName;
-        /** 角色顺序 */
+        @Schema(description = "角色顺序")
         private Integer roleSeq;
-        /** 角色描述 */
+        @Schema(description = "角色描述")
         private String roleDesc;
-        /** 审核人 ID */
+        @Schema(description = "审核人 ID")
         private String userId;
-        /** 审核人名称 */
+        @Schema(description = "审核人名称")
         private String userName;
-        /** 审核人顺序 */
+        @Schema(description = "审核人顺序")
         private Integer userSeq;
-        /** 审核人描述 */
+        @Schema(description = "审核人描述")
         private String userDesc;
-        /** 审核意见 */
+        @Schema(description = "审核意见")
         private String comment;
-        /** 审核结果 */
+        @Schema(description = "审批结果")
         private Map<String, String> roleApproveStatus;
-        /** 被委派的角色任务实例审批记录 ID */
+        @Schema(description = "被委派的角色任务实例审批记录 ID")
         private Integer reassignedTaskRoleApproveRecordId;
-        /** 是否为当前用户 */
+        @Schema(description = "是否为当前用户")
         private boolean isSelf;
-        /** 创建时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "创建时间")
         private Date createdAt;
-        /** 修改时间 */
         @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
+        @Schema(description = "修改时间")
         private Date updatedAt;
 
         public static TaskRoleApproveRecordResponse of(TaskRoleApproveRecord taskRoleApproveRecord, NodeRoleAssignment nodeRoleAssignment, List<String> curRoleIds, String curUserId) {

@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeRoleAssignment;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskReassignRecord;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -20,22 +21,22 @@ public class Inviter implements Serializable {
     @Serial
     private static final long serialVersionUID = 4421963956820738071L;
 
-    /** 审批角色唯一标识 */
+    @Schema(description = "审批角色唯一标识")
     private String roleId;
-    /** 审批角色名称 */
+    @Schema(description = "审批角色名称")
     private String roleName;
-    /** 审批角色描述 */
+    @Schema(description = "审批角色描述")
     private String roleDesc;
-    /** 审批角色排序 */
+    @Schema(description = "审批角色排序")
     private Integer roleSeq;
 
-    /** 审批人唯一标识 */
+    @Schema(description = "审批人唯一标识")
     private String userId;
-    /** 审批人名称 */
+    @Schema(description = "审批人名称")
     private String userName;
-    /** 审批人描述 */
+    @Schema(description = "审批人描述")
     private String userDesc;
-    /** 审批人排序 */
+    @Schema(description = "审批人排序")
     private Integer userSeq;
 
     public static Inviter of(NodeRoleAssignment nodeRoleAssignment) {
