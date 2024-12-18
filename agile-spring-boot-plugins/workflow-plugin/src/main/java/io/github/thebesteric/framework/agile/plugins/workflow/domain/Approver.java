@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeAssignment;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskDynamicAssignment;
 import lombok.Data;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -55,6 +56,10 @@ public class Approver implements Serializable {
 
     public static Approver of(NodeAssignment nodeAssignment, boolean roleType) {
         return Approver.of(nodeAssignment.getApproverId(), nodeAssignment.getApproverName(), nodeAssignment.getApproverDesc(), roleType);
+    }
+
+    public static Approver of(TaskDynamicAssignment taskDynamicAssignment, boolean roleType) {
+        return Approver.of(taskDynamicAssignment.getApproverId(), taskDynamicAssignment.getApproverName(), taskDynamicAssignment.getApproverDesc(), roleType);
     }
 
     /**

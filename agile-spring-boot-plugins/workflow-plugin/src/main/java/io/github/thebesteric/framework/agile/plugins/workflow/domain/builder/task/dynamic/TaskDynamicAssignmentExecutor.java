@@ -49,7 +49,7 @@ public class TaskDynamicAssignmentExecutor extends AbstractExecutor<TaskDynamicA
     }
 
     /**
-     * 根据节点定义获取动态审批用户
+     * 根据任务实例获取动态审批用户
      *
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
@@ -66,5 +66,27 @@ public class TaskDynamicAssignmentExecutor extends AbstractExecutor<TaskDynamicA
                 .eq(TaskDynamicAssignment::getState, 1)
                 .build();
         return this.find(query).getRecords();
+    }
+
+    /**
+     * 根据任务实例、审批人获取动态审批用户
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param approverId     审批人 ID
+     *
+     * @return TaskDynamicAssignment
+     *
+     * @author wangweijun
+     * @since 2024/12/18 10:12
+     */
+    public TaskDynamicAssignment getByTaskInstanceIdAndApproverId(String tenantId, Integer taskInstanceId, String approverId) {
+        Query query = QueryBuilderWrapper.createLambda(TaskDynamicAssignment.class)
+                .eq(TaskDynamicAssignment::getTenantId, tenantId)
+                .eq(TaskDynamicAssignment::getTaskInstanceId, taskInstanceId)
+                .eq(TaskDynamicAssignment::getApproverId, approverId)
+                .eq(TaskDynamicAssignment::getState, 1)
+                .build();
+        return this.get(query);
     }
 }

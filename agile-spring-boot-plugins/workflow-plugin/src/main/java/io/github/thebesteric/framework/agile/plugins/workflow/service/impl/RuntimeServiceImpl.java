@@ -3122,6 +3122,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             TaskInstance taskInstance = taskInstanceExecutor.getById(taskApprove.getTaskInstanceId());
             Integer nodeDefinitionId = taskInstance.getNodeDefinitionId();
             NodeDefinition nodeDefinition = nodeDefinitionExecutor.getById(tenantId, nodeDefinitionId);
+            // 处理动态审批节点
+            if (nodeDefinition.isDynamic()) {
+                TaskDynamicAssignmentExecutor taskDynamicAssignmentExecutor = taskDynamicAssignmentExecutorBuilder.build();
+                TaskDynamicAssignment taskDynamicAssignment = taskDynamicAssignmentExecutor.getByTaskInstanceIdAndApproverId(tenantId, taskInstance.getId(), taskApprove.getApproverId());
+                return Approver.of(taskDynamicAssignment, nodeDefinition.isRoleApprove());
+            }
             NodeAssignment nodeAssignment = nodeAssignmentExecutor.getByNodeDefinitionIdAndApproverId(tenantId, nodeDefinitionId, taskApprove.getApproverId());
             return Approver.of(nodeAssignment, nodeDefinition.isRoleApprove());
         }).toList();
