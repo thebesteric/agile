@@ -19,25 +19,34 @@ import java.util.function.Supplier;
 public class DataValidator extends AbstractUtils {
 
     public static Builder create() {
-        return newInstance(null);
+        return newInstance(null, true);
+    }
+
+    public static Builder create(boolean throwImmediately) {
+        return newInstance(null, throwImmediately);
     }
 
     public static Builder create(Class<? extends RuntimeException> defaultExceptionClass) {
-        return newInstance(defaultExceptionClass);
+        return newInstance(defaultExceptionClass, true);
     }
 
-    private static Builder newInstance(Class<? extends RuntimeException> exClass) {
-        return new Builder(exClass);
+    public static Builder create(Class<? extends RuntimeException> defaultExceptionClass, boolean throwImmediately) {
+        return newInstance(defaultExceptionClass, throwImmediately);
+    }
+
+    private static Builder newInstance(Class<? extends RuntimeException> exClass, boolean throwImmediately) {
+        return new Builder(exClass, throwImmediately);
     }
 
     @Getter
     public static class Builder {
-        
+        private final boolean throwImmediately;
         private final Class<? extends RuntimeException> defaultExceptionClass;
         private final List<RuntimeException> exceptions = new CopyOnWriteArrayList<>();
 
-        public Builder(Class<? extends RuntimeException> exClass) {
+        public Builder(Class<? extends RuntimeException> exClass, boolean throwImmediately) {
             this.defaultExceptionClass = exClass == null ? RuntimeException.class : exClass;
+            this.throwImmediately = throwImmediately;
         }
 
         @SneakyThrows
@@ -62,8 +71,12 @@ public class DataValidator extends AbstractUtils {
             return validate(ex == null, ex);
         }
 
+
         public <E extends RuntimeException> DataValidator.Builder validate(boolean validated, E ex) {
             if (!validated) {
+                if (throwImmediately) {
+                    throw ex;
+                }
                 exceptions.add(ex);
             }
             return this;
