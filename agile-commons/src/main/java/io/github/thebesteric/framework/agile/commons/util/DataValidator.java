@@ -52,29 +52,29 @@ public class DataValidator extends AbstractUtils {
         }
 
         @SneakyThrows
-        public DataValidator.Builder validate(boolean validated, String message) {
+        public DataValidator.Builder validate(boolean condition, String message) {
             for (Constructor<?> declaredConstructor : defaultExceptionClass.getDeclaredConstructors()) {
                 if (declaredConstructor.getParameterCount() == 1 && declaredConstructor.getParameterTypes()[0] == String.class) {
                     RuntimeException ex = (RuntimeException) declaredConstructor.newInstance(message);
-                    return validate(validated, ex);
+                    return validate(condition, ex);
                 }
             }
-            return validate(validated);
+            return validate(condition);
         }
 
         @SneakyThrows
-        public DataValidator.Builder validate(boolean validated) {
+        public DataValidator.Builder validate(boolean condition) {
             RuntimeException ex = defaultExceptionClass.getDeclaredConstructor().newInstance();
-            return validate(validated, ex);
+            return validate(condition, ex);
         }
 
         public <E extends RuntimeException> DataValidator.Builder validate(Supplier<E> supplier) {
             E ex = supplier.get();
-            return validate(ex == null, ex);
+            return validate(ex != null, ex);
         }
 
-        public <E extends RuntimeException> DataValidator.Builder validate(boolean validated, E ex) {
-            if (!validated) {
+        public <E extends RuntimeException> DataValidator.Builder validate(boolean condition, E ex) {
+            if (condition) {
                 if (throwImmediately) {
                     throw ex;
                 }
