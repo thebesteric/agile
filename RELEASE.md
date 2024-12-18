@@ -376,3 +376,8 @@
 
 ### v1.0.17.2
 - 工作流插件 (bugfix): 修复动态审批节点获取当前审批人时报错的问题
+
+### v1.0.17.3
+- 通用 (feat): 增加 DataValidator 数据校验工具类
+  通用 (perf): 增加 PagingRequest 和 PagingResponse 分页工具类
+- 工作流插件 (perf): 模型增加 @Schema 注释
