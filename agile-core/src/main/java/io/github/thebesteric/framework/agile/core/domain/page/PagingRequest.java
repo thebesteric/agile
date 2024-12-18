@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.core.domain.page;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -39,6 +41,10 @@ public abstract class PagingRequest implements Serializable {
         } else {
             this.current = current;
         }
+    }
+
+    public <T> IPage<T> getPage(Class<T> recordType) {
+        return new Page<>(this.current, this.size);
     }
 
     /**

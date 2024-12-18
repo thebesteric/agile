@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.core.domain.page;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -71,6 +72,10 @@ public class PagingResponse<T> implements Serializable {
 
     public static <T> PagingResponse<T> of(long current, long size, long total, List<T> records) {
         return new PagingResponse<>(current, size, total, records);
+    }
+
+    public static <T extends Serializable> PagingResponse<T> of(IPage<T> page) {
+        return of(page.getCurrent(), page.getSize(), page.getTotal(), page.getRecords());
     }
 
     public PagingResponse<T> extension(String key, Object value) {

@@ -70,8 +70,8 @@
         <vavr.version>0.10.4</vavr.version>
         <redisson.version>3.29.0</redisson.version>
         <hutool.version>5.8.27</hutool.version>
-        <mybatis-plus.version>3.5.7</mybatis-plus.version>
-        <mybatis.version>3.5.16</mybatis.version>
+        <mybatis-plus.version>3.5.9</mybatis-plus.version>
+        <mybatis.version>3.5.17</mybatis.version>
         <swagger-annotations-jakarta.version>2.2.22</swagger-annotations-jakarta.version>
     </properties>
 
@@ -199,6 +199,18 @@
             <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-annotation</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-core</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-extension</artifactId>
                 <version>${mybatis-plus.version}</version>
             </dependency>
 
