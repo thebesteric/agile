@@ -381,3 +381,8 @@
 - 通用 (feat): 增加 DataValidator 数据校验工具类
   通用 (perf): 增加 PagingRequest 和 PagingResponse 分页工具类
 - 工作流插件 (perf): 模型增加 @Schema 注释
+
+### v1.0.17.4
+- 通用 (perf): 分页工具类 PagingRequest 和 PagingResponse 增加 @Schema 注释
+- 通用 (perf): MapWrapper 支持驼峰和下划线字段格式转换
+- 日志插件 (perf): 日志查询接口增加 @Schema 注释
