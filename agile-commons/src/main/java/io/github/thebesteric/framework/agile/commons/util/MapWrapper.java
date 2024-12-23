@@ -30,29 +30,45 @@ public class MapWrapper {
         }
 
         public MapBuilder<T> put(String key, Object value) {
-            return put(key, value, keyStyle);
+            return put(true, key, value);
+        }
+
+        public MapBuilder<T> put(boolean condition, String key, Object value) {
+            return put(condition, key, value, keyStyle);
         }
 
         public MapBuilder<T> put(String key, Object value, KeyStyle keyStyle) {
-            params.put(convertKey(key, keyStyle), value);
+            return put(true, key, value, keyStyle);
+        }
+
+        public MapBuilder<T> put(boolean condition, String key, Object value, KeyStyle keyStyle) {
+            if (condition) {
+                params.put(convertKey(key, keyStyle), value);
+            }
             return this;
         }
 
         public MapBuilder<T> put(SFunction<T, ?> getter, Object value) {
-            return put(getter, value, keyStyle);
+            return put(true, getter, value, keyStyle);
         }
 
-        public MapBuilder<T> put(SFunction<T, ?> getter, Object value, KeyStyle keyStyle) {
-            try {
-                Method method = getter.getClass().getDeclaredMethod("writeReplace");
-                method.setAccessible(true);
-                SerializedLambda serializedLambda = (SerializedLambda) method.invoke(getter);
-                String implMethodName = serializedLambda.getImplMethodName();
-                String fieldName = implMethodName.startsWith("get") ? implMethodName.substring(3) : implMethodName.substring(2);
-                fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
-                params.put(convertKey(fieldName, keyStyle), value);
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException("Failed to extract field name", e);
+        public MapBuilder<T> put(boolean condition, SFunction<T, ?> getter, Object value) {
+            return put(condition, getter, value, keyStyle);
+        }
+
+        public MapBuilder<T> put(boolean condition, SFunction<T, ?> getter, Object value, KeyStyle keyStyle) {
+            if (condition) {
+                try {
+                    Method method = getter.getClass().getDeclaredMethod("writeReplace");
+                    method.setAccessible(true);
+                    SerializedLambda serializedLambda = (SerializedLambda) method.invoke(getter);
+                    String implMethodName = serializedLambda.getImplMethodName();
+                    String fieldName = implMethodName.startsWith("get") ? implMethodName.substring(3) : implMethodName.substring(2);
+                    fieldName = Character.toLowerCase(fieldName.charAt(0)) + fieldName.substring(1);
+                    params.put(convertKey(fieldName, keyStyle), value);
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException("Failed to extract field name", e);
+                }
             }
             return this;
         }
