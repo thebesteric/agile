@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.test.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 
 /**
  * BaseEntity
@@ -17,7 +18,7 @@ public abstract class BaseEntity {
     @TableId(type = IdType.AUTO)
     private Integer id;
 
-    // @EntityColumn
+    @EntityColumn(sequence = 1)
     @TableField(value = "`desc`")
     private String desc;
 

@@ -70,7 +70,7 @@ public @interface EntityColumn {
     Reference reference() default @Reference();
 
     /** 字段排序 */
-    int sequence() default Integer.MIN_VALUE;
+    int sequence() default Integer.MAX_VALUE;
 
 
     @Getter
