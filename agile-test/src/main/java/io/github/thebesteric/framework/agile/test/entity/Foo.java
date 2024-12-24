@@ -49,7 +49,7 @@ public class Foo extends BaseEntity implements EntityClassCreateListener, Entity
     private Date updateTime;
 
     @TableField("t_test")
-    @EntityColumn(length = 64, nullable = false, defaultExpression = "'hello'")
+    @EntityColumn(length = 64, nullable = false, defaultExpression = "'hello'", sequence = 2)
     private String test;
 
     @EntityColumn(nullable = false, defaultExpression = "0")
