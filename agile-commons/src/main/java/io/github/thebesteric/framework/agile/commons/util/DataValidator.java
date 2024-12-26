@@ -22,7 +22,10 @@ public class DataValidator {
 
     @Setter
     private boolean throwImmediately;
-    private final Class<? extends RuntimeException> defaultExceptionClass;
+
+    @Setter
+    private Class<? extends RuntimeException> defaultExceptionClass;
+
     private final List<RuntimeException> exceptions = new CopyOnWriteArrayList<>();
 
     private DataValidator(Class<? extends RuntimeException> exClass, boolean throwImmediately) {
