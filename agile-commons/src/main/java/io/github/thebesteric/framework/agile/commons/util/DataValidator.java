@@ -21,36 +21,36 @@ import java.util.function.Supplier;
 public class DataValidator {
 
     @Setter
-    private boolean throwImmediately;
+    private ExceptionThrowStrategy exceptionThrowStrategy;
 
     @Setter
     private Class<? extends RuntimeException> defaultExceptionClass;
 
     private final List<RuntimeException> exceptions = new CopyOnWriteArrayList<>();
 
-    private DataValidator(Class<? extends RuntimeException> exClass, boolean throwImmediately) {
+    private DataValidator(Class<? extends RuntimeException> exClass, ExceptionThrowStrategy exceptionThrowStrategy) {
         this.defaultExceptionClass = exClass == null ? RuntimeException.class : exClass;
-        this.throwImmediately = throwImmediately;
+        this.exceptionThrowStrategy = exceptionThrowStrategy;
     }
 
     public static DataValidator create() {
-        return newInstance(null, true);
+        return newInstance(null, ExceptionThrowStrategy.IMMEDIATELY);
     }
 
-    public static DataValidator create(boolean throwImmediately) {
-        return newInstance(null, throwImmediately);
+    public static DataValidator create(ExceptionThrowStrategy exceptionThrowStrategy) {
+        return newInstance(null, exceptionThrowStrategy);
     }
 
     public static DataValidator create(Class<? extends RuntimeException> defaultExceptionClass) {
-        return newInstance(defaultExceptionClass, true);
+        return newInstance(defaultExceptionClass, ExceptionThrowStrategy.IMMEDIATELY);
     }
 
-    public static DataValidator create(Class<? extends RuntimeException> defaultExceptionClass, boolean throwImmediately) {
-        return newInstance(defaultExceptionClass, throwImmediately);
+    public static DataValidator create(Class<? extends RuntimeException> defaultExceptionClass, ExceptionThrowStrategy exceptionThrowStrategy) {
+        return newInstance(defaultExceptionClass, exceptionThrowStrategy);
     }
 
-    private static DataValidator newInstance(Class<? extends RuntimeException> exClass, boolean throwImmediately) {
-        return new DataValidator(exClass, throwImmediately);
+    private static DataValidator newInstance(Class<? extends RuntimeException> exClass, ExceptionThrowStrategy exceptionThrowStrategy) {
+        return new DataValidator(exClass, exceptionThrowStrategy);
     }
 
     @SneakyThrows
@@ -77,7 +77,7 @@ public class DataValidator {
 
     public <E extends RuntimeException> DataValidator validate(boolean condition, E ex) {
         if (condition) {
-            if (throwImmediately) {
+            if (this.isThrowImmediately()) {
                 throw ex;
             }
             exceptions.add(ex);
@@ -97,6 +97,14 @@ public class DataValidator {
         if (optional.isPresent()) {
             throw optional.get();
         }
+    }
+
+    public boolean isThrowImmediately() {
+        return exceptionThrowStrategy == null || ExceptionThrowStrategy.IMMEDIATELY == exceptionThrowStrategy;
+    }
+
+    public enum ExceptionThrowStrategy {
+        IMMEDIATELY, COLLECT
     }
 
 }
