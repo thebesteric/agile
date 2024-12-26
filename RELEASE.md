@@ -392,3 +392,7 @@
 - 通用 (perf): MapWrapper 增加条件添加判断逻辑
 - 通用 (perf): DataValidator 可在创建后，设置默认异常类型
 - 通用 (feat): 增加 Processor 执行流程管理工具类
+
+### v1.0.18.1
+- 通用 (perf): DataValidator 增加是否立即抛出异常的枚举
+- 通用 (perf): Processor 优化执行流程，增加校验方法
