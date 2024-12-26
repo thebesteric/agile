@@ -25,11 +25,11 @@ public class Processor<T> {
     }
 
     public static <T> Processor<T> prepare() {
-        return Processor.prepare(false);
+        return io.github.thebesteric.framework.agile.commons.util.Processor.prepare(false);
     }
 
     public static <T> Processor<T> prepare(boolean throwImmediately) {
-        return Processor.prepare(RuntimeException.class, throwImmediately);
+        return io.github.thebesteric.framework.agile.commons.util.Processor.prepare(RuntimeException.class, throwImmediately);
     }
 
     public static <T, E extends RuntimeException> Processor<T> prepare(Class<E> defaultExceptionClass, boolean throwImmediately) {
@@ -62,6 +62,11 @@ public class Processor<T> {
 
     public <E extends RuntimeException> Processor<T> validate(boolean condition, E ex) {
         dataValidator.validate(condition, ex);
+        return this;
+    }
+
+    public Processor<T> validate(boolean condition, String errorMessage) {
+        dataValidator.validate(condition, errorMessage);
         return this;
     }
 
