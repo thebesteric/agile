@@ -20,20 +20,20 @@ public class Processor<T> {
     private final List<Predicate<List<RuntimeException>>> exceptionListeners = new ArrayList<>();
 
 
-    private <E extends RuntimeException> Processor(Class<E> defaultExceptionClass, boolean throwImmediately) {
-        dataValidator = DataValidator.create(defaultExceptionClass, throwImmediately);
+    private <E extends RuntimeException> Processor(Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
+        dataValidator = DataValidator.create(defaultExceptionClass, exceptionThrowStrategy);
     }
 
     public static <T> Processor<T> prepare() {
-        return io.github.thebesteric.framework.agile.commons.util.Processor.prepare(false);
+        return io.github.thebesteric.framework.agile.commons.util.Processor.prepare(DataValidator.ExceptionThrowStrategy.IMMEDIATELY);
     }
 
-    public static <T> Processor<T> prepare(boolean throwImmediately) {
-        return io.github.thebesteric.framework.agile.commons.util.Processor.prepare(RuntimeException.class, throwImmediately);
+    public static <T> Processor<T> prepare(DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
+        return Processor.prepare(RuntimeException.class, exceptionThrowStrategy);
     }
 
-    public static <T, E extends RuntimeException> Processor<T> prepare(Class<E> defaultExceptionClass, boolean throwImmediately) {
-        return new Processor<>(defaultExceptionClass, throwImmediately);
+    public static <T, E extends RuntimeException> Processor<T> prepare(Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
+        return new Processor<>(defaultExceptionClass, exceptionThrowStrategy);
     }
 
     public Processor<T> registerExceptionListener(Predicate<List<RuntimeException>> exceptionListener) {
