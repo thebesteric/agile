@@ -386,3 +386,9 @@
 - 通用 (perf): 分页工具类 PagingRequest 和 PagingResponse 增加 @Schema 注释
 - 通用 (perf): MapWrapper 支持驼峰和下划线字段格式转换
 - 日志插件 (perf): 日志查询接口增加 @Schema 注释
+
+### v1.0.18
+- 数据库插件 (bugfix): 解决 @EntityColumn 的 sequence 排序错误的问题
+- 通用 (perf): MapWrapper 增加条件添加判断逻辑
+- 通用 (perf): DataValidator 可在创建后，设置默认异常类型
+- 通用 (feat): 增加 Processor 执行流程管理工具类
