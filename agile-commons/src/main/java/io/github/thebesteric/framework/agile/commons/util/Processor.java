@@ -1,11 +1,15 @@
 package io.github.thebesteric.framework.agile.commons.util;
 
 import io.vavr.control.Try;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * 执行流程规范工具
@@ -13,6 +17,7 @@ import java.util.function.*;
  * @author wangweijun
  * @since 2024/12/26 14:51
  */
+@Slf4j
 public class Processor<T> {
 
     private T object;
@@ -57,9 +62,8 @@ public class Processor<T> {
         return this;
     }
 
-    public <E extends RuntimeException> Processor<T> validate(Function<T, E> function) {
-        E ex = function.apply(this.object);
-        dataValidator.validate(ex != null, ex);
+    public Processor<T> validate(Consumer<T> consumer) {
+        Try.run(() -> consumer.accept(this.object)).onFailure(e -> dataValidator.validate(true, new RuntimeException(e)));
         return this;
     }
 
@@ -111,8 +115,12 @@ public class Processor<T> {
         if (dataValidator.isThrowImmediately()) {
             dataValidator.throwException();
         }
+        List<RuntimeException> exceptions = dataValidator.getExceptions();
+        if (!exceptions.isEmpty() && exceptionListeners.isEmpty()) {
+            LoggerPrinter.warn(log, "Has some exceptions, but not can not find any exception listener");
+        }
         for (Predicate<List<RuntimeException>> exceptionListener : exceptionListeners) {
-            if (!exceptionListener.test(dataValidator.getExceptions())) {
+            if (!exceptionListener.test(exceptions)) {
                 break;
             }
         }
