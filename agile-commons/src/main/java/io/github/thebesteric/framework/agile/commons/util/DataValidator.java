@@ -24,12 +24,12 @@ public class DataValidator {
     private ExceptionThrowStrategy exceptionThrowStrategy;
 
     @Setter
-    private Class<? extends RuntimeException> defaultExceptionClass;
+    private Class<? extends Throwable> defaultExceptionClass;
 
-    private final List<RuntimeException> exceptions = new CopyOnWriteArrayList<>();
+    private final List<Throwable> exceptions = new CopyOnWriteArrayList<>();
 
-    private DataValidator(Class<? extends RuntimeException> exClass, ExceptionThrowStrategy exceptionThrowStrategy) {
-        this.defaultExceptionClass = exClass == null ? RuntimeException.class : exClass;
+    private DataValidator(Class<? extends Throwable> exClass, ExceptionThrowStrategy exceptionThrowStrategy) {
+        this.defaultExceptionClass = exClass == null ? Throwable.class : exClass;
         this.exceptionThrowStrategy = exceptionThrowStrategy;
     }
 
@@ -41,15 +41,15 @@ public class DataValidator {
         return newInstance(null, exceptionThrowStrategy);
     }
 
-    public static DataValidator create(Class<? extends RuntimeException> defaultExceptionClass) {
+    public static DataValidator create(Class<? extends Throwable> defaultExceptionClass) {
         return newInstance(defaultExceptionClass, ExceptionThrowStrategy.IMMEDIATELY);
     }
 
-    public static DataValidator create(Class<? extends RuntimeException> defaultExceptionClass, ExceptionThrowStrategy exceptionThrowStrategy) {
+    public static DataValidator create(Class<? extends Throwable> defaultExceptionClass, ExceptionThrowStrategy exceptionThrowStrategy) {
         return newInstance(defaultExceptionClass, exceptionThrowStrategy);
     }
 
-    private static DataValidator newInstance(Class<? extends RuntimeException> exClass, ExceptionThrowStrategy exceptionThrowStrategy) {
+    private static DataValidator newInstance(Class<? extends Throwable> exClass, ExceptionThrowStrategy exceptionThrowStrategy) {
         return new DataValidator(exClass, exceptionThrowStrategy);
     }
 
@@ -57,7 +57,7 @@ public class DataValidator {
     public DataValidator validate(boolean condition, String message) {
         for (Constructor<?> declaredConstructor : defaultExceptionClass.getDeclaredConstructors()) {
             if (declaredConstructor.getParameterCount() == 1 && declaredConstructor.getParameterTypes()[0] == String.class) {
-                RuntimeException ex = (RuntimeException) declaredConstructor.newInstance(message);
+                Throwable ex = (Throwable) declaredConstructor.newInstance(message);
                 return validate(condition, ex);
             }
         }
@@ -66,16 +66,18 @@ public class DataValidator {
 
     @SneakyThrows
     public DataValidator validate(boolean condition) {
-        RuntimeException ex = defaultExceptionClass.getDeclaredConstructor().newInstance();
+        Throwable ex = defaultExceptionClass.getDeclaredConstructor().newInstance();
         return validate(condition, ex);
     }
 
-    public <E extends RuntimeException> DataValidator validate(Supplier<E> supplier) {
+    public <E extends Throwable> DataValidator validate(Supplier<E> supplier) {
         E ex = supplier.get();
         return validate(ex != null, ex);
     }
 
-    public <E extends RuntimeException> DataValidator validate(boolean condition, E ex) {
+
+    @SneakyThrows
+    public <E extends Throwable> DataValidator validate(boolean condition, E ex) {
         if (condition) {
             if (this.isThrowImmediately()) {
                 throw ex;
@@ -85,15 +87,17 @@ public class DataValidator {
         return this;
     }
 
+    @SneakyThrows
     public void throwException() {
-        Optional<? extends RuntimeException> optional = exceptions.stream().findFirst();
+        Optional<? extends Throwable> optional = exceptions.stream().findFirst();
         if (optional.isPresent()) {
             throw optional.get();
         }
     }
 
+    @SneakyThrows
     public void throwException(Class<? extends Throwable> exClass) {
-        Optional<? extends RuntimeException> optional = exceptions.stream().filter(e -> e.getClass() == exClass).findFirst();
+        Optional<? extends Throwable> optional = exceptions.stream().filter(e -> e.getClass() == exClass).findFirst();
         if (optional.isPresent()) {
             throw optional.get();
         }
