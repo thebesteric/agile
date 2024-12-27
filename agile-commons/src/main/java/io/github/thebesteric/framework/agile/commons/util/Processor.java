@@ -63,8 +63,8 @@ public class Processor<T> {
         return this;
     }
 
-    public Processor<T> next(Supplier<T> supplier) {
-        return start(supplier);
+    public <R> Processor<R> next(Supplier<R> supplier) {
+        return this.next(t -> supplier.get());
     }
 
     @SuppressWarnings("unchecked")
