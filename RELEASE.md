@@ -403,3 +403,7 @@
 ### v1.0.18.3
 - 通用 (perf): Processor 优化 next 方法
 - 通用 (perf): Processor 优化 validate 方法
+
+### v1.0.18.4
+- 通用 (perf): DataValidator 异常类型修改为 Throwable
+- 通用 (perf): Processor 异常类型修改为 Throwable
