@@ -80,6 +80,18 @@ public class Processor<T> {
         return processor;
     }
 
+    public <R> R complete(Supplier<R> consumer) {
+        return this.complete(t -> {
+            return consumer.get();
+        });
+    }
+
+    public void complete(Runnable runnable) {
+        this.complete(t -> {
+            runnable.run();
+        });
+    }
+
     public void complete(Consumer<T> consumer) {
         List<Throwable> exceptions = dataValidator.getExceptions();
         if (CollectionUtils.isEmpty(exceptions)) {
