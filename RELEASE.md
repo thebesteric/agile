@@ -396,3 +396,6 @@
 ### v1.0.18.1
 - 通用 (perf): DataValidator 增加是否立即抛出异常的枚举
 - 通用 (perf): Processor 优化执行流程，增加校验方法
+
+### v1.0.18.2
+- 通用 (perf): Processor 优化执行逻辑，减少强转
