@@ -399,3 +399,7 @@
 
 ### v1.0.18.2
 - 通用 (perf): Processor 优化执行逻辑，减少强转
+
+### v1.0.18.3
+- 通用 (perf): Processor 优化 next 方法
+- 通用 (perf): Processor 优化 validate 方法
