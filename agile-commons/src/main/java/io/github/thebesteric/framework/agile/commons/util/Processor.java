@@ -22,13 +22,13 @@ public class Processor<T> {
 
     private T object;
     private final Class<T> objectType;
-    private final Class<? extends RuntimeException> defaultExceptionClass;
+    private final Class<? extends Throwable> defaultExceptionClass;
     private final DataValidator.ExceptionThrowStrategy exceptionThrowStrategy;
     private final DataValidator dataValidator;
-    private final List<Predicate<List<RuntimeException>>> exceptionListeners = new ArrayList<>();
+    private final List<Predicate<List<Throwable>>> exceptionListeners = new ArrayList<>();
 
 
-    private <E extends RuntimeException> Processor(Class<T> initialObjectType, Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
+    private <E extends Throwable> Processor(Class<T> initialObjectType, Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
         this.objectType = initialObjectType;
         this.defaultExceptionClass = defaultExceptionClass;
         this.exceptionThrowStrategy = exceptionThrowStrategy;
@@ -40,10 +40,10 @@ public class Processor<T> {
     }
 
     public static <T> Processor<T> prepare(Class<T> initialObjectType, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
-        return Processor.prepare(initialObjectType, RuntimeException.class, exceptionThrowStrategy);
+        return Processor.prepare(initialObjectType, Throwable.class, exceptionThrowStrategy);
     }
 
-    public static <T, E extends RuntimeException> Processor<T> prepare(Class<T> initialObjectType, Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
+    public static <T, E extends Throwable> Processor<T> prepare(Class<T> initialObjectType, Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
         return new Processor<>(initialObjectType, defaultExceptionClass, exceptionThrowStrategy);
     }
 
@@ -52,7 +52,7 @@ public class Processor<T> {
         return this;
     }
 
-    public <E extends RuntimeException> Processor<T> validate(boolean condition, E ex) {
+    public <E extends Throwable> Processor<T> validate(boolean condition, Throwable ex) {
         dataValidator.validate(condition, ex);
         return this;
     }
@@ -63,7 +63,7 @@ public class Processor<T> {
     }
 
     public Processor<T> validate(Consumer<T> consumer) {
-        Try.run(() -> consumer.accept(this.object)).onFailure(e -> dataValidator.validate(true, new RuntimeException(e)));
+        Try.run(() -> consumer.accept(this.object)).onFailure(e -> dataValidator.validate(true, e));
         return this;
     }
 
@@ -81,32 +81,32 @@ public class Processor<T> {
     }
 
     public void complete(Consumer<T> consumer) {
-        List<RuntimeException> exceptions = dataValidator.getExceptions();
+        List<Throwable> exceptions = dataValidator.getExceptions();
         if (CollectionUtils.isEmpty(exceptions)) {
             Try.run(() -> consumer.accept(this.object))
-                    .onFailure(e -> exceptions.add(new RuntimeException(e)));
+                    .onFailure(e -> exceptions.add(e));
         }
         throwExceptionsIfNecessary();
     }
 
     public <R> R complete(Function<T, R> function) {
-        List<RuntimeException> exceptions = dataValidator.getExceptions();
+        List<Throwable> exceptions = dataValidator.getExceptions();
         R result = null;
         if (CollectionUtils.isEmpty(exceptions)) {
             result = Try.of(() -> function.apply(this.object))
-                    .onFailure(e -> exceptions.add(new RuntimeException(e)))
+                    .onFailure(e -> exceptions.add(e))
                     .get();
         }
         throwExceptionsIfNecessary();
         return result;
     }
 
-    public Processor<T> registerExceptionListener(Predicate<List<RuntimeException>> exceptionListener) {
+    public Processor<T> registerExceptionListener(Predicate<List<Throwable>> exceptionListener) {
         exceptionListeners.add(exceptionListener);
         return this;
     }
 
-    public <E extends RuntimeException> Processor<T> setDefaultExceptionClass(Class<E> defaultExceptionClass) {
+    public <E extends Throwable> Processor<T> setDefaultExceptionClass(Class<E> defaultExceptionClass) {
         dataValidator.setDefaultExceptionClass(defaultExceptionClass);
         return this;
     }
@@ -115,11 +115,11 @@ public class Processor<T> {
         if (dataValidator.isThrowImmediately()) {
             dataValidator.throwException();
         }
-        List<RuntimeException> exceptions = dataValidator.getExceptions();
+        List<Throwable> exceptions = dataValidator.getExceptions();
         if (!exceptions.isEmpty() && exceptionListeners.isEmpty()) {
             LoggerPrinter.warn(log, "Has some exceptions, but not can not find any exception listener");
         }
-        for (Predicate<List<RuntimeException>> exceptionListener : exceptionListeners) {
+        for (Predicate<List<Throwable>> exceptionListener : exceptionListeners) {
             if (!exceptionListener.test(exceptions)) {
                 break;
             }
