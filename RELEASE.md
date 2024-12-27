@@ -407,3 +407,6 @@
 ### v1.0.18.4
 - 通用 (perf): DataValidator 异常类型修改为 Throwable
 - 通用 (perf): Processor 异常类型修改为 Throwable
+
+### v1.0.18.5
+- 通用 (feat): Processor 增加 Supplier 和 Runnable 类型的 complete 方法
