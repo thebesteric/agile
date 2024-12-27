@@ -21,6 +21,9 @@ class ProcessorTest {
                 .validate(s -> {
                     throw new DataValidationException("s.length() > 5");
                 })
+                .next(() -> {
+                    return 1L;
+                })
                 .complete(s -> {
                     System.out.println(s);
                 }));
