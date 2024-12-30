@@ -410,3 +410,6 @@
 
 ### v1.0.18.5
 - 通用 (feat): Processor 增加 Supplier 和 Runnable 类型的 complete 方法
+
+### v1.0.18.6
+- 通用 (perf): Processor 优化 start 方法，避免类型转换
