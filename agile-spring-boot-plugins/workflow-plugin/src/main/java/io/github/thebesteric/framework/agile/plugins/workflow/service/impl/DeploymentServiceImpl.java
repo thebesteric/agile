@@ -299,6 +299,9 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
     public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, Integer workflowDefinitionId) {
         // 获取流程定义
         WorkflowDefinition workflowDefinition = this.getById(tenantId, workflowDefinitionId);
+        if (workflowDefinition == null) {
+            return null;
+        }
         // 获取节点定义
         NodeDefinitionExecutor nodeDefinitionExecutor = this.nodeDefinitionExecutorBuilder.build();
         List<NodeDefinition> nodeDefinitions = nodeDefinitionExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinition.getId());

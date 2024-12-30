@@ -242,6 +242,9 @@ public class WorkflowDefinitionExecutor extends AbstractExecutor<WorkflowDefinit
      */
     public WorkflowDefinition getById(Integer workflowDefinitionId) {
         WorkflowDefinition wfd = super.getById(workflowDefinitionId);
+        if (wfd == null) {
+            return null;
+        }
         packageDefaultApprover(wfd);
         return wfd;
     }

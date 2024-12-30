@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Conditions;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -89,9 +90,9 @@ public class WorkflowDefinitionFlowSchema implements Serializable {
         flowSchema.whenEmptyApprover = workflowDefinition.getWhenEmptyApprover();
         flowSchema.createdAt = workflowDefinition.getCreatedAt();
 
-        NodeDefinition startNode = nodeDefinitions.stream().filter(nodeDefinition -> nodeDefinition.getNodeType() == NodeType.START).findFirst().orElseThrow();
-        List<NodeDefinition> taskNodes = nodeDefinitions.stream().filter(nodeDefinition -> nodeDefinition.getNodeType() == NodeType.TASK).toList();
-        NodeDefinition endNode = nodeDefinitions.stream().filter(nodeDefinition -> nodeDefinition.getNodeType() == NodeType.END).findFirst().orElseThrow();
+        NodeDefinition startNode = nodeDefinitions.stream().filter(nodeDefinition -> NodeType.START == nodeDefinition.getNodeType()).findFirst().orElseThrow(() -> new WorkflowException("开始节点: 节点定义不存在"));
+        List<NodeDefinition> taskNodes = nodeDefinitions.stream().filter(nodeDefinition -> NodeType.TASK == nodeDefinition.getNodeType()).toList();
+        NodeDefinition endNode = nodeDefinitions.stream().filter(nodeDefinition -> NodeType.END == nodeDefinition.getNodeType()).findFirst().orElseThrow(() -> new WorkflowException("结束节点: 节点定义不存在"));
 
 
         // 添加开始节点
@@ -147,7 +148,7 @@ public class WorkflowDefinitionFlowSchema implements Serializable {
     }
 
     @Data
-    public static class NodeDefinitionResponse implements Serializable{
+    public static class NodeDefinitionResponse implements Serializable {
         @Serial
         private static final long serialVersionUID = -2416352782055701117L;
 
