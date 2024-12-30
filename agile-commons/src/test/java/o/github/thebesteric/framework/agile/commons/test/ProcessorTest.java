@@ -16,7 +16,7 @@ class ProcessorTest {
 
     @Test
     void test() {
-        Assertions.assertThrows(RuntimeException.class, () -> Processor.prepare(String.class)
+        Assertions.assertThrows(RuntimeException.class, () -> Processor.prepare()
                 .start(() -> "hello world")
                 .validate(s -> {
                     throw new DataValidationException("s.length() > 5");
