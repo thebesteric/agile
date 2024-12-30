@@ -16,17 +16,24 @@ class ProcessorTest {
 
     @Test
     void test() {
-        Assertions.assertThrows(RuntimeException.class, () -> Processor.prepare()
-                .start(() -> "hello world")
-                .validate(s -> {
-                    throw new DataValidationException("s.length() > 5");
-                })
-                .next(() -> {
-                    return 1L;
-                })
-                .complete(s -> {
-                    System.out.println(s);
-                }));
+        Assertions.assertThrows(RuntimeException.class, () ->
+                Processor.prepare()
+                        .start(() -> "hello world")
+                        .validate(s -> {
+                            throw new DataValidationException("s.length() > 5");
+                        })
+                        .next(() -> {
+                            return 1L;
+                        })
+                        .interim(() -> {
+
+                        })
+                        .interim((t) -> {
+                            System.out.println(t);
+                        })
+                        .complete(s -> {
+                            System.out.println(s);
+                        }));
     }
 
 }
