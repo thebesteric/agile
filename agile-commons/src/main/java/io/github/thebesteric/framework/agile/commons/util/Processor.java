@@ -50,7 +50,7 @@ public class Processor<T> {
         return this.next(supplier);
     }
 
-    public <E extends Throwable> Processor<T> validate(boolean condition, Throwable ex) {
+    public Processor<T> validate(boolean condition, Throwable ex) {
         dataValidator.validate(condition, ex);
         return this;
     }
@@ -58,6 +58,10 @@ public class Processor<T> {
     public Processor<T> validate(boolean condition, String errorMessage) {
         dataValidator.validate(condition, errorMessage);
         return this;
+    }
+
+    public Processor<T> validate(Runnable runnable) {
+        return this.validate(t -> runnable.run());
     }
 
     public Processor<T> validate(Consumer<T> consumer) {
