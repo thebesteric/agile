@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
         <artifactId>agile</artifactId>
-        <version>1.0.18.5</version>
+        <version>1.0.18.6</version>
     </parent>
 
     <artifactId>agile-spring-boot-starter</artifactId>
