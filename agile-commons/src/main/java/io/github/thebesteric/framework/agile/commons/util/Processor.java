@@ -69,6 +69,13 @@ public class Processor<T> {
         return this.next(t -> supplier.get());
     }
 
+    public Processor<T> next(Runnable runnable) {
+        return this.next(() -> {
+            runnable.run();
+            return this.object;
+        });
+    }
+
     public <R> Processor<R> next(Function<T, R> function) {
         R r = function.apply(this.object);
         Processor<R> processor = new Processor<>(this.defaultExceptionClass, this.exceptionThrowStrategy, this.exceptionListeners);
@@ -76,9 +83,9 @@ public class Processor<T> {
         return processor;
     }
 
-    public <R> R complete(Supplier<R> consumer) {
+    public <R> R complete(Supplier<R> supplier) {
         return this.complete(t -> {
-            return consumer.get();
+            return supplier.get();
         });
     }
 
