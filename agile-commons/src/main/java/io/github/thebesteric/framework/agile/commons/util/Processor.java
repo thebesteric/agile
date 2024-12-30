@@ -65,6 +65,17 @@ public class Processor<T> {
         return this;
     }
 
+    public Processor<T> interim(Runnable runnable) {
+        return this.next(runnable);
+    }
+
+    public Processor<T> interim(Consumer<T> consumer) {
+        return this.next(t -> {
+            consumer.accept(t);
+            return this.object;
+        });
+    }
+
     public <R> Processor<R> next(Supplier<R> supplier) {
         return this.next(t -> supplier.get());
     }
