@@ -370,46 +370,65 @@
 - 工作流插件 (feat): 流程定义增加 lock 属性，影响是否可以提交新的流程
 
 ### v1.0.17.1
+
 - 数据库插件 (perf): 修复当索引名称过长时数据库报错的问题，会取首字母作为索引名称
 - 数据库插件 (perf): 创建表和更新表的监听器增加默认方法
 - 数据库插件 (feat): 增加全局表监听器 TableCreateListener 和 TableUpdateListener
 
 ### v1.0.17.2
+
 - 工作流插件 (bugfix): 修复动态审批节点获取当前审批人时报错的问题
 
 ### v1.0.17.3
+
 - 通用 (feat): 增加 DataValidator 数据校验工具类
   通用 (perf): 增加 PagingRequest 和 PagingResponse 分页工具类
 - 工作流插件 (perf): 模型增加 @Schema 注释
 
 ### v1.0.17.4
+
 - 通用 (perf): 分页工具类 PagingRequest 和 PagingResponse 增加 @Schema 注释
 - 通用 (perf): MapWrapper 支持驼峰和下划线字段格式转换
 - 日志插件 (perf): 日志查询接口增加 @Schema 注释
 
 ### v1.0.18
+
 - 数据库插件 (bugfix): 解决 @EntityColumn 的 sequence 排序错误的问题
 - 通用 (perf): MapWrapper 增加条件添加判断逻辑
 - 通用 (perf): DataValidator 可在创建后，设置默认异常类型
 - 通用 (feat): 增加 Processor 执行流程管理工具类
 
 ### v1.0.18.1
+
 - 通用 (perf): DataValidator 增加是否立即抛出异常的枚举
 - 通用 (perf): Processor 优化执行流程，增加校验方法
 
 ### v1.0.18.2
+
 - 通用 (perf): Processor 优化执行逻辑，减少强转
 
 ### v1.0.18.3
+
 - 通用 (perf): Processor 优化 next 方法
 - 通用 (perf): Processor 优化 validate 方法
 
 ### v1.0.18.4
+
 - 通用 (perf): DataValidator 异常类型修改为 Throwable
 - 通用 (perf): Processor 异常类型修改为 Throwable
 
 ### v1.0.18.5
+
 - 通用 (feat): Processor 增加 Supplier 和 Runnable 类型的 complete 方法
 
 ### v1.0.18.6
+
 - 通用 (perf): Processor 优化 start 方法，避免类型转换
+
+### v1.0.18.7
+
+- 工作流插件 (perf): 优化当节点定义不存在时抛出的异常信息
+- 工作流插件 (perf): 审批记录增加用户审批类型字段
+- 通用 (perf): Processor 增加 Runnable 类型的 next 方法
+- 通用 (perf): Processor 增加 Runnable 类型的 validate 方法
+- 通用 (feat): Processor 增加 interim 方法，支持中间状态过渡
