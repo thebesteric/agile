@@ -60,6 +60,14 @@ public class Processor<T> {
         return this;
     }
 
+    public Processor<T> validate(Predicate<T> predicate, Throwable ex) {
+        return this.validate(predicate.test(this.object), ex);
+    }
+
+    public Processor<T> validate(Predicate<T> predicate, String errorMessage) {
+        return this.validate(predicate.test(this.object), errorMessage);
+    }
+
     public Processor<T> validate(Runnable runnable) {
         return this.validate(t -> runnable.run());
     }
