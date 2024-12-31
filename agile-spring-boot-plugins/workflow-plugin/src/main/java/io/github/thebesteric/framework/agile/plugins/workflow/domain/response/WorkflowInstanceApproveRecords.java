@@ -239,6 +239,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         private Conditions conditions;
         @Schema(description = "排序")
         private Double sequence;
+        @Schema(description = "用户审批类型")
+        private Map<String, String> approveType;
         @Schema(description = "是否是角色审批节点")
         private boolean roleApprove = false;
         @Schema(description = "角色用户审批类型")
@@ -269,6 +271,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.dynamicAssignmentNum = nodeDefinition.getDynamicAssignmentNum();
             response.conditions = nodeDefinition.getConditions();
             response.sequence = nodeDefinition.getSequence();
+            response.approveType = nodeDefinition.getApproveType().toMap();
             response.roleApprove = nodeDefinition.isRoleApprove();
             response.roleUserApproveType = nodeDefinition.getRoleUserApproveType().toMap();
             response.roleApproveType = nodeDefinition.getRoleApproveType().toMap();
