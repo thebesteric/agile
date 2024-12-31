@@ -44,6 +44,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.service.Deployment
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.util.Assert;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -1299,10 +1300,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/11/4 10:28
      */
     private void saveWorkflowInstanceApproveRecords(String tenantId, WorkflowInstance workflowInstance) {
-        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
-        WorkflowInstanceApproveRecords workflowInstanceApproveRecords = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId());
-        workflowInstance.setApproveRecords(workflowInstanceApproveRecords);
-        workflowInstanceExecutor.updateById(workflowInstance);
+        if (workflowInstance != null && workflowInstance.isFinished()) {
+            WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+            WorkflowInstanceApproveRecords workflowInstanceApproveRecords = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId());
+            workflowInstance.setApproveRecords(workflowInstanceApproveRecords);
+            workflowInstanceExecutor.updateById(workflowInstance);
+        }
     }
 
     /**
@@ -3357,8 +3360,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         }
 
         // 查询是否存在审批记录，如果有则直接返回（存在审批记录，表示该流程实例已经完成审核）
+        Assert.notNull(workflowInstance, "流程实例不存在");
         WorkflowInstanceApproveRecords workflowInstanceApproveRecords = workflowInstance.getApproveRecords();
-        if (workflowInstanceApproveRecords != null) {
+        if (workflowInstance.isFinished() && workflowInstanceApproveRecords != null) {
             return workflowInstanceApproveRecords;
         }
 
