@@ -39,4 +39,18 @@ public enum WorkflowStatus implements BaseEnum {
     public static WorkflowStatus of(Integer code) {
         return Arrays.stream(WorkflowStatus.values()).filter(i -> ObjectUtil.equals(i.getCode(), code)).findFirst().orElse(null);
     }
+
+    /**
+     * 审批是否完成
+     *
+     * @param status 流程状态
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2024/12/31 16:21
+     */
+    public static boolean isFinished(WorkflowStatus status) {
+        return WorkflowStatus.WAITING != status && WorkflowStatus.IN_PROGRESS != status;
+    }
 }

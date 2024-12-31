@@ -71,7 +71,7 @@ public class WorkflowInstance extends BaseEntity {
      * @since 2024/11/7 19:09
      */
     public boolean isFinished() {
-        return WorkflowStatus.IN_PROGRESS != this.status;
+        return WorkflowStatus.isFinished(this.status);
     }
 
     public static WorkflowInstance of(ResultSet rs) throws SQLException {
