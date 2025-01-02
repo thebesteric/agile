@@ -1,15 +1,13 @@
 package io.github.thebesteric.framework.agile.commons.util;
 
 import io.vavr.control.Try;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * 执行流程规范工具
@@ -27,23 +25,27 @@ public class Processor<T> {
     private final List<Predicate<List<Throwable>>> exceptionListeners;
 
 
-    private <E extends Throwable> Processor(Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy, List<Predicate<List<Throwable>>> exceptionListeners) {
+    private <E extends Throwable> Processor(Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy, DataValidator dataValidator, List<Predicate<List<Throwable>>> exceptionListeners) {
         this.defaultExceptionClass = defaultExceptionClass;
         this.exceptionThrowStrategy = exceptionThrowStrategy;
         this.exceptionListeners = exceptionListeners != null ? exceptionListeners : new ArrayList<>();
-        this.dataValidator = DataValidator.create(defaultExceptionClass, exceptionThrowStrategy);
+        this.dataValidator = dataValidator != null ? dataValidator : DataValidator.create(defaultExceptionClass, exceptionThrowStrategy);
     }
 
     public static <T> Processor<T> prepare() {
-        return Processor.prepare(DataValidator.ExceptionThrowStrategy.IMMEDIATELY);
+        return Processor.prepare(DataValidator.ExceptionThrowStrategy.IMMEDIATELY, null);
     }
 
     public static <T> Processor<T> prepare(DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
-        return Processor.prepare(Throwable.class, exceptionThrowStrategy);
+        return Processor.prepare(Throwable.class, exceptionThrowStrategy, null);
     }
 
-    public static <T, E extends Throwable> Processor<T> prepare(Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy) {
-        return new Processor<>(defaultExceptionClass, exceptionThrowStrategy, null);
+    public static <T> Processor<T> prepare(DataValidator.ExceptionThrowStrategy exceptionThrowStrategy, DataValidator dataValidator) {
+        return Processor.prepare(Throwable.class, exceptionThrowStrategy, dataValidator);
+    }
+
+    public static <T, E extends Throwable> Processor<T> prepare(Class<E> defaultExceptionClass, DataValidator.ExceptionThrowStrategy exceptionThrowStrategy, DataValidator dataValidator) {
+        return new Processor<>(defaultExceptionClass, exceptionThrowStrategy, dataValidator, null);
     }
 
     public <R> Processor<R> start(Supplier<R> supplier) {
@@ -101,7 +103,7 @@ public class Processor<T> {
 
     public <R> Processor<R> next(Function<T, R> function) {
         R r = function.apply(this.object);
-        Processor<R> processor = new Processor<>(this.defaultExceptionClass, this.exceptionThrowStrategy, this.exceptionListeners);
+        Processor<R> processor = new Processor<>(this.defaultExceptionClass, this.exceptionThrowStrategy, this.dataValidator, this.exceptionListeners);
         processor.object = r;
         return processor;
     }
@@ -121,8 +123,7 @@ public class Processor<T> {
     public void complete(Consumer<T> consumer) {
         List<Throwable> exceptions = dataValidator.getExceptions();
         if (CollectionUtils.isEmpty(exceptions)) {
-            Try.run(() -> consumer.accept(this.object))
-                    .onFailure(exceptions::add);
+            Try.run(() -> consumer.accept(this.object)).onFailure(exceptions::add);
         }
         throwExceptionsIfNecessary();
     }
@@ -131,10 +132,23 @@ public class Processor<T> {
         List<Throwable> exceptions = dataValidator.getExceptions();
         R result = null;
         if (CollectionUtils.isEmpty(exceptions)) {
-            result = Try.of(() -> function.apply(this.object))
-                    .onFailure(exceptions::add)
-                    .get();
+            result = Try.of(() -> function.apply(this.object)).onFailure(exceptions::add).get();
         }
+        throwExceptionsIfNecessary();
+        return result;
+    }
+
+    public void complete(BiConsumer<T, List<Throwable>> biConsumer) {
+        List<Throwable> exceptions = new ArrayList<>(dataValidator.getExceptions());
+        dataValidator.clearExceptions();
+        Try.run(() -> biConsumer.accept(this.object, exceptions)).onFailure(dataValidator::addException);
+        throwExceptionsIfNecessary();
+    }
+
+    public <R> R complete(BiFunction<T, List<Throwable>, R> biFunction) {
+        List<Throwable> exceptions = new ArrayList<>(dataValidator.getExceptions());
+        dataValidator.clearExceptions();
+        R result = Try.of(() -> biFunction.apply(this.object, exceptions)).onFailure(dataValidator::addException).get();
         throwExceptionsIfNecessary();
         return result;
     }
@@ -144,22 +158,33 @@ public class Processor<T> {
         return this;
     }
 
+    public Processor<T> registerExceptionListener(Consumer<List<Throwable>> exceptionListener) {
+        return this.registerExceptionListener(exceptions -> {
+            exceptionListener.accept(exceptions);
+            return false;
+        });
+    }
+
     public <E extends Throwable> Processor<T> setDefaultExceptionClass(Class<E> defaultExceptionClass) {
         this.dataValidator.setDefaultExceptionClass(defaultExceptionClass);
         return this;
     }
 
+    @SneakyThrows
     private void throwExceptionsIfNecessary() {
         if (this.dataValidator.isThrowImmediately()) {
             this.dataValidator.throwException();
         }
         List<Throwable> exceptions = this.dataValidator.getExceptions();
-        if (!exceptions.isEmpty() && this.exceptionListeners.isEmpty()) {
-            LoggerPrinter.warn(log, "Has some exceptions, but not can not find any exception listener");
-        }
-        for (Predicate<List<Throwable>> exceptionListener : this.exceptionListeners) {
-            if (!exceptionListener.test(exceptions)) {
-                break;
+        if (!exceptions.isEmpty()) {
+            if (this.exceptionListeners.isEmpty()) {
+                LoggerPrinter.warn(log, "Has some exceptions, but not can not find any exception listener");
+                throw exceptions.get(0);
+            }
+            for (Predicate<List<Throwable>> exceptionListener : this.exceptionListeners) {
+                if (!exceptionListener.test(exceptions)) {
+                    break;
+                }
             }
         }
     }

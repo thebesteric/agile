@@ -55,7 +55,7 @@ public class DataValidator {
 
     @SneakyThrows
     public DataValidator validate(boolean condition, String message) {
-        for (Constructor<?> declaredConstructor : defaultExceptionClass.getDeclaredConstructors()) {
+        for (Constructor<?> declaredConstructor : this.defaultExceptionClass.getDeclaredConstructors()) {
             if (declaredConstructor.getParameterCount() == 1 && declaredConstructor.getParameterTypes()[0] == String.class) {
                 Throwable ex = (Throwable) declaredConstructor.newInstance(message);
                 return validate(condition, ex);
@@ -66,7 +66,7 @@ public class DataValidator {
 
     @SneakyThrows
     public DataValidator validate(boolean condition) {
-        Throwable ex = defaultExceptionClass.getDeclaredConstructor().newInstance();
+        Throwable ex = this.defaultExceptionClass.getDeclaredConstructor().newInstance();
         return validate(condition, ex);
     }
 
@@ -82,14 +82,22 @@ public class DataValidator {
             if (this.isThrowImmediately()) {
                 throw ex;
             }
-            exceptions.add(ex);
+            this.exceptions.add(ex);
         }
         return this;
     }
 
+    public void addException(Throwable throwable) {
+        this.exceptions.add(throwable);
+    }
+
+    public void clearExceptions() {
+        this.exceptions.clear();
+    }
+
     @SneakyThrows
     public void throwException() {
-        Optional<? extends Throwable> optional = exceptions.stream().findFirst();
+        Optional<? extends Throwable> optional = this.exceptions.stream().findFirst();
         if (optional.isPresent()) {
             throw optional.get();
         }
@@ -97,14 +105,14 @@ public class DataValidator {
 
     @SneakyThrows
     public void throwException(Class<? extends Throwable> exClass) {
-        Optional<? extends Throwable> optional = exceptions.stream().filter(e -> e.getClass() == exClass).findFirst();
+        Optional<? extends Throwable> optional = this.exceptions.stream().filter(e -> e.getClass() == exClass).findFirst();
         if (optional.isPresent()) {
             throw optional.get();
         }
     }
 
     public boolean isThrowImmediately() {
-        return exceptionThrowStrategy == null || ExceptionThrowStrategy.IMMEDIATELY == exceptionThrowStrategy;
+        return this.exceptionThrowStrategy == null || ExceptionThrowStrategy.IMMEDIATELY == this.exceptionThrowStrategy;
     }
 
     public enum ExceptionThrowStrategy {
