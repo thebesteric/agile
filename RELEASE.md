@@ -433,3 +433,10 @@
 - 通用 (perf): Processor 增加 Runnable 类型的 next 方法
 - 通用 (perf): Processor 增加 Runnable 类型的 validate 方法
 - 通用 (feat): Processor 增加 interim 方法，支持中间状态过渡
+
+### v1.0.18.8
+
+- 通用 (bugfix): 修复 Processor 异常没有传递的问题
+- 通用 (feat): Processor 增加 Predicate 类型的 validate 方法
+- 通用 (feat): Processor 增加 Consumer 类型的 registerExceptionListener 方法
+- 通用 (feat): Processor 增加 BiFunction 和 BiConsumer 类型的 complete 方法
