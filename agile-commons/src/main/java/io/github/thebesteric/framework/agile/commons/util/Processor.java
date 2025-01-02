@@ -132,7 +132,7 @@ public class Processor<T> {
         List<Throwable> exceptions = dataValidator.getExceptions();
         R result = null;
         if (CollectionUtils.isEmpty(exceptions)) {
-            result = Try.of(() -> function.apply(this.object)).onFailure(exceptions::add).get();
+            result = Try.of(() -> function.apply(this.object)).onFailure(exceptions::add).getOrElse(() -> null);
         }
         throwExceptionsIfNecessary();
         return result;
@@ -148,7 +148,7 @@ public class Processor<T> {
     public <R> R complete(BiFunction<T, List<Throwable>, R> biFunction) {
         List<Throwable> exceptions = new ArrayList<>(dataValidator.getExceptions());
         dataValidator.clearExceptions();
-        R result = Try.of(() -> biFunction.apply(this.object, exceptions)).onFailure(dataValidator::addException).get();
+        R result = Try.of(() -> biFunction.apply(this.object, exceptions)).onFailure(dataValidator::addException).getOrElse(() -> null);
         throwExceptionsIfNecessary();
         return result;
     }
@@ -178,14 +178,16 @@ public class Processor<T> {
         List<Throwable> exceptions = this.dataValidator.getExceptions();
         if (!exceptions.isEmpty()) {
             if (this.exceptionListeners.isEmpty()) {
-                LoggerPrinter.warn(log, "Has some exceptions, but not can not find any exception listener");
-                throw exceptions.get(0);
+                LoggerPrinter.debug(log, "Has some exceptions, but not can not find any exception listener");
+                this.dataValidator.throwException();
             }
             for (Predicate<List<Throwable>> exceptionListener : this.exceptionListeners) {
-                if (!exceptionListener.test(exceptions)) {
+                if (CollectionUtils.isNotEmpty(exceptions) && !exceptionListener.test(exceptions)) {
                     break;
                 }
             }
+            // Make sure that there are any unhandled exceptions that need to be thrown
+            this.dataValidator.throwException();
         }
     }
 
