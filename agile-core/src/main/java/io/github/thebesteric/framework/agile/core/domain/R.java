@@ -99,6 +99,10 @@ public class R<T> {
         return Optional.ofNullable(result).filter(e -> Objects.equals(result.getSuccessCode(), e.getCode())).map(R::getData).orElse(defaultValue);
     }
 
+    public T extractData(T defaultValue) {
+        return extractData(this, defaultValue);
+    }
+
     public R<T> message(String msg) {
         this.setMessage(msg);
         return this;
