@@ -440,3 +440,9 @@
 - 通用 (feat): Processor 增加 Predicate 类型的 validate 方法
 - 通用 (feat): Processor 增加 Consumer 类型的 registerExceptionListener 方法
 - 通用 (feat): Processor 增加 BiFunction 和 BiConsumer 类型的 complete 方法
+
+### v1.0.18.9
+- 通用 (perf): Processor 优化异常处理
+- 通用 (feat): 优化 R 类，增加 extractData 方法
+- 通用 (feat): 增加 MessageUtils 工具类
+- 通用 (feat): 增加 IpUtils 工具类
