@@ -442,8 +442,14 @@
 - 通用 (feat): Processor 增加 BiFunction 和 BiConsumer 类型的 complete 方法
 
 ### v1.0.18.9
+
 - 通用 (perf): Processor 优化异常处理
 - 通用 (feat): 优化 R 类，增加 extractData 方法
 - 通用 (feat): 增加 MessageUtils 工具类
 - 通用 (feat): 增加 IpUtils 工具类
 - 工作流插件 (feat): 获取审批记录时，增加自定义审批状态描述功能
+
+### v1.0.18.10
+
+- 工作流插件 (bugfix): 修复否有正在进行的流程实例时缺少待审批条件的问题
+- 通用 (feat): 优化 R 类，增加判断响应是否成功 succeed 方法
