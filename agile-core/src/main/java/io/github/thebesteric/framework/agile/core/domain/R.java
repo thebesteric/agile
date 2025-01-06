@@ -10,6 +10,10 @@ import java.util.Optional;
 @Data
 public class R<T> {
 
+
+    private int successCode = HttpStatus.OK.value();
+    private int errorCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
+
     private Integer code;
     private String message;
     private T data;
@@ -18,7 +22,7 @@ public class R<T> {
     private R() {
     }
 
-    public static <T> R<T> build(int code, String message, T body) {
+    public static <T> R<T> build(int code, String message, T body, boolean isSuccess) {
         R<T> result = new R<>();
         if (body != null) {
             result.setData(body);
@@ -26,6 +30,11 @@ public class R<T> {
         result.setCode(code);
         result.setMessage(message);
         result.setTrackId(TransactionUtils.get());
+        if (isSuccess) {
+            result.setSuccessCode(code);
+        } else {
+            result.setErrorCode(code);
+        }
         return result;
     }
 
@@ -55,7 +64,7 @@ public class R<T> {
     }
 
     public static <T> R<T> success(int code, String message, T data) {
-        return build(code, message, data);
+        return build(code, message, data, true);
     }
 
     public static <T> R<T> error() {
@@ -83,11 +92,11 @@ public class R<T> {
     }
 
     public static <T> R<T> error(int code, String message, T data) {
-        return build(code, message, data);
+        return build(code, message, data, false);
     }
 
-    public static <T> T extract(R<T> result, T defaultValue) {
-        return Optional.ofNullable(result).filter(e -> Objects.equals(HttpStatus.OK.value(), e.getCode())).map(R::getData).orElse(defaultValue);
+    public static <T> T extractData(R<T> result, T defaultValue) {
+        return Optional.ofNullable(result).filter(e -> Objects.equals(result.getSuccessCode(), e.getCode())).map(R::getData).orElse(defaultValue);
     }
 
     public R<T> message(String msg) {
