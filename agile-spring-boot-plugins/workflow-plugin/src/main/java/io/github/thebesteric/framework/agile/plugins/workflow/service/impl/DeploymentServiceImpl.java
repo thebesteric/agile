@@ -397,7 +397,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
         Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
                 .eq(WorkflowInstance::getTenantId, workflowDefinition.getTenantId())
                 .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinition.getId())
-                .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
+                .in(WorkflowInstance::getStatus, List.of(WorkflowStatus.WAITING.getCode(), WorkflowStatus.IN_PROGRESS.getCode()))
                 .eq(WorkflowInstance::getState, 1).build();
         Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
         return page.getRecords();
