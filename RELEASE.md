@@ -446,3 +446,4 @@
 - 通用 (feat): 优化 R 类，增加 extractData 方法
 - 通用 (feat): 增加 MessageUtils 工具类
 - 通用 (feat): 增加 IpUtils 工具类
+- 工作流插件 (feat): 获取审批记录时，增加自定义审批状态描述功能
