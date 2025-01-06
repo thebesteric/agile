@@ -13,7 +13,6 @@ public class R<T> {
 
     private int successCode = HttpStatus.OK.value();
     private int errorCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
-
     private boolean succeed = false;
 
     private Integer code;
@@ -124,16 +123,11 @@ public class R<T> {
 
     @Transient
     public int getSuccessCode() {
-        return successCode;
+        return this.successCode;
     }
 
     @Transient
     public int getErrorCode() {
-        return errorCode;
-    }
-
-    @Transient
-    public boolean isSucceed() {
-        return succeed;
+        return this.errorCode;
     }
 }
