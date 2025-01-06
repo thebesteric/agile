@@ -14,6 +14,8 @@ public class R<T> {
     private int successCode = HttpStatus.OK.value();
     private int errorCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
 
+    private boolean succeed = false;
+
     private Integer code;
     private String message;
     private T data;
@@ -32,8 +34,10 @@ public class R<T> {
         result.setTrackId(TransactionUtils.get());
         if (isSuccess) {
             result.setSuccessCode(code);
+            result.setSucceed(true);
         } else {
             result.setErrorCode(code);
+            result.setSucceed(false);
         }
         return result;
     }
