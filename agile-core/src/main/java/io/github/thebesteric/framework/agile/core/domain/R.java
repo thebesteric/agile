@@ -4,12 +4,12 @@ import io.github.thebesteric.framework.agile.commons.util.TransactionUtils;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
 
+import java.beans.Transient;
 import java.util.Objects;
 import java.util.Optional;
 
 @Data
 public class R<T> {
-
 
     private int successCode = HttpStatus.OK.value();
     private int errorCode = HttpStatus.INTERNAL_SERVER_ERROR.value();
@@ -120,5 +120,20 @@ public class R<T> {
     public R<T> data(T data) {
         this.setData(data);
         return this;
+    }
+
+    @Transient
+    public int getSuccessCode() {
+        return successCode;
+    }
+
+    @Transient
+    public int getErrorCode() {
+        return errorCode;
+    }
+
+    @Transient
+    public boolean isSucceed() {
+        return succeed;
     }
 }
