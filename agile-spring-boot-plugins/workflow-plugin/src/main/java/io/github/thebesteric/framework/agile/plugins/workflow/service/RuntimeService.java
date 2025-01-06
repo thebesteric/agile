@@ -5,9 +5,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveSt
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 
 import java.util.List;
@@ -504,58 +502,66 @@ public interface RuntimeService {
     /**
      * 获取流程审批记录
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param curRoleIds         当前角色 IDs
-     * @param curUserId          当前用户 ID
+     * @param tenantId                        租户 ID
+     * @param workflowInstanceId              流程实例 ID
+     * @param curRoleIds                      当前角色 IDs
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
      *
      * @return WorkflowInstanceApproveRecords
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId);
+    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId, ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer);
 
     /**
      * 获取流程审批记录
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
+     * @param tenantId                        租户 ID
+     * @param workflowInstanceId              流程实例 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
      *
      * @return WorkflowInstanceApproveRecords
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId);
+    WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer);
 
     /**
      * 获取流程审批记录
      *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 ID
-     * @param curRoleIds           当前角色 IDs
-     * @param curUserId            当前用户 ID
+     * @param tenantId                        租户 ID
+     * @param workflowDefinitionId            流程定义 ID
+     * @param curRoleIds                      当前角色 IDs
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
      *
      * @return List<WorkflowInstanceApproveRecords>
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId);
+    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId, ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer);
 
     /**
      * 获取流程审批记录
      *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 ID
+     * @param tenantId                        租户 ID
+     * @param workflowDefinitionId            流程定义 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
      *
      * @return List<WorkflowInstanceApproveRecords>
      *
      * @author wangweijun
      * @since 2024/9/12 13:42
      */
-    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId);
+    List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer);
 
     /**
      * 获取流程定义纲要

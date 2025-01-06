@@ -48,6 +48,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
      * @param nodeAssignments                        节点审批人
      * @param curRoleIds                             当前角色 IDs
      * @param curUserId                              当前用户 ID
+     * @param approveStatusDescCustomizer            审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer        角色审批状态描述自定义器
      *
      * @return WorkflowInstanceApproveRecords
      *
@@ -63,9 +65,12 @@ public class WorkflowInstanceApproveRecords implements Serializable {
                                                     Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
                                                     Map<NodeDefinition, List<TaskDynamicAssignment>> nodeDefAndDynamicNodeAssignmentMap,
                                                     List<NodeAssignment> nodeAssignments,
-                                                    List<String> curRoleIds, String curUserId) {
+                                                    List<String> curRoleIds, String curUserId,
+                                                    ApproveStatusDescCustomizer approveStatusDescCustomizer,
+                                                    RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
 
         WorkflowInstanceApproveRecords records = new WorkflowInstanceApproveRecords();
+
         // 封装流程实例
         WorkflowInstanceResponse workflowInstanceResponse = WorkflowInstanceResponse.of(workflowInstance);
         records.setWorkflowInstance(workflowInstanceResponse);
@@ -90,7 +95,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
                                 NodeAssignment nodeAssignment = taskApproveAndNodeAssignmentMap.get(taskApprove);
                                 TaskReassignRecord taskReassignRecord = taskApproveAndTaskReassignRecordMap.get(taskApprove);
                                 List<TaskRoleApproveRecord> taskRoleApproveRecords = taskApproveAndRoleApproveRecordsMap.get(taskApprove);
-                                return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskReassignRecord, taskRoleApproveRecords, taskRoleRecordAndNodeRoleAssignmentMap, curRoleIds, curUserId);
+                                return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskReassignRecord, taskRoleApproveRecords,
+                                        taskRoleRecordAndNodeRoleAssignmentMap, curRoleIds, curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
                             })
                             .sorted(Comparator.comparing(TaskApproveResponse::getApproverSeq, Comparator.nullsLast(Comparator.naturalOrder()))
                                     .thenComparing(TaskApproveResponse::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
@@ -439,7 +445,8 @@ public class WorkflowInstanceApproveRecords implements Serializable {
 
         public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment, TaskReassignRecord taskReassignRecord,
                                              List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
-                                             List<String> curRoleIds, String curUserId) {
+                                             List<String> curRoleIds, String curUserId,
+                                             ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
             TaskApproveResponse response = new TaskApproveResponse();
             response.taskApproveId = taskApprove.getId();
             response.approverId = taskApprove.getApproverId();
@@ -460,7 +467,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             }
 
             response.comment = taskApprove.getComment();
-            response.approveStatus = taskApprove.getStatus().toMap();
+            response.approveStatus = approveStatusDescCustomizer.toMap(taskApprove.getStatus());
             response.reassignedTaskApproveId = taskApprove.getReassignedTaskApproveId();
             response.createdAt = taskApprove.getCreatedAt();
             response.updatedAt = taskApprove.getUpdatedAt();
@@ -470,7 +477,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
                 response.taskRoleApproveRecordResponses = taskRoleApproveRecords.stream()
                         .map(taskRoleApproveRecord -> {
                             NodeRoleAssignment nodeRoleAssignment = taskRoleRecordAndNodeRoleAssignmentMap.get(taskRoleApproveRecord);
-                            return TaskRoleApproveRecordResponse.of(taskRoleApproveRecord, nodeRoleAssignment, curRoleIds, curUserId);
+                            return TaskRoleApproveRecordResponse.of(taskRoleApproveRecord, nodeRoleAssignment, curRoleIds, curUserId, roleApproveStatusDescCustomizer);
                         })
                         .sorted(Comparator.comparing(TaskRoleApproveRecordResponse::getRoleSeq, Comparator.nullsLast(Comparator.naturalOrder()))
                                 .thenComparing(TaskRoleApproveRecordResponse::getUserSeq, Comparator.nullsLast(Comparator.naturalOrder())))
@@ -520,7 +527,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
         @Schema(description = "修改时间")
         private Date updatedAt;
 
-        public static TaskRoleApproveRecordResponse of(TaskRoleApproveRecord taskRoleApproveRecord, NodeRoleAssignment nodeRoleAssignment, List<String> curRoleIds, String curUserId) {
+        public static TaskRoleApproveRecordResponse of(TaskRoleApproveRecord taskRoleApproveRecord, NodeRoleAssignment nodeRoleAssignment, List<String> curRoleIds, String curUserId, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
             TaskRoleApproveRecordResponse response = new TaskRoleApproveRecordResponse();
             response.taskRoleApproveRecordId = taskRoleApproveRecord.getId();
             response.nodeRoleAssignmentId = nodeRoleAssignment.getId();
@@ -533,7 +540,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
             response.userSeq = nodeRoleAssignment.getUserSeq();
             response.userDesc = nodeRoleAssignment.getUserDesc();
             response.comment = taskRoleApproveRecord.getComment();
-            response.roleApproveStatus = taskRoleApproveRecord.getStatus().toMap();
+            response.roleApproveStatus = roleApproveStatusDescCustomizer.toMap(taskRoleApproveRecord.getStatus());
             response.reassignedTaskRoleApproveRecordId = taskRoleApproveRecord.getReassignedTaskRoleApproveRecordId();
             response.createdAt = taskRoleApproveRecord.getCreatedAt();
             response.updatedAt = taskRoleApproveRecord.getUpdatedAt();

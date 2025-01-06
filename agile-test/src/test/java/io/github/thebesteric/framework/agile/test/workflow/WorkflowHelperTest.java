@@ -8,9 +8,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.WorkflowHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.helper.service.*;
@@ -98,7 +96,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow3(tenantId, workflowDefinition);
+        createWorkflow6(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
@@ -596,10 +594,10 @@ class WorkflowHelperTest {
      */
     @Test
     void approve() {
-        String roleId = "xxx";
+        // String roleId = "xxx";
         // String approverId = "小王";
         // String approverId = "大王";
-        String approverId = "张三";
+        // String approverId = "张三";
         // String approverId = "张三-1";
         // String approverId = "李四";
         // String approverId = "小明";
@@ -612,8 +610,8 @@ class WorkflowHelperTest {
         // String approverId = "admin";
         // String approverId = "admin-1";
 
-        // String roleId = "经理";
-        // String approverId = "manager-1";
+        String roleId = "经理";
+        String approverId = "manager-1";
         // String approverId = "manager-2";
 
         // String roleId = "组长1";
@@ -746,10 +744,15 @@ class WorkflowHelperTest {
         // String approverId = "manager-1";
         // String approverId = "manager-2";
 
-        String roleId = "组长";
+        // String roleId = "组长";
         // String approverId = "grouper-1";
-        String approverId = "grouper-2";
+        // String approverId = "grouper-2";
         // String approverId = "grouper-3";
+
+        String roleId = "总监";
+        String approverId = "major-1";
+        // String approverId = "major-2";
+
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(approverId);
@@ -954,10 +957,24 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
 
-        // List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理"), "manager-1");
+        ApproveStatusDescCustomizer approveStatusDescCustomizer = ApproveStatusDescCustomizer.builder()
+                .approved("自定义-通过")
+                .rejected("自定义-拒绝")
+                .skipped("自定义-跳过")
+                .build();
+
+        RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer = RoleApproveStatusDescCustomizer.builder()
+                .approved("自定义-通过")
+                .approved("自定义-拒绝")
+                .skipped("自定义-跳过")
+                .build();
+
+        // List<WorkflowInstanceApproveRecords> workflowInstanceApproveRecords = runtimeServiceHelper.findWorkflowInstanceApproveRecords(tenantId, 1,
+        //         List.of("经理"), "manager-1", approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
         // System.out.println("===============================");
         // System.out.println(JsonUtils.toJson(workflowInstanceApproveRecords));
-        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 1, List.of("经理", "组长"), "manager-1");
+        WorkflowInstanceApproveRecords workflowInstanceApproveRecord = runtimeServiceHelper.getWorkflowInstanceApproveRecords(tenantId, 1,
+                List.of("经理", "组长"), "manager-1", approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
         System.out.println("===============================");
         System.out.println(JsonUtils.toJson(workflowInstanceApproveRecord));
     }

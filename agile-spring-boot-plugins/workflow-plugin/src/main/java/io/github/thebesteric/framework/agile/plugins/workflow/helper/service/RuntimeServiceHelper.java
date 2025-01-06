@@ -6,6 +6,8 @@ import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveSt
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.ApproveStatusDescCustomizer;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.RoleApproveStatusDescCustomizer;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
@@ -1069,7 +1071,25 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/12 13:42
      */
     public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId) {
-        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId);
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, null, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowInstanceId              流程实例 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId,
+                                                                            ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
     }
 
     /**
@@ -1084,7 +1104,25 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/12 13:42
      */
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId) {
-        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId);
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, null, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowDefinitionId            流程定义 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId,
+                                                                                   ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
     }
 
     /**
@@ -1101,7 +1139,27 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/12 13:42
      */
     public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String curRoleId, String curUserId) {
-        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, List.of(curRoleId), curUserId);
+        return this.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, curRoleId, curUserId, null, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowInstanceId              流程实例 ID
+     * @param curRoleId                       当前角色 ID
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, String curRoleId, String curUserId,
+                                                                            ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, List.of(curRoleId), curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
     }
 
     /**
@@ -1118,7 +1176,27 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/12 13:42
      */
     public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId) {
-        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, curRoleIds, curUserId);
+        return this.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, curRoleIds, curUserId, null, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowInstanceId              流程实例 ID
+     * @param curRoleIds                      当前角色 IDs
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return WorkflowInstanceApproveRecords
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId,
+                                                                            ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.runtimeService.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, curRoleIds, curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
     }
 
     /**
@@ -1135,7 +1213,27 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/9/12 13:42
      */
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String curRoleId, String curUserId) {
-        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, List.of(curRoleId), curUserId);
+        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleId, curUserId, null, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowDefinitionId            流程定义 ID
+     * @param curRoleId                       当前角色 ID
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, String curRoleId, String curUserId,
+                                                                                   ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, List.of(curRoleId), curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
     }
 
     /**
@@ -1152,7 +1250,27 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @since 2024/10/14 16:37
      */
     public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId) {
-        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleIds, curUserId);
+        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleIds, curUserId, null, null);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowDefinitionId            流程定义 ID
+     * @param curRoleIds                      当前角色 IDs
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/10/14 16:37
+     */
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId,
+                                                                                   ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.runtimeService.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, curRoleIds, curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
     }
 
     /**

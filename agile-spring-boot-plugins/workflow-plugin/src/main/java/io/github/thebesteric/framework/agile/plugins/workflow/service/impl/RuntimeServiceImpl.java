@@ -34,9 +34,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wor
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance.WorkflowInstanceExecutorBuilder;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowInstanceApproveRecords;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractRuntimeService;
@@ -1293,8 +1291,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     /**
      * 保存流程实例的审批记录
      *
-     * @param tenantId         租户 ID
-     * @param workflowInstance 流程实例
+     * @param tenantId                        租户 ID
+     * @param workflowInstance                流程实例
      *
      * @author wangweijun
      * @since 2024/11/4 10:28
@@ -1302,7 +1300,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     private void saveWorkflowInstanceApproveRecords(String tenantId, WorkflowInstance workflowInstance) {
         if (workflowInstance != null && workflowInstance.isFinished()) {
             WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
-            WorkflowInstanceApproveRecords workflowInstanceApproveRecords = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId());
+            WorkflowInstanceApproveRecords workflowInstanceApproveRecords = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), null, null);
             workflowInstance.setApproveRecords(workflowInstanceApproveRecords);
             workflowInstanceExecutor.updateById(workflowInstance);
         }
@@ -3324,8 +3322,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     /**
      * 获取流程审批记录
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
+     * @param tenantId                        租户 ID
+     * @param workflowInstanceId              流程实例 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
      *
      * @return WorkflowInstanceApproveRecords
      *
@@ -3333,17 +3333,75 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/12 13:42
      */
     @Override
-    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId) {
-        return this.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, null, null);
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId,
+                                                                            ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.getWorkflowInstanceApproveRecords(tenantId, workflowInstanceId, null, null, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
     }
 
     /**
      * 获取流程审批记录
      *
-     * @param tenantId           租户 ID
-     * @param workflowInstanceId 流程实例 ID
-     * @param curRoleIds         当前角色 IDs
-     * @param curUserId          当前用户 ID
+     * @param tenantId                        租户 ID
+     * @param workflowDefinitionId            流程定义 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    @Override
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId,
+                                                                                   ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, List.of(), null, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowDefinitionId            流程定义 ID
+     * @param curRoleIds                      当前角色 IDs
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
+     *
+     * @return List<WorkflowInstanceApproveRecords>
+     *
+     * @author wangweijun
+     * @since 2024/9/12 13:42
+     */
+    @Override
+    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId,
+                                                                                   ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
+        // 流程定义
+        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
+        if (workflowDefinition == null) {
+            throw new WorkflowException("流程定义不存在");
+        }
+
+        List<WorkflowInstanceApproveRecords> recordsList = new ArrayList<>();
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        List<WorkflowInstance> workflowInstances = workflowInstanceExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId);
+        for (WorkflowInstance workflowInstance : workflowInstances) {
+            WorkflowInstanceApproveRecords records = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), curRoleIds, curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
+            recordsList.add(records);
+        }
+
+        return recordsList;
+    }
+
+    /**
+     * 获取流程审批记录
+     *
+     * @param tenantId                        租户 ID
+     * @param workflowInstanceId              流程实例 ID
+     * @param curRoleIds                      当前角色 IDs
+     * @param curUserId                       当前用户 ID
+     * @param approveStatusDescCustomizer     审批状态描述自定义器
+     * @param roleApproveStatusDescCustomizer 角色审批状态描述自定义器
      *
      * @return WorkflowInstanceApproveRecords
      *
@@ -3351,7 +3409,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/12 13:42
      */
     @Override
-    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId) {
+    public WorkflowInstanceApproveRecords getWorkflowInstanceApproveRecords(String tenantId, Integer workflowInstanceId, List<String> curRoleIds, String curUserId,
+                                                                            ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
         // 流程实例
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(workflowInstanceId);
@@ -3361,9 +3420,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
         // 查询是否存在审批记录，如果有则直接返回（存在审批记录，表示该流程实例已经完成审核）
         Assert.notNull(workflowInstance, "流程实例不存在");
+        // 判断是否需要读取缓存
+        boolean cacheable = approveStatusDescCustomizer == null && roleApproveStatusDescCustomizer == null;
         WorkflowInstanceApproveRecords workflowInstanceApproveRecords = workflowInstance.getApproveRecords();
-        if (workflowInstance.isFinished() && workflowInstanceApproveRecords != null) {
+        if (workflowInstance.isFinished() && workflowInstanceApproveRecords != null && cacheable) {
             return workflowInstanceApproveRecords;
+        }
+
+        // 审批状态描述自定义器
+        if (approveStatusDescCustomizer == null) {
+            approveStatusDescCustomizer = ApproveStatusDescCustomizer.builder().build();
+        }
+
+        // 角色审批状态描述自定义器
+        if (roleApproveStatusDescCustomizer == null) {
+            roleApproveStatusDescCustomizer = RoleApproveStatusDescCustomizer.builder().build();
         }
 
         // 流程定义
@@ -3448,28 +3519,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         // 构建 WorkflowInstanceApproveRecords
         workflowInstanceApproveRecords = WorkflowInstanceApproveRecords.of(workflowDefinition, workflowInstance, nodeDefAndTasks, taskApproves,
                 taskApproveAndNodeAssignmentMap, taskApproveAndTaskReassignMap, taskApproveAndRoleApproveRecordsMap, taskRoleRecordAndNodeRoleAssignmentMap, nodeDefAndTaskDynamicAssignmentMap,
-                nodeAssignments, curRoleIds, curUserId);
-        if (workflowInstance.isFinished() && workflowInstance.getApproveRecords() == null) {
+                nodeAssignments, curRoleIds, curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
+        // 判断是否需要缓存
+        if (workflowInstance.isFinished() && workflowInstance.getApproveRecords() == null && cacheable) {
             workflowInstance.setApproveRecords(workflowInstanceApproveRecords);
             workflowInstanceExecutor.updateById(workflowInstance);
         }
         return workflowInstanceApproveRecords;
-    }
-
-    /**
-     * 获取流程审批记录
-     *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 ID
-     *
-     * @return List<WorkflowInstanceApproveRecords>
-     *
-     * @author wangweijun
-     * @since 2024/9/12 13:42
-     */
-    @Override
-    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId) {
-        return this.findWorkflowInstanceApproveRecords(tenantId, workflowDefinitionId, List.of(), null);
     }
 
     /**
@@ -3500,39 +3556,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             workflowInstanceExecutor.updateById(workflowInstance);
         }
         return flowSchema;
-    }
-
-    /**
-     * 获取流程审批记录
-     *
-     * @param tenantId             租户 ID
-     * @param workflowDefinitionId 流程定义 ID
-     * @param curRoleIds           当前角色 IDs
-     * @param curUserId            当前用户 ID
-     *
-     * @return List<WorkflowInstanceApproveRecords>
-     *
-     * @author wangweijun
-     * @since 2024/9/12 13:42
-     */
-    @Override
-    public List<WorkflowInstanceApproveRecords> findWorkflowInstanceApproveRecords(String tenantId, Integer workflowDefinitionId, List<String> curRoleIds, String curUserId) {
-        // 流程定义
-        WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
-        WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(workflowDefinitionId);
-        if (workflowDefinition == null) {
-            throw new WorkflowException("流程定义不存在");
-        }
-
-        List<WorkflowInstanceApproveRecords> recordsList = new ArrayList<>();
-        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
-        List<WorkflowInstance> workflowInstances = workflowInstanceExecutor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId);
-        for (WorkflowInstance workflowInstance : workflowInstances) {
-            WorkflowInstanceApproveRecords records = this.getWorkflowInstanceApproveRecords(tenantId, workflowInstance.getId(), curRoleIds, curUserId);
-            recordsList.add(records);
-        }
-
-        return recordsList;
     }
 
     /**

@@ -11,6 +11,10 @@ import java.util.TreeMap;
  * @since 2024-06-25 17:43:28
  */
 public interface BaseEnum {
+
+    String CODE_KEY = "code";
+    String DESC_KEY = "desc";
+
     /** 获取枚举编码 */
     Integer getCode();
 
@@ -27,8 +31,8 @@ public interface BaseEnum {
      */
     default Map<String, String> toMap() {
         Map<String, String> map = new TreeMap<>();
-        map.put("code", String.valueOf(this.getCode()));
-        map.put("desc", this.getDesc());
+        map.put(CODE_KEY, String.valueOf(this.getCode()));
+        map.put(DESC_KEY, this.getDesc());
         return map;
         // return MapWrapper.createLambda(BaseEnum.class)
         //         .put(BaseEnum::getCode, this.getCode())
