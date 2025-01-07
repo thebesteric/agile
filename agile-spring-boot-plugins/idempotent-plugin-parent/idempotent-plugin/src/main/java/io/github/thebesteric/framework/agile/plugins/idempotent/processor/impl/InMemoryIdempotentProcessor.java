@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.idempotent.processor.impl;
 
 import io.github.thebesteric.framework.agile.core.func.SuccessFailureExecutor;
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit;
  * @version v1.0
  * @since 2024-05-04 17:23:21
  */
+@Slf4j
 public class InMemoryIdempotentProcessor implements IdempotentProcessor {
 
     /** 具体存储缓存数据的容器 */
@@ -65,22 +67,29 @@ public class InMemoryIdempotentProcessor implements IdempotentProcessor {
      */
     @Override
     public void execute(String key, Long value, long duration, TimeUnit timeUnit, SuccessFailureExecutor<Boolean, Boolean, Exception> executor) {
-        Date expireDate = expireRecords.get(key);
-        // 没有记录过期时间的记录
-        if (expireDate == null) {
+        try {
+            Date expireDate = expireRecords.get(key);
+            // 没有记录过期时间的记录
+            if (expireDate == null) {
+                this.put(key, value, duration, timeUnit);
+                executor.success(true);
+                return;
+            }
+            // 命中缓存后 返回缓存数据
+            if (new Date().before(expireDate)) {
+                executor.failure(false);
+                return;
+            }
+            // 数据过期移除数据存储和过期记录存储
+            this.remove(key);
+            // 再次新增缓存数据
             this.put(key, value, duration, timeUnit);
             executor.success(true);
-            return;
+        } catch (Exception ex) {
+            log.error("InMemoryIdempotentProcessor execute error", ex);
+            executor.exception(ex);
+        } finally {
+            executor.complete();
         }
-        // 命中缓存后 返回缓存数据
-        if (new Date().before(expireDate)) {
-            executor.failure(false);
-            return;
-        }
-        // 数据过期移除数据存储和过期记录存储
-        this.remove(key);
-        // 再次新增缓存数据
-        this.put(key, value, duration, timeUnit);
-        executor.success(true);
     }
 }

@@ -73,6 +73,7 @@ public class AgileIdempotentAdvice implements MethodInterceptor {
         AtomicReference<Object> result = new AtomicReference<>();
         // 生成 Key
         final String idempotentKey = IdempotentKeyGenerator.generate(idempotentAnnotationWrapper, method, args);
+        context.setIdempotentKey(idempotentKey);
         IdempotentProcessor idempotentProcessor = context.getIdempotentProcessor();
         idempotentProcessor.execute(idempotentKey, System.currentTimeMillis(), idempotentAnnotationWrapper.getTimeout(), idempotentAnnotationWrapper.getTimeUnit(), new SuccessFailureExecutor<>() {
             @Override
@@ -91,6 +92,11 @@ public class AgileIdempotentAdvice implements MethodInterceptor {
             @SneakyThrows
             public void exception(Exception exception) {
                 throw exception;
+            }
+
+            @Override
+            public void complete() {
+                context.removeIdempotentKey();
             }
         });
 

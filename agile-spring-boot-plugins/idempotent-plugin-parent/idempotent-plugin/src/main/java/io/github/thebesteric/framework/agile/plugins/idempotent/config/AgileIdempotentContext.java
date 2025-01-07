@@ -27,6 +27,8 @@ public class AgileIdempotentContext extends AbstractAgileContext {
     private final List<ClassMatcher> classMatchers;
     private final IdempotentProcessor idempotentProcessor;
 
+    private final ThreadLocal<String> idempotentKeyThreadLocal = new InheritableThreadLocal<>();
+
 
     public AgileIdempotentContext(ApplicationContext applicationContext, AgileIdempotentProperties properties, List<ClassMatcher> classMatchers) {
         super((GenericApplicationContext) applicationContext);
@@ -40,6 +42,18 @@ public class AgileIdempotentContext extends AbstractAgileContext {
             this.classMatchers = classMatchers;
         }
         this.idempotentProcessor = getBeanOrDefault(IdempotentProcessor.class, new InMemoryIdempotentProcessor());
+    }
+
+    public void setIdempotentKey(String idempotentKey) {
+        idempotentKeyThreadLocal.set(idempotentKey);
+    }
+
+    public String getIdempotentKey() {
+        return idempotentKeyThreadLocal.get();
+    }
+
+    public void removeIdempotentKey() {
+        idempotentKeyThreadLocal.remove();
     }
 
 }

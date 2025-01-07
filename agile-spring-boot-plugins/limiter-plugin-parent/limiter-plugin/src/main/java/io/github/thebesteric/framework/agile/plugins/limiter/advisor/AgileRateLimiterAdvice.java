@@ -84,6 +84,11 @@ public class AgileRateLimiterAdvice implements MethodInterceptor {
             public void exception(Exception exception) {
                 throw exception;
             }
+
+            @Override
+            public void complete() {
+                SuccessFailureExecutor.super.complete();
+            }
         });
 
         return result.get();
