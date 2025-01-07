@@ -57,4 +57,13 @@ public class Bar {
     @EntityColumn(type = EntityColumn.Type.TINY_BLOB)
     private Byte[] bytes;
 
+    @EntityColumn(comment = "是否锁定")
+    private boolean lock;
+
+    @EntityColumn(comment = "是否删除")
+    private Boolean delete;
+
+    @EntityColumn(comment = "是否启用")
+    private Boolean isEnable;
+
 }
