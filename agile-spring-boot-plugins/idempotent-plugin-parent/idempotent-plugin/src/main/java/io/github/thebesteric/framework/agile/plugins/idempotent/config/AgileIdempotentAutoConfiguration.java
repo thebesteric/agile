@@ -68,6 +68,8 @@ public class AgileIdempotentAutoConfiguration extends AbstractAgileInitializatio
         DefaultPointcutAdvisor advisor = new DefaultPointcutAdvisor();
         advisor.setPointcut(agileIdempotentPointcut);
         advisor.setAdvice(agileIdempotentAdvice);
+        // 优先级设置为最低
+        advisor.setOrder(Integer.MAX_VALUE);
         return advisor;
     }
 
