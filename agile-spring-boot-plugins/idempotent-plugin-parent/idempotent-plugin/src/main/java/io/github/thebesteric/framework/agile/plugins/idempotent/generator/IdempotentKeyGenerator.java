@@ -57,17 +57,21 @@ public class IdempotentKeyGenerator extends AbstractUtils {
                 continue;
             }
             // 获取注解类中所有的属性字段
-            final Field[] fields = object.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                // 判断字段上是否有 @IdempotentKey 注解
-                final IdempotentKey annotation = field.getAnnotation(IdempotentKey.class);
-                if (annotation == null) {
-                    continue;
+            Class<?> curClass = object.getClass();
+            do {
+                final Field[] fields = curClass.getDeclaredFields();
+                for (Field field : fields) {
+                    // 判断字段上是否有 @IdempotentKey 注解
+                    final IdempotentKey annotation = field.getAnnotation(IdempotentKey.class);
+                    if (annotation == null) {
+                        continue;
+                    }
+                    field.setAccessible(true);
+                    // 拼接连接符 "|" + 字段值
+                    sb.append(delimiter).append(ReflectionUtils.getField(field, object));
                 }
-                field.setAccessible(true);
-                // 拼接连接符 "|" + 字段值
-                sb.append(delimiter).append(ReflectionUtils.getField(field, object));
-            }
+                curClass = curClass.getSuperclass();
+            } while (curClass != null && curClass != Object.class);
         }
 
         // 返回 key：默认格式为：idempotent|class#method|xxx|yyy
