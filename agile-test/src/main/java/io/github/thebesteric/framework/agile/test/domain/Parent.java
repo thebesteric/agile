@@ -4,16 +4,16 @@ import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idemp
 import lombok.Data;
 
 /**
- * Id2Vo
+ * Parent
  *
  * @author wangweijun
  * @version v1.0
- * @since 2024-04-30 18:29:06
+ * @since 2025-01-07 17:16:58
  */
 @Data
-public class Id2Vo extends Parent {
+public abstract class Parent {
+
     @IdempotentKey
     private String name;
-    @IdempotentKey
-    private Integer age;
+
 }
