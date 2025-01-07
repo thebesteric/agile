@@ -453,3 +453,9 @@
 
 - 工作流插件 (bugfix): 修复否有正在进行的流程实例时缺少待审批条件的问题
 - 通用 (feat): 优化 R 类，增加判断响应是否成功 succeed 方法
+
+### v1.0.19
+- 数据库插件 (perf): 布尔类型的字段，若没有制定名称，则命名规则自动为: is_xx
+- 幂等插件 (perf): IdempotentAdvisor 设置优先级为最低
+- 幂等插件 (feat): @IdempotentKey 支持注解在父类的属性上
+- 幂等插件 (feat): AgileIdempotentContext 提供获取 IdempotentKey 的方法
