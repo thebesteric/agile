@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.distributed.locks.annotation.Distri
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.AnnotationParasiticContext;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.Idempotent;
 import io.github.thebesteric.framework.agile.plugins.idempotent.annotation.IdempotentKey;
+import io.github.thebesteric.framework.agile.plugins.idempotent.config.AgileIdempotentContext;
 import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
@@ -39,6 +40,9 @@ public class HelloController {
 
     @Autowired
     AnnotationParasiticContext parasiticContext;
+
+    @Autowired
+    AgileIdempotentContext idempotentContext;
 
     @GetMapping("/parasitic")
     public R<Map<String, List<String>>> parasitic() {
@@ -86,6 +90,7 @@ public class HelloController {
     @PostMapping("/id2")
     @Idempotent(timeout = 10000)
     public R<Id2Vo> id2(@RequestBody Id2Vo id2Vo) {
+        System.out.println("IdempotentKey = " + idempotentContext.getIdempotentKey());
         return R.success(id2Vo);
     }
 

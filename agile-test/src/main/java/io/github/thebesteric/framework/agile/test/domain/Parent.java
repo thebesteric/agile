@@ -14,6 +14,6 @@ import lombok.Data;
 public abstract class Parent {
 
     @IdempotentKey
-    private String name;
+    private String parentId;
 
 }
