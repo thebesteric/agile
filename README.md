@@ -495,3 +495,61 @@ class DeploymentServiceTest {
 
 }
 ```
+## 敏感词插件
+> file-path: 敏感词文件路径，一行代表一个敏感词  
+> placeholder: 需要替换的占位符  
+> symbols: 扩充符号字符
+```yaml
+sourceflag:
+  agile:
+    sensitive:
+      enable: true
+      file-path: asserts/sensitive.txt
+      placeholder: "***"
+      symbols:
+        - 'x'
+```
+### 使用方式
+直接使用
+```java
+AgileSensitiveFilterProperties properties = new AgileSensitiveFilterProperties();
+properties.setFilePath("asserts/sensitive.txt");
+properties.getSymbols().add('x');
+AgileSensitiveFilter sensitiveFilter = new AgileSensitiveFilter(properties, null);
+sensitiveFilter.init();
+
+SensitiveFilterResult result = sensitiveFilter.filter(MESSAGE);
+System.out.println("original = " + result.getOriginal());
+System.out.println("result = " + result.getResult());
+System.out.println("placeholder = " + result.getPlaceholder());
+for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
+    System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+}
+```
+配合 SpringBoot 使用
+```java
+@Resource
+AgileSensitiveFilter agileSensitiveFilter;
+
+void test() {
+    SensitiveFilterResult result = agileSensitiveFilter.filter(MESSAGE);
+    System.out.println("original = " + result.getOriginal());
+    System.out.println("result = " + result.getResult());
+    System.out.println("placeholder = " + result.getPlaceholder());
+    for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
+        System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+    }
+}
+```
+若需要处理返回结果情况，需要实现`AgileSensitiveResultProcessor`接口
+```java
+@Bean
+public AgileSensitiveResultProcessor sensitiveResultProcessor() {
+    return new AgileSensitiveResultProcessor() {
+        @Override
+        public void process(SensitiveFilterResult result) {
+            result.setResult(result.getResult() + " => 稍微修改了一下");
+        }
+    };
+}
+```
