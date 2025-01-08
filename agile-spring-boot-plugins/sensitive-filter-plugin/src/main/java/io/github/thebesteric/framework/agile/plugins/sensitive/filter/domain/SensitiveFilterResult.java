@@ -23,6 +23,8 @@ public class SensitiveFilterResult {
     private List<Sensitive> sensitiveWords = new ArrayList<>();
     /** 占位符 */
     private String placeholder;
+    /** 是否通过检测 */
+    private boolean passed = false;
 
     private SensitiveFilterResult() {
         super();
@@ -39,6 +41,13 @@ public class SensitiveFilterResult {
         sensitiveFilterResult.placeholder = placeholder;
         sensitiveFilterResult.sensitiveWords = sensitiveWords;
         return sensitiveFilterResult;
+    }
+
+    public boolean isPassed() {
+        if (sensitiveWords == null || sensitiveWords.isEmpty()) {
+            passed = true;
+        }
+        return passed;
     }
 
     @Data
