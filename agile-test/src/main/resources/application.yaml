@@ -64,6 +64,12 @@ sourceflag:
         component-app-secret: 123456789
         verify-token: 123456789
         encrypt-aes-key: 123456789
+    sensitive:
+      enable: true
+      file-path: asserts/sensitive.txt
+      placeholder: "***"
+      symbols:
+        - 'x'
 
 spring:
   datasource:

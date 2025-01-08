@@ -26,6 +26,8 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.imp
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.CustomRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.LocalLogRecordPostProcessor;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor.AgileSensitiveResultProcessor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,7 +55,7 @@ import java.util.Map;
  */
 @Configuration
 @EnableConfigurationProperties(AgileLoggerProperties.class)
-public class AgileLoggerConfig {
+public class AgileConfig {
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
@@ -180,6 +182,16 @@ public class AgileLoggerConfig {
                     return false;
                 }
                 return true;
+            }
+        };
+    }
+
+    @Bean
+    public AgileSensitiveResultProcessor sensitiveResultProcessor() {
+        return new AgileSensitiveResultProcessor() {
+            @Override
+            public void process(SensitiveFilterResult result) {
+                result.setResult(result.getResult() + " => 稍微修改了一下");
             }
         };
     }
