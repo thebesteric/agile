@@ -496,15 +496,19 @@ class DeploymentServiceTest {
 }
 ```
 ## 敏感词插件
-> file-path: 敏感词文件路径，一行代表一个敏感词  
+> file-type: 敏感词文件类型，支持 json、txt、other  
+> file-path: 敏感词文件路径  
 > placeholder: 需要替换的占位符  
-> symbols: 扩充符号字符
+> symbols: 扩充符号字符  
+
+注意：txt 格式的文件，每个敏感词占一行；json 格式的文件为`[“keyword1", "keyword2"]`格式
 ```yaml
 sourceflag:
   agile:
     sensitive:
       enable: true
-      file-path: asserts/sensitive.txt
+      file-type: json
+      file-path: asserts/sensitive.json
       placeholder: "***"
       symbols:
         - 'x'
@@ -543,6 +547,28 @@ void test() {
 ```
 若需要处理返回结果情况，需要实现`AgileSensitiveResultProcessor`接口
 ```java
+@Bean
+public AgileSensitiveResultProcessor sensitiveResultProcessor() {
+    return new AgileSensitiveResultProcessor() {
+        @Override
+        public void process(SensitiveFilterResult result) {
+            result.setResult(result.getResult() + " => 稍微修改了一下");
+        }
+    };
+}
+```
+若自定义读取文件格式类型，需要将`file-type`设置为`other`，并重写`AgileSensitiveFilter`的`loadOtherTypeSensitiveWords`方法
+```java
+@Bean
+public AgileSensitiveFilter agileSensitiveFilter(AgileSensitiveFilterProperties properties) {
+    return new AgileSensitiveFilter(properties, sensitiveResultProcessor()) {
+        @Override
+        public List<String> loadOtherTypeSensitiveWords() {
+            return List.of("嫖娼", "赌博");
+        }
+    };
+}
+
 @Bean
 public AgileSensitiveResultProcessor sensitiveResultProcessor() {
     return new AgileSensitiveResultProcessor() {
