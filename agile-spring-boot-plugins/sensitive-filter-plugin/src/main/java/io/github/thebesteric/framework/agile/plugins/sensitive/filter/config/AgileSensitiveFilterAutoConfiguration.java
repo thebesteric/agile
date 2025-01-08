@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.AgileSensi
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor.AgileSensitiveResultProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -39,6 +40,7 @@ public class AgileSensitiveFilterAutoConfiguration  extends AbstractAgileInitial
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public AgileSensitiveFilter agileSensitiveFilter(@Nullable AgileSensitiveResultProcessor sensitiveResultProcessor) {
         return new AgileSensitiveFilter(properties, sensitiveResultProcessor);
     }

@@ -26,6 +26,8 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.imp
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.CustomRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.LocalLogRecordPostProcessor;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.AgileSensitiveFilter;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.AgileSensitiveFilterProperties;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor.AgileSensitiveResultProcessor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -182,6 +184,16 @@ public class AgileConfig {
                     return false;
                 }
                 return true;
+            }
+        };
+    }
+
+    @Bean
+    public AgileSensitiveFilter agileSensitiveFilter(AgileSensitiveFilterProperties properties) {
+        return new AgileSensitiveFilter(properties, sensitiveResultProcessor()) {
+            @Override
+            public List<String> loadOtherTypeSensitiveWords() {
+                return List.of("嫖娼", "赌博");
             }
         };
     }

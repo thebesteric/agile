@@ -1,5 +1,8 @@
 package io.github.thebesteric.framework.agile.plugins.sensitive.filter;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.AgileSensitiveFilterProperties;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
@@ -27,7 +30,7 @@ public class AgileSensitiveFilter {
     /** 配置文件 */
     private final AgileSensitiveFilterProperties properties;
     /** 结果处理器 */
-    private AgileSensitiveResultProcessor resultProcessor;
+    private final AgileSensitiveResultProcessor resultProcessor;
 
 
     /** 敏感词文件 */
@@ -61,15 +64,56 @@ public class AgileSensitiveFilter {
             return;
         }
         // 加载敏感词
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sensitiveFile)))) {
-            String keyword;
-            while (StringUtils.isNotBlank((keyword = reader.readLine()))) {
-                // 添加到前缀树
-                this.addKeyword(keyword);
+        List<String> sensitiveWords = loadSensitiveWords(properties.getFileType());
+        // 添加到前缀树
+        sensitiveWords.forEach(this::addKeyword);
+    }
+
+    /**
+     * 加载敏感词
+     *
+     * @param fileType 文件类型
+     *
+     * @return 敏感词集合
+     *
+     * @author wangweijun
+     * @since 2025/1/8 17:46
+     */
+    private List<String> loadSensitiveWords(AgileSensitiveFilterProperties.FileType fileType) {
+        List<String> sensitiveWords = new ArrayList<>();
+        if (AgileSensitiveFilterProperties.FileType.JSON == fileType) {
+            try {
+                ObjectMapper objectMapper = JsonUtils.MAPPER;
+                sensitiveWords = objectMapper.readValue(sensitiveFile, new TypeReference<>() {
+                });
+            } catch (IOException e) {
+                LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
             }
-        } catch (IOException e) {
-            LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
+        } else if (AgileSensitiveFilterProperties.FileType.TXT == fileType) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sensitiveFile)))) {
+                String keyword;
+                while (StringUtils.isNotBlank((keyword = reader.readLine()))) {
+                    sensitiveWords.add(keyword);
+                }
+            } catch (IOException e) {
+                LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
+            }
+        } else {
+            sensitiveWords = loadOtherTypeSensitiveWords();
         }
+        return sensitiveWords;
+    }
+
+    /**
+     * 读取其他格式的敏感词，该方法用于重写
+     *
+     * @return 敏感词集合
+     *
+     * @author wangweijun
+     * @since 2025/1/8 17:25
+     */
+    public List<String> loadOtherTypeSensitiveWords() {
+        return new ArrayList<>();
     }
 
     /**
