@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
         <artifactId>limiter-plugin-parent</artifactId>
-        <version>1.0.18.10</version>
+        <version>1.0.19</version>
     </parent>
 
     <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
