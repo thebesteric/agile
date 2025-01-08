@@ -579,3 +579,4 @@ public AgileSensitiveResultProcessor sensitiveResultProcessor() {
     };
 }
 ```
+> JSON 格式敏感词库: https://github.com/konsheng/Sensitive-lexicon
