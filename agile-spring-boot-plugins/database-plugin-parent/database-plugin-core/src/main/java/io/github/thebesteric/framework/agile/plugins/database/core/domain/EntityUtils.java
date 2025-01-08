@@ -83,13 +83,6 @@ public final class EntityUtils extends AbstractUtils {
         if (tableField != null && CharSequenceUtil.isNotEmpty(tableField.value())) {
             return tableField.value().replace("`", "");
         }
-        // 如果 field 是 boolean 类型，则名称为 is_xxx
-        if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-            String fieldNameUnderlineCase = CharSequenceUtil.toUnderlineCase(field.getName());
-            if (!fieldNameUnderlineCase.startsWith("is_")) {
-                return "is_" + fieldNameUnderlineCase;
-            }
-        }
         return CharSequenceUtil.toUnderlineCase(field.getName());
     }
 
