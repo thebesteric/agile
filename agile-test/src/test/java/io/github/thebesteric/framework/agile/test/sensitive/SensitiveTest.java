@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.AgileSensi
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.AgileSensitiveFilterProperties;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
 import jakarta.annotation.Resource;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -32,23 +33,27 @@ class SensitiveTest {
         sensitiveFilter.init();
 
         SensitiveFilterResult result = sensitiveFilter.filter(MESSAGE);
+        System.out.println("isPass = " + result.isPassed());
         System.out.println("original = " + result.getOriginal());
         System.out.println("result = " + result.getResult());
         System.out.println("placeholder = " + result.getPlaceholder());
         for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
             System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
         }
+        Assertions.assertFalse(result.isPassed());
     }
 
     @Test
     void test() {
         SensitiveFilterResult result = agileSensitiveFilter.filter(MESSAGE);
+        System.out.println("isPass = " + result.isPassed());
         System.out.println("original = " + result.getOriginal());
         System.out.println("result = " + result.getResult());
         System.out.println("placeholder = " + result.getPlaceholder());
         for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
             System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
         }
+        Assertions.assertFalse(result.isPassed());
     }
 
 }
