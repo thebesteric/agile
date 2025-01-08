@@ -16,6 +16,7 @@ public enum AgilePlugins {
     DATABASE_PLUGIN("database-plugin", "io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseAutoConfiguration"),
     WORKFLOW_PLUGIN("workflow-plugin", "io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkflowAutoConfiguration"),
     ANNOTATION_SCANNER_PLUGIN("annotation-scanner-plugin", "io.github.thebesteric.framework.agile.plugins.annotation.scanner.config.AnnotationScannerAutoConfiguration"),
+    SENSITIVE_FILTER_PLUGIN("sensitive-filter-plugin", "io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.AgileSensitiveFilterAutoConfiguration"),
     WECHAT_OPEN_PLATFORM_PLUGIN("wechat-plugin", "io.github.thebesteric.framework.agile.wechat.third.platform.config.AgileWechatOpenAutoConfiguration");
 
     final String name;
