@@ -469,3 +469,4 @@
 
 - 敏感词插件 (perf): 优化敏感词加载逻辑
 - 敏感词插件 (feat): 新增`AgileOtherTypeSensitiveLoader`用于加载其他方式读取敏感字
+- 敏感词插件 (feat): 提供`reload`重新读取敏感词库的方法
