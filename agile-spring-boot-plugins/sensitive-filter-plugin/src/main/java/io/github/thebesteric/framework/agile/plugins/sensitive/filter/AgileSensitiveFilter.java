@@ -8,8 +8,10 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.Agi
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.TrieNode;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.exception.SensitiveException;
-import io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor.AgileSensitiveResultProcessor;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileOtherTypeSensitiveLoader;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -32,8 +34,12 @@ import java.util.function.Function;
 public class AgileSensitiveFilter {
     /** 配置文件 */
     private final AgileSensitiveFilterProperties properties;
-    /** 结果处理器 */
+
+    /** 其他方式敏感词加载器: will be autowired by user defined */
+    private final AgileOtherTypeSensitiveLoader otherTypeSensitiveLoader;
+    /** 结果处理器: will be autowired by user defined */
     private final AgileSensitiveResultProcessor resultProcessor;
+
     /** 敏感词文件 */
     private final File sensitiveFile;
     /** 根节点 */
@@ -42,10 +48,16 @@ public class AgileSensitiveFilter {
     private final AgileSensitiveFilterProperties.LoadType loadType;
     /** 文件加载地址 */
     private final String filePath;
+
     /** 敏感词是否已经加载 */
+    @Getter
     private boolean loaded;
 
-    public AgileSensitiveFilter(AgileSensitiveFilterProperties properties, @Nullable AgileSensitiveResultProcessor resultProcessor) {
+    public AgileSensitiveFilter(AgileSensitiveFilterProperties properties) {
+        this(properties, null, null);
+    }
+
+    public AgileSensitiveFilter(AgileSensitiveFilterProperties properties, @Nullable AgileOtherTypeSensitiveLoader otherTypeSensitiveLoader, @Nullable AgileSensitiveResultProcessor resultProcessor) {
         this.filePath = properties.getFilePath();
         this.loadType = properties.getLoadType();
         if (AgileSensitiveFilterProperties.LoadType.OTHER == this.loadType || StringUtils.isBlank(filePath)) {
@@ -55,6 +67,7 @@ public class AgileSensitiveFilter {
         }
         this.properties = properties;
         this.rootNode = new TrieNode();
+        this.otherTypeSensitiveLoader = otherTypeSensitiveLoader;
         this.resultProcessor = resultProcessor;
         this.loaded = false;
     }
@@ -111,23 +124,12 @@ public class AgileSensitiveFilter {
         }
         // 其他加载方式
         else {
-            sensitiveWords = loadOtherTypeSensitiveWords();
+            Objects.requireNonNull(otherTypeSensitiveLoader, "使用 OTHER 加载方式必须实现: AgileOtherTypeSensitiveLoader 接口");
+            sensitiveWords = otherTypeSensitiveLoader.load();
             this.loaded = true;
         }
         LoggerPrinter.info(log, "敏感词加载方式: {}, 加载数量: {}", loadType, sensitiveWords.size());
         return sensitiveWords;
-    }
-
-    /**
-     * 读取其他格式的敏感词，该方法用于重写
-     *
-     * @return 敏感词集合
-     *
-     * @author wangweijun
-     * @since 2025/1/8 17:25
-     */
-    public List<String> loadOtherTypeSensitiveWords() {
-        return new ArrayList<>();
     }
 
     /**

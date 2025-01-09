@@ -4,10 +4,10 @@ import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.AgileSensitiveFilter;
-import io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor.AgileSensitiveResultProcessor;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileOtherTypeSensitiveLoader;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -26,7 +26,7 @@ import org.springframework.lang.Nullable;
 @EnableConfigurationProperties(AgileSensitiveFilterProperties.class)
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".sensitive", name = "enable", havingValue = "true", matchIfMissing = true)
-public class AgileSensitiveFilterAutoConfiguration  extends AbstractAgileInitialization  {
+public class AgileSensitiveFilterAutoConfiguration extends AbstractAgileInitialization {
 
     private final AgileSensitiveFilterProperties properties;
 
@@ -40,9 +40,8 @@ public class AgileSensitiveFilterAutoConfiguration  extends AbstractAgileInitial
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    public AgileSensitiveFilter agileSensitiveFilter(@Nullable AgileSensitiveResultProcessor sensitiveResultProcessor) {
-        return new AgileSensitiveFilter(properties, sensitiveResultProcessor);
+    public AgileSensitiveFilter agileSensitiveFilter(@Nullable AgileOtherTypeSensitiveLoader otherTypeSensitiveLoader, @Nullable AgileSensitiveResultProcessor sensitiveResultProcessor) {
+        return new AgileSensitiveFilter(properties, otherTypeSensitiveLoader, sensitiveResultProcessor);
     }
 
 }

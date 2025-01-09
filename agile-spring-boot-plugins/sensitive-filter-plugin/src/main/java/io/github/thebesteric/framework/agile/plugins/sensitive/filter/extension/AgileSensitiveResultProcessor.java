@@ -1,7 +1,8 @@
-package io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor;
+package io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension;
 
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
 
+@FunctionalInterface
 public interface AgileSensitiveResultProcessor {
     /**
      * 执行结果处理器
