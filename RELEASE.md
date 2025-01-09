@@ -460,3 +460,7 @@
 - 幂等插件 (feat): @IdempotentKey 支持注解在父类的属性上
 - 幂等插件 (feat): AgileIdempotentContext 提供获取 IdempotentKey 的方法
 - 敏感词插件 (feat): 新增敏感词插件
+
+### v1.0.19.1
+
+- 敏感词插件 (feat): 新增直接获取结果和获取结果时抛出异常的方法

@@ -527,7 +527,7 @@ System.out.println("original = " + result.getOriginal());
 System.out.println("result = " + result.getResult());
 System.out.println("placeholder = " + result.getPlaceholder());
 for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
-    System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+    System.out.println(MessageUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
 }
 ```
 配合 SpringBoot 使用
@@ -541,7 +541,7 @@ void test() {
     System.out.println("result = " + result.getResult());
     System.out.println("placeholder = " + result.getPlaceholder());
     for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
-        System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+        System.out.println(MessageUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
     }
 }
 ```
