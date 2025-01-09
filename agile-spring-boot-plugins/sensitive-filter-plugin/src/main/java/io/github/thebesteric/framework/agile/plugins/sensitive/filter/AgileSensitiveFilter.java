@@ -34,25 +34,29 @@ public class AgileSensitiveFilter {
     private final AgileSensitiveFilterProperties properties;
     /** 结果处理器 */
     private final AgileSensitiveResultProcessor resultProcessor;
-
-
     /** 敏感词文件 */
     private final File sensitiveFile;
     /** 根节点 */
     private final TrieNode rootNode;
-
-    private static final String EMPTY_FILE_PATH = "not_exist_file_path";
-
+    /** 数据加载类型 */
+    private final AgileSensitiveFilterProperties.LoadType loadType;
+    /** 文件加载地址 */
+    private final String filePath;
+    /** 敏感词是否已经加载 */
+    private boolean loaded;
 
     public AgileSensitiveFilter(AgileSensitiveFilterProperties properties, @Nullable AgileSensitiveResultProcessor resultProcessor) {
-        String filePath = properties.getFilePath();
-        if (StringUtils.isBlank(filePath)) {
-            filePath = EMPTY_FILE_PATH;
+        this.filePath = properties.getFilePath();
+        this.loadType = properties.getLoadType();
+        if (AgileSensitiveFilterProperties.LoadType.OTHER == this.loadType || StringUtils.isBlank(filePath)) {
+            this.sensitiveFile = null;
+        } else {
+            this.sensitiveFile = new File(this.filePath);
         }
         this.properties = properties;
-        this.sensitiveFile = new File(filePath);
         this.rootNode = new TrieNode();
         this.resultProcessor = resultProcessor;
+        this.loaded = false;
     }
 
     @PostConstruct
@@ -61,13 +65,13 @@ public class AgileSensitiveFilter {
         if (!properties.isEnable()) {
             return;
         }
-        // 加载文件
-        if (!sensitiveFile.exists()) {
-            LoggerPrinter.warn(log, "敏感词文件不存在，请检查路径是否正确");
+        // 以文件形式加载敏感词
+        if (isLoadByFile()) {
+            LoggerPrinter.warn(log, "敏感词文件不存在，请检查路径是否正确: {}", filePath);
             return;
         }
         // 加载敏感词
-        List<String> sensitiveWords = loadSensitiveWords(properties.getFileType());
+        List<String> sensitiveWords = loadSensitiveWords();
         // 添加到前缀树
         sensitiveWords.forEach(this::addKeyword);
     }
@@ -75,35 +79,42 @@ public class AgileSensitiveFilter {
     /**
      * 加载敏感词
      *
-     * @param fileType 文件类型
-     *
      * @return 敏感词集合
      *
      * @author wangweijun
      * @since 2025/1/8 17:46
      */
-    private List<String> loadSensitiveWords(AgileSensitiveFilterProperties.FileType fileType) {
+    private List<String> loadSensitiveWords() {
         List<String> sensitiveWords = new ArrayList<>();
-        if (AgileSensitiveFilterProperties.FileType.JSON == fileType) {
+        // 加载 JSON 文件（不要求后缀名，但是格式必须符合 JSON Array 标准）
+        if (AgileSensitiveFilterProperties.LoadType.JSON == this.loadType) {
             try {
                 ObjectMapper objectMapper = JsonUtils.MAPPER;
                 sensitiveWords = objectMapper.readValue(sensitiveFile, new TypeReference<>() {
                 });
+                this.loaded = true;
             } catch (IOException e) {
                 LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
             }
-        } else if (AgileSensitiveFilterProperties.FileType.TXT == fileType) {
+        }
+        // 加载 TXT 文件（不要求后缀名，但是格式必须时一行一个敏感词）
+        else if (AgileSensitiveFilterProperties.LoadType.TXT == this.loadType) {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(sensitiveFile)))) {
                 String keyword;
                 while (StringUtils.isNotBlank((keyword = reader.readLine()))) {
                     sensitiveWords.add(keyword);
                 }
+                this.loaded = true;
             } catch (IOException e) {
                 LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
             }
-        } else {
-            sensitiveWords = loadOtherTypeSensitiveWords();
         }
+        // 其他加载方式
+        else {
+            sensitiveWords = loadOtherTypeSensitiveWords();
+            this.loaded = true;
+        }
+        LoggerPrinter.info(log, "敏感词加载方式: {}, 加载数量: {}", loadType, sensitiveWords.size());
         return sensitiveWords;
     }
 
@@ -160,7 +171,8 @@ public class AgileSensitiveFilter {
         if (StringUtils.isBlank(text) || !properties.isEnable()) {
             return SensitiveFilterResult.empty(text, properties.getPlaceholder());
         }
-        if (!sensitiveFile.exists()) {
+        // 是否以文件形式加载敏感词
+        if (isLoadByFile()) {
             LoggerPrinter.warn(log, "敏感词文件不存在，请检查路径是否正确");
             return SensitiveFilterResult.empty(text, properties.getPlaceholder());
         }
@@ -335,5 +347,17 @@ public class AgileSensitiveFilter {
         }
         // 0x2E80~0x9FFF 是东亚文字范围
         return !CharUtils.isAsciiAlphanumeric(character) && (character < 0x2E80 || character > 0x9FFF);
+    }
+
+    /**
+     * 是否以文件形式加载敏感词（非 OTHER，且文件及地址必须存在）
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2025/1/9 15:19
+     */
+    private boolean isLoadByFile() {
+        return AgileSensitiveFilterProperties.LoadType.OTHER != this.loadType && (sensitiveFile == null || !sensitiveFile.exists());
     }
 }

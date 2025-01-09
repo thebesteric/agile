@@ -24,8 +24,8 @@ public class AgileSensitiveFilterProperties {
     /** 占位替换符 */
     private String placeholder = "*";
 
-    /** 敏感词文件类型 */
-    private FileType fileType = FileType.TXT;
+    /** 敏感词文件加载类型 */
+    private LoadType loadType = LoadType.TXT;
 
     /** 敏感词文件地址 */
     private String filePath;
@@ -33,7 +33,7 @@ public class AgileSensitiveFilterProperties {
     /** 特殊符号 */
     private List<Character> symbols = new ArrayList<>();
 
-    public enum FileType {
+    public enum LoadType {
         JSON, TXT, OTHER
     }
 
