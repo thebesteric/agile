@@ -468,3 +468,4 @@
 ### v1.0.19.2
 
 - 敏感词插件 (perf): 优化敏感词加载逻辑
+- 敏感词插件 (feat): 新增`AgileOtherTypeSensitiveLoader`用于加载其他方式读取敏感字
