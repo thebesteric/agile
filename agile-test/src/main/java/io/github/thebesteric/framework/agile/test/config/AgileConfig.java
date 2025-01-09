@@ -26,10 +26,9 @@ import io.github.thebesteric.framework.agile.plugins.logger.processor.ignore.imp
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.Recorder;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl.CustomRecorder;
 import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.LocalLogRecordPostProcessor;
-import io.github.thebesteric.framework.agile.plugins.sensitive.filter.AgileSensitiveFilter;
-import io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.AgileSensitiveFilterProperties;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
-import io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor.AgileSensitiveResultProcessor;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileOtherTypeSensitiveLoader;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -189,21 +188,21 @@ public class AgileConfig {
     }
 
     @Bean
-    public AgileSensitiveFilter agileSensitiveFilter(AgileSensitiveFilterProperties properties) {
-        return new AgileSensitiveFilter(properties, sensitiveResultProcessor()) {
-            @Override
-            public List<String> loadOtherTypeSensitiveWords() {
-                return List.of("嫖娼", "赌博");
-            }
-        };
-    }
-
-    @Bean
     public AgileSensitiveResultProcessor sensitiveResultProcessor() {
         return new AgileSensitiveResultProcessor() {
             @Override
             public void process(SensitiveFilterResult result) {
                 result.setResult(result.getResult() + " => 稍微修改了一下");
+            }
+        };
+    }
+
+    @Bean
+    public AgileOtherTypeSensitiveLoader otherTypeSensitiveLoader() {
+        return new AgileOtherTypeSensitiveLoader() {
+            @Override
+            public List<String> load() {
+                return List.of("赌博", "嫖娼");
             }
         };
     }

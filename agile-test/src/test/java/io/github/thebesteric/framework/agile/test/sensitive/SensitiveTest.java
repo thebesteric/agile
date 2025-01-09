@@ -29,7 +29,7 @@ class SensitiveTest {
         AgileSensitiveFilterProperties properties = new AgileSensitiveFilterProperties();
         properties.setFilePath("asserts/sensitive.txt");
         properties.getSymbols().add('x');
-        AgileSensitiveFilter sensitiveFilter = new AgileSensitiveFilter(properties, null);
+        AgileSensitiveFilter sensitiveFilter = new AgileSensitiveFilter(properties);
         sensitiveFilter.init();
 
         SensitiveFilterResult result = sensitiveFilter.filter(MESSAGE);
