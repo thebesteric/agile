@@ -38,7 +38,7 @@ class SensitiveTest {
         System.out.println("result = " + result.getResult());
         System.out.println("placeholder = " + result.getPlaceholder());
         for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
-            System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+            System.out.println(MessageUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
         }
         Assertions.assertFalse(result.isPassed());
     }
@@ -51,7 +51,7 @@ class SensitiveTest {
         System.out.println("result = " + result.getResult());
         System.out.println("placeholder = " + result.getPlaceholder());
         for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
-            System.out.println(MessageUtils.replacePlaceholders("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+            System.out.println(MessageUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
         }
         Assertions.assertFalse(result.isPassed());
     }

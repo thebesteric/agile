@@ -228,6 +228,29 @@ public class AgileSensitiveFilter {
     }
 
     /**
+     * 直接返回过滤结果
+     *
+     * @param text 待过滤的文本
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2025/1/9 09:20
+     */
+    public String getResult(String text) {
+        SensitiveFilterResult result = this.filter(text);
+        return result.getResult();
+    }
+
+    public String getResultOrThrow(String text) {
+        SensitiveFilterResult result = this.filter(text);
+        if (!result.isPassed()) {
+            throw new SensitiveException(result.getResult());
+        }
+        return result.getResult();
+    }
+
+    /**
      * 判断是否为符号
      *
      * @param character 待判断的字符

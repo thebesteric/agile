@@ -10,7 +10,7 @@ package io.github.thebesteric.framework.agile.commons.util;
 public class MessageUtils extends AbstractUtils {
 
     /**
-     * replacePlaceholders
+     * 格式化消息
      *
      * @param message      格式化消息
      * @param replacements 替换参数
@@ -20,7 +20,7 @@ public class MessageUtils extends AbstractUtils {
      * @author wangweijun
      * @since 2025/1/4 17:42
      */
-    public static String replacePlaceholders(String message, Object... replacements) {
+    public static String format(String message, Object... replacements) {
         String result = message;
         int index = result.indexOf("{}");
         int replacementIndex = 0;
