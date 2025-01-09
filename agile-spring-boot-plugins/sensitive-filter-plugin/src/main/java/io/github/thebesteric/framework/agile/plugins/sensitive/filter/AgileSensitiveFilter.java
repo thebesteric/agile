@@ -43,7 +43,7 @@ public class AgileSensitiveFilter {
     /** 敏感词文件 */
     private final File sensitiveFile;
     /** 根节点 */
-    private final TrieNode rootNode;
+    private TrieNode rootNode;
     /** 数据加载类型 */
     private final AgileSensitiveFilterProperties.LoadType loadType;
     /** 文件加载地址 */
@@ -65,8 +65,8 @@ public class AgileSensitiveFilter {
         } else {
             this.sensitiveFile = new File(this.filePath);
         }
-        this.properties = properties;
         this.rootNode = new TrieNode();
+        this.properties = properties;
         this.otherTypeSensitiveLoader = otherTypeSensitiveLoader;
         this.resultProcessor = resultProcessor;
         this.loaded = false;
@@ -84,13 +84,42 @@ public class AgileSensitiveFilter {
             return;
         }
         // 加载敏感词
-        List<String> sensitiveWords = loadSensitiveWords();
-        // 添加到前缀树
-        sensitiveWords.forEach(this::addKeyword);
+        load();
     }
+
 
     /**
      * 加载敏感词
+     *
+     * @author wangweijun
+     * @since 2025/1/9 16:54
+     */
+    public synchronized void load() {
+        if (loaded) {
+            return;
+        }
+        // 加载敏感词
+        List<String> sensitiveWords = loadSensitiveWords();
+        // 添加到前缀树
+        sensitiveWords.forEach(this::addKeyword);
+        this.loaded = true;
+        LoggerPrinter.info(log, "敏感词加载完成，加载方式: {}, 加载数量: {}", loadType, sensitiveWords.size());
+    }
+
+    /**
+     * 重新加载敏感词
+     *
+     * @author wangweijun
+     * @since 2025/1/9 16:57
+     */
+    public synchronized void reload() {
+        this.loaded = false;
+        this.rootNode = new TrieNode();
+        load();
+    }
+
+    /**
+     * 读取敏感词
      *
      * @return 敏感词集合
      *
@@ -105,7 +134,6 @@ public class AgileSensitiveFilter {
                 ObjectMapper objectMapper = JsonUtils.MAPPER;
                 sensitiveWords = objectMapper.readValue(sensitiveFile, new TypeReference<>() {
                 });
-                this.loaded = true;
             } catch (IOException e) {
                 LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
             }
@@ -117,7 +145,6 @@ public class AgileSensitiveFilter {
                 while (StringUtils.isNotBlank((keyword = reader.readLine()))) {
                     sensitiveWords.add(keyword);
                 }
-                this.loaded = true;
             } catch (IOException e) {
                 LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
             }
@@ -126,9 +153,7 @@ public class AgileSensitiveFilter {
         else {
             Objects.requireNonNull(otherTypeSensitiveLoader, "使用 OTHER 加载方式必须实现: AgileOtherTypeSensitiveLoader 接口");
             sensitiveWords = otherTypeSensitiveLoader.load();
-            this.loaded = true;
         }
-        LoggerPrinter.info(log, "敏感词加载方式: {}, 加载数量: {}", loadType, sensitiveWords.size());
         return sensitiveWords;
     }
 
