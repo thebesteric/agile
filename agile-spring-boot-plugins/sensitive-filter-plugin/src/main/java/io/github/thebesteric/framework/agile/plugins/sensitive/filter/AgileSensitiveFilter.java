@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.AgileSensitiveFilterProperties;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.TrieNode;
+import io.github.thebesteric.framework.agile.plugins.sensitive.filter.exception.SensitiveException;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.processor.AgileSensitiveResultProcessor;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,8 @@ import org.springframework.lang.Nullable;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * SensitiveFilter
@@ -227,6 +230,7 @@ public class AgileSensitiveFilter {
         return result;
     }
 
+
     /**
      * 直接返回过滤结果
      *
@@ -242,10 +246,74 @@ public class AgileSensitiveFilter {
         return result.getResult();
     }
 
-    public String getResultOrThrow(String text) {
+    /**
+     * 获取结果并抛出异常
+     *
+     * @param text 待过滤的文本
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2025/1/9 10:00
+     */
+    public String getResultOrElseThrow(String text) {
+        return this.getResultOrElseThrow(text, result -> {
+            List<String> sensitiveWords = result.getSensitiveWords().stream().map(SensitiveFilterResult.Sensitive::getKeyword).toList();
+            return new SensitiveException(sensitiveWords);
+        });
+    }
+
+    /**
+     * 获取结果并抛出异常
+     *
+     * @param text     待过滤的文本
+     * @param function 函数
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2025/1/9 10:01
+     */
+    public <E extends Throwable> String getResultOrElseThrow(String text, Function<SensitiveFilterResult, E> function) throws E {
+        Objects.requireNonNull(function, "function is null");
         SensitiveFilterResult result = this.filter(text);
         if (!result.isPassed()) {
-            throw new SensitiveException(result.getResult());
+            throw function.apply(result);
+        }
+        return result.getResult();
+    }
+
+    /**
+     * 获取结果并返回指定结果
+     *
+     * @param text         待过滤的文本
+     * @param defaultValue 默认值
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2025/1/9 10:01
+     */
+    public String getResultOrElse(String text, String defaultValue) {
+        return getResultOrElse(text, result -> defaultValue);
+    }
+
+    /**
+     * 获取结果并返回指定结果
+     *
+     * @param text     待过滤的文本
+     * @param function 函数
+     *
+     * @return String
+     *
+     * @author wangweijun
+     * @since 2025/1/9 10:01
+     */
+    public String getResultOrElse(String text, Function<SensitiveFilterResult, String> function) {
+        Objects.requireNonNull(function, "function is null");
+        SensitiveFilterResult result = this.filter(text);
+        if (!result.isPassed()) {
+            return function.apply(result);
         }
         return result.getResult();
     }
