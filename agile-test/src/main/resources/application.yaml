@@ -66,8 +66,8 @@ sourceflag:
         encrypt-aes-key: 123456789
     sensitive:
       enable: true
-      file-type: json
-      file-path: asserts/sensitive.json
+      load-type: other
+#      file-path: asserts/sensitive.json
       placeholder: "***"
       symbols:
         - 'x'
