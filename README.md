@@ -496,12 +496,15 @@ class DeploymentServiceTest {
 }
 ```
 ## 敏感词插件
-> file-type: 敏感词文件类型，支持 json、txt、other  
+> load-type: 敏感词数据加载类型，支持 JSON、TXT、OTHER  
 > file-path: 敏感词文件路径  
 > placeholder: 需要替换的占位符  
 > symbols: 扩充符号字符  
 
-注意：txt 格式的文件，每个敏感词占一行；json 格式的文件为`[“keyword1", "keyword2"]`格式
+注意：
+- TXT 加载类型：不要求后缀名，每个敏感词占一行；
+- JSON 加载类型：不要求后缀名，但是格式必须符合 JSON Array 标准，如：`[“keyword1", "keyword2"]`
+- OTHER 加载类型：需要重写`AgileSensitiveFilter`的`loadOtherTypeSensitiveWords`方法
 ```yaml
 sourceflag:
   agile:
