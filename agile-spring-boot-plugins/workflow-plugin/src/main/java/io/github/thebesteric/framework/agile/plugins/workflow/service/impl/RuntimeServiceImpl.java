@@ -1267,7 +1267,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/11/7 17:07
      */
     private void checkIfWorkflowInstanceIsFinished(WorkflowInstance workflowInstance) {
-        if (WorkflowStatus.IN_PROGRESS != workflowInstance.getStatus()) {
+        if (workflowInstance.isFinished()) {
             throw new WorkflowException("流程实例已结束: %s", workflowInstance.getStatus().getDesc());
         }
     }

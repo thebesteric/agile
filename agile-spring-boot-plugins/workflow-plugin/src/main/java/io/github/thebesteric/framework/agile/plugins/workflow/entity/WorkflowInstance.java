@@ -14,6 +14,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.beans.Transient;
 import java.io.Serial;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -70,6 +71,7 @@ public class WorkflowInstance extends BaseEntity {
      * @author wangweijun
      * @since 2024/11/7 19:09
      */
+    @Transient
     public boolean isFinished() {
         return WorkflowStatus.isFinished(this.status);
     }
