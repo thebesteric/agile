@@ -95,8 +95,9 @@ public class WorkflowInstanceApproveRecords implements Serializable {
                                 NodeAssignment nodeAssignment = taskApproveAndNodeAssignmentMap.get(taskApprove);
                                 TaskReassignRecord taskReassignRecord = taskApproveAndTaskReassignRecordMap.get(taskApprove);
                                 List<TaskRoleApproveRecord> taskRoleApproveRecords = taskApproveAndRoleApproveRecordsMap.get(taskApprove);
+                                List<TaskDynamicAssignment> taskDynamicAssignments = nodeDefAndDynamicNodeAssignmentMap.get(nodeDefinition);
                                 return TaskApproveResponse.of(nodeDefinition, taskApprove, nodeAssignment, taskReassignRecord, taskRoleApproveRecords,
-                                        taskRoleRecordAndNodeRoleAssignmentMap, curRoleIds, curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
+                                        taskRoleRecordAndNodeRoleAssignmentMap, taskDynamicAssignments, curRoleIds, curUserId, approveStatusDescCustomizer, roleApproveStatusDescCustomizer);
                             })
                             .sorted(Comparator.comparing(TaskApproveResponse::getApproverSeq, Comparator.nullsLast(Comparator.naturalOrder()))
                                     .thenComparing(TaskApproveResponse::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
@@ -445,7 +446,7 @@ public class WorkflowInstanceApproveRecords implements Serializable {
 
         public static TaskApproveResponse of(NodeDefinition nodeDefinition, TaskApprove taskApprove, NodeAssignment nodeAssignment, TaskReassignRecord taskReassignRecord,
                                              List<TaskRoleApproveRecord> taskRoleApproveRecords, Map<TaskRoleApproveRecord, NodeRoleAssignment> taskRoleRecordAndNodeRoleAssignmentMap,
-                                             List<String> curRoleIds, String curUserId,
+                                             List<TaskDynamicAssignment> taskDynamicAssignments, List<String> curRoleIds, String curUserId,
                                              ApproveStatusDescCustomizer approveStatusDescCustomizer, RoleApproveStatusDescCustomizer roleApproveStatusDescCustomizer) {
             TaskApproveResponse response = new TaskApproveResponse();
             response.taskApproveId = taskApprove.getId();
@@ -464,6 +465,18 @@ public class WorkflowInstanceApproveRecords implements Serializable {
                 response.approverName = taskReassignRecord.getToUserName();
                 response.approverSeq = taskReassignRecord.getToUserSeq();
                 response.approverDesc = taskReassignRecord.getToUserDesc();
+            }
+
+            // 动态审批节点
+            if (nodeDefinition.isDynamic()) {
+                taskDynamicAssignments.stream().filter(dynamicAssigment -> dynamicAssigment.getApproverId().equals(taskApprove.getApproverId()))
+                        .findFirst()
+                        .ifPresent(dynamicAssigment -> {
+                            response.userId = dynamicAssigment.getId().toString();
+                            response.approverName = dynamicAssigment.getApproverName();
+                            response.approverDesc = dynamicAssigment.getApproverDesc();
+                            response.approverSeq = dynamicAssigment.getApproverSeq();
+                        });
             }
 
             response.comment = taskApprove.getComment();
