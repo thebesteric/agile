@@ -3626,7 +3626,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 taskDynamicAssignmentExecutor.save(taskDynamicAssignment);
                 taskDynamicAssignments.add(taskDynamicAssignment);
             }
-            taskDynamicAssignments.sort(Comparator.comparingInt(TaskDynamicAssignment::getApproverSeq));
+            // 排序
+            taskDynamicAssignments.sort(Comparator.comparing(TaskDynamicAssignment::getApproverSeq, Comparator.nullsLast(Comparator.naturalOrder())));
 
             // 此时的 taskApprove 为 {dynamic:n} 的形式，需要修改为真实的用户
             TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
