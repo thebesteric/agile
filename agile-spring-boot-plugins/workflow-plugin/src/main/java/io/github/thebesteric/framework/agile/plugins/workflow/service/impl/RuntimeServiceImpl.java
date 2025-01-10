@@ -1291,8 +1291,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     /**
      * 保存流程实例的审批记录
      *
-     * @param tenantId                        租户 ID
-     * @param workflowInstance                流程实例
+     * @param tenantId         租户 ID
+     * @param workflowInstance 流程实例
      *
      * @author wangweijun
      * @since 2024/11/4 10:28
@@ -3169,6 +3169,29 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
         TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
         return taskInstance != null && tenantId.equals(taskInstance.getTenantId()) ? taskInstance : null;
+    }
+
+    /**
+     * 根据流程实例 ID 和任务实例 ID 查找任务实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param nodeDefinitionId   节点定义 ID
+     *
+     * @return TaskInstance
+     *
+     * @author wangweijun
+     * @since 2025/1/10 15:15
+     */
+    @Override
+    public TaskInstance getTaskInstance(String tenantId, Integer workflowInstanceId, Integer nodeDefinitionId) {
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
+                .eq(TaskInstance::getTenantId, tenantId)
+                .eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId)
+                .eq(TaskInstance::getNodeDefinitionId, nodeDefinitionId)
+                .build();
+        return taskInstanceExecutor.get(query);
     }
 
     /**
