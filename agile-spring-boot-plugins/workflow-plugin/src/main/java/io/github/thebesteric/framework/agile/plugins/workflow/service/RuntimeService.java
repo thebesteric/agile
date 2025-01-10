@@ -408,6 +408,20 @@ public interface RuntimeService {
     TaskInstance getTaskInstance(String tenantId, Integer taskInstanceId);
 
     /**
+     * 根据流程实例 ID 和任务实例 ID 查找任务实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param nodeDefinitionId   节点定义 ID
+     *
+     * @return TaskInstance
+     *
+     * @author wangweijun
+     * @since 2025/1/10 15:15
+     */
+    TaskInstance getTaskInstance(String tenantId, Integer workflowInstanceId, Integer nodeDefinitionId);
+
+    /**
      * 查找流程实例：根据发起人
      *
      * @param tenantId    租户 ID

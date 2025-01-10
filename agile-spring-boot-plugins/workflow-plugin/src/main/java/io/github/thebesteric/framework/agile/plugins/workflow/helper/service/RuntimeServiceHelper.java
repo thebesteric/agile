@@ -420,6 +420,24 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
         return this.runtimeService.getTaskInstance(tenantId, taskInstanceId);
     }
 
+
+    /**
+     * 根据流程实例 ID 和任务实例 ID 查找任务实例
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param nodeDefinitionId   节点定义 ID
+     *
+     * @return TaskInstance
+     *
+     * @author wangweijun
+     * @since 2025/1/10 15:15
+     */
+    public TaskInstance getTaskInstance(String tenantId, Integer workflowInstanceId, Integer nodeDefinitionId) {
+        return this.runtimeService.getTaskInstance(tenantId, workflowInstanceId, nodeDefinitionId);
+    }
+
+
     /**
      * 根据流程实例 ID 获取流程实例
      *
