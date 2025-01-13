@@ -201,6 +201,72 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     }
 
     /**
+     * 查询审批任务
+     *
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     * @param page                         当前页
+     * @param pageSize                     每页显示数量
+     *
+     * @return List<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/6/25 10:17
+     */
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
+        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, approveDatesSegmentCondition, page, pageSize);
+    }
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param page                         当前页
+     * @param pageSize                     每页显示数量
+     *
+     * @return List<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/6/25 10:17
+     */
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, null, page, pageSize);
+    }
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     *
+     * @return List<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/6/25 10:17
+     */
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, ApproveDatesSegmentCondition approveDatesSegmentCondition) {
+        return this.runtimeService.findTaskInstances(tenantId, workflowInstanceId, approveDatesSegmentCondition);
+    }
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     *
+     * @return List<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/6/25 10:17
+     */
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, null);
+    }
+
+    /**
      * 查找审批实例
      *
      * @param tenantId           租户 ID

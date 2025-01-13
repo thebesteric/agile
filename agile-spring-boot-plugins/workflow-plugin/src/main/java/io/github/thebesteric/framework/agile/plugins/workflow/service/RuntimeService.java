@@ -313,6 +313,20 @@ public interface RuntimeService {
      *
      * @param tenantId                     租户 ID
      * @param workflowInstanceId           流程实例 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     *
+     * @return List<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/6/25 10:17
+     */
+    List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, ApproveDatesSegmentCondition approveDatesSegmentCondition);
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
      * @param roleId                       审批人角色 ID
      * @param approverId                   审批人 ID
      * @param approveDatesSegmentCondition 审批时间段查询条件

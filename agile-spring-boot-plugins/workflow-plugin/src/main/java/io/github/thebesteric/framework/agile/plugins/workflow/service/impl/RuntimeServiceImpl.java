@@ -2918,6 +2918,21 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      *
      * @param tenantId                     租户 ID
      * @param workflowInstanceId           流程实例 ID
+     * @param approveDatesSegmentCondition 审批时间段查询条件
+     *
+     * @return List<TaskInstance>
+     */
+    @Override
+    public List<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId,
+                                                ApproveDatesSegmentCondition approveDatesSegmentCondition) {
+        return this.findTaskInstances(tenantId, workflowInstanceId, approveDatesSegmentCondition, 1, Integer.MAX_VALUE).getRecords();
+    }
+
+    /**
+     * 查询审批任务
+     *
+     * @param tenantId                     租户 ID
+     * @param workflowInstanceId           流程实例 ID
      * @param approverId                   审批人 ID
      * @param approveDatesSegmentCondition 审批时间段查询条件
      *
