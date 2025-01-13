@@ -228,7 +228,7 @@ class WorkflowHelperTest {
 
         nodeDefinition = NodeDefinitionBuilder.builderTaskNode(tenantId, workflowDefinition.getId(), 2)
                 .name("部门经理审批").desc("任务节点").approveType(ApproveType.ANY)
-                .dynamicAssignmentApproversNum(1) // 预设 1 个审批人
+                .dynamicAssignmentApproversNum(2) // 预设 1 个审批人
                 .build();
         nodeDefinition = workflowService.createNode(nodeDefinition);
         System.out.println(nodeDefinition);
@@ -718,9 +718,8 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, 1, roleId == null ? null : List.of(roleId), approverId, new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED), null, 1, 10);
-        List<TaskInstance> taskInstances = page.getRecords();
-
+        List<TaskInstance> taskInstances = runtimeServiceHelper.findTaskInstances(tenantId, 1, roleId == null ? null : List.of(roleId), approverId,
+                new ArrayList<>(), List.of(ApproveStatus.APPROVED, ApproveStatus.ABANDONED));
         // int i = 1/0;
 
         taskInstances.forEach(taskInstance -> {
