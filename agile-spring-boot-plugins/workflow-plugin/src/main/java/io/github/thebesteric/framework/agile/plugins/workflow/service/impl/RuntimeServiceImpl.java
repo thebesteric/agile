@@ -830,7 +830,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         if (CollUtil.isNotEmpty(nextNodeAssignments) && NodeType.END != nextNodeDefinition.getNodeType()) {
             int i = 0;
             for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
-                taskApproveExecutorBuilder
+                taskApproveExecutorBuilder.newInstance()
                         .tenantId(tenantId)
                         .workflowInstanceId(nextTaskInstance.getWorkflowInstanceId())
                         .taskInstanceId(nextTaskInstance.getId())
