@@ -93,6 +93,24 @@ public class TaskApprove extends BaseEntity {
     }
 
     /**
+     * 获取动态审批人数量
+     *
+     * @return Integer
+     *
+     * @author wangweijun
+     * @since 2025/1/13 13:01
+     */
+    public Integer getDynamicApproverNum() {
+        Integer dynamicApproverNum = null;
+        if (isUnSettingApprover()) {
+            int start = WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX.length();
+            int end = approverId.lastIndexOf(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_SUFFIX);
+            dynamicApproverNum = Integer.parseInt(approverId.substring(start, end));
+        }
+        return dynamicApproverNum;
+    }
+
+    /**
      * 将审批实例设置为：进行中
      *
      * @author wangweijun

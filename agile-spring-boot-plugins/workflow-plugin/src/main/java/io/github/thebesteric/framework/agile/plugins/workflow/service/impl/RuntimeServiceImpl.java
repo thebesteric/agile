@@ -3634,7 +3634,28 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             List<TaskApprove> taskApproves = taskApproveExecutor.findByTaskInstanceId(tenantId, taskInstanceId, ActiveStatus.ACTIVE);
             // 获取所有未设置的动态审批人
             List<TaskApprove> unSettingDynamicTaskApproves = new ArrayList<>(taskApproves.stream().filter(TaskApprove::isUnSettingApprover).toList());
-            unSettingDynamicTaskApproves.sort(Comparator.comparingInt(TaskApprove::getApproverSeq));
+            unSettingDynamicTaskApproves.sort(Comparator.comparing(TaskApprove::getApproverSeq, Comparator.nullsLast(Comparator.naturalOrder())));
+
+            // 获取动态审批人数量
+            Integer dynamicApproverNum = null;
+            if (unSettingDynamicTaskApproves.size() == 1) {
+                TaskApprove unSettingDynamicTaskApprove = unSettingDynamicTaskApproves.get(0);
+                dynamicApproverNum = unSettingDynamicTaskApprove.getDynamicApproverNum();
+                if (dynamicApproverNum == null) {
+                    throw new WorkflowException("动态审批人数量解析错误: {}", unSettingDynamicTaskApprove.getApproverId());
+                }
+            }
+
+            // 动态审批人为不限定的情况，根据实际传入的审批人数量进行设置
+            if (dynamicApproverNum != null && dynamicApproverNum == -1) {
+                TaskApprove templateTaskApprove = unSettingDynamicTaskApproves.get(0);
+                // 根据第一个任务审批记录设置其他任务审批记录
+                for (int i = 1; i < taskDynamicAssignments.size(); i++) {
+                    TaskApprove taskApprove = TaskApprove.copyOf(templateTaskApprove);
+                    taskApproveExecutor.save(taskApprove);
+                    unSettingDynamicTaskApproves.add(taskApprove);
+                }
+            }
 
             // 再次判断数量
             if (unSettingDynamicTaskApproves.size() != taskDynamicAssignments.size()) {
