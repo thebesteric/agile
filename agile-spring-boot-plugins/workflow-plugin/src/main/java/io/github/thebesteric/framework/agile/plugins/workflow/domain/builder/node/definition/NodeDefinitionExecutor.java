@@ -116,12 +116,18 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
      * @since 2024/11/28 15:24
      */
     public void saveApprovers(NodeDefinition nodeDefinition, ApproverIdType approverIdType, ApproveType approveType, RoleApproveType roleApproveType, Set<Approver> approvers) {
-        if (approvers == null || approvers.isEmpty()) {
-            return;
-        }
         NodeAssignmentBuilder nodeAssignmentBuilder = NodeAssignmentBuilder.builder(nodeDefinition.getTenantId(), nodeDefinition.getId());
         NodeAssignmentExecutorBuilder assignmentExecutorBuilder = NodeAssignmentExecutorBuilder.builder(jdbcTemplate);
         NodeAssignmentExecutor assignmentExecutor = assignmentExecutorBuilder.build();
+        if (approvers == null || approvers.isEmpty()) {
+            // 是否是动态审批节点
+            if (nodeDefinition.isDynamic()) {
+                String dynamicApproverId = WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(nodeDefinition.getDynamicAssignmentNum());
+                NodeAssignment dynamicNodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, dynamicApproverId, null, null).build();
+                assignmentExecutor.saveNodeAssignment(dynamicNodeAssignment);
+            }
+            return;
+        }
         for (Approver approver : approvers) {
             NodeAssignment nodeAssignment = nodeAssignmentBuilder.approverInfo(approverIdType, approveType, roleApproveType, approver.getId(), approver.getName(), approver.getDesc()).build();
             assignmentExecutor.saveNodeAssignment(nodeAssignment);
