@@ -480,3 +480,11 @@
 - 工作流插件 (perf): 增加查找流程实例的重载方法
 - 工作流插件 (feat): 增加通过流程实例，节点定义获取任务实例的方法
 
+### v1.0.19.4
+
+- 工作流插件 (bugfix): 修复审核时，没有重新设置 TaskApprove 为最新值的问题
+- 工作流插件 (bugfix): 修复更新节点时，动态审批节点 NodeAssignment 没有写入的问题
+- 工作流插件 (bugfix): 修复撤回审批时时角色审批记录 TaskRoleApproveRecord 没有清除历史数据的问题
+- 工作流插件 (bugfix): 修复多角色或签，角色用户会签时，判断是否需要流转到下一节点的问题
+- 工作流插件 (feat): 增加查找 taskInstance 的重载方法
+- 通用 (feat): feat: 增加 BaseCodeDescEnum 基类
