@@ -54,6 +54,25 @@ public class TaskRoleApproveRecordExecutor extends AbstractExecutor<TaskRoleAppr
     }
 
     /**
+     * 根据任务实例 ID 删除
+     *
+     * @param tenantId         租户 ID
+     * @param workerInstanceId 流程实例 ID
+     * @param taskInstanceId   任务实例 ID
+     *
+     * @author wangweijun
+     * @since 2025/1/14 14:38
+     */
+    public void deleteByTaskInstanceId(String tenantId, Integer workerInstanceId, Integer taskInstanceId) {
+        Query query = QueryBuilderWrapper.createLambda(TaskRoleApproveRecord.class)
+                .eq(TaskRoleApproveRecord::getTenantId, tenantId)
+                .eq(TaskRoleApproveRecord::getWorkflowInstanceId, workerInstanceId)
+                .eq(TaskRoleApproveRecord::getTaskInstanceId, taskInstanceId)
+                .build();
+        super.delete(query);
+    }
+
+    /**
      * 根据任务审批实例 ID 获取
      *
      * @param tenantId      租户 ID
