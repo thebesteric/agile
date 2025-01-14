@@ -2899,6 +2899,27 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
     /**
      * 查询审批任务
      *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param page               当前页
+     * @param pageSize           每页显示数量
+     *
+     * @return List<TaskInstance>
+     */
+    @Override
+    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+        Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
+                .eq(TaskInstance::getTenantId, tenantId)
+                .eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId)
+                .page(1, pageSize)
+                .build();
+        TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+        return taskInstanceExecutor.find(query);
+    }
+
+    /**
+     * 查询审批任务
+     *
      * @param tenantId                     租户 ID
      * @param workflowInstanceId           流程实例 ID
      * @param approveDatesSegmentCondition 审批时间段查询条件

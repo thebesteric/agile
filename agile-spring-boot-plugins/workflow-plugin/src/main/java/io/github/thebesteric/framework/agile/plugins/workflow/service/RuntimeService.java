@@ -197,6 +197,22 @@ public interface RuntimeService {
     /**
      * 查询审批任务
      *
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param page               页码
+     * @param pageSize           每页大小
+     *
+     * @return List<TaskInstance>
+     *
+     * @author wangweijun
+     * @since 2024/6/25 10:17
+     */
+    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize);
+
+
+    /**
+     * 查询审批任务
+     *
      * @param tenantId                     租户 ID
      * @param workflowInstanceId           流程实例 ID
      * @param roleId                       审批人角色 ID
