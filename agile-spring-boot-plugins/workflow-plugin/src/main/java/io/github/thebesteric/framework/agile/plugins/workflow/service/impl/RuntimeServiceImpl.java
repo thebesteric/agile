@@ -1398,27 +1398,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 用角色中审批通过的用户与总审批人数进行取模计算，如果余数为 0 则表示审批完成
             if (maxApprovedCount > 0) {
-                // 获取 nodeRoleAssignmentsByRole 中，审批人员数量最少的角色
-                Optional<Map.Entry<String, List<NodeRoleAssignment>>> minEntry = nodeRoleAssignmentsByRoles.entrySet().stream().min(Comparator.comparingInt(e -> e.getValue().size()));
-                if (minEntry.isPresent()) {
-                    // 获取最少的审批人员
-                    List<NodeRoleAssignment> minValue = minEntry.get().getValue();
-                    // 如果审批人员数量最少的只有 1 个
-                    if (minValue.size() == 1) {
-                        roleApproveGotoNext = true;
-                    }
-                }
+                // 查询该角色下有多少角色用户
+                List<NodeRoleAssignment> nodeRoleAssignmentsByRole = nodeRoleAssignmentsByRoles.get(roleId);
+                // 查询该角色下已经完成审核的用户
+                List<NodeRoleAssignment> approvedNodeRoleAssignments = roleApprovedMap.get(roleId);
 
-                // 表示还没有角色完全审批完成
-                if (!roleApproveGotoNext) {
-                    // 查询该角色下有多少角色用户
-                    List<NodeRoleAssignment> nodeRoleAssignmentsByRole = nodeRoleAssignmentsByRoles.get(roleId);
-                    // 查询该角色下已经完成审核的用户
-                    List<NodeRoleAssignment> approvedNodeRoleAssignments = roleApprovedMap.get(roleId);
-                    // 如果数量相等则表示该角色下所有用户均完成了审核
-                    if (nodeRoleAssignmentsByRole.size() == approvedNodeRoleAssignments.size()) {
-                        roleApproveGotoNext = true;
-                    }
+                // 如果数量相等则表示该角色下所有用户均完成了审核
+                if (nodeRoleAssignmentsByRole.size() == approvedNodeRoleAssignments.size()) {
+                    roleApproveGotoNext = true;
                 }
 
                 // 更新 taskApprove
@@ -1899,6 +1886,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                                 dynamicApprover.setApproverId(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(i));
                                 nodeAssignmentExecutor.updateById(dynamicApprover);
                             }
+                        }
+
+                        // 删除角色审批记录
+                        if (nextTaskInstance.isRoleApprove()) {
+                            TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+                            taskRoleApproveRecordExecutor.deleteByTaskInstanceId(tenantId, workflowInstanceId, nextTaskInstance.getId());
                         }
 
                         // 删除下一个审批节点
