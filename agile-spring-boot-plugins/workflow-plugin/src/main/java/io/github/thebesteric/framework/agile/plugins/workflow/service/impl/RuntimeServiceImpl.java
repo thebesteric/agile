@@ -825,6 +825,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             this.approve(tenantId, nextTaskInstance.getId(), null, WorkflowConstants.AUTO_APPROVER_ID, WorkflowConstants.AUTO_APPROVER_COMMENT);
         }
 
+        // 获取连续审批模式
+        ContinuousApproveMode continuousApproveMode = workflowDefinition.getContinuousApproveMode();
+
         // 创建任务实例审批人
         List<TaskApprove> taskApproves = new ArrayList<>();
         if (CollUtil.isNotEmpty(nextNodeAssignments) && NodeType.END != nextNodeDefinition.getNodeType()) {
@@ -851,14 +854,18 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 i++;
 
                 // 判断连续审批模式
-                ContinuousApproveMode continuousApproveMode = workflowDefinition.getContinuousApproveMode();
-                this.continuousApproveModeProcess(tenantId, nextTaskInstance, roleId, userId, null, nextNodeAssignment.getApproverId(), continuousApproveMode);
+                this.continuousApproveModeProcess(tenantId, nextTaskInstance, roleId, userId, nextNodeAssignment.getApproverId(), continuousApproveMode);
             }
         }
 
         // 判断是否是角色审批，如果是角色审批则创建角色审批记录
         if (nextNodeDefinition.isRoleApprove()) {
             this.processTaskRoleApproveRecords(tenantId, nextNodeDefinition, nextTaskInstance, taskApproves);
+            // 判断连续审批模式
+            for (NodeAssignment nextNodeAssignment : nextNodeAssignments) {
+                // 判断连续审批模式
+                this.continuousApproveModeProcess(tenantId, nextTaskInstance, roleId, userId, nextNodeAssignment.getApproverId(), continuousApproveMode);
+            }
         }
 
         nextTaskInstances.add(nextTaskInstance);
@@ -871,7 +878,6 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param nextTaskInstance      下一个审批节点
      * @param roleId                当前审批人角色 ID
      * @param approverId            当前审批人 ID
-     * @param nextRoleId            下一个审批人角色 ID
      * @param nextApproverId        下一个审批人 ID
      * @param continuousApproveMode 连续审批模式
      *
@@ -880,35 +886,128 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     private void continuousApproveModeProcess(String tenantId, TaskInstance nextTaskInstance,
                                               String roleId, String approverId,
-                                              String nextRoleId, String nextApproverId,
+                                              String nextApproverId,
                                               ContinuousApproveMode continuousApproveMode) {
 
-        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
+        // 如果流程实例已经完成，则不处理
+        WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
+        WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(nextTaskInstance.getWorkflowInstanceId());
+        if (workflowInstance.isFinished()) {
+            return;
+        }
 
+        TaskApproveExecutor taskApproveExecutor = taskApproveExecutorBuilder.build();
         // 获取该流程实例下已经完成审批和即将要审批的审批人
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, nextTaskInstance.getWorkflowInstanceId(), null, null);
 
-        // 下一个审批人的审批情况（下一个审批人在之前的审批记录中是否存在，并且是通过审核的）
-        Optional<TaskApprove> nextApproverIdApproveOptional = taskApproves.stream()
-                .filter(approve -> nextApproverId.equals(approve.getApproverId()) && ApproveStatus.APPROVED == approve.getStatus()).findAny();
-
-        switch (continuousApproveMode) {
-            case APPROVE_FIRST:
-                // 下个审批人已经存在审批的节点，则自动审批
-                if (nextApproverIdApproveOptional.isPresent()) {
-                    this.approve(tenantId, nextTaskInstance.getId(), nextRoleId, nextApproverId, WorkflowConstants.AUTO_APPROVER_COMMENT);
+        // 下个节点是：角色审批实例
+        if (nextTaskInstance.isRoleApprove()) {
+            Integer nextTaskInstanceId = nextTaskInstance.getId();
+            // 获取流程实例下的角色审批记录
+            TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+            List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstance.getId());
+            // 获取任务实例下的审批记录，是为了保证角色用户审批已经审核过了
+            if (taskRoleApproveRecordExecutor.findByTaskInstanceId(tenantId, nextTaskInstanceId).isEmpty()) {
+                return;
+            }
+            // 获取角色审批记录对应的角色用户
+            List<NodeRoleAssignment> nodeRoleAssignments = taskRoleApproveRecords.stream().map(taskRoleApproveRecord -> {
+                NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+                return nodeRoleAssignmentExecutor.getById(taskRoleApproveRecord.getNodeRoleAssignmentId());
+            }).toList();
+            // 判断是否是同一用户
+            if (CollectionUtils.isNotEmpty(nodeRoleAssignments)) {
+                switch (continuousApproveMode) {
+                    case APPROVE_FIRST:
+                        // 下个审批人已经存在审批的节点，则自动审批
+                        // 已经完成审核的任务
+                        List<TaskApprove> approvedTaskApproves = taskApproves.stream().filter(taskApprove -> ApproveStatus.APPROVED == taskApprove.getStatus()).toList();
+                        // 已完成审核的角色用户
+                        List<TaskRoleApproveRecord> approvedTaskRoleApproveRecords = taskRoleApproveRecords.stream().filter(taskRoleApproveRecord -> RoleApproveStatus.APPROVED == taskRoleApproveRecord.getStatus()).toList();
+                        for (TaskApprove approvedTaskApprove : approvedTaskApproves) {
+                            if (ApproverIdType.USER == approvedTaskApprove.getApproverIdType()) {
+                                // 找到相同用户 ID 的审批人
+                                Optional<NodeRoleAssignment> nodeRoleAssignmentOptional = nodeRoleAssignments.stream()
+                                        .filter(nodeRoleAssignment -> Objects.equals(nodeRoleAssignment.getUserId(), approvedTaskApprove.getApproverId()))
+                                        .findAny();
+                                if (nodeRoleAssignmentOptional.isPresent()) {
+                                    NodeRoleAssignment sameNodeRoleAssignment = nodeRoleAssignmentOptional.get();
+                                    // 找到当前角色用户已经审核过的实例
+                                    Optional<TaskRoleApproveRecord> approvedTaskRoleApproveRecord = approvedTaskRoleApproveRecords.stream()
+                                            .filter(taskRoleApproveRecord -> Objects.equals(taskRoleApproveRecord.getTaskInstanceId(), nextTaskInstanceId))
+                                            .filter(taskRoleApproveRecord -> RoleApproveStatus.APPROVED == taskRoleApproveRecord.getStatus())
+                                            .filter(taskRoleApproveRecord -> Objects.equals(taskRoleApproveRecord.getNodeRoleAssignmentId(), sameNodeRoleAssignment.getId()))
+                                            .findAny();
+                                    // 如果不存在已经审核过的实例，则进行审核
+                                    if (approvedTaskRoleApproveRecord.isEmpty() && (roleId == null || roleId.equals(sameNodeRoleAssignment.getRoleId()))) {
+                                        this.approve(tenantId, nextTaskInstance.getId(), sameNodeRoleAssignment.getRoleId(), sameNodeRoleAssignment.getUserId(), WorkflowConstants.AUTO_APPROVER_COMMENT);
+                                    }
+                                }
+                            } else {
+                                // 将 approvedTaskRoleApproveRecords 按 nodeRoleAssignmentId 去重
+                                List<Integer> nodeRoleAssignmentIds = approvedTaskRoleApproveRecords.stream().map(TaskRoleApproveRecord::getNodeRoleAssignmentId).distinct().toList();
+                                nodeRoleAssignments.forEach(nodeRoleAssignment -> {
+                                    if (nodeRoleAssignmentIds.contains(nodeRoleAssignment.getId())) {
+                                        // 找到当前角色用户已经审核过的实例
+                                        Optional<TaskRoleApproveRecord> approvedTaskRoleApproveRecord = approvedTaskRoleApproveRecords.stream()
+                                                .filter(taskRoleApproveRecord -> Objects.equals(taskRoleApproveRecord.getTaskInstanceId(), nextTaskInstanceId))
+                                                .filter(taskRoleApproveRecord -> RoleApproveStatus.APPROVED == taskRoleApproveRecord.getStatus())
+                                                .filter(taskRoleApproveRecord -> Objects.equals(taskRoleApproveRecord.getNodeRoleAssignmentId(), nodeRoleAssignment.getId()))
+                                                .findAny();
+                                        // 如果不存在已经审核过的实例，则进行审核
+                                        if (approvedTaskRoleApproveRecord.isEmpty() && (roleId == null || roleId.equals(nodeRoleAssignment.getRoleId()))) {
+                                            this.approve(tenantId, nextTaskInstance.getId(), nodeRoleAssignment.getRoleId(), nodeRoleAssignment.getUserId(), WorkflowConstants.AUTO_APPROVER_COMMENT);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                        break;
+                    case APPROVE_CONTINUOUS:
+                        // 下个审批人已经存在审批的节点，且已审批的节点的审批人和下一个节点的审批人是同一个人，则自动审批
+                        // 找到相同角色 ID，相同用户 ID 的审批人
+                        Optional<NodeRoleAssignment> nodeRoleAssignmentOptional = nodeRoleAssignments.stream()
+                                .filter(nodeRoleAssignment -> Objects.equals(nodeRoleAssignment.getRoleId(), nextApproverId))
+                                .filter(nodeRoleAssignment -> Objects.equals(nodeRoleAssignment.getUserId(), approverId))
+                                .findAny();
+                        // 如果存在相同审批人
+                        if (nodeRoleAssignmentOptional.isPresent()) {
+                            NodeRoleAssignment sameNodeRoleAssignment = nodeRoleAssignmentOptional.get();
+                            this.approve(tenantId, nextTaskInstance.getId(), sameNodeRoleAssignment.getRoleId(), sameNodeRoleAssignment.getUserId(), WorkflowConstants.AUTO_APPROVER_COMMENT);
+                        }
+                        break;
+                    case APPROVE_ALL:
+                    default:
+                        break;
                 }
-                break;
-            case APPROVE_CONTINUOUS:
-                // 下个审批人已经存在审批的节点，且已审批的节点的审批人和下一个节点的审批人是同一个人，则自动审批
-                if (nextApproverIdApproveOptional.isPresent() && approverId.equals(nextApproverId)) {
-                    this.approve(tenantId, nextTaskInstance.getId(), nextRoleId, nextApproverId, WorkflowConstants.AUTO_APPROVER_COMMENT);
-                }
-                break;
-            case APPROVE_ALL:
-            default:
-                break;
+            }
         }
+        // 下个节点是：用户审批实例
+        else {
+            // 下一个审批人的审批情况（下一个审批人在之前的审批记录中是否存在，并且是通过审核的）
+            Optional<TaskApprove> nextApproverIdApproveOptional = taskApproves.stream()
+                    .filter(approve -> nextApproverId.equals(approve.getApproverId()) && ApproveStatus.APPROVED == approve.getStatus()).findAny();
+
+            switch (continuousApproveMode) {
+                case APPROVE_FIRST:
+                    // 下个审批人已经存在审批的节点，则自动审批
+                    if (nextApproverIdApproveOptional.isPresent()) {
+                        this.approve(tenantId, nextTaskInstance.getId(), null, nextApproverId, WorkflowConstants.AUTO_APPROVER_COMMENT);
+                    }
+                    break;
+                case APPROVE_CONTINUOUS:
+                    // 下个审批人已经存在审批的节点，且已审批的节点的审批人和下一个节点的审批人是同一个人，则自动审批
+                    if (nextApproverIdApproveOptional.isPresent() && approverId.equals(nextApproverId)) {
+                        this.approve(tenantId, nextTaskInstance.getId(), null, nextApproverId, WorkflowConstants.AUTO_APPROVER_COMMENT);
+                    }
+                    break;
+                case APPROVE_ALL:
+                default:
+                    break;
+            }
+        }
+
+
     }
 
     /**
