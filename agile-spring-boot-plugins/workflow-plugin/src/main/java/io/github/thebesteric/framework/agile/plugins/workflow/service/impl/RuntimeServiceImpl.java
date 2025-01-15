@@ -1062,6 +1062,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 非自动审批的情况
             else {
                 taskApprove = taskApproveExecutor.getByTaskInstanceIdAndRoleIdAndApproverId(tenantId, taskInstanceId, ActiveStatus.ACTIVE, roleId, userId);
+                if (taskApprove == null) {
+                    return;
+                }
                 // 用户审批的情况
                 if (ApproverIdType.ROLE != taskApprove.getApproverIdType()) {
                     // 更新 TaskApprove 的 active、status 和 comment
