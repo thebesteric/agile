@@ -463,7 +463,7 @@
 
 ### v1.0.19.1
 
-- 敏感词插件 (feat): 新增直接获取结果和获取结果时抛出异常的方法+
+- 敏感词插件 (feat): 新增直接获取结果和获取结果时抛出异常的方法
 
 ### v1.0.19.2
 
@@ -488,3 +488,9 @@
 - 工作流插件 (bugfix): 修复多角色或签，角色用户会签时，判断是否需要流转到下一节点的问题
 - 工作流插件 (feat): 增加查找 taskInstance 的重载方法
 - 通用 (feat): feat: 增加 BaseCodeDescEnum 基类
+
+### v1.0.19.5
+
+- 工作流插件 (bugfix): 修复自动审批时，缺少角色的自动审批判断
+- 工作流插件 (feat): 增加`AgileAutoApproveProcessor`自动审批回调处理器
+- 通用 (perf): Processor 增加 Runnable 类型的 start 方法
