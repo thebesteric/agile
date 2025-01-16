@@ -52,6 +52,10 @@ public class Processor<T> {
         return this.next(supplier);
     }
 
+    public Processor<T> start(Runnable runnable) {
+        return this.next(runnable);
+    }
+
     public Processor<T> validate(boolean condition, Throwable ex) {
         dataValidator.validate(condition, ex);
         return this;
