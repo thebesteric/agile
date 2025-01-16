@@ -29,6 +29,9 @@ import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.L
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileOtherTypeSensitiveLoader;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileAutoApproveProcessor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -203,6 +206,22 @@ public class AgileConfig {
             @Override
             public List<String> load() {
                 return List.of("赌博", "嫖娼");
+            }
+        };
+    }
+
+    @Bean
+    public AgileAutoApproveProcessor agileAutoApproveProcessor() {
+        return new AgileAutoApproveProcessor() {
+            @Override
+            public String preAutoApprove(ContinuousApproveMode approveMode, TaskInstance taskInstance, String roleId, String userId) {
+                System.out.println("preAutoApprove11111111111111111 = " + taskInstance);
+                return "我是自动同意的";
+            }
+
+            @Override
+            public void postAutoApprove(ContinuousApproveMode approveMode, TaskInstance taskInstance, String roleId, String userId, String comment) {
+                System.out.println("postAutoApprove1111111111111111111 = " + taskInstance);
             }
         };
     }

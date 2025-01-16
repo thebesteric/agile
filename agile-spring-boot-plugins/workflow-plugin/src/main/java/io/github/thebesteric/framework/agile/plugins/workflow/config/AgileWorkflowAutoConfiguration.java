@@ -6,6 +6,7 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitializa
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.filter.AgileWorkflowFilter;
+import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileAutoApproveProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -68,8 +69,8 @@ public class AgileWorkflowAutoConfiguration extends AbstractAgileInitialization 
     }
 
     @Bean
-    public AgileWorkflowContext agileWorkflowContext(ApplicationContext applicationContext, AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
-        return new AgileWorkflowContext(applicationContext, properties, jdbcTemplateHelper);
+    public AgileWorkflowContext agileWorkflowContext(ApplicationContext applicationContext, AgileAutoApproveProcessor agileAutoApproveProcessor, AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
+        return new AgileWorkflowContext(applicationContext, agileAutoApproveProcessor, properties, jdbcTemplateHelper);
     }
 
     @Bean
@@ -84,6 +85,13 @@ public class AgileWorkflowAutoConfiguration extends AbstractAgileInitialization 
     @Bean
     public WorkflowEngine agileWorkflowEngine(AgileWorkflowContext context) {
         return new WorkflowEngine(context);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public AgileAutoApproveProcessor agileAutoApproveProcessor() {
+        return new AgileAutoApproveProcessor() {
+        };
     }
 
 }

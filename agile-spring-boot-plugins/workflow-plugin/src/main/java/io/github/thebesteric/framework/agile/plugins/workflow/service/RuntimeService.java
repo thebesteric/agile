@@ -115,6 +115,21 @@ public interface RuntimeService {
     void approve(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment);
 
     /**
+     * 审批-同意
+     *
+     * @param tenantId       租户 ID
+     * @param taskInstanceId 任务实例 ID
+     * @param roleId         角色 ID
+     * @param userId         用户 ID
+     * @param comment        审批意见
+     * @param autoApprove    是否是自动审批
+     *
+     * @author wangweijun
+     * @since 2024/6/24 19:43
+     */
+    void approve(String tenantId, Integer taskInstanceId, String roleId, String userId, String comment, boolean autoApprove);
+
+    /**
      * 审批-转派
      *
      * @param tenantId       租户 ID
