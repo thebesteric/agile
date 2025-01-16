@@ -96,7 +96,7 @@ class WorkflowHelperTest {
         //         .name("部门经理审批").approverId("王五"));
         // workflowServiceHelper.createEndNode(workflowDefinition, "请假流程结束");
 
-        createWorkflow3(tenantId, workflowDefinition);
+        createWorkflow5(tenantId, workflowDefinition);
     }
 
     /** 多节点案例。 */
