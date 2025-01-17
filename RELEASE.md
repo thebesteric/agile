@@ -494,3 +494,8 @@
 - 工作流插件 (bugfix): 修复自动审批时，缺少角色的自动审批判断
 - 工作流插件 (feat): 增加`AgileAutoApproveProcessor`自动审批回调处理器
 - 通用 (perf): Processor 增加 Runnable 类型的 start 方法
+
+### v1.0.19.6
+
+- 工作流插件 (bugfix): 修复动态审批节点，会签时审批人数量设置错误的问题
+- 工作流插件 (bugfix): 修复动态审批节点，撤回审批时审批人数量设置错误的问题
