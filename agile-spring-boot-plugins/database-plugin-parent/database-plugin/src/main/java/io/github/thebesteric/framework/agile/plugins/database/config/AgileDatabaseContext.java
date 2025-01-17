@@ -58,7 +58,7 @@ public class AgileDatabaseContext extends AbstractAgileContext {
                 // 不需要创建表的实体类
                 EntityClass entityClassAnno = clazz.getAnnotation(EntityClass.class);
                 if (entityClassAnno != null && entityClassAnno.ignore()) {
-                    LoggerPrinter.info("Ignore entity class: " + entityClassAnno);
+                    LoggerPrinter.info("Ignore entity class: {}", entityClassName);
                     continue;
                 }
                 // 获取表名
