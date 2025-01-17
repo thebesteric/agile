@@ -585,6 +585,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 return RoleUserApproveType.ANY == roleUserApproveType ? nodeAssignmentSize : sum;
             }
         }
+        // 动态审批节点
+        if (nodeDefinition.isDynamic()) {
+            return nodeDefinition.getDynamicAssignmentNum();
+        }
         // 用户审批的情况（非角色审批）：除或签、自动审批外，其余均需要审批全部
         ApproveType approveType = nodeDefinition.getApproveType();
         return ApproveType.ANY == approveType || (workflowDefinition.isAllowEmptyAutoApprove() && nodeAssignmentSize == 0) ? 1 : nodeAssignmentSize;
@@ -1105,8 +1109,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             else {
                 taskApprove = taskApproveExecutor.getByTaskInstanceIdAndRoleIdAndApproverId(tenantId, taskInstanceId, ActiveStatus.ACTIVE, roleId, userId);
                 if (taskApprove == null) {
-                    throw new WorkflowException("任务实例审批信息不存在");
+                    if (autoApprove) {
+                        return;
+                    }
+                    throw new WorkflowException("未查询到符合的任务审批记录: TaskApprove");
                 }
+
                 // 用户审批的情况
                 if (ApproverIdType.ROLE != taskApprove.getApproverIdType()) {
                     // 更新 TaskApprove 的 active、status 和 comment
@@ -2024,11 +2032,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         // 如果是动态审批节点，则更新为未设置的动态审批人
                         if (nextNodeDefinition.isDynamic()) {
                             NodeAssignmentExecutor nodeAssignmentExecutor = nodeAssignmentExecutorBuilder.build();
-                            List<NodeAssignment> dynamicApprovers = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinition.getId());
-                            for (int i = 0; i < dynamicApprovers.size(); i++) {
-                                NodeAssignment dynamicApprover = dynamicApprovers.get(i);
-                                dynamicApprover.setApproverId(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(i));
-                                nodeAssignmentExecutor.updateById(dynamicApprover);
+                            List<NodeAssignment> dynamicNodeAssignments = nodeAssignmentExecutor.findByNodeDefinitionId(tenantId, nextNodeDefinition.getId());
+                            for (NodeAssignment dynamicNodeAssignment : dynamicNodeAssignments) {
+                                Integer dynamicApproverNum = dynamicNodeAssignment.getDynamicApproverNum();
+                                if (dynamicApproverNum == null) {
+                                    throw new WorkflowException("动态审批人数量解析错误: {}", dynamicNodeAssignment.getApproverId());
+                                }
+                                dynamicNodeAssignment.setApproverId(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE.formatted(dynamicApproverNum));
+                                nodeAssignmentExecutor.updateById(dynamicNodeAssignment);
                             }
                         }
 
@@ -3842,6 +3853,17 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 unSettingDynamicTaskApprove.setApproverId(taskDynamicAssignment.getApproverId());
                 unSettingDynamicTaskApprove.setApproverSeq(taskDynamicAssignment.getApproverSeq());
                 taskApproveExecutor.updateById(unSettingDynamicTaskApprove);
+            }
+
+            // 更新 taskInstance
+            TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
+            TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
+            Integer totalCount = taskInstance.getTotalCount();
+            // 表示是动态审批，但是没有设置具体的值
+            if (totalCount == -1) {
+                // 设置具体值
+                taskInstance.setTotalCount(taskDynamicAssignments.size());
+                taskInstanceExecutor.updateById(taskInstance);
             }
         });
     }

@@ -3,9 +3,9 @@ package io.github.thebesteric.framework.agile.plugins.workflow.entity;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproverIdType;
+import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowConstants;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -22,7 +22,6 @@ import java.sql.SQLException;
  * @version v1.0
  * @since 2024-06-12 17:14:53
  */
-@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Data
 @EntityClass(value = "awf_node_assignment", comment = "节点用户定义表")
@@ -71,6 +70,22 @@ public class NodeAssignment extends BaseEntity {
         NodeAssignment target = new NodeAssignment();
         BeanUtils.copyProperties(source, target, IGNORE_COPY_FIELD_NAMES);
         return target;
+    }
+
+    /**
+     * 获取动态审批人数量
+     *
+     * @return Integer
+     *
+     * @author wangweijun
+     * @since 2025/1/17 11:56
+     */
+    public Integer getDynamicApproverNum() {
+        if (approverId.startsWith(WorkflowConstants.DYNAMIC_ASSIGNMENT_APPROVER_VALUE_PREFIX)) {
+            String nextPart = this.approverId.split(":")[1];
+            return Integer.valueOf(nextPart.substring(0, nextPart.length() - 1));
+        }
+        return null;
     }
 
     @Override
