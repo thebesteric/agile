@@ -689,7 +689,7 @@ class WorkflowHelperTest {
                         actualApprovers.add(Approver.of("王五-" + i, "王五-" + i + "-姓名", "王五-" + i + "-备注"));
                     }
                 }
-                runtimeServiceHelper.dynamicAssignmentApprovers(tenantId, inCurrentlyEffectNodeDefinition.getId(), inCurrentlyEffectTaskInstance.getId(), actualApprovers);
+                runtimeServiceHelper.dynamicAssignmentApprovers(tenantId, inCurrentlyEffectNodeDefinition.getId(), inCurrentlyEffectTaskInstance.getId(), approverId, actualApprovers);
             }
         });
     }
