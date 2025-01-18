@@ -37,7 +37,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.wor
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
-import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileAutoApproveProcessor;
+import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileApproveProcessor;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractRuntimeService;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
 import org.apache.commons.collections4.CollectionUtils;
@@ -910,7 +910,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         }
 
         // 获取自动审批处理器
-        AgileAutoApproveProcessor agileAutoApproveProcessor = this.context.getAgileAutoApproveProcessor();
+        AgileApproveProcessor agileApproveProcessor = this.context.getAgileApproveProcessor();
 
         // 获取该流程实例下已经完成审批和即将要审批的审批人
         List<TaskApprove> taskApproves = taskApproveExecutor.findByTWorkflowInstanceId(tenantId, nextTaskInstance.getWorkflowInstanceId(), null, null);
@@ -974,12 +974,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                                             String nodeRoleAssignmentRoleId = nodeRoleAssignment.getRoleId();
                                             String nodeRoleAssignmentUserId = nodeRoleAssignment.getUserId();
                                             // 自动审批之前
-                                            String comment = agileAutoApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId);
+                                            String comment = agileApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId);
                                             comment = comment == null ? WorkflowConstants.AUTO_APPROVER_COMMENT : comment;
                                             // 审核
                                             this.approve(tenantId, nextTaskInstance.getId(), nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId, comment, true);
                                             // 自动审批之后
-                                            agileAutoApproveProcessor.postAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId, comment);
+                                            agileApproveProcessor.postAutoApproved(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId, comment);
                                         }
                                     }
                                 });
@@ -999,12 +999,12 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                             String sameRoleId = sameNodeRoleAssignment.getRoleId();
                             String sameUserId = sameNodeRoleAssignment.getUserId();
                             // 自动审批之前
-                            String comment = agileAutoApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, sameRoleId, sameUserId);
+                            String comment = agileApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, sameRoleId, sameUserId);
                             comment = comment == null ? WorkflowConstants.AUTO_APPROVER_COMMENT : comment;
                             // 审核
                             this.approve(tenantId, nextTaskInstance.getId(), sameRoleId, sameUserId, comment, true);
                             // 自动审批之后
-                            agileAutoApproveProcessor.postAutoApprove(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, sameRoleId, sameUserId, comment);
+                            agileApproveProcessor.postAutoApproved(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, sameRoleId, sameUserId, comment);
                         }
                         break;
                     case APPROVE_ALL:
@@ -1046,24 +1046,24 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     // 下个审批人已经存在审批的节点，则自动审批
                     if (sameUserId.isPresent()) {
                         // 自动审批之前
-                        String comment = agileAutoApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, null, nextApproverId);
+                        String comment = agileApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, null, nextApproverId);
                         comment = comment == null ? WorkflowConstants.AUTO_APPROVER_COMMENT : comment;
                         // 审核
                         this.approve(tenantId, nextTaskInstance.getId(), null, nextApproverId, comment, true);
                         // 自动审批之后
-                        agileAutoApproveProcessor.postAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, null, nextApproverId, comment);
+                        agileApproveProcessor.postAutoApproved(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, null, nextApproverId, comment);
                     }
                     break;
                 case APPROVE_CONTINUOUS:
                     // 下个审批人已经存在审批的节点，且已审批的节点的审批人和下一个节点的审批人是同一个人，则自动审批
                     if (sameUserId.isPresent() && approverId.equals(nextApproverId)) {
                         // 自动审批之前
-                        String comment = agileAutoApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, null, nextApproverId);
+                        String comment = agileApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, null, nextApproverId);
                         comment = comment == null ? WorkflowConstants.AUTO_APPROVER_COMMENT : comment;
                         // 审核
                         this.approve(tenantId, nextTaskInstance.getId(), null, nextApproverId, comment, true);
                         // 自动审批之后
-                        agileAutoApproveProcessor.postAutoApprove(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, null, nextApproverId, comment);
+                        agileApproveProcessor.postAutoApproved(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, null, nextApproverId, comment);
                     }
                     break;
                 case APPROVE_ALL:
@@ -1100,6 +1100,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
             TaskInstance taskInstance = taskInstanceExecutor.getById(taskInstanceId);
 
+            // 审核之前调用
+            AgileApproveProcessor agileApproveProcessor = context.getAgileApproveProcessor();
+            String userComment = agileApproveProcessor.preApprove(taskInstance, roleId, userId);
+            if (userComment == null) {
+                userComment = comment;
+            }
+
             // 设置流程实例状态为：进行中
             WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
             WorkflowInstance workflowInstance = workflowInstanceExecutor.getById(taskInstance.getWorkflowInstanceId());
@@ -1124,7 +1131,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         .approverId(defaultApprover.getId())
                         .active(ActiveStatus.INACTIVE)
                         .status(ApproveStatus.APPROVED)
-                        .comment(comment)
+                        .comment(userComment)
                         .build();
                 taskApproveExecutor.save(taskApprove);
             }
@@ -1143,7 +1150,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     // 更新 TaskApprove 的 active、status 和 comment
                     taskApprove.setActive(ActiveStatus.INACTIVE);
                     taskApprove.setStatus(ApproveStatus.APPROVED);
-                    taskApprove.setComment(comment);
+                    taskApprove.setComment(userComment);
                     taskApproveExecutor.updateById(taskApprove);
                 }
                 // 角色审批的情况，在下面的代码会进行更新
@@ -1162,7 +1169,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             boolean roleApproveGotoNext = false;
             // 角色审批的情况
             if (nodeDefinition.isRoleApprove()) {
-                roleApproveGotoNext = this.processApproveRoleApprove(tenantId, nodeDefinition, taskInstance, taskApprove, roleId, userId, comment);
+                roleApproveGotoNext = this.processApproveRoleApprove(tenantId, nodeDefinition, taskInstance, taskApprove, roleId, userId, userComment);
             }
             // 用户审批的情况
             else {
@@ -1202,8 +1209,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     // 角色审批类型为：ALL 或 SEQ 且 角色用户审批类型为：ANY
                     else if ((RoleApproveType.ALL == roleApproveType || RoleApproveType.SEQ == roleApproveType) && RoleUserApproveType.ANY == roleUserApproveType) {
                         // 将所有角色审批节点设置为 APPROVED，表示全部同意
+                        String finalUserComment = userComment;
                         otherActiveTaskApproves.forEach(otherActiveTaskApprove -> {
-                            otherActiveTaskApprove.convertToApproveStatusApproved(comment);
+                            otherActiveTaskApprove.convertToApproveStatusApproved(finalUserComment);
                             taskApproveExecutor.updateById(otherActiveTaskApprove);
                         });
                     }
@@ -1219,6 +1227,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
 
             // 记录流程日志（审批通过）
             recordLogs(tenantId, taskInstance.getWorkflowInstanceId(), taskInstanceId, nodeDefinition.getName(), TaskHistoryMessage.INSTANCE_APPROVED);
+
+            // 调用审批处理器：审核完成
+            agileApproveProcessor.postApproved(taskInstance, roleId, userId, userComment);
 
             // 没有下一级审批节点，且当前审批节点全部审批完成，则表示流程已经结束
             // nextTaskInstances = null: 表示正常达到结束节点

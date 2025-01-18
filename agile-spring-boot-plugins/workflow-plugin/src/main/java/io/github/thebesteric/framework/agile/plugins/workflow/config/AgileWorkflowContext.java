@@ -2,7 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.config;
 
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
-import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileAutoApproveProcessor;
+import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileApproveProcessor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -19,15 +19,15 @@ import org.springframework.context.support.GenericApplicationContext;
 @Slf4j
 public class AgileWorkflowContext extends AbstractAgileContext {
 
-    private final AgileAutoApproveProcessor agileAutoApproveProcessor;
+    private final AgileApproveProcessor agileApproveProcessor;
     private final AgileWorkflowProperties properties;
     private final JdbcTemplateHelper jdbcTemplateHelper;
 
     private static final ThreadLocal<String> CURRENT_USER = new ThreadLocal<>();
 
-    public AgileWorkflowContext(ApplicationContext applicationContext, AgileAutoApproveProcessor agileAutoApproveProcessor, AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
+    public AgileWorkflowContext(ApplicationContext applicationContext, AgileApproveProcessor agileApproveProcessor, AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
         super((GenericApplicationContext) applicationContext);
-        this.agileAutoApproveProcessor = agileAutoApproveProcessor;
+        this.agileApproveProcessor = agileApproveProcessor;
         this.properties = properties;
         this.jdbcTemplateHelper = jdbcTemplateHelper;
     }

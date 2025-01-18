@@ -31,7 +31,7 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
-import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileAutoApproveProcessor;
+import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileApproveProcessor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -211,17 +211,28 @@ public class AgileConfig {
     }
 
     @Bean
-    public AgileAutoApproveProcessor agileAutoApproveProcessor() {
-        return new AgileAutoApproveProcessor() {
+    public AgileApproveProcessor agileApproveProcessor() {
+        return new AgileApproveProcessor() {
+            @Override
+            public String preApprove(TaskInstance taskInstance, String roleId, String userId) {
+                System.out.println("============== preApprove ============== " + taskInstance);
+                return "我同意了";
+            }
+
             @Override
             public String preAutoApprove(ContinuousApproveMode approveMode, TaskInstance taskInstance, String roleId, String userId) {
-                System.out.println("preAutoApprove11111111111111111 = " + taskInstance);
+                System.out.println("============== preAutoApprove ============== " + taskInstance);
                 return "我是自动同意的";
             }
 
             @Override
-            public void postAutoApprove(ContinuousApproveMode approveMode, TaskInstance taskInstance, String roleId, String userId, String comment) {
-                System.out.println("postAutoApprove1111111111111111111 = " + taskInstance);
+            public void postAutoApproved(ContinuousApproveMode approveMode, TaskInstance taskInstance, String roleId, String userId, String comment) {
+                System.out.println("============== postAutoApproved ============== " + taskInstance);
+            }
+
+            @Override
+            public void postApproved(TaskInstance taskInstance, String roleId, String userId, String comment) {
+                System.out.println("============== postApproved ============== " + taskInstance);
             }
         };
     }
