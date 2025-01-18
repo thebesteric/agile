@@ -641,12 +641,13 @@ public interface RuntimeService {
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
      * @param taskInstanceId   任务实例 ID
+     * @param curApproverId    当前审批人 ID
      * @param approvers        审批人列表
      *
      * @author wangweijun
      * @since 2024/9/9 13:58
      */
-    void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, List<Approver> approvers);
+    void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, String curApproverId, List<Approver> approvers);
 
     /**
      * 替换审批人（未审批状态下）

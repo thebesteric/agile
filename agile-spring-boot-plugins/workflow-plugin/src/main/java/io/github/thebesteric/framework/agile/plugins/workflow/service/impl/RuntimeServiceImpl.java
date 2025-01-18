@@ -3771,13 +3771,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
      * @param taskInstanceId   任务实例 ID
+     * @param curApproverId    当前审批人 ID
      * @param approvers        审批人列表
      *
      * @author wangweijun
      * @since 2024/9/9 13:58
      */
     @Override
-    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, List<Approver> approvers) {
+    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, String curApproverId, List<Approver> approvers) {
         JdbcTemplateHelper jdbcTemplateHelper = this.context.getJdbcTemplateHelper();
         jdbcTemplateHelper.executeInTransaction(() -> {
             // 获取到节点定义
@@ -3864,6 +3865,16 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 // 设置具体值
                 taskInstance.setTotalCount(taskDynamicAssignments.size());
                 taskInstanceExecutor.updateById(taskInstance);
+            }
+
+            // 判断是否需要自动审批
+            if (curApproverId != null) {
+                WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
+                WorkflowDefinition workflowDefinition = workflowDefinitionExecutor.getById(nodeDefinition.getWorkflowDefinitionId());
+                ContinuousApproveMode continuousApproveMode = workflowDefinition.getContinuousApproveMode();
+                for (TaskDynamicAssignment taskDynamicAssignment : taskDynamicAssignments) {
+                    continuousApproveModeProcess(tenantId, taskInstance, null, curApproverId, taskDynamicAssignment.getApproverId(), continuousApproveMode);
+                }
             }
         });
     }

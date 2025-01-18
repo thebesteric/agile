@@ -203,10 +203,10 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
     /**
      * 查询审批任务
      *
-     * @param tenantId                     租户 ID
-     * @param workflowInstanceId           流程实例 ID
-     * @param page                         当前页
-     * @param pageSize                     每页显示数量
+     * @param tenantId           租户 ID
+     * @param workflowInstanceId 流程实例 ID
+     * @param page               当前页
+     * @param pageSize           每页显示数量
      *
      * @return List<TaskInstance>
      *
@@ -946,13 +946,14 @@ public class RuntimeServiceHelper extends AbstractServiceHelper {
      * @param tenantId         租户 ID
      * @param nodeDefinitionId 节点定义 ID
      * @param taskInstanceId   任务实例 ID
+     * @param curApproverId    当前审核人 ID
      * @param approvers        审批人列表
      *
      * @author wangweijun
      * @since 2024/9/9 13:58
      */
-    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, List<Approver> approvers) {
-        this.runtimeService.dynamicAssignmentApprovers(tenantId, nodeDefinitionId, taskInstanceId, approvers);
+    public void dynamicAssignmentApprovers(String tenantId, Integer nodeDefinitionId, Integer taskInstanceId, String curApproverId, List<Approver> approvers) {
+        this.runtimeService.dynamicAssignmentApprovers(tenantId, nodeDefinitionId, taskInstanceId, curApproverId, approvers);
     }
 
     /**
