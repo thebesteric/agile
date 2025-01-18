@@ -508,4 +508,5 @@
 ### v1.0.19.8
 
 - 工作流插件 (bugfix): 修复用户节点自动审批时缺少判断角色用户审批记录的问题
-- 工作流插件 (perf): 删除`AgileAutoApproveProcessor`自动审批回调处理器，改为使用`AgileApproveProcessor`，增加`preApprove`和`postApproved`方法
+- 工作流插件 (perf): 删除`AgileAutoApproveProcessor`自动审批回调处理器
+- 工作流插件 (perf): 增加`AgileApproveProcessor`审批回调处理器，增加`preApprove`、`postApproved`、`approveComplete`方法
