@@ -31,6 +31,7 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileApproveProcessor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -233,6 +234,11 @@ public class AgileConfig {
             @Override
             public void postApproved(TaskInstance taskInstance, String roleId, String userId, String comment) {
                 System.out.println("============== postApproved ============== " + taskInstance);
+            }
+
+            @Override
+            public void approveCompleted(WorkflowInstance workflowInstance, TaskInstance taskInstance, String roleId, String userId, String comment) {
+                System.out.println("============== approveCompleted ============== " + workflowInstance);
             }
         };
     }

@@ -955,7 +955,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                                             .findAny();
                                     // 如果不存在已经审核过的实例，则进行审核
                                     if (approvedTaskRoleApproveRecord.isEmpty() && (roleId == null || roleId.equals(sameNodeRoleAssignment.getRoleId()))) {
-                                        this.approve(tenantId, nextTaskInstance.getId(), sameNodeRoleAssignment.getRoleId(), sameNodeRoleAssignment.getUserId(), WorkflowConstants.AUTO_APPROVER_COMMENT);
+                                        String nodeRoleAssignmentRoleId = sameNodeRoleAssignment.getRoleId();
+                                        String nodeRoleAssignmentUserId = sameNodeRoleAssignment.getUserId();
+                                        // 自动审批之前
+                                        String comment = agileApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId);
+                                        comment = comment == null ? WorkflowConstants.AUTO_APPROVER_COMMENT : comment;
+                                        this.approve(tenantId, nextTaskInstance.getId(), nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId, comment, true);
+                                        // 自动审批之后
+                                        agileApproveProcessor.postAutoApproved(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, nodeRoleAssignmentRoleId, nodeRoleAssignmentUserId, comment);
                                     }
                                 }
                             } else {
@@ -1103,7 +1110,8 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 审核之前调用
             AgileApproveProcessor agileApproveProcessor = context.getAgileApproveProcessor();
             String userComment = agileApproveProcessor.preApprove(taskInstance, roleId, userId);
-            if (userComment == null) {
+            // 审批意见返回 null 或者时自动审核返回的 comment，则不修改
+            if (userComment == null || autoApprove) {
                 userComment = comment;
             }
 
