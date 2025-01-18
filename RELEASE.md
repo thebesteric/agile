@@ -504,3 +504,8 @@
 
 - 数据库插件 (perf): 优化忽略创建实体类时的日志打印
 - 工作流插件 (feat): 增加设置动态审批人时，支持自动审批功能
+
+### v1.0.19.8
+
+- 工作流插件 (bugfix): 修复用户节点自动审批时缺少判断角色用户审批记录的问题
+- 工作流插件 (perf): 删除`AgileAutoApproveProcessor`自动审批回调处理器，改为使用`AgileApproveProcessor`，增加`preApprove`和`postApproved`方法
