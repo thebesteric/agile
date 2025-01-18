@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.processor;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
+import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 
 /**
  * 自动审批监听器
@@ -76,5 +77,21 @@ public interface AgileApproveProcessor {
      * @since 2025/1/16 17:49
      */
     default void postApproved(TaskInstance taskInstance, String roleId, String userId, String comment) {
+    }
+
+    /**
+     * 流程审核完成
+     * 整个流程生命周期中，只会在完成的时候调用一次
+     *
+     * @param workflowInstance 流程实例
+     * @param taskInstance     任务实例
+     * @param roleId           角色 ID
+     * @param userId           用户 ID
+     * @param comment          备注
+     *
+     * @author wangweijun
+     * @since 2025/1/18 18:03
+     */
+    default void approveComplete(WorkflowInstance workflowInstance, TaskInstance taskInstance, String roleId, String userId, String comment) {
     }
 }
