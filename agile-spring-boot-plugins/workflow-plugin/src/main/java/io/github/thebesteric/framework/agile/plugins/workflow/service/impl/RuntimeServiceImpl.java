@@ -1265,7 +1265,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 recordLogs(tenantId, workflowInstanceId, taskInstance.getId(), endNodeDefinition.getName(), TaskHistoryMessage.INSTANCE_ENDED);
 
                 // 调用审批处理器：审核完成
-                agileApproveProcessor.approveComplete(workflowInstance, taskInstance, roleId, userId, userComment);
+                agileApproveProcessor.approveCompleted(workflowInstance, taskInstance, roleId, userId, userComment);
             }
         });
     }

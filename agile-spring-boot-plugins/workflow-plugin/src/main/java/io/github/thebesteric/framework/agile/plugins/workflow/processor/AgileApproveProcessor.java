@@ -92,6 +92,6 @@ public interface AgileApproveProcessor {
      * @author wangweijun
      * @since 2025/1/18 18:03
      */
-    default void approveComplete(WorkflowInstance workflowInstance, TaskInstance taskInstance, String roleId, String userId, String comment) {
+    default void approveCompleted(WorkflowInstance workflowInstance, TaskInstance taskInstance, String roleId, String userId, String comment) {
     }
 }
