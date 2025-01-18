@@ -45,6 +45,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.Assert;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -890,7 +891,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/11 11:46
      */
     private void continuousApproveModeProcess(String tenantId, TaskInstance nextTaskInstance,
-                                              String roleId, String approverId,
+                                              @Nullable String roleId, String approverId,
                                               String nextApproverId,
                                               ContinuousApproveMode continuousApproveMode) {
 
@@ -1014,14 +1015,36 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
         }
         // 下个节点是：用户审批实例
         else {
+            // 相同的用户并且已经审核的用户
+            Optional<String> sameUserId = Optional.empty();
+
             // 下一个审批人的审批情况（下一个审批人在之前的审批记录中是否存在，并且是通过审核的）
             Optional<TaskApprove> nextApproverIdApproveOptional = taskApproves.stream()
                     .filter(approve -> nextApproverId.equals(approve.getApproverId()) && ApproveStatus.APPROVED == approve.getStatus()).findAny();
+            if (nextApproverIdApproveOptional.isPresent()) {
+                sameUserId = Optional.of(nextApproverId);
+            }
+            // 继续从角色审批记录中查询
+            else {
+                // 获取流程实例下的角色审批记录
+                TaskRoleApproveRecordExecutor taskRoleApproveRecordExecutor = taskRoleApproveRecordExecutorBuilder.build();
+                List<TaskRoleApproveRecord> taskRoleApproveRecords = taskRoleApproveRecordExecutor.findByTWorkflowInstanceId(tenantId, workflowInstance.getId());
+                // 已完成审核的角色用户审核记录
+                List<TaskRoleApproveRecord> approvedTaskRoleApproveRecords = taskRoleApproveRecords.stream().filter(taskRoleApproveRecord -> RoleApproveStatus.APPROVED == taskRoleApproveRecord.getStatus()).toList();
+                // 在已完成的角色审核记录中获取与当前审核人相同的角色用户
+                Optional<NodeRoleAssignment> nodeRoleAssignmentOptional = approvedTaskRoleApproveRecords.stream().map(taskRoleApproveRecord -> {
+                    NodeRoleAssignmentExecutor nodeRoleAssignmentExecutor = nodeRoleAssignmentExecutorBuilder.build();
+                    return nodeRoleAssignmentExecutor.getById(taskRoleApproveRecord.getNodeRoleAssignmentId());
+                }).filter(nodeRoleAssignment -> Objects.equals(nodeRoleAssignment.getUserId(), nextApproverId)).findAny();
+                if (nodeRoleAssignmentOptional.isPresent()) {
+                    sameUserId = Optional.of(nextApproverId);
+                }
+            }
 
             switch (continuousApproveMode) {
                 case APPROVE_FIRST:
                     // 下个审批人已经存在审批的节点，则自动审批
-                    if (nextApproverIdApproveOptional.isPresent()) {
+                    if (sameUserId.isPresent()) {
                         // 自动审批之前
                         String comment = agileAutoApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_FIRST, nextTaskInstance, null, nextApproverId);
                         comment = comment == null ? WorkflowConstants.AUTO_APPROVER_COMMENT : comment;
@@ -1033,7 +1056,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     break;
                 case APPROVE_CONTINUOUS:
                     // 下个审批人已经存在审批的节点，且已审批的节点的审批人和下一个节点的审批人是同一个人，则自动审批
-                    if (nextApproverIdApproveOptional.isPresent() && approverId.equals(nextApproverId)) {
+                    if (sameUserId.isPresent() && approverId.equals(nextApproverId)) {
                         // 自动审批之前
                         String comment = agileAutoApproveProcessor.preAutoApprove(ContinuousApproveMode.APPROVE_CONTINUOUS, nextTaskInstance, null, nextApproverId);
                         comment = comment == null ? WorkflowConstants.AUTO_APPROVER_COMMENT : comment;
