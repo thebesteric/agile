@@ -1,17 +1,17 @@
-package io.github.thebesteric.framework.agile.plugins.workflow.processor;
+package io.github.thebesteric.framework.agile.plugins.workflow.listener;
 
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ContinuousApproveMode;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 
 /**
- * 自动审批监听器
+ * 审批通过监听器
  *
  * @author wangweijun
  * @version v1.0
  * @since 2025-01-16 17:41:21
  */
-public interface AgileApproveProcessor {
+public interface AgileApproveListener {
 
     /**
      * 审核之前

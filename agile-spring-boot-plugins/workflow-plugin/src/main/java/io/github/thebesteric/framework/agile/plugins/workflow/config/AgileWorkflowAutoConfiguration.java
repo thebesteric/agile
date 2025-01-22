@@ -6,7 +6,10 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitializa
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.filter.AgileWorkflowFilter;
-import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileApproveProcessor;
+import io.github.thebesteric.framework.agile.plugins.workflow.listener.AgileAbandonListener;
+import io.github.thebesteric.framework.agile.plugins.workflow.listener.AgileApproveListener;
+import io.github.thebesteric.framework.agile.plugins.workflow.listener.AgileRedoListener;
+import io.github.thebesteric.framework.agile.plugins.workflow.listener.AgileRejectListener;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -69,8 +72,10 @@ public class AgileWorkflowAutoConfiguration extends AbstractAgileInitialization 
     }
 
     @Bean
-    public AgileWorkflowContext agileWorkflowContext(ApplicationContext applicationContext, AgileApproveProcessor agileApproveProcessor, AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
-        return new AgileWorkflowContext(applicationContext, agileApproveProcessor, properties, jdbcTemplateHelper);
+    public AgileWorkflowContext agileWorkflowContext(ApplicationContext applicationContext,
+                                                     AgileApproveListener agileApproveListener, AgileRejectListener agileRejectListener, AgileRedoListener agileRedoListener, AgileAbandonListener agileAbandonListener,
+                                                     AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
+        return new AgileWorkflowContext(applicationContext, agileApproveListener, agileRejectListener, agileRedoListener, agileAbandonListener, properties, jdbcTemplateHelper);
     }
 
     @Bean
@@ -87,10 +92,35 @@ public class AgileWorkflowAutoConfiguration extends AbstractAgileInitialization 
         return new WorkflowEngine(context);
     }
 
+    /** 审核通过回调器 */
     @Bean
     @ConditionalOnMissingBean
-    public AgileApproveProcessor agileApproveProcessor() {
-        return new AgileApproveProcessor() {
+    public AgileApproveListener agileApproveListener() {
+        return new AgileApproveListener() {
+        };
+    }
+
+    /** 审核拒绝回调器 */
+    @Bean
+    @ConditionalOnMissingBean
+    public AgileRejectListener agileRejectListener() {
+        return new AgileRejectListener() {
+        };
+    }
+
+    /** 审核撤回回调器 */
+    @Bean
+    @ConditionalOnMissingBean
+    public AgileRedoListener agileRedoListener() {
+        return new AgileRedoListener() {
+        };
+    }
+
+    /** 审核撤回回调器 */
+    @Bean
+    @ConditionalOnMissingBean
+    public AgileAbandonListener agileAbandonListener() {
+        return new AgileAbandonListener() {
         };
     }
 

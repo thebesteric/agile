@@ -2,7 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.config;
 
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileContext;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
-import io.github.thebesteric.framework.agile.plugins.workflow.processor.AgileApproveProcessor;
+import io.github.thebesteric.framework.agile.plugins.workflow.listener.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -19,15 +19,24 @@ import org.springframework.context.support.GenericApplicationContext;
 @Slf4j
 public class AgileWorkflowContext extends AbstractAgileContext {
 
-    private final AgileApproveProcessor agileApproveProcessor;
+    private final AgileApproveListener agileApproveListener;
+    private final AgileRejectListener agileRejectListener;
+    private final AgileRedoListener agileRedoListener;
+    private final AgileAbandonListener agileAbandonListener;
+
     private final AgileWorkflowProperties properties;
     private final JdbcTemplateHelper jdbcTemplateHelper;
 
     private static final ThreadLocal<String> CURRENT_USER = new ThreadLocal<>();
 
-    public AgileWorkflowContext(ApplicationContext applicationContext, AgileApproveProcessor agileApproveProcessor, AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
+    public AgileWorkflowContext(ApplicationContext applicationContext,
+                                AgileApproveListener agileApproveListener, AgileRejectListener agileRejectListener, AgileRedoListener agileRedoListener, AgileAbandonListener agileAbandonListener,
+                                AgileWorkflowProperties properties, JdbcTemplateHelper jdbcTemplateHelper) {
         super((GenericApplicationContext) applicationContext);
-        this.agileApproveProcessor = agileApproveProcessor;
+        this.agileApproveListener = agileApproveListener;
+        this.agileRejectListener = agileRejectListener;
+        this.agileRedoListener = agileRedoListener;
+        this.agileAbandonListener = agileAbandonListener;
         this.properties = properties;
         this.jdbcTemplateHelper = jdbcTemplateHelper;
     }
