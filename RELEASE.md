@@ -511,3 +511,8 @@
 - 工作流插件 (perf): 删除`AgileAutoApproveProcessor`自动审批回调处理器
 - 工作流插件 (perf): 增加`AgileApproveProcessor`审批回调处理器，增加`preApprove`、`postApproved`、`approveCompleted`方法
 - 工作流插件 (perf): 审批意见返回 null 或者时自动审核返回的 comment，则不修改
+
+### v1.0.19.9
+
+- 工作流插件 (perf): 同意将审批监听器命名为 listener 后缀
+- 工作流插件 (feat): 新增`AgileAbandonListener`、`AgileRejectListener`、`AgileRedoListener`审批监听器
