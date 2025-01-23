@@ -3945,8 +3945,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             Integer totalCount = taskInstance.getTotalCount();
             // 表示是动态审批，但是没有设置具体的值
             if (totalCount == -1) {
-                // 设置具体值
-                taskInstance.setTotalCount(taskDynamicAssignments.size());
+                if (ApproveType.ANY == nodeDefinition.getApproveType()) {
+                    taskInstance.setTotalCount(1);
+                } else {
+                    taskInstance.setTotalCount(taskDynamicAssignments.size());
+                }
                 taskInstanceExecutor.updateById(taskInstance);
             }
 
