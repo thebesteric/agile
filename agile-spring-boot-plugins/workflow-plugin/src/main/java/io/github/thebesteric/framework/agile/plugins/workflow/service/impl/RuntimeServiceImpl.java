@@ -655,8 +655,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             // 表示已经到达结束节点
             if (toNodeDefinitions.isEmpty()) {
                 // 更新节点状态
-                prevTaskInstance.setStatus(NodeStatus.COMPLETED);
-                taskInstanceExecutor.updateById(prevTaskInstance);
+                if (NodeStatus.COMPLETED != prevTaskInstance.getStatus()) {
+                    prevTaskInstance.setStatus(NodeStatus.COMPLETED);
+                    taskInstanceExecutor.updateById(prevTaskInstance);
+                }
                 // 更新流程实例为：已完成
                 workflowInstance.setStatus(WorkflowStatus.COMPLETED);
                 workflowInstanceExecutor.updateById(workflowInstance);
@@ -1224,8 +1226,9 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                         });
                     }
                 }
-
+                // 将 taskInstance 更新为最新值
                 taskInstance.setStatus(NodeStatus.COMPLETED);
+                taskInstanceExecutor.updateById(taskInstance);
                 // 指向下一个审批节点
                 nextTaskInstances = this.next(tenantId, taskInstance.getId(), roleId, userId);
             }
