@@ -516,3 +516,7 @@
 
 - 工作流插件 (perf): 同意将审批监听器命名为 listener 后缀
 - 工作流插件 (feat): 新增`AgileAbandonListener`、`AgileRejectListener`、`AgileRedoListener`审批监听器
+
+### v1.0.19.10
+
+- 工作流插件 (bugfix): 修复设置动态审批人数量时，缺少判断节点类型的问题
