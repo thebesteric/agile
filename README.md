@@ -583,3 +583,83 @@ public AgileSensitiveResultProcessor sensitiveResultProcessor() {
 }
 ```
 > JSON 格式敏感词库: https://github.com/konsheng/Sensitive-lexicon
+
+## Mock 插件
+主要作用：测试时返回模拟数据，减少测试代码量
+### 使用方式
+```xml
+<dependency>
+    <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+    <artifactId>mocker-plugin</artifactId>
+    <version>${latest.version}</version>
+</dependency>
+```
+- condition: 表达式，使用`#`开头，表示引用当前方法的参数
+- type: 模拟数据类型，支持`CLASS`、`FILE`、`URL`
+- targetClass: 模拟数据类，当 type 为 CLASS 时，必须指定，要继承`Mocker`接口
+- path: 模拟数据文件路径，当 type 为 FILE 或 URL 时，必须指定，支持 `classpath`、`file`、`http`、`https`格式路径
+```java
+@RestController
+@RequestMapping("/mocker")
+@AgileLogger(tag = "hello")
+public class MockerController {
+
+    @Resource
+    private MockService mockService;
+
+    @Mock(condition = "(#parent.id == 1 || #parent.sub.name == lisi) && #name == zs", type = MockType.CLASS, targetClass = MyMocker.class)
+    @AgileLogger
+    @PostMapping("/method1")
+    public R<String> method1(@RequestParam(required = false) String name, @RequestBody Parent parent) {
+        return R.success(name);
+    }
+
+    @Mock(condition = "(#parent.id == 1 || #parent.sub.name == lisi) && #name == zs", type = MockType.FILE, path = "classpath:mock/mock-method2.json")
+    @AgileLogger
+    @PostMapping("/method2")
+    public R<String> method2(@RequestParam(required = false) String name, @RequestBody Parent parent) {
+        return R.success(name);
+    }
+
+    @Mock(condition = "(#parent.id == 1 || #parent.sub.name == lisi) && #name == zs", type = MockType.FILE, path = "file:/Users/wangweijun/Downloads/mock-file.json")
+    @AgileLogger
+    @PostMapping("/method3")
+    public R<String> method3(@RequestParam(required = false) String name, @RequestBody Parent parent) {
+        return R.success(name);
+    }
+
+    @Mock(condition = "(#parent.id == 1 || #parent.sub.name == lisi) && #name == zs", type = MockType.URL, path = "http://127.0.0.1:8080/mocker/test")
+    @AgileLogger
+    @PostMapping("/method4")
+    public R<String> method4(@RequestParam(required = false) String name, @RequestBody Parent parent) {
+        return R.success(name);
+    }
+
+    @AgileLogger
+    @PostMapping("/method5")
+    public R<String> method5(@RequestParam(required = false) String name, @RequestBody Parent parent) {
+        return R.success(mockService.method5(name, parent));
+    }
+
+    @AgileLogger
+    @GetMapping("/test")
+    public R<String> test() {
+        return R.success("test");
+    }
+
+    @Data
+    public static class Parent {
+
+        private Integer id;
+        private String name;
+        private Sub sub;
+
+        @Data
+        public static class Sub {
+            private Integer id;
+            private String name;
+        }
+    }
+}
+
+```
