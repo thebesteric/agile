@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.starter;
 
+import io.github.thebesteric.framework.agile.commons.constant.AgilePlugins;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileContext;
 import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
@@ -31,12 +32,12 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
         AgilePlugins[] plugins = AgilePlugins.values();
         for (AgilePlugins plugin : plugins) {
             try {
-                Class.forName(plugin.className);
+                Class.forName(plugin.getClassName());
             } catch (ClassNotFoundException ignored) {
-                LoggerPrinter.warn("{} plug-in not found.", plugin.name());
+                LoggerPrinter.warn("{} plug-in not found.", plugin.getName());
                 continue;
             }
-            LoggerPrinter.info("The {} has been installed.", plugin.name);
+            LoggerPrinter.info("The {} has been installed.", plugin.getName());
         }
     }
 

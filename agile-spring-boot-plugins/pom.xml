@@ -23,6 +23,7 @@
         <module>workflow-plugin</module>
         <module>annotation-scanner-plugin</module>
         <module>sensitive-filter-plugin</module>
+        <module>mocker-plugin</module>
     </modules>
 
     <dependencies>

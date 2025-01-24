@@ -11,7 +11,10 @@
 @Version(XxxVersion.class)
 
 # Mock 数据
-@Mock
+@Mock(envs = "dev", condition = "#request.id == 1", type = MockType.CLASS, targetClass = Test.class, method = "mock")
+@Mock(envs = "dev", condition = "#request.id == 1", type = MockType.FILE, path = "classpath:mock/test.json")
+@Mock(envs = "dev", condition = "#request.id == 1", type = MockType.FILE, path = "file:/mock/test.json")
+@Mock(envs = "dev", condition = "#request.id == 1", type = MockType.URL, path = "https://www.baidu.com")
 
 # 支持启动后导入 sql 脚本
 database.executeSqlScript
