@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
         <artifactId>agile</artifactId>
-        <version>1.0.19.10</version>
+        <version>1.0.20</version>
     </parent>
 
     <artifactId>agile-spring-boot-plugins</artifactId>
