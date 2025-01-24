@@ -21,10 +21,17 @@ public class MyMocker implements Mocker<Object> {
         if (method.getName().equals("method1")) {
             return mockMethod1();
         }
+        if (method.getName().equals("method5")) {
+            return mockMethod5();
+        }
         return null;
     }
 
     public R<String> mockMethod1() {
         return R.success("xxxxxxxxxxxx");
+    }
+
+    public String mockMethod5() {
+        return "hello eric";
     }
 }

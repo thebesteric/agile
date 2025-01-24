@@ -5,6 +5,8 @@ import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogg
 import io.github.thebesteric.framework.agile.plugins.mocker.annotation.Mock;
 import io.github.thebesteric.framework.agile.plugins.mocker.mocker.MockType;
 import io.github.thebesteric.framework.agile.test.mock.MyMocker;
+import io.github.thebesteric.framework.agile.test.service.MockService;
+import jakarta.annotation.Resource;
 import lombok.Data;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/mocker")
 @AgileLogger(tag = "hello")
 public class MockerController {
+
+    @Resource
+    private MockService mockService;
 
     @Mock(condition = "(#parent.id == 1 || #parent.sub.name == lisi) && #name == zs", type = MockType.CLASS, targetClass = MyMocker.class)
     @AgileLogger
@@ -46,6 +51,12 @@ public class MockerController {
     @PostMapping("/method4")
     public R<String> method4(@RequestParam(required = false) String name, @RequestBody Parent parent) {
         return R.success(name);
+    }
+
+    @AgileLogger
+    @PostMapping("/method5")
+    public R<String> method5(@RequestParam(required = false) String name, @RequestBody Parent parent) {
+        return R.success(mockService.method5(name, parent));
     }
 
     @AgileLogger
