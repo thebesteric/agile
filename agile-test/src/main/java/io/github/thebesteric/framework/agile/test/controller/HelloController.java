@@ -115,9 +115,9 @@ public class HelloController {
         return R.success();
     }
 
-    @GetMapping("/lock")
-    @DistributedLock(waitTime = 5, message = "加锁失败咯")
-    public R<String> lock() throws InterruptedException {
+    @PostMapping("/lock")
+    @DistributedLock(key = "abc + #params.name + #params.id", waitTime = 5, message = "加锁失败咯")
+    public R<String> lock(@RequestBody Map<String, Object> params) throws InterruptedException {
         TimeUnit.SECONDS.sleep(10);
         return R.success();
     }
