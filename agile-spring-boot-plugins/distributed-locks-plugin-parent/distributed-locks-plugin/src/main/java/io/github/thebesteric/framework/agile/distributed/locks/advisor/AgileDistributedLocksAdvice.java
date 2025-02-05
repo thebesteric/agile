@@ -44,7 +44,8 @@ public class AgileDistributedLocksAdvice implements MethodInterceptor {
 
         AtomicReference<Object> result = new AtomicReference<>();
         // 生成 Key
-        final String distributedLocksKey = DistributedLocksKeyGenerator.generate(method);
+        Object[] arguments = invocation.getArguments();
+        final String distributedLocksKey = DistributedLocksKeyGenerator.generate(method, arguments);
         DistributedLocksProcessor distributedLocksProcessor = context.getDistributedLocksProcessor();
         distributedLocksProcessor.execute(distributedLocksKey, distributedLock.waitTime(), distributedLock.leaseTime(), distributedLock.timeUnit(), new SuccessFailureExecutor<Boolean, Boolean, Exception>() {
             @Override

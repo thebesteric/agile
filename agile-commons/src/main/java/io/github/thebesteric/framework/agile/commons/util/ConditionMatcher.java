@@ -31,6 +31,57 @@ public class ConditionMatcher extends AbstractUtils {
         return evaluateRPN(rpn, parameters, arguments);
     }
 
+    @SuppressWarnings("unchecked")
+    public static String parseExpression(String expr, Parameter[] parameters, Object[] arguments) {
+        if (parameters.length != arguments.length) {
+            throw new IllegalArgumentException("参数描述数组和参数值数组长度必须一致");
+        }
+        // 定义正则表达式，用于匹配以 # 开头的占位符
+        Pattern pattern = Pattern.compile("#([\\w.]+)");
+        Matcher matcher = pattern.matcher(expr);
+
+        StringBuffer sb = new StringBuffer();
+        // 遍历匹配结果
+        while (matcher.find()) {
+            // 获取占位符名称
+            String placeholder = matcher.group(1);
+            // 从参数映射中获取实际参数值
+            String[] paramInfo = placeholder.split("\\.");
+            String paramName = paramInfo[0];
+            Object value = null;
+            for (int i = 0; i < parameters.length; i++) {
+                // Map 类型参数
+                if (parameters[i].getType() == Map.class) {
+                    Map<String, Object> map = (Map<String, Object>) arguments[i];
+                    String key = paramInfo[1];
+                    if (map.containsKey(key)) {
+                        value = map.get(key);
+                    }
+                }
+                // 对象类型参数
+                else if (parameters[i].getName().equals(paramName)) {
+                    Object paramValue = arguments[i];
+                    value = getNestedFieldValue(paramValue, paramInfo, 1);
+                }
+            }
+            if (value != null) {
+                // 将占位符替换为实际参数值
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(value.toString()));
+            } else {
+                // 如果参数值为空，保留占位符
+                matcher.appendReplacement(sb, matcher.group());
+            }
+        }
+        // 追加剩余的字符串
+        matcher.appendTail(sb);
+
+        // 将字符串转换为单个字符串
+        String result = sb.toString();
+        String[] arr = result.split("\\+");
+        // 通过 stream 转换为字符串
+        return Arrays.stream(arr).map(String::trim).reduce((a, b) -> a + b).orElse("");
+    }
+
     private static boolean matchSingleCondition(@Nonnull String condition, Parameter[] parameters, Object[] arguments) {
         // 检查是否为布尔字面量
         if ("true".equalsIgnoreCase(condition) || "false".equalsIgnoreCase(condition)) {
