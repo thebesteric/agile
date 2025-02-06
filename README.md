@@ -495,6 +495,30 @@ class DeploymentServiceTest {
 
 }
 ```
+## 分布式锁插件
+注意：`@DistributedLock` 只能作用在方法上，如果需要使用动态参数使用`#`符号加上参数名称即可，使用`+`符号作为字符串连接符
+```yaml
+sourceflag:
+  agile:
+    distribute-locks:
+      enable: true
+      message: "分布式锁加锁失败"
+```
+### 使用方式
+```java
+@RestController
+@RequestMapping("/hello")
+@AgileLogger(tag = "hello")
+public class HelloController {
+    @PostMapping("/lock")
+    @DistributedLock(key = "abc + #params.name + #params.id", waitTime = 5, message = "加锁失败咯")
+    public R<String> lock(@RequestBody Map<String, Object> params) throws InterruptedException {
+        TimeUnit.SECONDS.sleep(10);
+        return R.success();
+    }
+
+}
+```
 ## 敏感词插件
 > load-type: 敏感词数据加载类型，支持 JSON、TXT、OTHER  
 > file-path: 敏感词文件路径  
