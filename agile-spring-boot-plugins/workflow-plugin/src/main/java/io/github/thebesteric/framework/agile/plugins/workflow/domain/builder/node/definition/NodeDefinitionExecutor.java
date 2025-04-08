@@ -78,8 +78,9 @@ public class NodeDefinitionExecutor extends AbstractExecutor<NodeDefinition> {
                     throw new WorkflowException("非自动审批条件下，审批人不能为空");
                 }
             }
+
             // 用户审批节点，设置审批人为流程定义的默认审批人
-            if (nodeDefinition.isUserApprove()) {
+            if (nodeDefinition.isUserApprove() && approvers.isEmpty()) {
                 approvers = Set.of(workflowDefinition.getWhenEmptyApprover());
             }
         }
