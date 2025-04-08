@@ -13,7 +13,7 @@
 
     <groupId>io.github.thebesteric.framework.agile.test</groupId>
     <artifactId>agile-test</artifactId>
-    <version>1.0.20.1</version>
+    <version>1.0.20.2</version>
 
     <name>agile-test</name>
     <description>agile-test</description>
@@ -75,11 +75,11 @@
             <version>${project.version}</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>io.github.thebesteric.framework.agile.plugins</groupId>-->
-<!--            <artifactId>limiter-plugin</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
+            <artifactId>limiter-plugin</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
