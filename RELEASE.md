@@ -533,3 +533,7 @@
 ### v1.0.20.2
 
 - 工作流插件 (bugfix): 修复允许自动审批时，任务节点获取默认审批人的时报错的问题
+
+### v1.0.20.3
+
+- 微信开发平台 (feat): GetUnlimitedQRCodeRequest 增加 page 字段
