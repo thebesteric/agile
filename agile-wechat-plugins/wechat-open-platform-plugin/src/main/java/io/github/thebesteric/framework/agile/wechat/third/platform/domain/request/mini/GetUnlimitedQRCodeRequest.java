@@ -16,6 +16,9 @@ import lombok.EqualsAndHashCode;
 @Data
 @Schema(description = "获取不限制的小程序码")
 public class GetUnlimitedQRCodeRequest extends GetQRCodeRequest {
+    @Schema(description = "默认是主页，页面 page，根路径前不要填加 /，不能携带参数（参数请放在scene字段里），如果不填写这个字段，默认跳主页面。scancode_time为系统保留参数，不允许配置")
+    private String page = "pages/index/index";
+
     @Schema(description = "最大32个可见字符，只支持数字，大小写英文以及部分特殊字符")
     private String scene;
 
