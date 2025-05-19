@@ -537,3 +537,7 @@
 ### v1.0.20.3
 
 - 微信开发平台 (feat): GetUnlimitedQRCodeRequest 增加 page 字段
+
+### v1.0.20.4
+
+- 工作流插件 (perf):`DeploymentServiceImpl.getWorkflowDefinitionFlowSchema` 增加 null 值判断
