@@ -333,6 +333,9 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
     @Override
     public WorkflowDefinitionFlowSchema getWorkflowDefinitionFlowSchema(String tenantId, String workflowDefinitionKey) {
         WorkflowDefinition workflowDefinition = getByKey(tenantId, workflowDefinitionKey);
+        if (workflowDefinition == null) {
+            return null;
+        }
         return this.getWorkflowDefinitionFlowSchema(tenantId, workflowDefinition.getId());
     }
 
