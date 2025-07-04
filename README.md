@@ -687,3 +687,67 @@ public class MockerController {
 }
 
 ```
+## 工具类
+### MapWrapper Map 转换工具类
+```java
+class MapWrapperTest {
+    @Data
+    public static class User {
+        private String name;
+        private Integer age;
+    }
+    
+    @Test
+    void test() {
+        Map<String, Object> map = MapWrapper.createLambda(User.class)
+                .put(User::getName, "张三")
+                .put(User::getAge, 18)
+                .build();
+        System.out.println(map);
+    }
+}
+```
+### DataValidator 数据校验工具类
+```java
+class DataValidatorTest {
+    @Test
+    void test() {
+        List<Throwable> exceptions = DataValidator.create(DataValidator.ExceptionThrowStrategy.COLLECT)
+                .validate(3 == 3, "两个数不能相等")
+                .getExceptions();
+        System.out.println(exceptions);
+    }
+
+}
+```
+### Processor 流程执行规范工具
+```java
+class ProcessorTest {
+    @Test
+    void test() {
+        Assertions.assertThrows(RuntimeException.class, () ->
+                Processor.prepare(DataValidator.ExceptionThrowStrategy.COLLECT)
+                        .start(() -> "hello world")
+                        .validate(s -> {
+                            throw new DataValidationException("s.length() > 5");
+                        })
+                        .next(() -> {
+                            return 1L;
+                        })
+                        .interim(() -> {
+
+                        })
+                        .interim((t) -> {
+                            System.out.println(t);
+                        })
+                        .complete((s, exceptions) -> {
+                            System.out.println("result = " + s);
+                            System.out.println("exceptions = " + exceptions);
+                            if (exceptions.get(0) instanceof DataExistsException dataExistsException) {
+                                throw dataExistsException;
+                            }
+                            return 2L;
+                        }));
+    }
+}
+```
