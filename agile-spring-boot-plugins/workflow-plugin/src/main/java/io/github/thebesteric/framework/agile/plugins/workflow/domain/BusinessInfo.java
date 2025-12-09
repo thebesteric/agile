@@ -8,6 +8,9 @@ import lombok.SneakyThrows;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * BusinessInfo
@@ -51,8 +54,13 @@ public class BusinessInfo implements Serializable {
     public <T> T getObject(Class<T> clazz) {
         if (ReflectUtils.isPrimitiveOrWarp(clazz)) {
             return clazz.getDeclaredConstructor(String.class).newInstance(business.toString());
-        }
-        else if (ReflectUtils.isStringType(clazz)) {
+        } else if (ReflectUtils.isStringType(clazz)) {
+            return (T) business;
+        } else if (Map.class.isAssignableFrom(clazz) && business instanceof Map) {
+            return (T) business;
+        } else if (List.class.isAssignableFrom(clazz) && business instanceof List) {
+            return (T) business;
+        } else if (Set.class.isAssignableFrom(clazz) && business instanceof Set) {
             return (T) business;
         }
         return JSONUtil.toBean(business.toString(), clazz);
