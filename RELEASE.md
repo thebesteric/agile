@@ -538,7 +538,7 @@
 
 - 微信开发平台 (feat): GetUnlimitedQRCodeRequest 增加 page 字段
 
-### v1.0.20.4
+### v1.0.21.0
 
 - 工作流插件 (perf):`DeploymentServiceImpl.getWorkflowDefinitionFlowSchema` 增加 null 值判断
 - 工作流插件 (feat): 增加 `BusinessInfo` 对 Map 类型的支持
