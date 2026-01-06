@@ -541,3 +541,5 @@
 ### v1.0.20.4
 
 - 工作流插件 (perf):`DeploymentServiceImpl.getWorkflowDefinitionFlowSchema` 增加 null 值判断
+- 工作流插件 (feat): 增加 `BusinessInfo` 对 Map 类型的支持
+- 通用 (refactor): 支持 Spring Boot 4.x 版本，升级部分三方依赖版本
