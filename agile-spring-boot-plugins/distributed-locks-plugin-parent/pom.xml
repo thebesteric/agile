@@ -11,6 +11,7 @@
         <version>1.0.21.0</version>
     </parent>
 
+    <name>distributed-locks-plugin-parent</name>
     <artifactId>distributed-locks-plugin-parent</artifactId>
     <packaging>pom</packaging>
 

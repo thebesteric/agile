@@ -11,6 +11,7 @@
         <version>1.0.21.0</version>
     </parent>
 
+    <name>wechat-open-platform-plugin</name>
     <artifactId>wechat-open-platform-plugin</artifactId>
 
     <dependencies>

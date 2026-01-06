@@ -9,6 +9,7 @@
         <version>1.0.21.0</version>
     </parent>
 
+    <name>agile-spring-boot-starter</name>
     <artifactId>agile-spring-boot-starter</artifactId>
     <packaging>jar</packaging>
 

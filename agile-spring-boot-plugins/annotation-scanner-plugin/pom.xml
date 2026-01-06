@@ -9,6 +9,7 @@
         <version>1.0.21.0</version>
     </parent>
 
+    <name>annotation-scanner-plugin</name>
     <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
     <artifactId>annotation-scanner-plugin</artifactId>
 

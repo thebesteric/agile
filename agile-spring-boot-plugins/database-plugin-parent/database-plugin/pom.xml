@@ -11,6 +11,7 @@
         <version>1.0.21.0</version>
     </parent>
 
+    <name>database-plugin</name>
     <groupId>io.github.thebesteric.framework.agile.plugins</groupId>
     <artifactId>database-plugin</artifactId>
 
