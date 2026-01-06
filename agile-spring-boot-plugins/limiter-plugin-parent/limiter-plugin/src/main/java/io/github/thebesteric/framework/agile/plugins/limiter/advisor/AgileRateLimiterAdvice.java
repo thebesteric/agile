@@ -12,6 +12,8 @@ import io.github.thebesteric.framework.agile.plugins.limiter.config.AgileRateLim
 import io.github.thebesteric.framework.agile.plugins.limiter.exception.RateLimitException;
 import io.github.thebesteric.framework.agile.plugins.limiter.processor.RateLimiterProcessor;
 import io.vavr.control.Try;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -21,8 +23,6 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicReference;
 

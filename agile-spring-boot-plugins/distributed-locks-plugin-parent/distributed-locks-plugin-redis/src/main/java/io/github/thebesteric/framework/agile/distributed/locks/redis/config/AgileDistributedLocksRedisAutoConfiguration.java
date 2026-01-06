@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.distributed.locks.config.AgileDistr
 import io.github.thebesteric.framework.agile.distributed.locks.processor.DistributedLocksProcessor;
 import io.github.thebesteric.framework.agile.distributed.locks.redis.processor.impl.RedisDistributedLocksProcessor;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,6 +22,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(AgileDistributedLocksProperties.class)
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".distribute-locks", name = "enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnClass(RedissonClient.class)
 public class AgileDistributedLocksRedisAutoConfiguration {
 
     @Bean

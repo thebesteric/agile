@@ -5,6 +5,7 @@ import io.github.thebesteric.framework.agile.plugins.idempotent.config.AgileIdem
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
 import io.github.thebesteric.framework.agile.plugins.idempotent.redis.processor.impl.RedisIdempotentProcessor;
 import org.redisson.api.RedissonClient;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,6 +22,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties(AgileIdempotentProperties.class)
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".idempotent", name = "enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnClass(RedissonClient.class)
 public class AgileIdempotentRedisAutoConfiguration {
 
     @Bean

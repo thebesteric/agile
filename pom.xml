@@ -57,23 +57,23 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <skipTests>true</skipTests>
-        <spring.boot.version>3.2.4</spring.boot.version>
+        <spring.boot.version>4.0.1</spring.boot.version>
         <lombok.version>1.18.30</lombok.version>
         <slf4j.version>2.0.12</slf4j.version>
-        <jackson.version>2.16.1</jackson.version>
-        <commons.lang3.version>3.13.0</commons.lang3.version>
-        <commons.io.version>2.18.0</commons.io.version>
-        <commons.collections4.version>4.4</commons.collections4.version>
+        <jackson.version>2.20.1</jackson.version>
+        <commons.lang3.version>3.20.0</commons.lang3.version>
+        <commons.io.version>2.21.0</commons.io.version>
+        <commons.collections4.version>4.5.0</commons.collections4.version>
         <junit.jupiter.version>5.10.0</junit.jupiter.version>
-        <guava.version>33.0.0-jre</guava.version>
-        <caffeine.version>3.1.8</caffeine.version>
+        <guava.version>33.5.0-jre</guava.version>
+        <caffeine.version>3.2.3</caffeine.version>
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
-        <vavr.version>0.10.4</vavr.version>
-        <redisson.version>3.29.0</redisson.version>
-        <hutool.version>5.8.27</hutool.version>
-        <mybatis-plus.version>3.5.9</mybatis-plus.version>
-        <mybatis.version>3.5.17</mybatis.version>
-        <swagger-annotations-jakarta.version>2.2.27</swagger-annotations-jakarta.version>
+        <vavr.version>0.11.0</vavr.version>
+        <redisson.version>4.1.0</redisson.version>
+        <hutool.version>5.8.43</hutool.version>
+        <mybatis-plus.version>3.5.15</mybatis-plus.version>
+        <mybatis.version>3.5.19</mybatis.version>
+        <swagger-annotations-jakarta.version>2.2.41</swagger-annotations-jakarta.version>
     </properties>
 
     <dependencies>
@@ -149,6 +149,12 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>${hutool.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>3.0.0</version>
         </dependency>
 
     </dependencies>

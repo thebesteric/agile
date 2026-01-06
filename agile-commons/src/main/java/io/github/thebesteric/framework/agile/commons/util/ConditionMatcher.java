@@ -1,9 +1,9 @@
 package io.github.thebesteric.framework.agile.commons.util;
 
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
 import java.util.*;

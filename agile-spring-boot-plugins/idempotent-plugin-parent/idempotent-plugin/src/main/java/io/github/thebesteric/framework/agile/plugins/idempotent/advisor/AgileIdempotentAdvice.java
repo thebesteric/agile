@@ -11,14 +11,14 @@ import io.github.thebesteric.framework.agile.plugins.idempotent.exception.Idempo
 import io.github.thebesteric.framework.agile.plugins.idempotent.generator.IdempotentKeyGenerator;
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
 import io.vavr.control.Try;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;

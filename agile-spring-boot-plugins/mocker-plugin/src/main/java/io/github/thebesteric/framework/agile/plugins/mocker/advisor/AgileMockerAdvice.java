@@ -10,6 +10,8 @@ import io.github.thebesteric.framework.agile.plugins.mocker.config.AgileMockerPr
 import io.github.thebesteric.framework.agile.plugins.mocker.mocker.EmptyMocker;
 import io.github.thebesteric.framework.agile.plugins.mocker.mocker.MockType;
 import io.github.thebesteric.framework.agile.plugins.mocker.mocker.Mocker;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -17,8 +19,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.ClassPathResource;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.*;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;

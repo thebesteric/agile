@@ -8,13 +8,13 @@ import io.github.thebesteric.framework.agile.distributed.locks.exeption.Distribu
 import io.github.thebesteric.framework.agile.distributed.locks.generator.DistributedLocksKeyGenerator;
 import io.github.thebesteric.framework.agile.distributed.locks.processor.DistributedLocksProcessor;
 import io.vavr.control.Try;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicReference;
 

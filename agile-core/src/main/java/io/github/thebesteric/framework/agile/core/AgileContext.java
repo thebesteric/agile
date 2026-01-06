@@ -47,7 +47,10 @@ public final class AgileContext {
             Class<?> beanClass = bean.getClass();
             if (AnnotationUtils.findAnnotation(beanClass, SpringBootApplication.class) != null) {
                 String beanClassName = beanClass.getName();
-                beanClassName = beanClassName.substring(0, beanClassName.indexOf("$$"));
+                int indexOf = beanClassName.indexOf("$$");
+                if (indexOf > 0) {
+                    beanClassName = beanClassName.substring(0, indexOf);
+                }
                 try {
                     startupClass = Class.forName(beanClassName);
                     return startupClass;
