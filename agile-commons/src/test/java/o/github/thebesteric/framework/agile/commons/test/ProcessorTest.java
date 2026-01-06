@@ -1,11 +1,11 @@
 package o.github.thebesteric.framework.agile.commons.test;
 
 import io.github.thebesteric.framework.agile.commons.exception.DataExistsException;
+import io.github.thebesteric.framework.agile.commons.exception.DataValidationException;
 import io.github.thebesteric.framework.agile.commons.util.DataValidator;
 import io.github.thebesteric.framework.agile.commons.util.Processor;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.shadow.com.univocity.parsers.common.DataValidationException;
 
 /**
  * o.github.thebesteric.framework.agile.commons.test.ProcessorTest
