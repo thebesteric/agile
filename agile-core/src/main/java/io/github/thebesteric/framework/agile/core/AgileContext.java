@@ -22,6 +22,16 @@ public final class AgileContext {
         super();
     }
 
+    /**
+     * 获取当前代理对象
+     *
+     * @param proxyClass 代理类
+     *
+     * @return T
+     *
+     * @author wangweijun
+     * @since 2026/1/8 14:04
+     */
     @SuppressWarnings("unchecked")
     public static <T> T currentProxy(Class<T> proxyClass) {
         Assert.notNull(proxyClass, "proxy class cannot be null");
