@@ -543,3 +543,7 @@
 - 工作流插件 (perf):`DeploymentServiceImpl.getWorkflowDefinitionFlowSchema` 增加 null 值判断
 - 工作流插件 (feat): 增加 `BusinessInfo` 对 Map 类型的支持
 - 通用 (refactor): 支持 Spring Boot 4.x 版本，升级部分三方依赖版本
+
+### v1.0.21.1
+- 通用 (perf): 优化启动 Agile 框架时，对必要的配置进行校验（AspectJ 和 EnableAgile）
+- 日志插件 (perf): 修复日志框架处理流类型对象报错的问题，增加对流类型的判断，不返回（记录）流对象
