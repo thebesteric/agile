@@ -6,7 +6,7 @@
     <groupId>io.github.thebesteric.framework.agile</groupId>
     <artifactId>agile</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.21.0</version>
+    <version>1.0.21.1</version>
 
     <name>agile</name>
     <url>https://github.com/thebesteric/agile</url>
@@ -250,6 +250,12 @@
         </resources>
 
         <plugins>
+            <!-- 版本管理插件 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.20.1</version>
+            </plugin>
             <!-- 编译插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
