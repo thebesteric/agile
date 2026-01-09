@@ -1,6 +1,33 @@
 # Agile Framework
 > Agile Framework for building web applications easily
 
+## 使用准备
+### 开启 AOP 支持
+```java
+@EnableAgile
+@EnableAspectJAutoProxy(exposeProxy = true)
+@SpringBootApplication
+public class AgileTestApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(AgileTestApplication.class, args);
+    }
+}
+```
+### 引入 AspectJ 依赖
+```xml
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjrt</artifactId>
+    <version>1.9.25.1</version>
+</dependency>
+
+<dependency>
+    <groupId>org.aspectj</groupId>
+    <artifactId>aspectjweaver</artifactId>
+    <version>1.9.25.1</version>
+</dependency>
+```
+
 ## 日志插件
 ### 相关配置
 ```yaml
