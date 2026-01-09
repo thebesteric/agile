@@ -10,6 +10,7 @@ import io.github.thebesteric.framework.agile.plugins.idempotent.config.AgileIdem
 import io.github.thebesteric.framework.agile.plugins.limiter.annotation.RateLimiter;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
+import io.github.thebesteric.framework.agile.test.domain.FileVo;
 import io.github.thebesteric.framework.agile.test.domain.Id2Vo;
 import io.github.thebesteric.framework.agile.test.service.HelloService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,8 +78,11 @@ public class HelloController {
     }
 
     @PostMapping("/upload")
-    public String upload(@RequestParam(value = "file") MultipartFile[] files) {
-        return "success";
+    public R<Object> upload(@RequestParam(value = "file") MultipartFile file) {
+        FileVo fileVo = new FileVo();
+        fileVo.setFileName(file.getOriginalFilename());
+        fileVo.setResource(file.getResource());
+        return R.success(fileVo);
     }
 
     @GetMapping("/id1")

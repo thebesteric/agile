@@ -206,7 +206,9 @@ public class ReflectUtils extends AbstractUtils {
 
     public static boolean isPrimitiveOrWarp(Class<?> clazz) {
         try {
-            return clazz.isPrimitive() || ((Class<?>) clazz.getField("TYPE").get(null)).isPrimitive();
+            return clazz.isPrimitive() || ((Class<?>) clazz.getField("TYPE").get(null)).isPrimitive()
+                   || clazz == Number.class
+                   || clazz == Date.class;
         } catch (Exception ignore) {
             return false;
         }
