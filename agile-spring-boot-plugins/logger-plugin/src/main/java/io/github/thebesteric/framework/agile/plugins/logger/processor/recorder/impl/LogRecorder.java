@@ -1,14 +1,13 @@
 package io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl;
 
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
-import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogMode;
+import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.AbstractThreadPoolRecorder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.EnumMap;
 import java.util.function.Consumer;
 
 /**
@@ -20,14 +19,15 @@ import java.util.function.Consumer;
  */
 @Slf4j
 public class LogRecorder extends AbstractThreadPoolRecorder {
-    private static final Map<LogLevel, Consumer<String>> logActions = new HashMap<>(8);
+
+    private static final EnumMap<LogLevel, Consumer<String>> LOG_ACTIONS = new EnumMap<>(LogLevel.class);
 
     static {
-        logActions.put(LogLevel.DEBUG, log::debug);
-        logActions.put(LogLevel.INFO, log::info);
-        logActions.put(LogLevel.WARN, log::warn);
-        logActions.put(LogLevel.ERROR, log::error);
-        logActions.put(LogLevel.TRACE, log::trace);
+        LOG_ACTIONS.put(LogLevel.DEBUG, log::debug);
+        LOG_ACTIONS.put(LogLevel.INFO, log::info);
+        LOG_ACTIONS.put(LogLevel.WARN, log::warn);
+        LOG_ACTIONS.put(LogLevel.ERROR, log::error);
+        LOG_ACTIONS.put(LogLevel.TRACE, log::trace);
     }
 
     public LogRecorder(AgileLoggerProperties properties) {
@@ -41,7 +41,7 @@ public class LogRecorder extends AbstractThreadPoolRecorder {
 
     @Override
     protected void doProcess(InvokeLog invokeLog) {
-        Consumer<String> logAction = logActions.getOrDefault(invokeLog.getLevel(), log::debug);
+        Consumer<String> logAction = LOG_ACTIONS.getOrDefault(invokeLog.getLevel(), log::debug);
         logAction.accept(invokeLog.print());
     }
 }
