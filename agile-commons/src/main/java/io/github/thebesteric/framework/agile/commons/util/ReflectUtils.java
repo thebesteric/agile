@@ -212,6 +212,10 @@ public class ReflectUtils extends AbstractUtils {
         }
     }
 
+    public static boolean isPrimitiveOrWarp(Object obj) {
+        return isPrimitiveOrWarp(obj.getClass());
+    }
+
     public static boolean isListType(Class<?> clazz) {
         return List.class.isAssignableFrom(clazz);
     }
