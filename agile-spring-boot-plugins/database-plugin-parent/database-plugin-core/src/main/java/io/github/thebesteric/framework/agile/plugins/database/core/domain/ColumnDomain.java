@@ -28,6 +28,10 @@ import java.util.List;
 @Data
 @Accessors(chain = true)
 public class ColumnDomain {
+
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
+
     /** 所属表 */
     private String tableName;
 
@@ -246,7 +250,7 @@ public class ColumnDomain {
             if (key.length() > 64) {
                 key = key.substring(0, 64);
             }
-            LoggerPrinter.warn(log, "The table {}'s key name is too long, so it is truncated to {}", tableName, key);
+            loggerPrinter.warn("The table {}'s key name is too long, so it is truncated to {}", tableName, key);
         }
         return key;
     }

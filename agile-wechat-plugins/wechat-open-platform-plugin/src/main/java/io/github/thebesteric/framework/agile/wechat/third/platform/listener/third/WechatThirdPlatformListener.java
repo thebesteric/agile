@@ -28,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WechatThirdPlatformListener extends AbstractListener {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private static final String SUCCESS = "success";
 
     private final WechatThirdPlatformProperties properties;
@@ -81,7 +83,7 @@ public class WechatThirdPlatformListener extends AbstractListener {
             //     LoggerPrinter.info(log, "申请小程序备案");
             // }
         } catch (Exception e) {
-            LoggerPrinter.error(log, e.getMessage(), e);
+            loggerPrinter.error("Error processing authorization event: {}", e.getMessage(), e);
         }
         return SUCCESS;
     }
@@ -117,7 +119,7 @@ public class WechatThirdPlatformListener extends AbstractListener {
                 messageEventListener.onSubmitAuditDelay(weAppAuditDelayEvent);
             }
         } catch (Exception e) {
-            LoggerPrinter.error(log, e.getMessage(), e);
+            loggerPrinter.error("Error processing message event: {}", e.getMessage(), e);
         }
         return SUCCESS;
     }
@@ -141,7 +143,7 @@ public class WechatThirdPlatformListener extends AbstractListener {
         String encryptType = request.getParameter("encrypt_type");
         String msgSignature = request.getParameter("msg_signature");
 
-        LoggerPrinter.info(log, "接收到事件: signature = {}, timestamp = {}, nonce = {}, encrypt_type = {}, msg_signature = {}",
+        loggerPrinter.info("接收到事件: signature = {}, timestamp = {}, nonce = {}, encrypt_type = {}, msg_signature = {}",
                 signature, timestamp, nonce, encryptType, msgSignature);
 
         // 获取 xml 请求体

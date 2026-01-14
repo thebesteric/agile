@@ -15,7 +15,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -32,6 +32,9 @@ import java.util.function.Function;
  */
 @Slf4j
 public class AgileSensitiveFilter {
+
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     /** 配置文件 */
     private final AgileSensitiveFilterProperties properties;
 
@@ -80,7 +83,7 @@ public class AgileSensitiveFilter {
         }
         // 以文件形式加载敏感词
         if (isLoadByFile()) {
-            LoggerPrinter.warn(log, "敏感词文件不存在，请检查路径是否正确: {}", filePath);
+            loggerPrinter.warn("敏感词文件不存在，请检查路径是否正确: {}", filePath);
             return;
         }
         // 加载敏感词
@@ -103,7 +106,7 @@ public class AgileSensitiveFilter {
         // 添加到前缀树
         sensitiveWords.forEach(this::addKeyword);
         this.loaded = true;
-        LoggerPrinter.info(log, "敏感词加载完成，加载方式: {}, 加载数量: {}", loadType, sensitiveWords.size());
+        loggerPrinter.info("敏感词加载完成，加载方式: {}, 加载数量: {}", loadType, sensitiveWords.size());
     }
 
     /**
@@ -135,7 +138,7 @@ public class AgileSensitiveFilter {
                 sensitiveWords = objectMapper.readValue(sensitiveFile, new TypeReference<>() {
                 });
             } catch (IOException e) {
-                LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
+                loggerPrinter.error("加载敏感词文件失败: " + e.getMessage());
             }
         }
         // 加载 TXT 文件（不要求后缀名，但是格式必须时一行一个敏感词）
@@ -146,7 +149,7 @@ public class AgileSensitiveFilter {
                     sensitiveWords.add(keyword);
                 }
             } catch (IOException e) {
-                LoggerPrinter.error(log, "加载敏感词文件失败: " + e.getMessage());
+                loggerPrinter.error("加载敏感词文件失败: " + e.getMessage());
             }
         }
         // 其他加载方式
@@ -200,7 +203,7 @@ public class AgileSensitiveFilter {
         }
         // 是否以文件形式加载敏感词
         if (isLoadByFile()) {
-            LoggerPrinter.warn(log, "敏感词文件不存在，请检查路径是否正确");
+            loggerPrinter.warn("敏感词文件不存在，请检查路径是否正确");
             return SensitiveFilterResult.empty(text, properties.getPlaceholder());
         }
         // 节点指针

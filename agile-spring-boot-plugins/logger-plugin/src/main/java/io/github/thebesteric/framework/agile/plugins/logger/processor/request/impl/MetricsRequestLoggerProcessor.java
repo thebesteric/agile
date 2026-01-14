@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MetricsRequestLoggerProcessor extends AbstractRequestLoggerProcessor {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final Cache<String, MetricsRequestLog.Metrics> cache;
 
     public MetricsRequestLoggerProcessor() {
@@ -27,7 +29,7 @@ public class MetricsRequestLoggerProcessor extends AbstractRequestLoggerProcesso
     public MetricsRequestLoggerProcessor(int initialCapacity, int maximumSize) {
         super();
         cache = CacheBuilder.newBuilder().initialCapacity(initialCapacity).maximumSize(maximumSize)
-                .removalListener(notification -> LoggerPrinter.info(log, "Metrics Log: {}-{} is removed", notification.getKey(), notification.getValue()))
+                .removalListener(notification -> loggerPrinter.info("Metrics Log: {}-{} is removed", notification.getKey(), notification.getValue()))
                 .build();
     }
 

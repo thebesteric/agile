@@ -44,6 +44,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public abstract class AbstractExecutor<T extends BaseEntity> {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     @Transient
     protected final JdbcTemplate jdbcTemplate;
 
@@ -80,7 +82,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
         try {
             ofMethod = type.getMethod("of", ResultSet.class);
         } catch (NoSuchMethodException e) {
-            LoggerPrinter.error(log, e.getMessage(), e);
+            loggerPrinter.error(e.getMessage(), e);
             return null;
         }
         final String selectSql = """
@@ -520,7 +522,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
                         }
                     }
                 } catch (IllegalAccessException e) {
-                    LoggerPrinter.error(log, e.getMessage(), e);
+                    loggerPrinter.error(e.getMessage(), e);
                 }
             }
             // 递归寻找父类

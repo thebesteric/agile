@@ -27,6 +27,8 @@ import java.util.*;
 @Data
 public class InvokeLog {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     public static final String DEFAULT_TAG = "default";
     public static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.INFO;
     private static final Object NULL_OBJECT_MARKER = null;
@@ -216,7 +218,7 @@ public class InvokeLog {
             return obj;
         } catch (Exception e) {
             // 如果反射处理失败，返回原对象
-            LoggerPrinter.error("Process stream object error.", e);
+            loggerPrinter.error("Process stream object error.", e);
             return obj;
         }
     }

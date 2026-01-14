@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractWechatMiniEventListener {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     /**
      * 音视频内容安全识别
      *
@@ -25,7 +27,7 @@ public abstract class AbstractWechatMiniEventListener {
      * @since 2024/8/6 14:16
      */
     public void onMediaCheckAsyncEvent(MediaCheckAsyncEvent mediaCheckAsyncEvent) {
-        LoggerPrinter.info(log, "onMediaCheckAsyncEvent: {}", mediaCheckAsyncEvent);
+        loggerPrinter.info("onMediaCheckAsyncEvent: {}", mediaCheckAsyncEvent);
     }
 
     /**
@@ -37,7 +39,7 @@ public abstract class AbstractWechatMiniEventListener {
      * @since 2024/8/7 14:54
      */
     public void onSessionMessageEvent(CustomerSessionMessageEvent sessionMessageEvent) {
-        LoggerPrinter.info(log, "onSessionMessageEvent: {}", sessionMessageEvent);
+        loggerPrinter.info("onSessionMessageEvent: {}", sessionMessageEvent);
     }
 
     /**
@@ -49,6 +51,6 @@ public abstract class AbstractWechatMiniEventListener {
      * @since 2024/8/6 17:11
      */
     public void onUnknownEvent(BaseMiniEvent baseMiniEvent) {
-        LoggerPrinter.info(log, "onUnknownEvent: {}", baseMiniEvent);
+        loggerPrinter.info("onUnknownEvent: {}", baseMiniEvent);
     }
 }

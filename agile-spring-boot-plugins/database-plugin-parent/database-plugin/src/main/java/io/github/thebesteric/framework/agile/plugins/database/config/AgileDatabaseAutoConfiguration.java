@@ -6,12 +6,12 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitializa
 import io.github.thebesteric.framework.agile.plugins.database.jdbc.AgileDatabaseJdbcTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -31,15 +31,17 @@ import java.sql.SQLException;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".database", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileDatabaseAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileDatabaseProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Database-plugin has been Disabled");
+            loggerPrinter.info("Database-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Database-plugin is running");
+        loggerPrinter.info("Database-plugin is running");
 
         AgileDatabaseJdbcTemplate jdbcTemplate = getBean(AgileDatabaseJdbcTemplate.class);
         jdbcTemplate.createOrUpdateTable();

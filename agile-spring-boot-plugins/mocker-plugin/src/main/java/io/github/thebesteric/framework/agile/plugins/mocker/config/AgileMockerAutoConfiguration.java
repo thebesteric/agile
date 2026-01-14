@@ -29,15 +29,17 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".mocker", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileMockerAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileMockerProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "{} has been Disabled", AgilePlugins.MOCKER_PLUGIN.getName());
+            loggerPrinter.info("{} has been Disabled", AgilePlugins.MOCKER_PLUGIN.getName());
             return;
         }
-        LoggerPrinter.info(log, "{} is running", AgilePlugins.MOCKER_PLUGIN.getName());
+        loggerPrinter.info("{} is running", AgilePlugins.MOCKER_PLUGIN.getName());
     }
 
     @Bean

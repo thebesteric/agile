@@ -30,6 +30,8 @@ import java.util.regex.Pattern;
 @Slf4j
 public class JsonUtils extends AbstractUtils {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private static final Pattern PATTERN = Pattern.compile("\\s*|\t|\r|\n");
 
     public static final ObjectMapper MAPPER = new ObjectMapper();
@@ -55,7 +57,7 @@ public class JsonUtils extends AbstractUtils {
         try {
             return MAPPER.readValue(jsonStr, clazz);
         } catch (Exception e) {
-            LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
+            log.error(ExceptionUtils.getSimpleMessage(e));
         }
         return null;
     }
@@ -72,7 +74,7 @@ public class JsonUtils extends AbstractUtils {
             CollectionType listType = MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, clazz);
             return MAPPER.readValue(jsonStr, listType);
         } catch (IOException e) {
-            LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
+            loggerPrinter.error(ExceptionUtils.getSimpleMessage(e));
         }
         return null;
     }
@@ -89,7 +91,7 @@ public class JsonUtils extends AbstractUtils {
             MapLikeType mapType = MAPPER.getTypeFactory().constructMapLikeType(Map.class, key, value);
             return MAPPER.readValue(jsonStr, mapType);
         } catch (IOException e) {
-            LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
+            loggerPrinter.error(ExceptionUtils.getSimpleMessage(e));
         }
         return null;
     }
@@ -105,7 +107,7 @@ public class JsonUtils extends AbstractUtils {
         try {
             return MAPPER.writeValueAsString(obj);
         } catch (Exception e) {
-            LoggerPrinter.error(log, ExceptionUtils.getSimpleMessage(e));
+            loggerPrinter.error(ExceptionUtils.getSimpleMessage(e));
         }
         return null;
     }

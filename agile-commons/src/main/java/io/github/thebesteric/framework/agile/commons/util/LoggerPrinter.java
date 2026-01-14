@@ -1,69 +1,155 @@
 package io.github.thebesteric.framework.agile.commons.util;
 
+import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * LoggerPrinter
+ * LoggerPrinter - 增强的日志打印工具类
+ * <p>
+ * 特性:
+ * - 支持自动识别调用类
+ * - 支持事务ID前缀
+ * - 支持异常堆栈信息
  *
  * @author Eric Joe
  * @version 1.0
  * @since 2022-08-12 11:43:51
  */
-public class LoggerPrinter extends AbstractUtils {
+public class LoggerPrinter {
 
-    private static final Logger log = LoggerFactory.getLogger(LoggerPrinter.class);
+    /** 日志对象 */
+    @Getter
+    private final Logger logger;
 
+    /** 日志前缀模板 */
     private static final String LOG_PREFIX = "[Agile] - %s: ";
 
-    // debug
-    public static void debug(Logger log, String message, Object... args) {
-        if (log.isDebugEnabled()) log.debug(getLogPrefix() + message, args);
+    public LoggerPrinter() {
+        this(getCallerClass());
     }
 
-    public static void debug(String message, Object... args) {
-        debug(log, message, args);
+    public LoggerPrinter(Class<?> clazz) {
+        this.logger = LoggerFactory.getLogger(clazz);
     }
 
-    // info
-    public static void info(Logger log, String message, Object... args) {
-        if (log.isInfoEnabled()) log.info(getLogPrefix() + message, args);
+    public static LoggerPrinter newInstance() {
+        return newInstance(null);
     }
 
-    public static void info(String message, Object... args) {
-        info(log, message, args);
+    public static LoggerPrinter newInstance(@Nullable Class<?> clazz) {
+        clazz = clazz != null ? clazz : getCallerClass();
+        return new LoggerPrinter(clazz);
     }
 
-    // warn
-    public static void warn(Logger log, String message, Object... args) {
-        if (log.isWarnEnabled()) log.warn(getLogPrefix() + message, args);
+    // ==================== debug ====================
+
+    public void debug(String message, Object... args) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(getLogPrefix() + message, args);
+        }
     }
 
-    public static void warn(String message, Object... args) {
-        warn(log, message, args);
+    public void debug(String message, Throwable throwable) {
+        if (logger.isDebugEnabled()) {
+            logger.debug(getLogPrefix() + message, throwable);
+        }
     }
 
-    // error
-    public static void error(Logger log, String message, Object... args) {
-        if (log.isErrorEnabled()) log.error(getLogPrefix() + message, args);
+    // ==================== info ====================
+
+    public void info(String message, Object... args) {
+        if (logger.isInfoEnabled()) {
+            logger.info(getLogPrefix() + message, args);
+        }
     }
 
-    public static void error(String message, Object... args) {
-        error(log, message, args);
+    public void info(String message, Throwable throwable) {
+        if (logger.isInfoEnabled()) {
+            logger.info(getLogPrefix() + message, throwable);
+        }
     }
 
-    // trace
-    public static void trace(Logger log, String message, Object... args) {
-        if (log.isTraceEnabled()) log.trace(getLogPrefix() + message, args);
+    // ==================== warn ====================
+
+    public void warn(String message, Object... args) {
+        if (logger.isWarnEnabled()) {
+            logger.warn(getLogPrefix() + message, args);
+        }
     }
 
-    public static void trace(String message, Object... args) {
-        trace(log, message, args);
+    public void warn(String message, Throwable throwable) {
+        if (logger.isWarnEnabled()) {
+            logger.warn(getLogPrefix() + message, throwable);
+        }
     }
 
+    // ==================== error ====================
+
+    public void error(String message, Object... args) {
+        if (logger.isErrorEnabled()) {
+            logger.error(getLogPrefix() + message, args);
+        }
+    }
+
+    public void error(String message, Throwable throwable) {
+        if (logger.isErrorEnabled()) {
+            logger.error(getLogPrefix() + message, throwable);
+        }
+    }
+
+    // ==================== trace ====================
+
+    public void trace(String message, Object... args) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(getLogPrefix() + message, args);
+        }
+    }
+
+    public void trace(String message, Throwable throwable) {
+        if (logger.isTraceEnabled()) {
+            logger.trace(getLogPrefix() + message, throwable);
+        }
+    }
+
+    /**
+     * 获取带事务 ID 前缀的日志前缀
+     *
+     * @return 日志前缀
+     */
     private static String getLogPrefix() {
         String transactionId = TransactionUtils.get();
         return LOG_PREFIX.formatted(transactionId);
+    }
+
+    /**
+     * 获取调用者的Class对象
+     * 通过解析StackTrace确定实际的调用类
+     * <p>
+     * StackTrace结构:
+     * [0] = Thread.currentThread().getStackTrace()
+     * [1] = getCallerClass()
+     * [2] = LoggerPrinter() 构造方法
+     * [3] = 实际调用者 <--
+     *
+     * @return 调用者的Class对象，如果无法确定则返回LoggerPrinter.class
+     */
+    private static Class<?> getCallerClass() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        for (int i = 3; i < stackTrace.length; i++) {
+            String className = stackTrace[i].getClassName();
+            // 跳过 LoggerPrinter 类本身
+            if (className.equals(LoggerPrinter.class.getName())) {
+                continue;
+            }
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException e) {
+                // 继续尝试下一个堆栈元素
+            }
+        }
+        return LoggerPrinter.class;
     }
 
 }

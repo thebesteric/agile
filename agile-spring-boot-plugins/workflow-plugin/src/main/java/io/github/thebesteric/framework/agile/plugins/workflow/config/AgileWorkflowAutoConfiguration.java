@@ -13,6 +13,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.listener.AgileReje
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -20,7 +21,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -42,15 +42,17 @@ import java.sql.SQLException;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".workflow", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileWorkflowAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileWorkflowProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Workflow-plugin has been Disabled");
+            loggerPrinter.info("Workflow-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Workflow-plugin is running");
+        loggerPrinter.info("Workflow-plugin is running");
         // 初始化
         init();
     }

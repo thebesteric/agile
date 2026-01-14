@@ -28,6 +28,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class WechatMiniListener extends AbstractListener {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final WechatMiniProperties properties;
 
     public String listen(HttpServletRequest request, AbstractWechatMiniEventListener eventListener, AbstractWechatMiniMessageListener messageListener) throws Exception {
@@ -129,7 +131,7 @@ public class WechatMiniListener extends AbstractListener {
         String nonce = request.getParameter("nonce");
         String echoStr = request.getParameter("echostr");
 
-        LoggerPrinter.info(log, "接收到事件: signature = {}, timestamp = {}, nonce = {}, echoStr = {}",
+        loggerPrinter.info("接收到事件: signature = {}, timestamp = {}, nonce = {}, echoStr = {}",
                 signature, timestamp, nonce, echoStr);
 
         // 将 Token、timestamp、nonce 三个参数进行字典序排序。

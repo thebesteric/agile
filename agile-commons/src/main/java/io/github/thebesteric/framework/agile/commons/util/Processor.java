@@ -182,7 +182,7 @@ public class Processor<T> {
         List<Throwable> exceptions = this.dataValidator.getExceptions();
         if (!exceptions.isEmpty()) {
             if (this.exceptionListeners.isEmpty()) {
-                LoggerPrinter.debug(log, "Has some exceptions, but not can not find any exception listener");
+                log.debug("Has some exceptions, but not can not find any exception listener");
                 this.dataValidator.throwException();
             }
             for (Predicate<List<Throwable>> exceptionListener : this.exceptionListeners) {

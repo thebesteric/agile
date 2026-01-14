@@ -2,12 +2,12 @@ package io.github.thebesteric.framework.agile.core.config;
 
 import io.github.thebesteric.framework.agile.core.AgileContext;
 import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.support.GenericApplicationContext;
-import org.springframework.lang.NonNull;
 
 /**
  * AbstractAgileInitialization

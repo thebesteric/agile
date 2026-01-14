@@ -11,7 +11,10 @@ import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkfl
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
-import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.*;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeAssignmentExecutorBuilder;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutor;
+import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.assignment.NodeRoleAssignmentExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.definition.NodeDefinitionExecutorBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.history.NodeDefinitionHistoryBuilder;
@@ -46,6 +49,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class WorkflowServiceImpl extends AbstractWorkflowService {
+
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
 
     private final NodeDefinitionExecutorBuilder nodeDefinitionExecutorBuilder;
     private final NodeRelationExecutorBuilder nodeRelationExecutorBuilder;
@@ -476,7 +481,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
 
             // 查看是否已经发布
             if (workflowDefinition.isPublished()) {
-                LoggerPrinter.debug(log, "流程定义已发布，无需重复发布: {}", workflowDefinitionId);
+                loggerPrinter.debug("流程定义已发布，无需重复发布: {}", workflowDefinitionId);
                 return;
             }
 

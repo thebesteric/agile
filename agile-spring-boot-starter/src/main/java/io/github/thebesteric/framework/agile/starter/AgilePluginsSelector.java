@@ -3,9 +3,9 @@ package io.github.thebesteric.framework.agile.starter;
 import io.github.thebesteric.framework.agile.commons.constant.AgilePlugins;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.lang.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +19,8 @@ import java.util.List;
  */
 @Slf4j
 public class AgilePluginsSelector implements ImportSelector {
+
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
 
     @NonNull
     @Override
@@ -39,7 +41,7 @@ public class AgilePluginsSelector implements ImportSelector {
                 Class.forName(className);
                 list.add(className);
             } catch (ClassNotFoundException e) {
-                LoggerPrinter.debug(log, "{} is not installed", plugin.getName());
+                loggerPrinter.debug("{} is not installed", plugin.getName());
             }
         }
 

@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 @AgileLogger(tag = "hello")
 public class HelloController {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     @Autowired
     HelloService helloService;
 
@@ -67,7 +69,7 @@ public class HelloController {
     @CrossOrigin
     @GetMapping("/foo")
     public R<String> foo(String name) {
-        LoggerPrinter.info("entering foo");
+        loggerPrinter.info("entering foo");
         return R.success(helloService.foo(name));
     }
 
@@ -79,9 +81,7 @@ public class HelloController {
 
     @PostMapping("/upload")
     public R<Object> upload(@RequestParam(value = "file") MultipartFile file) {
-        FileVo fileVo = new FileVo();
-        fileVo.setFileName(file.getOriginalFilename());
-        fileVo.setResource(file.getResource());
+        FileVo fileVo = helloService.parseFile(file);
         return R.success(fileVo);
     }
 

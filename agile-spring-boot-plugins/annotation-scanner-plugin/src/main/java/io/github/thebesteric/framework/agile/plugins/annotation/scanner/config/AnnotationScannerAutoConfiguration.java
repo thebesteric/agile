@@ -9,12 +9,12 @@ import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
@@ -33,15 +33,17 @@ import java.util.List;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".annotation-scanner", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AnnotationScannerAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AnnotationScannerProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Annotation-scanner-plugin has been Disabled");
+            loggerPrinter.info("Annotation-scanner-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Annotation-scanner-plugin is running");
+        loggerPrinter.info("Annotation-scanner-plugin is running");
     }
 
     @Bean

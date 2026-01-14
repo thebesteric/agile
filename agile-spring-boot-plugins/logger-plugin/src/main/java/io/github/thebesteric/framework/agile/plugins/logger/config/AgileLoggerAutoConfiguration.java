@@ -44,15 +44,17 @@ import java.util.List;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".logger", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileLoggerProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Logger-plugin has been Disabled");
+            loggerPrinter.info("Logger-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Logger-plugin is running");
+        loggerPrinter.info("Logger-plugin is running");
     }
 
     @Bean

@@ -24,6 +24,8 @@ import java.util.List;
  */
 public class AgileApplicationContextInitializer implements ApplicationContextAware {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private static final List<String> REQUIRED_CLASSES = List.of(
             "org.aspectj.lang.annotation.Aspect",
             "org.aspectj.weaver.Advice"
@@ -32,14 +34,14 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
     private void initialize(ApplicationContext applicationContext) {
 
         // 打印包扫描路径
-        LoggerPrinter.info("Base package path is {}", PackageFinder.getPackageNames());
+        loggerPrinter.info("Base package path is {}", PackageFinder.getPackageNames());
 
         // 检测是否包含 AspectJ 相关类
         REQUIRED_CLASSES.forEach(className -> {
             try {
                 Class.forName(className);
             } catch (ClassNotFoundException e) {
-                LoggerPrinter.error(" The required class '{}' is not found. Please make sure the AspectJ library is included. ", className);
+                loggerPrinter.error(" The required class '{}' is not found. Please make sure the AspectJ library is included. ", className);
             }
         });
 
@@ -50,7 +52,7 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
                 .findAny()
                 .ifPresentOrElse(clazz -> {
                 }, () -> {
-                    LoggerPrinter.error("Make sure @EnableAspectJAutoProxy is enabled in the project configuration.");
+                    loggerPrinter.error("Make sure @EnableAspectJAutoProxy is enabled in the project configuration.");
                 });
 
         // 获取 @EnableAgile 启动类
@@ -60,7 +62,7 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
                 .findAny()
                 .ifPresentOrElse(clazz -> {
                 }, () -> {
-                    LoggerPrinter.error("Make sure @EnableAgile is added to the configuration class.");
+                    loggerPrinter.error("Make sure @EnableAgile is added to the configuration class.");
                 });
 
 
@@ -70,10 +72,10 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
             try {
                 Class.forName(plugin.getClassName());
             } catch (ClassNotFoundException ignored) {
-                LoggerPrinter.debug("{} plug-in not found.", plugin.getName());
+                loggerPrinter.debug("{} plug-in not found.", plugin.getName());
                 continue;
             }
-            LoggerPrinter.info("The {} has been installed.", plugin.getName());
+            loggerPrinter.info("The {} has been installed.", plugin.getName());
         }
     }
 

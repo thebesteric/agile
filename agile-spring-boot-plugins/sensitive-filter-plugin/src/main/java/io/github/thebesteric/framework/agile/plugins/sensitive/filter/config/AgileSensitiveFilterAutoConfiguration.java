@@ -8,11 +8,11 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
 
 /**
  * AgileSensitiveFilterAutoConfiguration
@@ -28,15 +28,17 @@ import org.springframework.lang.Nullable;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".sensitive", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileSensitiveFilterAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileSensitiveFilterProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Sensitive-filter-plugin has been Disabled");
+            loggerPrinter.info("Sensitive-filter-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Sensitive-filter-plugin is running");
+        loggerPrinter.info("Sensitive-filter-plugin is running");
     }
 
     @Bean

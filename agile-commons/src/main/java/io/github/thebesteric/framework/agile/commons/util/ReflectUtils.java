@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.commons.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.annotation.Annotation;
@@ -17,6 +18,7 @@ import java.util.function.Predicate;
  * @version v1.0
  * @since 2024-03-08 15:05:24
  */
+@Slf4j
 public class ReflectUtils extends AbstractUtils {
 
     private static final Map<String, Class<?>> PRIMITIVE_TYPE_MAP = new HashMap<>();
@@ -43,7 +45,7 @@ public class ReflectUtils extends AbstractUtils {
             try {
                 type = Class.forName(typeName);
             } catch (ClassNotFoundException e) {
-                LoggerPrinter.debug(e.getMessage());
+                log.debug(e.getMessage());
             }
         }
         return type;

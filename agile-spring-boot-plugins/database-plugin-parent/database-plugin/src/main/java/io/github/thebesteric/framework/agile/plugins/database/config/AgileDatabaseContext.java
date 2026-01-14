@@ -33,6 +33,8 @@ import java.util.Set;
 @Slf4j
 public class AgileDatabaseContext extends AbstractAgileContext {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final Set<Class<?>> entityClasses = new HashSet<>();
     private final AgileDatabaseProperties properties;
     private final List<TableCreateListener> tableCreateListeners;
@@ -58,7 +60,7 @@ public class AgileDatabaseContext extends AbstractAgileContext {
                 // 不需要创建表的实体类
                 EntityClass entityClassAnno = clazz.getAnnotation(EntityClass.class);
                 if (entityClassAnno != null && entityClassAnno.ignore()) {
-                    LoggerPrinter.info("Ignore entity class: {}", entityClassName);
+                    loggerPrinter.info("Ignore entity class: {}", entityClassName);
                     continue;
                 }
                 // 获取表名

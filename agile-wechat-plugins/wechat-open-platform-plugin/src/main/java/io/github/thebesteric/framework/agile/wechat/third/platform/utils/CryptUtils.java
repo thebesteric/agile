@@ -29,6 +29,7 @@ import java.util.Arrays;
 @Slf4j
 public class CryptUtils {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
     private static final Charset UTF_8_CHARSET = StandardCharsets.UTF_8;
 
     private final String appId;
@@ -157,7 +158,7 @@ public class CryptUtils {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            LoggerPrinter.error(log, e.getMessage(), e);
+            loggerPrinter.error("sha1加密失败: {}", e.getMessage(), e);
         }
         return null;
     }
@@ -181,7 +182,7 @@ public class CryptUtils {
             byte[] bytes = sha256Hmac.doFinal(str.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(bytes);
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            LoggerPrinter.error(log, e.getMessage(), e);
+            loggerPrinter.error("sha256加密失败: {}", e.getMessage(), e);
         }
         return null;
     }

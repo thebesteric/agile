@@ -17,6 +17,8 @@ import java.util.Map;
  */
 public final class AgileContext {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private static Class<?> startupClass = null;
 
     private AgileContext() {
@@ -58,7 +60,7 @@ public final class AgileContext {
         try {
             return Class.forName(proxyClassName);
         } catch (ClassNotFoundException ignored) {
-            LoggerPrinter.warn("Cannot find ultimate target class for proxy class: {}", proxyClass.getName());
+            loggerPrinter.warn("Cannot find ultimate target class for proxy class: {}", proxyClass.getName());
         }
         return proxyClass;
     }

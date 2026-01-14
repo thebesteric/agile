@@ -8,6 +8,7 @@ import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIde
 import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIdempotentPointcut;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -15,7 +16,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.Nullable;
 
 import java.util.List;
 
@@ -33,6 +33,8 @@ import java.util.List;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".idempotent", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileIdempotentAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileIdempotentProperties properties;
 
     public static final String CUSTOM_CLASS_MATCHER_NAME = "idempotentCustomClassMatcher";
@@ -40,10 +42,10 @@ public class AgileIdempotentAutoConfiguration extends AbstractAgileInitializatio
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Idempotent-plugin has been Disabled");
+            loggerPrinter.info("Idempotent-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Idempotent-plugin is running");
+        loggerPrinter.info("Idempotent-plugin is running");
     }
 
     @Bean

@@ -28,16 +28,18 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class AgileWechatOpenAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final WechatMiniProperties wechatMiniProperties;
     private final WechatThirdPlatformProperties wechatThirdPlatformProperties;
 
     @Override
     public void start() {
         if (wechatMiniProperties.isEnable()) {
-            LoggerPrinter.info(log, "Wechat-mini-plugin is running");
+            loggerPrinter.info("Wechat-mini-plugin is running");
         }
         if (wechatThirdPlatformProperties.isEnable()) {
-            LoggerPrinter.info(log, "Wechat-third-platform-plugin is running");
+            loggerPrinter.info("Wechat-third-platform-plugin is running");
         }
     }
 

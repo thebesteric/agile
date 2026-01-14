@@ -18,6 +18,9 @@ import java.util.List;
 @Getter
 public abstract class AbstractAgileContext {
 
+
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     protected final GenericApplicationContext applicationContext;
 
     protected AbstractAgileContext(GenericApplicationContext applicationContext) {
@@ -40,7 +43,7 @@ public abstract class AbstractAgileContext {
             if (defaultValue != null) {
                 obj = defaultValue;
             } else {
-                LoggerPrinter.warn(log, e.getMessage());
+                loggerPrinter.warn(e.getMessage());
             }
         }
         return obj;
@@ -63,7 +66,7 @@ public abstract class AbstractAgileContext {
             if (defaultValue != null) {
                 obj = defaultValue;
             } else {
-                LoggerPrinter.debug(log, e.getMessage());
+                loggerPrinter.debug(e.getMessage());
             }
         }
         return obj;

@@ -3,7 +3,6 @@ package io.github.thebesteric.framework.agile.plugins.limiter.config;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
-import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
 import io.github.thebesteric.framework.agile.plugins.limiter.advisor.AgileRateLimiterAdvice;
 import io.github.thebesteric.framework.agile.plugins.limiter.advisor.AgileRateLimiterPointcut;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +13,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 /**
  * AgileRateLimiterAutoConfiguration
@@ -31,15 +28,17 @@ import java.util.List;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".limiter", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileRateLimiterAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileRateLimiterProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Limiter-plugin has been Disabled");
+            loggerPrinter.info("Limiter-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Limiter-plugin is running");
+        loggerPrinter.info("Limiter-plugin is running");
     }
 
     @Bean

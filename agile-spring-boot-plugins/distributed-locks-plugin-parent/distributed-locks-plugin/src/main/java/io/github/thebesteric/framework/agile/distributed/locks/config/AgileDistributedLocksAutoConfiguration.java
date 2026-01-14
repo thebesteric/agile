@@ -28,15 +28,17 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".distribute-locks", name = "enable", havingValue = "true", matchIfMissing = true)
 public class AgileDistributedLocksAutoConfiguration extends AbstractAgileInitialization {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileDistributedLocksProperties properties;
 
     @Override
     public void start() {
         if (!properties.isEnable()) {
-            LoggerPrinter.info(log, "Distribute-locks-plugin has been Disabled");
+            loggerPrinter.info("Distribute-locks-plugin has been Disabled");
             return;
         }
-        LoggerPrinter.info(log, "Distribute-locks-plugin is running");
+        loggerPrinter.info("Distribute-locks-plugin is running");
     }
 
     @Bean

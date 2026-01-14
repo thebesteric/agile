@@ -42,6 +42,8 @@ import java.util.regex.Pattern;
 @Getter
 public class JdbcTemplateHelper {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final JdbcTemplate jdbcTemplate;
     private final PlatformTransactionManager transactionManager;
     private final String jdbcUrl;
@@ -150,7 +152,7 @@ public class JdbcTemplateHelper {
             TransactionDefinition def = new DefaultTransactionDefinition();
             TransactionStatus status = transactionManager.getTransaction(def);
             return Try.of(supplier::get).onSuccess(result -> transactionManager.commit(status)).onFailure(e -> {
-                LoggerPrinter.error(log, "Failed to execute: {}", e.getMessage(), e);
+                loggerPrinter.error("Failed to execute: {}", e.getMessage(), e);
                 transactionManager.rollback(status);
             }).get();
         }
@@ -184,7 +186,7 @@ public class JdbcTemplateHelper {
             TransactionDefinition def = new DefaultTransactionDefinition();
             TransactionStatus status = transactionManager.getTransaction(def);
             Try.run(runnable::run).onSuccess(result -> transactionManager.commit(status)).onFailure(e -> {
-                LoggerPrinter.error(log, "Failed to execute: {}", e.getMessage(), e);
+                loggerPrinter.error("Failed to execute: {}", e.getMessage(), e);
                 transactionManager.rollback(status);
             }).get();
         }
@@ -702,19 +704,19 @@ public class JdbcTemplateHelper {
         }).onFailure(e -> {
             // 更新或新建重复数据，忽略
             if (e instanceof SQLSyntaxErrorException && e.getMessage().startsWith("Duplicate key")) {
-                LoggerPrinter.warn(log, e.getMessage() + ": {}", sql);
+                loggerPrinter.warn(e.getMessage() + ": {}", sql);
                 return;
             }
             if (Operation.DELETE != operation) {
-                LoggerPrinter.error(log, e.getMessage() + ": {}", sql, e);
+                loggerPrinter.error(e.getMessage() + ": {}", sql, e);
             }
         }).andThen(result -> {
             if (showSql && result == 0) {
                 if (formatSql) {
                     String formattedSql = SqlFormatter.format(sql);
-                    LoggerPrinter.info(log, formattedSql);
+                    loggerPrinter.info(formattedSql);
                 } else {
-                    LoggerPrinter.info(log, sql);
+                    loggerPrinter.info(sql);
                 }
             }
         }).andFinallyTry(() -> connection.get().close());
@@ -755,13 +757,13 @@ public class JdbcTemplateHelper {
                 }
             }
             return result;
-        }).onFailure(e -> LoggerPrinter.error(log, e.getMessage() + ": {}", sql, e)).andThen(result -> {
+        }).onFailure(e -> loggerPrinter.error(e.getMessage() + ": {}", sql, e)).andThen(result -> {
             if (showSql) {
                 if (formatSql) {
                     String formattedSql = SqlFormatter.format(sql);
-                    LoggerPrinter.info(log, formattedSql);
+                    loggerPrinter.info(formattedSql);
                 } else {
-                    LoggerPrinter.info(log, sql);
+                    loggerPrinter.info(sql);
                 }
             }
         }).andFinallyTry(() -> connection.get().close()).get();

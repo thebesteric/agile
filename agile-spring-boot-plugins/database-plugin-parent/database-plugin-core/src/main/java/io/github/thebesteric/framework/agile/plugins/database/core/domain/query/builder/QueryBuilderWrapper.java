@@ -27,7 +27,10 @@ import java.util.function.Function;
  */
 public class QueryBuilderWrapper {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private static final String QUERY_PARSE_ERROR_MESSAGE = "Failed to extract field name";
+
 
     public static class Builder<T> {
         private final Class<T> clazz;
@@ -386,7 +389,7 @@ public class QueryBuilderWrapper {
             try {
                 runnable.run();
             } catch (Exception e) {
-                LoggerPrinter.error(QUERY_PARSE_ERROR_MESSAGE, e.getMessage(), e);
+                loggerPrinter.error(QUERY_PARSE_ERROR_MESSAGE, e.getMessage(), e);
                 throw new QueryParseException(QUERY_PARSE_ERROR_MESSAGE, e);
             }
             return this;

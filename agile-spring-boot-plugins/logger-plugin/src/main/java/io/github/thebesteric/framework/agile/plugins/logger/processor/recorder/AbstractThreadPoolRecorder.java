@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public abstract class AbstractThreadPoolRecorder implements Recorder {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileLoggerProperties properties;
     private ExecutorService recorderThreadPool;
 
@@ -83,7 +85,7 @@ public abstract class AbstractThreadPoolRecorder implements Recorder {
                     .headers(requestLog.getHeaders())
                     .body(IOUtils.toByteArray(requestLog.getBody())).curl();
             requestLog.setCurl(curl);
-            LoggerPrinter.trace(log, curl);
+            loggerPrinter.debug("CURL: {}", curl);
         }
     }
 

@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class MessageEventListener {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     /**
      * 代码审核通过
      *
@@ -26,7 +28,7 @@ public abstract class MessageEventListener {
      * @since 2024/8/1 19:35
      */
     public void onSubmitAuditSuccess(WeAppAuditSuccessEvent weAppAuditSuccessEvent) {
-        LoggerPrinter.info(log, "onSubmitAuditSucceed: time = {}", weAppAuditSuccessEvent.getSuccTime());
+        loggerPrinter.info("onSubmitAuditSucceed: time = {}", weAppAuditSuccessEvent.getSuccTime());
     }
 
     /**
@@ -39,7 +41,7 @@ public abstract class MessageEventListener {
      * @since 2024/8/1 19:35
      */
     public void onSubmitAuditFail(WeAppAuditFailEvent weAppAuditFailEvent) {
-        LoggerPrinter.info(log, "onSubmitAuditFail: time = {}, reason = {}", weAppAuditFailEvent.getFailTime(), weAppAuditFailEvent.getReason());
+        loggerPrinter.info("onSubmitAuditFail: time = {}, reason = {}", weAppAuditFailEvent.getFailTime(), weAppAuditFailEvent.getReason());
     }
 
     /**
@@ -52,7 +54,7 @@ public abstract class MessageEventListener {
      * @since 2024/8/1 19:35
      */
     public void onSubmitAuditDelay(WeAppAuditDelayEvent weAppAuditDelayEvent) {
-        LoggerPrinter.info(log, "onSubmitAuditDelayed: time = {}, reason = {}", weAppAuditDelayEvent.getDelayTime(), weAppAuditDelayEvent.getReason());
+        loggerPrinter.info("onSubmitAuditDelayed: time = {}, reason = {}", weAppAuditDelayEvent.getDelayTime(), weAppAuditDelayEvent.getReason());
     }
 
 }

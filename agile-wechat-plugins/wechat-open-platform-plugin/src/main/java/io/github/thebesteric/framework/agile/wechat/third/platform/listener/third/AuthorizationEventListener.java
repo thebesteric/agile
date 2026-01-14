@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AuthorizationEventListener {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     /**
      * 推送 component_verify_ticket 消息
      *
@@ -26,7 +28,7 @@ public abstract class AuthorizationEventListener {
      * @since 2024/7/29 20:16
      */
     public void onComponentVerifyTicket(ComponentVerifyTicketEvent componentVerifyTicketEvent) {
-        LoggerPrinter.info(log, "onComponentVerifyTicket: {}", componentVerifyTicketEvent);
+        loggerPrinter.info("onComponentVerifyTicket: {}", componentVerifyTicketEvent);
     }
 
     /**
@@ -38,7 +40,7 @@ public abstract class AuthorizationEventListener {
      * @since 2024/7/29 20:23
      */
     public void onAuthorized(AuthorizedEvent authorizedEvent) {
-        LoggerPrinter.info(log, "onAuthorized: {}", authorizedEvent);
+        loggerPrinter.info("onAuthorized: {}", authorizedEvent);
     }
 
     /**
@@ -50,7 +52,7 @@ public abstract class AuthorizationEventListener {
      * @since 2024/7/29 20:47
      */
     public void onUnAuthorized(UnAuthorizedEvent unAuthorizedEvent) {
-        LoggerPrinter.info(log, "onUnAuthorized: {}", unAuthorizedEvent);
+        loggerPrinter.info("onUnAuthorized: {}", unAuthorizedEvent);
     }
 
     /**
@@ -62,7 +64,7 @@ public abstract class AuthorizationEventListener {
      * @since 2024/7/29 20:50
      */
     public void onUpdateAuthorized(UpdateAuthorizedEvent updateAuthorizedEvent) {
-        LoggerPrinter.info(log, "onUpdateAuthorized: {}", updateAuthorizedEvent);
+        loggerPrinter.info("onUpdateAuthorized: {}", updateAuthorizedEvent);
     }
 
 }

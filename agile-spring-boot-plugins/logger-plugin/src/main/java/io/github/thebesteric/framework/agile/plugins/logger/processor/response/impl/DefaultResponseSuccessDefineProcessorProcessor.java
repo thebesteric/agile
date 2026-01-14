@@ -19,6 +19,8 @@ import java.util.List;
 @Slf4j
 public class DefaultResponseSuccessDefineProcessorProcessor extends AbstractResponseSuccessDefineProcessor {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     public DefaultResponseSuccessDefineProcessorProcessor() {
         super(DefaultResponseSuccessDefineProcessorProcessor.getDefaultResponseSuccessDefine());
     }
@@ -58,7 +60,7 @@ public class DefaultResponseSuccessDefineProcessorProcessor extends AbstractResp
             return codeValue;
 
         } catch (Exception ex) {
-            LoggerPrinter.debug(log, ex.getMessage());
+            loggerPrinter.debug(ex.getMessage());
             return ExceptionUtils.getSimpleMessage(ex);
         }
     }

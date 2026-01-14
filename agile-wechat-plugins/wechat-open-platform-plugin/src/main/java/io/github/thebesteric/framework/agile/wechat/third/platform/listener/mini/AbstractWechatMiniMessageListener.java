@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public abstract class AbstractWechatMiniMessageListener {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     /**
      * 文本消息
      *
@@ -26,7 +28,7 @@ public abstract class AbstractWechatMiniMessageListener {
      * @since 2024/8/7 14:36
      */
     public void onCustomerTextMessageEvent(CustomerTextMessageEvent customerTextMessageEvent) {
-        LoggerPrinter.info(log, "onCustomerTextMessageEvent: {}", customerTextMessageEvent);
+        loggerPrinter.info("onCustomerTextMessageEvent: {}", customerTextMessageEvent);
     }
 
     /**
@@ -38,7 +40,7 @@ public abstract class AbstractWechatMiniMessageListener {
      * @since 2024/8/7 14:53
      */
     public void onCustomerImageMessageEvent(CustomerImageMessageEvent customerImageMessageEvent) {
-        LoggerPrinter.info(log, "onCustomerImageMessageEvent: {}", customerImageMessageEvent);
+        loggerPrinter.info("onCustomerImageMessageEvent: {}", customerImageMessageEvent);
     }
 
     /**
@@ -50,7 +52,7 @@ public abstract class AbstractWechatMiniMessageListener {
      * @since 2024/8/7 14:53
      */
     public void onCustomerMiniCardMessageEvent(CustomerMiniCardMessageEvent customerMiniCardMessageEvent) {
-        LoggerPrinter.info(log, "onCustomerMiniCardMessageEvent: {}", customerMiniCardMessageEvent);
+        loggerPrinter.info("onCustomerMiniCardMessageEvent: {}", customerMiniCardMessageEvent);
     }
 
     /**
@@ -62,7 +64,7 @@ public abstract class AbstractWechatMiniMessageListener {
      * @since 2024/8/6 17:11
      */
     public void onUnknownEvent(BaseMiniEvent baseMiniEvent) {
-        LoggerPrinter.info(log, "onUnknownEvent: {}", baseMiniEvent);
+        loggerPrinter.info("onUnknownEvent: {}", baseMiniEvent);
     }
 
 }

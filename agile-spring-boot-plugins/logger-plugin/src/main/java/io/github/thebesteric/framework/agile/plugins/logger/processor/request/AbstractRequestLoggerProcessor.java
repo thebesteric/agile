@@ -24,6 +24,8 @@ import java.lang.reflect.Method;
 @RequiredArgsConstructor
 public abstract class AbstractRequestLoggerProcessor implements RequestLoggerProcessor {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     @Override
     public RequestLog processor(String id, Method method, AgileLoggerRequestWrapper requestWrapper, AgileLoggerResponseWrapper responseWrapper, DurationWatcher.Duration duration) throws IOException {
         RequestLog requestLog = new RequestLog(id, requestWrapper, responseWrapper, duration);
@@ -32,7 +34,7 @@ public abstract class AbstractRequestLoggerProcessor implements RequestLoggerPro
                 requestLog.setResult(JsonUtils.MAPPER.readTree(requestLog.getResult().toString()));
             }
         } catch (Exception ex) {
-            LoggerPrinter.debug(log, "Cannot parse {} to json", requestLog.getResult().toString());
+            loggerPrinter.debug("Cannot parse {} to json", requestLog.getResult().toString());
             requestLog.setResult(requestLog.getResult().toString());
         }
         if (method != null) {
