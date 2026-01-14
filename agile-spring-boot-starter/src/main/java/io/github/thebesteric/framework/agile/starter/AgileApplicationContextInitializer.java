@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.starter;
 
 import io.github.thebesteric.framework.agile.commons.constant.AgilePlugins;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
+import io.github.thebesteric.framework.agile.core.AgileContext;
 import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
 import io.github.thebesteric.framework.agile.starter.annotaion.EnableAgile;
 import lombok.SneakyThrows;
@@ -54,7 +55,7 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
 
         // 获取 @EnableAgile 启动类
         applicationContext.getBeansWithAnnotation(EnableAgile.class).values().stream()
-                .map(Object::getClass)
+                .map(proxyObj -> AgileContext.ultimateTargetClass(proxyObj.getClass()))
                 .filter(clazz -> clazz.isAnnotationPresent(Configuration.class))
                 .findAny()
                 .ifPresentOrElse(clazz -> {
@@ -69,7 +70,7 @@ public class AgileApplicationContextInitializer implements ApplicationContextAwa
             try {
                 Class.forName(plugin.getClassName());
             } catch (ClassNotFoundException ignored) {
-                LoggerPrinter.warn("{} plug-in not found.", plugin.getName());
+                LoggerPrinter.debug("{} plug-in not found.", plugin.getName());
                 continue;
             }
             LoggerPrinter.info("The {} has been installed.", plugin.getName());
