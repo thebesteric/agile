@@ -3,16 +3,23 @@ package io.github.thebesteric.framework.agile.plugins.logger.domain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
+import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
 import io.github.thebesteric.framework.agile.commons.util.StringUtils;
 import io.github.thebesteric.framework.agile.core.domain.R;
+import io.github.thebesteric.framework.agile.plugins.logger.annotation.IgnoreField;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerContext;
+import io.github.thebesteric.framework.agile.plugins.logger.constant.IgnoreFieldHandleType;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -95,7 +102,6 @@ public class InvokeLog {
         return new Builder(new InvokeLog());
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public String print() {
         Object resultObj = this.getResult();
         // 对象直接就是流对象
@@ -191,17 +197,19 @@ public class InvokeLog {
             Field[] fields = clazz.getDeclaredFields();
 
             for (Field field : fields) {
-                // 跳过静态字段和 final 字段
-                if (java.lang.reflect.Modifier.isStatic(field.getModifiers()) ||
-                    java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
+                // 跳过静态字段
+                if (ReflectUtils.isStatic(field) && ReflectUtils.isFinal(field)) {
                     continue;
                 }
                 field.setAccessible(true);
                 Object fieldValue = field.get(obj);
-
                 if (fieldValue != null) {
+                    if (ReflectUtils.isAnnotationPresent(field, IgnoreField.class)) {
+                        // 将忽略字段设置为 null
+                        field.set(obj, NULL_OBJECT_MARKER);
+                    }
                     // 检查字段值是否为流对象
-                    if (isStreamObject(fieldValue)) {
+                    else if (isStreamObject(fieldValue)) {
                         // 将流对象字段设置为 null，避免类型不匹配异常
                         field.set(obj, NULL_OBJECT_MARKER);
                     }
@@ -247,8 +255,51 @@ public class InvokeLog {
 
     @Override
     @SneakyThrows
+    @SuppressWarnings({"rawtypes", "unchecked"})
     public String toString() {
-        return JsonUtils.MAPPER.writeValueAsString(this);
+        String jsonStr = JsonUtils.MAPPER.writeValueAsString(this);
+        // 转换为 Map 格式
+        Map<String, Object> jsonMap = JsonUtils.toMap(jsonStr, String.class, Object.class);
+
+        // 获取返回值类型
+        Map<String, Object> executeInfoMap = (Map<String, Object>) jsonMap.get("executeInfo");
+        Map<String, Object> methodInfoMap = (Map<String, Object>) executeInfoMap.get("methodInfo");
+        String returnType = methodInfoMap.get("returnType").toString();
+
+        // 处理返回结果
+        Object resultObj = jsonMap.get("result");
+        if (resultObj instanceof Map resultMap) {
+            // Map 转 POJO
+            Class<?> resultObjClass = Class.forName(returnType);
+            Object obj = null;
+            try {
+                obj = resultObjClass.getDeclaredConstructor().newInstance();
+                // 填充对象字段
+                BeanUtils.populate(obj, resultMap);
+            } catch (Exception e) {
+                loggerPrinter.warn("Convert result to POJO error.", e);
+                return jsonStr;
+            }
+
+            // 处理忽略字段
+            Field[] fields = resultObjClass.getDeclaredFields();
+            for (Field field : fields) {
+                // 处理 @IgnoreField 注解
+                IgnoreField ignoreField = field.getAnnotation(IgnoreField.class);
+                if (ignoreField != null) {
+                    IgnoreFieldHandleType ignoreFieldHandleType = ignoreField.handleType();
+                    if (ignoreFieldHandleType == IgnoreFieldHandleType.DELETE) {
+                        resultMap.remove(field.getName());
+                    }
+                    break;
+                }
+            }
+
+            // 将处理后的结果放回 jsonMap 中，并转换为 JSON 字符串
+            jsonMap.put("result", resultMap);
+            jsonStr = JsonUtils.MAPPER.writeValueAsString(jsonMap);
+        }
+        return jsonStr;
     }
 
     public static class Builder {

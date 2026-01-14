@@ -41,10 +41,7 @@ public class HelloService {
     }
 
     public FileVo parseFile(MultipartFile file) {
-        FileVo fileVo = new FileVo();
-        fileVo.setFileName(file.getOriginalFilename());
-        fileVo.setResource(file.getResource());
-        return fileVo;
+        return new FileVo(file.getOriginalFilename(), file.getResource());
     }
 
 

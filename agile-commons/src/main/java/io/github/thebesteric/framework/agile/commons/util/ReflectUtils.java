@@ -63,14 +63,68 @@ public class ReflectUtils extends AbstractUtils {
         return field.getAnnotation(annotationClass);
     }
 
+    /**
+     * 判断字段上是否存在指定注解
+     *
+     * @param field           字段
+     * @param annotationClass 注解类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
+    public static boolean isAnnotationPresent(Field field, Class<? extends Annotation> annotationClass) {
+        return field.isAnnotationPresent(annotationClass);
+    }
+
+    /**
+     * 判断方法上是否存在指定注解
+     *
+     * @param method          方法
+     * @param annotationClass 注解类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
+    public static boolean isAnnotationPresent(Method method, Class<? extends Annotation> annotationClass) {
+        return method.isAnnotationPresent(annotationClass);
+    }
+
+
+    /**
+     * 判断类上是否存在指定注解
+     *
+     * @param objectClass     类
+     * @param annotationClass 注解类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
     public static boolean isAnnotationPresent(Class<?> objectClass, Class<? extends Annotation> annotationClass) {
         return isAnnotationPresent(objectClass, annotationClass, false);
     }
 
-    public static boolean isAnnotationPresent(Class<?> objectClass, Class<? extends Annotation> annotationClass, boolean typeAndMethod) {
+    /**
+     * 判断类或其方法上是否存在指定注解
+     *
+     * @param objectClass     类
+     * @param annotationClass 注解类
+     * @param includeMethod   是否判断方法上注解
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
+    public static boolean isAnnotationPresent(Class<?> objectClass, Class<? extends Annotation> annotationClass, boolean includeMethod) {
         if (allAnnotationPresent(objectClass, annotationClass)) {
             return true;
-        } else if (typeAndMethod) {
+        } else if (includeMethod) {
             for (Method method : objectClass.getDeclaredMethods()) {
                 if (allAnnotationPresent(method, annotationClass)) {
                     return true;
@@ -81,24 +135,68 @@ public class ReflectUtils extends AbstractUtils {
         return false;
     }
 
+    /**
+     * 判断类上是否存在指定的任意一个注解
+     *
+     * @param objectClass     类
+     * @param annotationClass 注解类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
     @SafeVarargs
     public static boolean anyAnnotationPresent(Class<?> objectClass, Class<? extends Annotation> annotationClass, Class<? extends Annotation>... annotationClasses) {
         List<Class<? extends Annotation>> annoClasses = mergeIndefiniteParams(annotationClass, annotationClasses);
         return annoClasses.stream().anyMatch(objectClass::isAnnotationPresent);
     }
 
+    /**
+     * 判断方法上是否存在指定的任意一个注解
+     *
+     * @param method          方法
+     * @param annotationClass 注解类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
     @SafeVarargs
     public static boolean anyAnnotationPresent(Method method, Class<? extends Annotation> annotationClass, Class<? extends Annotation>... annotationClasses) {
         List<Class<? extends Annotation>> annoClasses = mergeIndefiniteParams(annotationClass, annotationClasses);
         return annoClasses.stream().anyMatch(method::isAnnotationPresent);
     }
 
+    /**
+     * 判断类上是否存在指定的全部注解
+     *
+     * @param objectClass     类
+     * @param annotationClass 注解类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
     @SafeVarargs
     public static boolean allAnnotationPresent(Class<?> objectClass, Class<? extends Annotation> annotationClass, Class<? extends Annotation>... annotationClasses) {
         List<Class<? extends Annotation>> annoClasses = mergeIndefiniteParams(annotationClass, annotationClasses);
         return annoClasses.stream().allMatch(objectClass::isAnnotationPresent);
     }
 
+    /**
+     * 判断方法上是否存在指定的全部注解
+     *
+     * @param method          方法
+     * @param annotationClass 注解类
+     *
+     * @return boolean
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:52
+     */
     @SafeVarargs
     public static boolean allAnnotationPresent(Method method, Class<? extends Annotation> annotationClass, Class<? extends Annotation>... annotationClasses) {
         List<Class<? extends Annotation>> annoClasses = mergeIndefiniteParams(annotationClass, annotationClasses);
@@ -124,6 +222,17 @@ public class ReflectUtils extends AbstractUtils {
         return modifiers + " " + method.getDeclaringClass().getName() + "#" + method.getName() + "(" + args + ")";
     }
 
+    /**
+     * 合并不定参数
+     *
+     * @param t                固定参数
+     * @param indefiniteParams 不定参数
+     *
+     * @return java.util.List<T>
+     *
+     * @author wangweijun
+     * @since 2026/1/14 15:53
+     */
     @SafeVarargs
     private static <T> List<T> mergeIndefiniteParams(T t, T... indefiniteParams) {
         List<T> list = new ArrayList<>();

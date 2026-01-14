@@ -68,6 +68,7 @@
         <commons.lang3.version>3.20.0</commons.lang3.version>
         <commons.io.version>2.21.0</commons.io.version>
         <commons.collections4.version>4.5.0</commons.collections4.version>
+        <commons.beanutils.version>1.11.0</commons.beanutils.version>
         <junit.jupiter.version>5.10.0</junit.jupiter.version>
         <guava.version>33.5.0-jre</guava.version>
         <caffeine.version>3.2.3</caffeine.version>
@@ -117,6 +118,12 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>
             <version>${commons.collections4.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${commons.beanutils.version}</version>
         </dependency>
 
         <dependency>
