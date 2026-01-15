@@ -6,7 +6,7 @@
     <groupId>io.github.thebesteric.framework.agile</groupId>
     <artifactId>agile</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.21.1</version>
+    <version>1.0.21.2</version>
 
     <name>agile</name>
     <url>https://github.com/thebesteric/agile</url>
@@ -283,7 +283,7 @@
                 <artifactId>maven-source-plugin</artifactId>
                 <version>${maven-source-plugin.version}</version>
                 <configuration>
-                    <!-- 源码包随着项目打成的jar包安装到本地仓库或者私服、公服 -->
+                    <!-- 源码包随着项目打成的 jar 包安装到本地仓库或者私服、公服 -->
                     <attach>true</attach>
                 </configuration>
                 <executions>
