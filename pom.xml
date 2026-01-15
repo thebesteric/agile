@@ -68,6 +68,7 @@
         <commons.lang3.version>3.20.0</commons.lang3.version>
         <commons.io.version>2.21.0</commons.io.version>
         <commons.collections4.version>4.5.0</commons.collections4.version>
+        <commons.text.version>1.15.0</commons.text.version>
         <commons.beanutils.version>1.11.0</commons.beanutils.version>
         <junit.jupiter.version>5.10.0</junit.jupiter.version>
         <guava.version>33.5.0-jre</guava.version>
@@ -109,15 +110,21 @@
         </dependency>
 
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commons.io.version}</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>${commons.collections4.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>${commons.collections4.version}</version>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
         </dependency>
 
         <dependency>

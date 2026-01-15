@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.limiter.exception;
 
-import io.github.thebesteric.framework.agile.commons.util.MessageUtils;
+import io.github.thebesteric.framework.agile.commons.util.MessageFormatUtils;
 
 import java.io.Serial;
 
@@ -19,6 +19,6 @@ public class RateLimitException extends RuntimeException {
         super("Rate limit exception");
     }
     public RateLimitException(String message, Object... params) {
-        super(MessageUtils.format(message, params));
+        super(MessageFormatUtils.format(message, params));
     }
 }

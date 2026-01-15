@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.test.sensitive;
 
-import io.github.thebesteric.framework.agile.commons.util.MessageUtils;
+import io.github.thebesteric.framework.agile.commons.util.MessageFormatUtils;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.AgileSensitiveFilter;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.config.AgileSensitiveFilterProperties;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.domain.SensitiveFilterResult;
@@ -38,7 +38,7 @@ class SensitiveTest {
         System.out.println("result = " + result.getResult());
         System.out.println("placeholder = " + result.getPlaceholder());
         for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
-            System.out.println(MessageUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+            System.out.println(MessageFormatUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
         }
         Assertions.assertFalse(result.isPassed());
     }
@@ -51,7 +51,7 @@ class SensitiveTest {
         System.out.println("result = " + result.getResult());
         System.out.println("placeholder = " + result.getPlaceholder());
         for (SensitiveFilterResult.Sensitive sensitiveWord : result.getSensitiveWords()) {
-            System.out.println(MessageUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
+            System.out.println(MessageFormatUtils.format("sensitiveWord: start: {}, end: {}, keyword: {}", sensitiveWord.getStart(), sensitiveWord.getEnd(), sensitiveWord.getKeyword()));
         }
         Assertions.assertFalse(result.isPassed());
     }

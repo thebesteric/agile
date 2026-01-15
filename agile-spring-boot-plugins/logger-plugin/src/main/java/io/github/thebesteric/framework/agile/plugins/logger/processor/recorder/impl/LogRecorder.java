@@ -44,7 +44,7 @@ public class LogRecorder extends AbstractThreadPoolRecorder {
 
     @Override
     protected void doProcess(InvokeLog invokeLog) {
-        Consumer<String> logAction = LOG_ACTIONS.getOrDefault(invokeLog.getLevel(), log::debug);
+        Consumer<String> logAction = LOG_ACTIONS.getOrDefault(invokeLog.getLevel(), loggerPrinter::debug);
         logAction.accept(invokeLog.print());
     }
 }

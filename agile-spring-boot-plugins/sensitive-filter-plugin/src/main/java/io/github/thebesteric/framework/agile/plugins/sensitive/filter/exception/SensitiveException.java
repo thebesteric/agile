@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.sensitive.filter.exception;
 
-import io.github.thebesteric.framework.agile.commons.util.MessageUtils;
+import io.github.thebesteric.framework.agile.commons.util.MessageFormatUtils;
 import lombok.Getter;
 
 import java.io.Serial;
@@ -25,7 +25,7 @@ public class SensitiveException extends RuntimeException {
     }
 
     public SensitiveException(List<String> sensitiveWords, String message, Object... params) {
-        super(MessageUtils.format(message, params));
+        super(MessageFormatUtils.format(message, params));
         this.sensitiveWords = sensitiveWords;
     }
 }
