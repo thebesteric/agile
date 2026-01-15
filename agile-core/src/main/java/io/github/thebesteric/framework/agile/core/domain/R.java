@@ -2,7 +2,6 @@ package io.github.thebesteric.framework.agile.core.domain;
 
 import io.github.thebesteric.framework.agile.commons.util.TransactionUtils;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 import java.beans.Transient;
@@ -10,7 +9,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Data
-@NoArgsConstructor
 public class R<T> {
 
     private int successCode = HttpStatus.OK.value();
@@ -21,6 +19,9 @@ public class R<T> {
     private String message;
     private T data;
     private String trackId;
+
+    private R() {
+    }
 
     public static <T> R<T> build(int code, String message, T body, boolean isSuccess) {
         R<T> result = new R<>();

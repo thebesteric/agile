@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.logger.processor.recorder.impl;
 
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogMode;
@@ -20,14 +21,16 @@ import java.util.function.Consumer;
 @Slf4j
 public class LogRecorder extends AbstractThreadPoolRecorder {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private static final EnumMap<LogLevel, Consumer<String>> LOG_ACTIONS = new EnumMap<>(LogLevel.class);
 
     static {
-        LOG_ACTIONS.put(LogLevel.DEBUG, log::debug);
-        LOG_ACTIONS.put(LogLevel.INFO, log::info);
-        LOG_ACTIONS.put(LogLevel.WARN, log::warn);
-        LOG_ACTIONS.put(LogLevel.ERROR, log::error);
-        LOG_ACTIONS.put(LogLevel.TRACE, log::trace);
+        LOG_ACTIONS.put(LogLevel.DEBUG, loggerPrinter::debug);
+        LOG_ACTIONS.put(LogLevel.INFO, loggerPrinter::info);
+        LOG_ACTIONS.put(LogLevel.WARN, loggerPrinter::warn);
+        LOG_ACTIONS.put(LogLevel.ERROR, loggerPrinter::error);
+        LOG_ACTIONS.put(LogLevel.TRACE, loggerPrinter::trace);
     }
 
     public LogRecorder(AgileLoggerProperties properties) {

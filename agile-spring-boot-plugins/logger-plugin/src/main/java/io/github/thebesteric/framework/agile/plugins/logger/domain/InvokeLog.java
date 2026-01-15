@@ -3,25 +3,13 @@ package io.github.thebesteric.framework.agile.plugins.logger.domain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
-import io.github.thebesteric.framework.agile.commons.util.ReflectUtils;
 import io.github.thebesteric.framework.agile.commons.util.StringUtils;
-import io.github.thebesteric.framework.agile.core.domain.R;
-import io.github.thebesteric.framework.agile.plugins.logger.annotation.IgnoreField;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerContext;
-import io.github.thebesteric.framework.agile.plugins.logger.constant.IgnoreFieldHandleType;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import lombok.Data;
 import lombok.SneakyThrows;
-import org.apache.commons.beanutils.BeanUtils;
-import org.springframework.core.io.Resource;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
-import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Date;
 
 
 /**
@@ -103,203 +91,13 @@ public class InvokeLog {
     }
 
     public String print() {
-        Object resultObj = this.getResult();
-        // 对象直接就是流对象
-        if (isStreamObject(resultObj)) {
-            this.setResult(NULL_OBJECT_MARKER);
-        }
-        // 对象不是流对象
-        else {
-            // 尝试处理 R 对象
-            if (resultObj instanceof R rObjResult) {
-                Object data = rObjResult.getData();
-                if (isStreamObject(data)) {
-                    rObjResult.setData(NULL_OBJECT_MARKER);
-                } else {
-                    // 继续处理 R 对象的 data 字段，判断是否有流对象字段
-                    Object processedData = processObjectFields(data);
-                    if (processedData != data) {
-                        rObjResult.setData(processedData);
-                    }
-                }
-            }
-            // 尝试处理普通对象
-            else {
-                // 遍历普通对象的字段，判断是否有流对象字段
-                Object processedResult = processObjectFields(resultObj);
-                if (processedResult != resultObj) {
-                    this.setResult(processedResult);
-                }
-            }
-        }
         return this.toString();
-    }
-
-    /**
-     * 递归处理对象字段，将流对象替换为标记
-     *
-     * @param obj 待处理的对象
-     *
-     * @return 处理后的对象
-     */
-    private Object processObjectFields(Object obj) {
-        if (obj == null) {
-            return null;
-        }
-
-        // 如果是流对象，直接返回标记
-        if (isStreamObject(obj)) {
-            return NULL_OBJECT_MARKER;
-        }
-
-        // 如果是基本类型或包装类、字符串，直接返回
-        if (isPrimitiveOrWrapper(obj)) {
-            return obj;
-        }
-
-        // 如果是集合类型，递归处理集合元素
-        if (obj instanceof Collection<?> collection) {
-            List<Object> processedList = new ArrayList<>();
-            for (Object item : collection) {
-                processedList.add(processObjectFields(item));
-            }
-            return processedList;
-        }
-
-        // 如果是 Map 类型，递归处理 Map 的值
-        if (obj instanceof Map<?, ?> map) {
-            Map<Object, Object> processedMap = new LinkedHashMap<>();
-            for (Map.Entry<?, ?> entry : map.entrySet()) {
-                processedMap.put(entry.getKey(), processObjectFields(entry.getValue()));
-            }
-            return processedMap;
-        }
-
-        // 如果是数组类型，递归处理数组元素
-        if (obj.getClass().isArray()) {
-            Object[] array = (Object[]) obj;
-            Object[] processedArray = new Object[array.length];
-            for (int i = 0; i < array.length; i++) {
-                processedArray[i] = processObjectFields(array[i]);
-            }
-            return processedArray;
-        }
-
-        // 对于普通对象，使用反射遍历字段
-        try {
-            Class<?> clazz = obj.getClass();
-            // 跳过 Java 内置类和常见库类
-            if (clazz.getName().startsWith("java.") || clazz.getName().startsWith("javax.")) {
-                return obj;
-            }
-
-            // 获取所有字段
-            Field[] fields = clazz.getDeclaredFields();
-
-            for (Field field : fields) {
-                // 跳过静态字段
-                if (ReflectUtils.isStatic(field) && ReflectUtils.isFinal(field)) {
-                    continue;
-                }
-                field.setAccessible(true);
-                Object fieldValue = field.get(obj);
-                if (fieldValue != null) {
-                    if (ReflectUtils.isAnnotationPresent(field, IgnoreField.class)) {
-                        // 将忽略字段设置为 null
-                        field.set(obj, NULL_OBJECT_MARKER);
-                    }
-                    // 检查字段值是否为流对象
-                    else if (isStreamObject(fieldValue)) {
-                        // 将流对象字段设置为 null，避免类型不匹配异常
-                        field.set(obj, NULL_OBJECT_MARKER);
-                    }
-                    // 递归处理复杂对象字段
-                    else if (!isPrimitiveOrWrapper(fieldValue)) {
-                        Object processedFieldValue = processObjectFields(fieldValue);
-                        if (processedFieldValue != fieldValue) {
-                            field.set(obj, processedFieldValue);
-                        }
-                    }
-                }
-            }
-
-            return obj;
-        } catch (Exception e) {
-            // 如果反射处理失败，返回原对象
-            loggerPrinter.error("Process stream object error.", e);
-            return obj;
-        }
-    }
-
-    /**
-     * 判断对象是否为流对象
-     */
-    private static boolean isStreamObject(Object obj) {
-        return obj instanceof InputStream || obj instanceof OutputStream
-               || obj instanceof Reader || obj instanceof Writer
-               || obj instanceof Resource || obj instanceof MultipartFile;
-    }
-
-    /**
-     * 判断对象是否为基本类型或包装类
-     *
-     * @param obj 待判断的对象
-     *
-     * @return 是否为基本类型或包装类
-     */
-    private boolean isPrimitiveOrWrapper(Object obj) {
-        return obj instanceof String || obj instanceof Number || obj instanceof Boolean ||
-               obj instanceof Character || obj instanceof Date ||
-               obj.getClass().isPrimitive();
     }
 
     @Override
     @SneakyThrows
-    @SuppressWarnings({"rawtypes", "unchecked"})
     public String toString() {
-        String jsonStr = JsonUtils.MAPPER.writeValueAsString(this);
-        // 转换为 Map 格式
-        Map<String, Object> jsonMap = JsonUtils.toMap(jsonStr, String.class, Object.class);
-
-        // 获取返回值类型
-        Map<String, Object> executeInfoMap = (Map<String, Object>) jsonMap.get("executeInfo");
-        Map<String, Object> methodInfoMap = (Map<String, Object>) executeInfoMap.get("methodInfo");
-        String returnType = methodInfoMap.get("returnType").toString();
-
-        // 处理返回结果
-        Object resultObj = jsonMap.get("result");
-        if (resultObj instanceof Map resultMap) {
-            // Map 转 POJO
-            Class<?> resultObjClass = Class.forName(returnType);
-            Object obj = null;
-            try {
-                obj = resultObjClass.getDeclaredConstructor().newInstance();
-                // 填充对象字段
-                BeanUtils.populate(obj, resultMap);
-            } catch (Exception e) {
-                loggerPrinter.warn("Convert result to POJO error.", e);
-                return jsonStr;
-            }
-
-            // 处理忽略字段
-            Field[] fields = resultObjClass.getDeclaredFields();
-            for (Field field : fields) {
-                // 处理 @IgnoreField 注解
-                IgnoreField ignoreField = field.getAnnotation(IgnoreField.class);
-                if (ignoreField != null) {
-                    IgnoreFieldHandleType ignoreFieldHandleType = ignoreField.handleType();
-                    if (ignoreFieldHandleType == IgnoreFieldHandleType.DELETE) {
-                        resultMap.remove(field.getName());
-                    }
-                    break;
-                }
-            }
-
-            // 将处理后的结果放回 jsonMap 中，并转换为 JSON 字符串
-            jsonMap.put("result", resultMap);
-            jsonStr = JsonUtils.MAPPER.writeValueAsString(jsonMap);
-        }
-        return jsonStr;
+        return JsonUtils.MAPPER.writeValueAsString(this);
     }
 
     public static class Builder {

@@ -11,7 +11,6 @@ public interface LocalLogRecordPostProcessor {
      *
      * @return boolean
      *
-     * @author wangweijun
      * @since 2024/11/13 10:26
      */
     boolean postProcessBeforeRecord(InvokeLog invokeLog);

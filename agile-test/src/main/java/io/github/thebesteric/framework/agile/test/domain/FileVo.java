@@ -1,8 +1,6 @@
 package io.github.thebesteric.framework.agile.test.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.github.thebesteric.framework.agile.plugins.logger.annotation.IgnoreField;
-import io.github.thebesteric.framework.agile.plugins.logger.constant.IgnoreFieldHandleType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.core.io.Resource;

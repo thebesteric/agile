@@ -8,7 +8,6 @@ public interface RequestIgnoreProcessor {
      *
      * @param requestLog 日志信息
      *
-     * @author wangweijun
      * @since 2024/4/25 19:40
      */
     void ignore(RequestLog requestLog);
@@ -18,7 +17,6 @@ public interface RequestIgnoreProcessor {
      *
      * @param requestLog 日志信息
      *
-     * @author wangweijun
      * @since 2024/4/25 19:47
      */
     void rewrite(RequestLog requestLog);

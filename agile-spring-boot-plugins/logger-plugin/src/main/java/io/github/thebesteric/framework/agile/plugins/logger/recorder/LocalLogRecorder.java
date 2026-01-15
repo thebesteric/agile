@@ -37,7 +37,6 @@ public class LocalLogRecorder extends AbstractUtils {
      * @param config         配置信息
      * @param localLogRecord 日志记录对象
      *
-     * @author wangweijun
      * @since 2024/11/13 16:57
      */
     public static void record(AgileLoggerProperties.LocalLogRecorderConfig config, LocalLogRecord localLogRecord) {
@@ -70,7 +69,6 @@ public class LocalLogRecorder extends AbstractUtils {
      *
      * @return LocalLogRecord
      *
-     * @author wangweijun
      * @since 2024/11/13 16:57
      */
     public static LocalLogRecord logId(String logId) {
@@ -84,7 +82,6 @@ public class LocalLogRecorder extends AbstractUtils {
      *
      * @return List<LocalLogRecord>
      *
-     * @author wangweijun
      * @since 2024/11/13 16:57
      */
     public static List<LocalLogRecord> trackId(String trackId) {
@@ -99,7 +96,6 @@ public class LocalLogRecorder extends AbstractUtils {
      *
      * @return List<LocalLogRecord>
      *
-     * @author wangweijun
      * @since 2024/11/13 16:57
      */
     public static List<LocalLogRecord> tagName(String tagName) {
@@ -114,7 +110,6 @@ public class LocalLogRecorder extends AbstractUtils {
      *
      * @return List<LocalLogRecord>
      *
-     * @author wangweijun
      * @since 2024/11/13 16:57
      */
     public static List<LocalLogRecord> uriName(String uriName) {
@@ -135,7 +130,6 @@ public class LocalLogRecorder extends AbstractUtils {
      *
      * @return ExceptionLogInfo
      *
-     * @author wangweijun
      * @since 2024/11/13 17:04
      */
     public static ExceptionLogInfo classifyException(@Nullable String exceptionClassName) {
@@ -175,7 +169,6 @@ public class LocalLogRecorder extends AbstractUtils {
      *
      * @return PagingResponse<LocalLogRecord>
      *
-     * @author wangweijun
      * @since 2024/11/13 16:57
      */
     public static PagingResponse<LocalLogRecord> list(LogLevel logLevel, String tagName, int current, int size) {
@@ -206,7 +199,6 @@ public class LocalLogRecorder extends AbstractUtils {
     /**
      * 清空缓存
      *
-     * @author wangweijun
      * @since 2024/11/15 15:26
      */
     public static void clear() {

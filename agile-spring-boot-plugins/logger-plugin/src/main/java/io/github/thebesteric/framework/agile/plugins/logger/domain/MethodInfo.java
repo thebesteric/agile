@@ -5,6 +5,7 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import lombok.Data;
 import lombok.SneakyThrows;
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -12,7 +13,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -35,6 +39,7 @@ public class MethodInfo {
         SIMPLE_PROCESS_CLASSES.add(MultipartFile[].class);
         SIMPLE_PROCESS_CLASSES.add(InputStream.class);
         SIMPLE_PROCESS_CLASSES.add(OutputStream.class);
+        SIMPLE_PROCESS_CLASSES.add(Resource.class);
     }
 
     public MethodInfo(Method method, Object[] args) {
@@ -49,14 +54,37 @@ public class MethodInfo {
                 // Processing args
                 if (args != null) {
                     if (shouldSimpleProcess(param)) {
-                        arguments.put(param.getName(), param.getParameterizedType().getTypeName());
+                        if (args[i] instanceof MultipartFile file) {
+                            arguments.put(param.getName(), file.getOriginalFilename());
+                        } else if (args[i] instanceof File file) {
+                            arguments.put(param.getName(), file.getName());
+                        } else if (args[i] instanceof Resource resource) {
+                            arguments.put(param.getName(), resource.getFilename());
+                        } else {
+                            arguments.put(param.getName(), param.getParameterizedType().getTypeName());
+                        }
                     } else {
                         if (args[i] instanceof Exception) {
                             arguments.put(param.getName(), String.valueOf(args[i]));
-                        } else if (args[i] instanceof MultipartFile file) {
-                            arguments.put(param.getName(), file.getOriginalFilename());
                         } else {
-                            arguments.put(param.getName(), args[i]);
+                            Object argValue = args[i];
+                            if (argValue instanceof Collection<?> collection) {
+                                for (Object obj : collection) {
+                                    if (obj != null && shouldSimpleProcess(param)) {
+                                        if (obj instanceof MultipartFile file) {
+                                            argValue = file.getOriginalFilename();
+                                        } else if (obj instanceof File file) {
+                                            argValue = file.getName();
+                                        } else if (obj instanceof Resource resource) {
+                                            argValue = resource.getFilename();
+                                        } else {
+                                            argValue = param.getParameterizedType().getTypeName();
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                            arguments.put(param.getName(), argValue);
                         }
                     }
                 }
@@ -72,9 +100,34 @@ public class MethodInfo {
 
     // 是否需要简单处理
     private boolean shouldSimpleProcess(Parameter param) {
-        for (Class<?> clazz : SIMPLE_PROCESS_CLASSES) {
-            if (clazz.isAssignableFrom(param.getType())) return true;
+
+        // 如果 param 是列表类型，则取出其泛型类型，供后续检查
+        if (Collection.class.isAssignableFrom(param.getType())) {
+            // 获取泛型类型
+            Type genericType = param.getParameterizedType();
+            if (genericType instanceof ParameterizedType parameterizedType) {
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                if (actualTypeArguments.length > 0) {
+                    Type actualType = actualTypeArguments[0];
+                    if (actualType instanceof Class<?> actualClass) {
+                        for (Class<?> clazz : SIMPLE_PROCESS_CLASSES) {
+                            if (clazz.isAssignableFrom(actualClass)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
         }
+        // 直接检查参数类型
+        else {
+            for (Class<?> clazz : SIMPLE_PROCESS_CLASSES) {
+                if (clazz.isAssignableFrom(param.getType())) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
