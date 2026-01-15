@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -68,7 +69,7 @@ public class JsonUtils extends AbstractUtils {
 
     public static <T> List<T> toList(String jsonStr, Class<T> clazz) {
         if (jsonStr == null) {
-            return null;
+            return Collections.emptyList();
         }
         try {
             CollectionType listType = MAPPER.getTypeFactory().constructCollectionType(ArrayList.class, clazz);
@@ -76,7 +77,7 @@ public class JsonUtils extends AbstractUtils {
         } catch (IOException e) {
             loggerPrinter.error(ExceptionUtils.getSimpleMessage(e));
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public static <T> List<T> toList(Object obj, Class<T> clazz) {
@@ -85,7 +86,7 @@ public class JsonUtils extends AbstractUtils {
 
     public static <K, V> Map<K, V> toMap(String jsonStr, Class<K> key, Class<V> value) {
         if (jsonStr == null) {
-            return null;
+            return Collections.emptyMap();
         }
         try {
             MapLikeType mapType = MAPPER.getTypeFactory().constructMapLikeType(Map.class, key, value);
@@ -93,7 +94,7 @@ public class JsonUtils extends AbstractUtils {
         } catch (IOException e) {
             loggerPrinter.error(ExceptionUtils.getSimpleMessage(e));
         }
-        return null;
+        return Collections.emptyMap();
     }
 
     public static <K, V> Map<K, V> toMap(Object obj, Class<K> key, Class<V> value) {
