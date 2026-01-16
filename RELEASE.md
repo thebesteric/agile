@@ -545,13 +545,18 @@
 - 通用 (refactor): 支持 Spring Boot 4.x 版本，升级部分三方依赖版本
 
 ### v1.0.21.1
+
 - 通用 (perf): 优化启动 Agile 框架时，对必要的配置进行校验（AspectJ 和 EnableAgile）
 - 日志插件 (perf): 修复日志框架处理流类型对象报错的问题，增加对流类型的判断，不返回（记录）流对象
 
 ### v1.0.21.2
+
 - 通用 (bugfix): 修复判断配置类是否包含 `@EnableAgile` 注解错误的问题
 - 日志插件 (perf): 修复日志打印过程中对于不可序列化类的处理（如文件或流对象）
 - 通用 (refactor): 重构 `LoggerPrinter` 功能，使其可以准确输出对应的类
 
 ### v1.0.21.3
+
 - 通用 (feat): 增加 `MessageFormatUtils` 工具类，支持 kwargs 参数进行消息格式化
+- 通用 (perf): 增加 `JWTUtils` 工具类，支持 JWT 令牌的生成和解析
+- 日志插件 (perf): 修复 `LocalLogRecorderConfig` 配置可能不生效的问题
