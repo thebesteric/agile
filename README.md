@@ -52,6 +52,10 @@ sourceflag:
           maximum-pool-size: 2
           keep-alive-time: 60s
           queue-size: 1024
+      local-log-recorder-config:
+        enable: false
+        record-levels: info, error
+        record-tags: test, hello
 ```
 ### 自定义日志记录器
 自定义一个 bean 实现 CustomRecorder，实现 process 方法
