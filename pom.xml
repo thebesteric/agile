@@ -74,12 +74,14 @@
         <guava.version>33.5.0-jre</guava.version>
         <caffeine.version>3.2.3</caffeine.version>
         <jakarta.servlet-api.version>6.0.0</jakarta.servlet-api.version>
+        <jakarta.annotation-api.version>3.0.0</jakarta.annotation-api.version>
         <vavr.version>0.11.0</vavr.version>
         <redisson.version>4.1.0</redisson.version>
         <hutool.version>5.8.43</hutool.version>
         <mybatis-plus.version>3.5.15</mybatis-plus.version>
         <mybatis.version>3.5.19</mybatis.version>
         <swagger-annotations-jakarta.version>2.2.41</swagger-annotations-jakarta.version>
+        <jjwt.version>0.13.0</jjwt.version>
     </properties>
 
     <dependencies>
@@ -172,7 +174,13 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <version>3.0.0</version>
+            <version>${jakarta.annotation-api.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+            <version>${jjwt.version}</version>
         </dependency>
 
     </dependencies>
