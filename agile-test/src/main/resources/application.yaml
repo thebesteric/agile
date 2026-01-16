@@ -20,7 +20,7 @@ sourceflag:
           keep-alive-time: 60s
           queue-size: 1024
       local-log-recorder-config:
-        enable: true
+        enable: false
         record-levels: info, error
         record-tags: test, hello
     idempotent:

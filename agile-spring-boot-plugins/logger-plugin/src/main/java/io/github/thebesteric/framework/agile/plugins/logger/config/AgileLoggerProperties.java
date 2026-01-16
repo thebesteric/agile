@@ -36,6 +36,7 @@ public class AgileLoggerProperties {
     private Async async = new Async();
 
     /** 本地日志记录配置 */
+    @NestedConfigurationProperty
     private LocalLogRecorderConfig localLogRecorderConfig = new LocalLogRecorderConfig();
 
     @Data

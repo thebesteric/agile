@@ -12,7 +12,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
@@ -108,7 +108,7 @@ public class LocalLogRecorder extends AbstractUtils {
      *
      * @param uriName URI 名称
      *
-     * @return List<LocalLogRecord>
+     * @return List
      *
      * @since 2024/11/13 16:57
      */
