@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.github.thebesteric.framework.agile</groupId>
         <artifactId>agile-spring-boot-plugins</artifactId>
-        <version>1.0.21.2</version>
+        <version>1.0.21.3</version>
     </parent>
 
     <name>distributed-locks-plugin-parent</name>
