@@ -32,7 +32,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.exception.Workflow
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowInstanceInProgressException;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.AbstractWorkflowService;
 import io.github.thebesteric.framework.agile.plugins.workflow.service.DeploymentService;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,7 +46,6 @@ import java.util.stream.Collectors;
  * @version v1.0
  * @since 2024-06-13 21:23:21
  */
-@Slf4j
 public class WorkflowServiceImpl extends AbstractWorkflowService {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

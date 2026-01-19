@@ -15,7 +15,6 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.utils.CryptUt
 import io.github.thebesteric.framework.agile.wechat.third.platform.utils.XmlParser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * WechatThirdPlatformListener
@@ -24,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  * @version v1.0
  * @since 2024-07-26 18:21:18
  */
-@Slf4j
 @RequiredArgsConstructor
 public class WechatThirdPlatformListener extends AbstractListener {
 

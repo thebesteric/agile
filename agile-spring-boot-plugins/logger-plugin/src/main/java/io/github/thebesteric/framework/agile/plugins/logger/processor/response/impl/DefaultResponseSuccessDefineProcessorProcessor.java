@@ -5,7 +5,6 @@ import io.github.thebesteric.framework.agile.commons.util.ExceptionUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.response.AbstractResponseSuccessDefineProcessor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -16,7 +15,6 @@ import java.util.List;
  * @author Eric Joe
  * @since 1.0
  */
-@Slf4j
 public class DefaultResponseSuccessDefineProcessorProcessor extends AbstractResponseSuccessDefineProcessor {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

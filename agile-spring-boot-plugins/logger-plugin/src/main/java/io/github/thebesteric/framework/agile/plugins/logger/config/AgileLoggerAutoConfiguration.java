@@ -18,7 +18,6 @@ import io.github.thebesteric.framework.agile.plugins.logger.recorder.LocalLogRec
 import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.LocalLogRecordPostProcessor;
 import io.github.thebesteric.framework.agile.plugins.logger.recorder.processor.impl.DefaultLocalLogRecordPostProcessor;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,7 +36,6 @@ import java.util.List;
  * @version v1.0
  * @since 2024-03-11 14:50:58
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AgileLoggerProperties.class)
 @RequiredArgsConstructor

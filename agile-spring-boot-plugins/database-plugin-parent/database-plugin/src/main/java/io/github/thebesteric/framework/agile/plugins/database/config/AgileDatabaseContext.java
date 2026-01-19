@@ -12,7 +12,6 @@ import io.github.thebesteric.framework.agile.plugins.database.core.listener.Tabl
 import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableUpdateListener;
 import io.vavr.control.Try;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 
@@ -30,7 +29,6 @@ import java.util.Set;
  * @since 2024-05-13 11:22:56
  */
 @Getter
-@Slf4j
 public class AgileDatabaseContext extends AbstractAgileContext {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

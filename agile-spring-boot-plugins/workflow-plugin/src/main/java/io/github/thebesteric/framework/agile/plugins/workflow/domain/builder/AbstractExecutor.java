@@ -19,7 +19,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.config.AgileWorkfl
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.base.BaseEntity;
 import io.github.thebesteric.framework.agile.plugins.workflow.exception.WorkflowException;
 import io.vavr.control.Try;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Transient;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -41,7 +40,6 @@ import java.util.stream.Collectors;
  * @version v1.0
  * @since 2024-06-18 16:03:10
  */
-@Slf4j
 public abstract class AbstractExecutor<T extends BaseEntity> {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

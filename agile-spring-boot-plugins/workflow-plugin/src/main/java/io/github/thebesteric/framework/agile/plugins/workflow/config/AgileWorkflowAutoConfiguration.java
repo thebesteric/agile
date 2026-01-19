@@ -12,7 +12,6 @@ import io.github.thebesteric.framework.agile.plugins.workflow.listener.AgileRedo
 import io.github.thebesteric.framework.agile.plugins.workflow.listener.AgileRejectListener;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,7 +33,6 @@ import java.sql.SQLException;
  * @version v1.0
  * @since 2024-06-11 20:59:43
  */
-@Slf4j
 @Configuration
 @EnableTransactionManagement
 @EnableConfigurationProperties(AgileWorkflowProperties.class)

@@ -8,7 +8,6 @@ import io.github.thebesteric.framework.agile.commons.util.UrlUtils;
 import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.InvokeLog;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 import java.util.concurrent.ExecutorService;
@@ -23,7 +22,6 @@ import java.util.concurrent.TimeUnit;
  * @version v1.0
  * @since 2024-03-11 18:30:23
  */
-@Slf4j
 public abstract class AbstractThreadPoolRecorder implements Recorder {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

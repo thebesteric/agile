@@ -5,7 +5,6 @@ import io.github.thebesteric.framework.agile.core.AgileConstants;
 import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
 import io.github.thebesteric.framework.agile.plugins.database.jdbc.AgileDatabaseJdbcTemplate;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,7 +23,6 @@ import java.sql.SQLException;
  * @version v1.0
  * @since 2024-05-13 11:01:55
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AgileDatabaseProperties.class)
 @RequiredArgsConstructor

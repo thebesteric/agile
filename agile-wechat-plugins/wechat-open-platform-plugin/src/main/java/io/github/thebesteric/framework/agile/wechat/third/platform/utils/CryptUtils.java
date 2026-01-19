@@ -5,7 +5,6 @@ import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.mini.WechatMiniProperties;
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.third.WechatThirdPlatformProperties;
 import io.github.thebesteric.framework.agile.wechat.third.platform.exception.AesException;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -26,7 +25,6 @@ import java.util.Arrays;
  * @version v1.0
  * @since 2024-07-29 11:21:37
  */
-@Slf4j
 public class CryptUtils {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

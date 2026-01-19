@@ -18,7 +18,6 @@ import java.util.function.Consumer;
  * @version v1.0
  * @since 2024-03-11 18:10:45
  */
-@Slf4j
 public class LogRecorder extends AbstractThreadPoolRecorder {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

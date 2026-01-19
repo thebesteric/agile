@@ -5,7 +5,6 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.third.authroization.ComponentVerifyTicketEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.third.authroization.UnAuthorizedEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.third.authroization.UpdateAuthorizedEvent;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 授权事件接收监听
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  * @version v1.0
  * @since 2024-07-29 19:30:17
  */
-@Slf4j
 public abstract class AuthorizationEventListener {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

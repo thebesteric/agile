@@ -12,7 +12,6 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jspecify.annotations.Nullable;
@@ -30,7 +29,6 @@ import java.util.function.Function;
  * @version v1.0
  * @since 2025-01-08 13:43:55
  */
-@Slf4j
 public class AgileSensitiveFilter {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

@@ -10,7 +10,6 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.utils.CryptUt
 import io.github.thebesteric.framework.agile.wechat.third.platform.utils.XmlParser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +23,6 @@ import java.util.Objects;
  * @version v1.0
  * @since 2024-08-06 11:55:11
  */
-@Slf4j
 @RequiredArgsConstructor
 public class WechatMiniListener extends AbstractListener {
 

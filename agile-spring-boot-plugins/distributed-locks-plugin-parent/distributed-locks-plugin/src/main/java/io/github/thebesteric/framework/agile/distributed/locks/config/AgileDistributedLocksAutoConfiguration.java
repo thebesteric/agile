@@ -6,7 +6,6 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitializa
 import io.github.thebesteric.framework.agile.distributed.locks.advisor.AgileDistributedLocksAdvice;
 import io.github.thebesteric.framework.agile.distributed.locks.advisor.AgileDistributedLocksPointcut;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
  * @version v1.0
  * @since 2024-08-22 16:13:47
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AgileDistributedLocksProperties.class)
 @RequiredArgsConstructor

@@ -4,7 +4,6 @@ import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.third.message.WeAppAuditDelayEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.third.message.WeAppAuditFailEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.third.message.WeAppAuditSuccessEvent;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息与事件接收监听
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
  * @version v1.0
  * @since 2024-08-01 18:05:05
  */
-@Slf4j
 public abstract class MessageEventListener {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

@@ -8,7 +8,6 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.WechatThirdPl
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.mini.WechatMiniProperties;
 import io.github.thebesteric.framework.agile.wechat.third.platform.config.third.WechatThirdPlatformProperties;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,7 +21,6 @@ import org.springframework.context.annotation.Configuration;
  * @version v1.0
  * @since 2024-08-05 17:48:47
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties({WechatMiniProperties.class, WechatThirdPlatformProperties.class})
 @RequiredArgsConstructor

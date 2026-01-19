@@ -7,7 +7,6 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitializa
 import io.github.thebesteric.framework.agile.plugins.mocker.advisor.AgileMockerAdvice;
 import io.github.thebesteric.framework.agile.plugins.mocker.advisor.AgileMockerPointcut;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -22,7 +21,6 @@ import org.springframework.context.annotation.Configuration;
  * @version v1.0
  * @since 2025-01-23 17:22:28
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AgileMockerProperties.class)
 @RequiredArgsConstructor

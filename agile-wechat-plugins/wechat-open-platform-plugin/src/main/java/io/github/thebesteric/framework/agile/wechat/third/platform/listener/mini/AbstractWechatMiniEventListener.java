@@ -2,9 +2,8 @@ package io.github.thebesteric.framework.agile.wechat.third.platform.listener.min
 
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.BaseMiniEvent;
-import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.MediaCheckAsyncEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.CustomerSessionMessageEvent;
-import lombok.extern.slf4j.Slf4j;
+import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.MediaCheckAsyncEvent;
 
 /**
  * 小程序事件监听
@@ -13,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
  * @version v1.0
  * @since 2024-08-06 14:15:46
  */
-@Slf4j
 public abstract class AbstractWechatMiniEventListener {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

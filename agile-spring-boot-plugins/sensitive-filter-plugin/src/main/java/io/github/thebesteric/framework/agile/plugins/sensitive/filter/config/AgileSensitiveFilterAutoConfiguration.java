@@ -7,7 +7,6 @@ import io.github.thebesteric.framework.agile.plugins.sensitive.filter.AgileSensi
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileOtherTypeSensitiveLoader;
 import io.github.thebesteric.framework.agile.plugins.sensitive.filter.extension.AgileSensitiveResultProcessor;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
  * @version v1.0
  * @since 2025-01-08 13:49:05
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AgileSensitiveFilterProperties.class)
 @RequiredArgsConstructor

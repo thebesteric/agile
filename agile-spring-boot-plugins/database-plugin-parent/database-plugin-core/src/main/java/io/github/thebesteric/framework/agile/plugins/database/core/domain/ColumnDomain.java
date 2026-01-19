@@ -10,7 +10,6 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.Ig
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.Reference;
 import lombok.Data;
 import lombok.experimental.Accessors;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.Transient;
 
 import java.lang.reflect.Field;
@@ -24,7 +23,6 @@ import java.util.List;
  * @version v1.0
  * @since 2024-05-13 17:14:20
  */
-@Slf4j
 @Data
 @Accessors(chain = true)
 public class ColumnDomain {

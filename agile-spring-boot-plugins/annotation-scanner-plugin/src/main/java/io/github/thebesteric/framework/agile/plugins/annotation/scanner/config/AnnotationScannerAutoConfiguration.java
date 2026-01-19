@@ -8,7 +8,6 @@ import io.github.thebesteric.framework.agile.plugins.annotation.scanner.Annotati
 import io.github.thebesteric.framework.agile.plugins.annotation.scanner.listener.AnnotationParasiticRegisteredListener;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,7 +25,6 @@ import java.util.List;
  * @version v1.0
  * @since 2024-08-13 13:59:31
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AnnotationScannerProperties.class)
 @RequiredArgsConstructor

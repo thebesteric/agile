@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.type.CollectionType;
 import com.fasterxml.jackson.databind.type.MapLikeType;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -28,7 +27,6 @@ import java.util.regex.Pattern;
  * @version 1.0
  * @since 2022-07-27 12:17:15
  */
-@Slf4j
 public class JsonUtils extends AbstractUtils {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
@@ -58,7 +56,7 @@ public class JsonUtils extends AbstractUtils {
         try {
             return MAPPER.readValue(jsonStr, clazz);
         } catch (Exception e) {
-            log.error(ExceptionUtils.getSimpleMessage(e));
+            loggerPrinter.error(ExceptionUtils.getSimpleMessage(e));
         }
         return null;
     }

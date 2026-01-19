@@ -2,7 +2,6 @@ package io.github.thebesteric.framework.agile.core.config;
 
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.GenericApplicationContext;
 
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
  * @version v1.0
  * @since 2024-05-04 17:33:32
  */
-@Slf4j
 @Getter
 public abstract class AbstractAgileContext {
 

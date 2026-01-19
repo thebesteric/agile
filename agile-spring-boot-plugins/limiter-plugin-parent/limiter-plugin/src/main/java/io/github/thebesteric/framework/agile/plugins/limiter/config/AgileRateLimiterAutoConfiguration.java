@@ -6,7 +6,6 @@ import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitializa
 import io.github.thebesteric.framework.agile.plugins.limiter.advisor.AgileRateLimiterAdvice;
 import io.github.thebesteric.framework.agile.plugins.limiter.advisor.AgileRateLimiterPointcut;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
  * @version v1.0
  * @since 2024-05-06 17:21:50
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AgileRateLimiterProperties.class)
 @RequiredArgsConstructor

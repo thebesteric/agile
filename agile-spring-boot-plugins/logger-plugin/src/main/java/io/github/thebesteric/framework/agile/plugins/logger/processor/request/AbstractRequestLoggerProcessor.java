@@ -9,7 +9,6 @@ import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
 import io.github.thebesteric.framework.agile.plugins.logger.filter.warpper.AgileLoggerRequestWrapper;
 import io.github.thebesteric.framework.agile.plugins.logger.filter.warpper.AgileLoggerResponseWrapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -20,7 +19,6 @@ import java.lang.reflect.Method;
  * @author Eric Joe
  * @version 1.0
  */
-@Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractRequestLoggerProcessor implements RequestLoggerProcessor {
 

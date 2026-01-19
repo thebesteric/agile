@@ -11,7 +11,6 @@ import io.github.thebesteric.framework.agile.plugins.database.core.domain.Entity
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ReferenceDomain;
 import io.vavr.control.Try;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -38,7 +37,6 @@ import java.util.regex.Pattern;
  * @version v1.0
  * @since 2024-06-14 13:36:57
  */
-@Slf4j
 @Getter
 public class JdbcTemplateHelper {
 

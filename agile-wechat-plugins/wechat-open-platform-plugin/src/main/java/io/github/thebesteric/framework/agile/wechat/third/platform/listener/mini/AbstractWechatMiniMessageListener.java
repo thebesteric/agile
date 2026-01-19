@@ -5,7 +5,6 @@ import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.CustomerImageMessageEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.CustomerMiniCardMessageEvent;
 import io.github.thebesteric.framework.agile.wechat.third.platform.domain.event.mini.CustomerTextMessageEvent;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 小程序消息监听
@@ -14,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
  * @version v1.0
  * @since 2024-08-07 14:33:57
  */
-@Slf4j
 public abstract class AbstractWechatMiniMessageListener {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();

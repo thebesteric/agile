@@ -7,7 +7,6 @@ import io.github.thebesteric.framework.agile.core.matcher.clazz.ClassMatcher;
 import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIdempotentAdvice;
 import io.github.thebesteric.framework.agile.plugins.idempotent.advisor.AgileIdempotentPointcut;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,7 +25,6 @@ import java.util.List;
  * @version v1.0
  * @since 2024-04-30 15:24:05
  */
-@Slf4j
 @Configuration
 @EnableConfigurationProperties(AgileIdempotentProperties.class)
 @RequiredArgsConstructor

@@ -6,7 +6,6 @@ import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.MetricsRequestLog;
 import io.github.thebesteric.framework.agile.plugins.logger.domain.RequestLog;
 import io.github.thebesteric.framework.agile.plugins.logger.processor.request.AbstractRequestLoggerProcessor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * MetricsRequestLoggerProcessor
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author Eric Joe
  * @version 1.0
  */
-@Slf4j
 public class MetricsRequestLoggerProcessor extends AbstractRequestLoggerProcessor {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
