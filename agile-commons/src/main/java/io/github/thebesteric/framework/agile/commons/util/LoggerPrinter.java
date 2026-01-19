@@ -23,24 +23,43 @@ public class LoggerPrinter {
     @Getter
     private final Logger logger;
 
+    /** 日志标签 */
+    @Getter
+    private final String tag;
+
     /** 日志前缀模板 */
-    private static final String LOG_PREFIX = "[Agile] - %s: ";
+    @Getter
+    private final String logPrefix;
 
     public LoggerPrinter() {
-        this(getCallerClass());
+        this(getCallerClass(), null);
     }
 
-    public LoggerPrinter(Class<?> clazz) {
+    public LoggerPrinter(String prefix) {
+        this(getCallerClass(), prefix);
+    }
+
+    public LoggerPrinter(Class<?> clazz, String tag) {
         this.logger = LoggerFactory.getLogger(clazz);
+        this.tag = tag;
+        this.logPrefix = tag != null ? "[Agile] %s: ".formatted(tag) : "[Agile]: ";
     }
 
     public static LoggerPrinter newInstance() {
-        return newInstance(null);
+        return newInstance(null, null);
     }
 
     public static LoggerPrinter newInstance(@Nullable Class<?> clazz) {
+        return newInstance(clazz, null);
+    }
+
+    public static LoggerPrinter newInstance(@Nullable String tag) {
+        return newInstance(null, tag);
+    }
+
+    public static LoggerPrinter newInstance(@Nullable Class<?> clazz, @Nullable String tag) {
         clazz = clazz != null ? clazz : getCallerClass();
-        return new LoggerPrinter(clazz);
+        return new LoggerPrinter(clazz, tag);
     }
 
     // ==================== debug ====================
@@ -111,16 +130,6 @@ public class LoggerPrinter {
         if (logger.isTraceEnabled()) {
             logger.trace(getLogPrefix() + message, throwable);
         }
-    }
-
-    /**
-     * 获取带事务 ID 前缀的日志前缀
-     *
-     * @return 日志前缀
-     */
-    private static String getLogPrefix() {
-        String transactionId = TransactionUtils.get();
-        return LOG_PREFIX.formatted(transactionId);
     }
 
     /**

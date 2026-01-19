@@ -104,7 +104,7 @@ public class AgileSensitiveFilter {
         // 添加到前缀树
         sensitiveWords.forEach(this::addKeyword);
         this.loaded = true;
-        loggerPrinter.info("敏感词加载完成，加载方式: {}, 加载数量: {}", loadType, sensitiveWords.size());
+        loggerPrinter.info("Sensitive words have been loaded successfully. Loading method: {}, Number of words loaded: {}", loadType, sensitiveWords.size());
     }
 
     /**
