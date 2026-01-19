@@ -558,5 +558,9 @@
 ### v1.0.21.3
 
 - 通用 (feat): 增加 `MessageFormatUtils` 工具类，支持 kwargs 参数进行消息格式化
+- 通用 (perf): 加强 `R` 工具类，支持设置 HTTP 响应状态码
 - 通用 (perf): 增加 `JWTUtils` 工具类，支持 JWT 令牌的生成和解析
+- 日志插件 (feat): 本地日志记录器，增加可查看本地配置的接口
 - 日志插件 (perf): 修复 `LocalLogRecorderConfig` 配置可能不生效的问题
+- 数据库插件 (bugfix): 修复判断表是否存在时，兼容不同数据库的返回结果
+- 数据库插件 (feat): 增加两个数据库实体类的基类 `BaseEntity` 和 `BaseBizEntity`
