@@ -30,4 +30,8 @@ public enum AgilePlugins {
         this.name = name;
         this.className = className;
     }
+
+    public String upperName() {
+        return this.name.toUpperCase();
+    }
 }
