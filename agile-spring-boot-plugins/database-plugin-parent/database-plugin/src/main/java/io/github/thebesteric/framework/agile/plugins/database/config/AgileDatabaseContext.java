@@ -41,7 +41,7 @@ public class AgileDatabaseContext extends AbstractAgileContext {
     public AgileDatabaseContext(ApplicationContext applicationContext, AgileDatabaseProperties properties) {
         super((GenericApplicationContext) applicationContext);
         this.properties = properties;
-        findEntityClasses();
+        this.findEntityClasses();
         this.tableCreateListeners = this.getBeans(TableCreateListener.class);
         this.tableUpdateListeners = this.getBeans(TableUpdateListener.class);
     }
