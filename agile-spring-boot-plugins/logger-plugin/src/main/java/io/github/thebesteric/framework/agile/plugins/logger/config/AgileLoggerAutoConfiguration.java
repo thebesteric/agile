@@ -104,7 +104,7 @@ public class AgileLoggerAutoConfiguration extends AbstractAgileInitialization {
 
     @Bean
     public LocalLogRecordController localLogRecordController() {
-        return new LocalLogRecordController();
+        return new LocalLogRecordController(properties);
     }
 
     @Bean

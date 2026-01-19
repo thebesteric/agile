@@ -2,12 +2,14 @@ package io.github.thebesteric.framework.agile.plugins.logger.recorder;
 
 import io.github.thebesteric.framework.agile.core.domain.R;
 import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
+import io.github.thebesteric.framework.agile.plugins.logger.config.AgileLoggerProperties;
 import io.github.thebesteric.framework.agile.plugins.logger.constant.LogLevel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +25,16 @@ import java.util.List;
 @RestController
 @RequestMapping("/agile/logger/local")
 @Tag(name = "日志查询")
+@RequiredArgsConstructor
 public class LocalLogRecordController {
+
+    private final AgileLoggerProperties agileLoggerProperties;
+
+    @GetMapping("/config")
+    @Operation(summary = "获取本地日志记录器配置")
+    public R<AgileLoggerProperties.LocalLogRecorderConfig> getConfig() {
+        return R.success(agileLoggerProperties.getLocalLogRecorderConfig());
+    }
 
     @GetMapping("/log/{logId}")
     @Operation(summary = "根据 logId 查询日志")
