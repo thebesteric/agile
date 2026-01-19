@@ -203,7 +203,32 @@ public class JdbcTemplateHelper {
     public boolean tableExists(String tableName) throws SQLException {
         String tableExistsSql = TableMetadataHelper.tableExistsSql(schema, tableName);
         Map<String, Object> result = executeSelect(tableExistsSql);
-        return result != null && !result.isEmpty() && (Long) result.get("exists") != 0;
+        // 判断结果是否为空
+        if (result == null || result.isEmpty()) {
+            loggerPrinter.warn("Failed to determine if table '{}' exists: query result is null or empty", tableName);
+            return false;
+        }
+        // 安全获取 exists 值，兼容不同数值类型
+        Object existsObj = result.get("exists");
+        if (existsObj == null) {
+            loggerPrinter.warn("Failed to determine if table '{}' exists: 'exists' value is null", tableName);
+            return false;
+        }
+        // 兼容 Integer/Long/BigDecimal 等数值类型，统一转为数字判断
+        long existsValue;
+        try {
+            if (existsObj instanceof Number number) {
+                existsValue = number.longValue();
+            } else {
+                // 尝试将字符串等类型转为数字（应对特殊数据库驱动返回字符串的情况）
+                existsValue = Long.parseLong(existsObj.toString().trim());
+            }
+        } catch (NumberFormatException e) {
+            loggerPrinter.error("Failed to determine if table '{}' exists: 'exists' value conversion failed", tableName, e);
+            return false;
+        }
+
+        return existsValue != 0;
     }
 
     /**
