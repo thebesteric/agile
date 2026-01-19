@@ -13,6 +13,7 @@ import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.test.domain.FileVo;
 import io.github.thebesteric.framework.agile.test.domain.Id2Vo;
 import io.github.thebesteric.framework.agile.test.service.HelloService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -68,9 +69,9 @@ public class HelloController {
 
     @CrossOrigin
     @GetMapping("/foo")
-    public R<String> foo(String name) {
+    public R<String> foo(String name, HttpServletResponse response) {
         loggerPrinter.info("entering foo");
-        return R.success(helloService.foo(name));
+        return R.success(helloService.foo(name)).httpStatus(201, response);
     }
 
     @AgileLogger
