@@ -80,6 +80,12 @@ public class HelloController {
         return R.success(body);
     }
 
+    @AgileLogger
+    @PostMapping("/error")
+    public R<Map<String, Object>> error(@RequestBody Map<String, Object> body, HttpServletResponse response) {
+        return R.<Map<String, Object>>error("error", null).httpStatus(400, response);
+    }
+
     @PostMapping("/upload")
     public R<Object> upload(@RequestParam(value = "file") MultipartFile file) {
         FileVo fileVo = helloService.parseFile(file);
