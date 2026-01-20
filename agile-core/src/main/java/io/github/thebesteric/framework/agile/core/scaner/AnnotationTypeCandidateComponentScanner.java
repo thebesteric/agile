@@ -16,18 +16,18 @@ import java.util.*;
  */
 public class AnnotationTypeCandidateComponentScanner {
 
-    private final List<String> basePackages;
+    private final Set<String> basePackages;
 
-    private List<AnnotationTypeFilter> includeFilters = new ArrayList<>();
+    private final List<AnnotationTypeFilter> includeFilters = new ArrayList<>();
 
-    public AnnotationTypeCandidateComponentScanner(List<String> basePackages, List<Class<? extends Annotation>> classes) {
+    public AnnotationTypeCandidateComponentScanner(Set<String> basePackages, List<Class<? extends Annotation>> classes) {
         this.basePackages = basePackages;
         for (Class<? extends Annotation> clazz : classes) {
             this.includeFilters.add(new AnnotationTypeFilter(clazz));
         }
     }
 
-    public AnnotationTypeCandidateComponentScanner(List<String> basePackages, Class<? extends Annotation> clazz) {
+    public AnnotationTypeCandidateComponentScanner(Set<String> basePackages, Class<? extends Annotation> clazz) {
         this(basePackages, List.of(clazz));
     }
 
@@ -37,7 +37,7 @@ public class AnnotationTypeCandidateComponentScanner {
             scanner.addIncludeFilter(filter);
         }
         Set<String> classNames = new HashSet<>();
-        for (String basePackage : Optional.ofNullable(basePackages).orElse(new ArrayList<>())) {
+        for (String basePackage : Optional.ofNullable(basePackages).orElse(new LinkedHashSet<>())) {
             Set<BeanDefinition> components = scanner.findCandidateComponents(basePackage);
             classNames.addAll(components.stream().map(BeanDefinition::getBeanClassName).toList());
         }
