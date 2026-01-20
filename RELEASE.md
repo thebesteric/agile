@@ -564,3 +564,6 @@
 - 日志插件 (perf): 修复 `LocalLogRecorderConfig` 配置可能不生效的问题
 - 数据库插件 (bugfix): 修复判断表是否存在时，兼容不同数据库的返回结果
 - 数据库插件 (feat): 增加两个数据库实体类的基类 `BaseEntity` 和 `BaseBizEntity`
+
+### v1.0.21.4
+- 通用 (perf): 增强 MapWrapper，增加灵活的 Map 构建，支持定义 ValueClass 类型
