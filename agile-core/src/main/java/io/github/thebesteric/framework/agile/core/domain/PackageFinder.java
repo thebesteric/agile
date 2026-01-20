@@ -4,9 +4,9 @@ import lombok.Getter;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScans;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * PackageFinder
@@ -19,7 +19,7 @@ public class PackageFinder {
 
     // 包路径
     @Getter
-    private static final List<String> packageNames = new ArrayList<>();
+    private static final Set<String> packageNames = new LinkedHashSet<>();
 
     private PackageFinder() {
         super();
