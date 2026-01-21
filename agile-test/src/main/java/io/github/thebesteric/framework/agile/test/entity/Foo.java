@@ -70,8 +70,7 @@ public class Foo extends BaseEntity implements EntityClassCreateListener, Entity
     @EntityColumn(length = 64, indexGroup = "c_e_d", indexGroupSort = 2)
     private String e;
 
-    @EntityColumn(length = 32, index = true)
-    private String f;
+
 
     @Override
     public EntityClassDomain preCreateTable(EntityClassDomain entityClassDomain, JdbcTemplateHelper jdbcTemplateHelper) {
