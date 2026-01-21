@@ -31,15 +31,14 @@ public class R<T> {
         }
         result.setCode(code);
         result.setMessage(message);
+        result.setHttpStatus(httpStatus);
         result.setTrackId(TransactionUtils.get());
         if (isSuccess) {
             result.setSuccessCode(code);
             result.setSucceed(true);
-            result.setHttpStatus(httpStatus != null ? httpStatus : HttpStatus.OK);
         } else {
             result.setErrorCode(code);
             result.setSucceed(false);
-            result.setHttpStatus(httpStatus != null ? httpStatus : HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return result;
     }
