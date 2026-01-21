@@ -566,6 +566,7 @@
 - 数据库插件 (feat): 增加两个数据库实体类的基类 `BaseEntity` 和 `BaseBizEntity`
 
 ### v1.0.21.4
+
 - 通用 (perf): 增强 MapWrapper，增加灵活的 Map 构建，支持定义 ValueClass 类型
 - 通用 (perf): 优化 `PackageFinder` 可能多次调用，导致存在相同包路径的问题
 - 数据库插件 (feat): 支持 PostgreSQL 数据库的表结构创建和更新
