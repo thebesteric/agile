@@ -9,10 +9,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.*;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.TableMetadataHelper;
-import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassCreateListener;
-import io.github.thebesteric.framework.agile.plugins.database.core.listener.EntityClassUpdateListener;
-import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableCreateListener;
-import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableUpdateListener;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.*;
 import io.github.thebesteric.framework.agile.plugins.database.entity.AgileTableMetadata;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +61,9 @@ public class AgileDatabaseJdbcTemplate {
             DatabaseMetaData metaData = connection.getMetaData();
             // 初始化元数据表
             initTableMeta();
+            // 存在的表实体
+            List<EntityClassDomain> existEntityClasses = new ArrayList<>();
+            // 遍历所有实体类，创建或更新表
             for (Class<?> clazz : entityClasses) {
                 EntityClass entityClass = clazz.getAnnotation(EntityClass.class);
                 if (entityClass != null) {
@@ -100,13 +100,13 @@ public class AgileDatabaseJdbcTemplate {
                     }
                     // 创建表：执行后置处理
                     boolean shouldExecutePostTableCreate = entityClassDomain != null && executeTableCreateListener;
-                    if (createListener != null && shouldExecutePostTableCreate) {
-                        createListener.postCreateTable(jdbcTemplateHelper);
-                    }
                     if (shouldExecutePostTableCreate) {
                         for (TableCreateListener tableCreateListener : tableCreateListeners) {
                             tableCreateListener.postCreateTable(tableName, jdbcTemplateHelper);
                         }
+                    }
+                    if (createListener != null && shouldExecutePostTableCreate) {
+                        createListener.postCreateTable(jdbcTemplateHelper);
                     }
                 }
                 // 更新表
@@ -123,6 +123,7 @@ public class AgileDatabaseJdbcTemplate {
                     if (changeFields != null) {
                         for (TableUpdateListener tableUpdateListener : tableUpdateListeners) {
                             if (!tableUpdateListener.preUpdateTable(tableName, jdbcTemplateHelper)) {
+                                // 监听器返回 false，则不进行更新
                                 executeTableUpdateListener = false;
                                 break;
                             }
@@ -134,18 +135,25 @@ public class AgileDatabaseJdbcTemplate {
                     }
                     // 更新表：执行后置处理
                     boolean shouldExecutePostTableUpdate = changeFields != null && executeTableUpdateListener;
-                    if (updateListener != null && shouldExecutePostTableUpdate) {
-                        updateListener.postUpdateTable(jdbcTemplateHelper);
-                    }
                     if (shouldExecutePostTableUpdate) {
                         for (TableUpdateListener tableUpdateListener : tableUpdateListeners) {
                             tableUpdateListener.postUpdateTable(tableName, jdbcTemplateHelper);
                         }
                     }
+                    if (updateListener != null && shouldExecutePostTableUpdate) {
+                        updateListener.postUpdateTable(jdbcTemplateHelper);
+                    }
+
                 }
+                // 记录存在的表实体
+                existEntityClasses.add(entityClassDomain);
             }
+
             // 创建外键（只会在新增表的时候生效）
             jdbcTemplateHelper.createForeignKeyOnCreated();
+
+            // 删除表逻辑
+            deleteTableIfNecessary(existEntityClasses);
         }
     }
 
@@ -157,15 +165,57 @@ public class AgileDatabaseJdbcTemplate {
         }
     }
 
+    public void deleteTableIfNecessary(List<EntityClassDomain> existEntityClasses) throws Exception {
+        // 判断是否删除表
+        if (!properties.isDeleteTable()) {
+            return;
+        }
+        // 获取表删除监听器
+        List<TableDropListener> tableDropListeners = context.getTableDropListeners();
+        // 查询元数据中的所有表
+        String listTablesSql = AgileTableMetadata.listTablesSql();
+        List<Map<String, Object>> tables = executeSelect(listTablesSql);
+        // 获取元数据中所有的表名称
+        List<String> metadataTableNames = tables.stream().map(table -> (String) table.get(AgileTableMetadata.COLUMN_TABLE_NAME)).toList();
+        List<String> existTableNames = existEntityClasses.stream().map(EntityClassDomain::getTableName).toList();
+        // 删除不存在的表
+        for (String metadataTableName : metadataTableNames) {
+            // 实体表不在元数据表中
+            if (!existTableNames.contains(metadataTableName)) {
+                // 监听器：删除表：执行前置处理
+                for (TableDropListener tableDropListener : tableDropListeners) {
+                    if (!tableDropListener.preDropTable(metadataTableName, jdbcTemplateHelper)) {
+                        break;
+                    }
+                }
+
+                // 删除表
+                String dropTableSql = "DROP TABLE IF EXISTS `%s`".formatted(metadataTableName);
+                executeUpdate(dropTableSql, JdbcTemplateHelper.Operation.DROP);
+
+                // 删除元数据信息
+                String deleteMetadataSql = AgileTableMetadata.deleteSql(AgileTableMetadata.MetadataType.TABLE, metadataTableName, null);
+                executeUpdate(deleteMetadataSql, JdbcTemplateHelper.Operation.DELETE);
+                String deleteColumnMetadataSql = AgileTableMetadata.deleteSql(AgileTableMetadata.MetadataType.COLUMN, metadataTableName, null);
+                executeUpdate(deleteColumnMetadataSql, JdbcTemplateHelper.Operation.DELETE);
+
+                // 监听器：删除表：执行后置处理
+                for (TableDropListener tableDropListener : tableDropListeners) {
+                    tableDropListener.postDropTable(metadataTableName, jdbcTemplateHelper);
+                }
+            }
+        }
+    }
+
     public void createTable(EntityClassDomain entityClassDomain) throws SQLException {
         // 创建表
         List<ColumnDomain> columnDomains = this.jdbcTemplateHelper.createTable(entityClassDomain, properties.isShowSql(), properties.isFormatSql());
-
         // 插入元数据
         for (ColumnDomain columnDomain : columnDomains) {
             String selectSql = AgileTableMetadata.selectSql(AgileTableMetadata.MetadataType.COLUMN, columnDomain.getTableName(), columnDomain.getName());
-            Map<String, Object> result = executeSelect(selectSql);
-            if (!result.isEmpty()) {
+            List<Map<String, Object>> results = executeSelect(selectSql);
+            if (!results.isEmpty()) {
+                Map<String, Object> result = results.get(0);
                 String signature = (String) result.get(AgileTableMetadata.COLUMN_SIGNATURE);
                 String currSignature = columnDomain.signature();
                 if (!signature.equals(currSignature)) {
@@ -187,8 +237,9 @@ public class AgileDatabaseJdbcTemplate {
     private void updateTableMetaData(EntityClassDomain entityClassDomain) throws SQLException {
         String tableName = entityClassDomain.getTableName();
         String selectSql = AgileTableMetadata.selectSql(AgileTableMetadata.MetadataType.TABLE, tableName, null);
-        Map<String, Object> result = executeSelect(selectSql);
-        if (!result.isEmpty()) {
+        List<Map<String, Object>> results = executeSelect(selectSql);
+        if (!results.isEmpty()) {
+            Map<String, Object> result = results.get(0);
             String signature = (String) result.get(AgileTableMetadata.COLUMN_SIGNATURE);
             String currSignature = entityClassDomain.signature();
             if (!signature.equals(currSignature)) {
@@ -230,9 +281,10 @@ public class AgileDatabaseJdbcTemplate {
         // 更新表上的相关注解
         String currTableSignature = entityClassDomain.signature();
         final String selectSql = AgileTableMetadata.selectSql(AgileTableMetadata.MetadataType.TABLE, tableName, null);
-        Map<String, Object> result = executeSelect(selectSql);
+        List<Map<String, Object>> results = executeSelect(selectSql);
         // 元数据中存在对应的字段记录
-        if (!result.isEmpty()) {
+        if (!results.isEmpty()) {
+            Map<String, Object> result = results.get(0);
             String tableSignature = (String) result.get(AgileTableMetadata.COLUMN_SIGNATURE);
             if (!currTableSignature.equals(tableSignature)) {
                 // 执行更新表上的相关注解
@@ -265,9 +317,10 @@ public class AgileDatabaseJdbcTemplate {
             String signature = null;
             String columnSignature = columnDomain.signature();
             final String selectSql = AgileTableMetadata.selectSql(AgileTableMetadata.MetadataType.COLUMN, tableName, columnName);
-            Map<String, Object> result = executeSelect(selectSql);
+            List<Map<String, Object>> results = executeSelect(selectSql);
             // 元数据中存在对应的字段记录
-            if (!result.isEmpty()) {
+            if (!results.isEmpty()) {
+                Map<String, Object> result = results.get(0);
                 signature = (String) result.get(AgileTableMetadata.COLUMN_SIGNATURE);
             }
 
@@ -453,6 +506,7 @@ public class AgileDatabaseJdbcTemplate {
 
     private void deleteColumns(DatabaseMetaData metaData, EntityClassDomain entityClassDomain, List<String> deleteColumns) throws SQLException {
         String tableName = entityClassDomain.getTableName();
+        DatabaseProduct databaseProduct = this.jdbcTemplateHelper.getDatabaseProduct();
         for (String deleteColumn : deleteColumns) {
             jdbcTemplateHelper.deleteColumn(metaData, tableName, deleteColumn);
             // 删除元数据信息
@@ -464,6 +518,7 @@ public class AgileDatabaseJdbcTemplate {
         String tableName = entityClassDomain.getTableName();
         Map<String, List<String>> uniqueGroups = new HashMap<>();
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
+
         for (Field field : newFields) {
             // 新增字段
             ColumnDomain columnDomain = this.jdbcTemplateHelper.addColumn(tableName, field);
@@ -597,9 +652,9 @@ public class AgileDatabaseJdbcTemplate {
             }
 
             // 更新元信息
-            Map<String, Object> result = executeSelect(AgileTableMetadata.selectSql(AgileTableMetadata.MetadataType.COLUMN, tableName, columnName));
+            List<Map<String, Object>> results = executeSelect(AgileTableMetadata.selectSql(AgileTableMetadata.MetadataType.COLUMN, tableName, columnName));
             // 元数据中不存在对应的字段记录，则表示需要新增
-            if (result.isEmpty()) {
+            if (results.isEmpty()) {
                 // 新增元数据
                 executeUpdate(AgileTableMetadata.insertSql(AgileTableMetadata.MetadataType.COLUMN, tableName, columnName, columnDomain.signature()), JdbcTemplateHelper.Operation.INSERT);
             }
@@ -625,7 +680,7 @@ public class AgileDatabaseJdbcTemplate {
         this.jdbcTemplateHelper.updateUniqueIndex(inDatabaseUniqueIndexNames, entityClassDomain);
     }
 
-    public Map<String, Object> executeSelect(final String sql) throws SQLException {
+    public List<Map<String, Object>> executeSelect(final String sql) throws SQLException {
         return this.jdbcTemplateHelper.executeSelect(sql, properties.isShowSql() && log.isDebugEnabled(), properties.isFormatSql());
     }
 

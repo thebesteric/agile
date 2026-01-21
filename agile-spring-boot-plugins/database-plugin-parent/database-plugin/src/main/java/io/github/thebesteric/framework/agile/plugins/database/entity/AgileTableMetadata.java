@@ -69,31 +69,39 @@ public class AgileTableMetadata implements Serializable {
             columns = "`%s`, `%s`, `%s`, `%s`".formatted(COLUMN_TYPE, COLUMN_TABLE_NAME, COLUMN_SIGNATURE, COLUMN_CREATED_AT);
             values = "'%s', '%s', '%s', '%s'".formatted(metadataType.name(), tableName, signature, DATE_FORMAT.format(new Date()));
         }
-        return "INSERT INTO %s (%s) VALUES (%s)".formatted(AgileTableMetadata.TABLE_NAME, columns, values);
+        return "INSERT INTO `%s` (%s) VALUES (%s)".formatted(AgileTableMetadata.TABLE_NAME, columns, values);
     }
 
     public static String selectSql(MetadataType metadataType, String tableName, String columnName) {
         if (columnName != null) {
-            return "SELECT * FROM %s WHERE `%s` = '%s' AND `%s` = '%s' AND `%s` = '%s' ORDER BY UPDATED_AT DESC LIMIT 1"
+            return "SELECT * FROM `%s` WHERE `%s` = '%s' AND `%s` = '%s' AND `%s` = '%s' ORDER BY `UPDATED_AT` DESC LIMIT 1"
                     .formatted(AgileTableMetadata.TABLE_NAME, AgileTableMetadata.COLUMN_TYPE, metadataType.name(), COLUMN_TABLE_NAME, tableName, COLUMN_COLUMN_NAME, columnName);
         }
-        return "SELECT * FROM %s WHERE `%s` = '%s' AND `%s` = '%s' ORDER BY UPDATED_AT DESC LIMIT 1"
+        return "SELECT * FROM `%s` WHERE `%s` = '%s' AND `%s` = '%s' ORDER BY `UPDATED_AT` DESC LIMIT 1"
                 .formatted(AgileTableMetadata.TABLE_NAME, AgileTableMetadata.COLUMN_TYPE, metadataType.name(), COLUMN_TABLE_NAME, tableName);
     }
 
     public static String deleteSql(MetadataType metadataType, String tableName, String deleteColumn) {
-        return "DELETE FROM %s WHERE `%s` = '%s' AND `%s` = '%s' AND `%s` = '%s'"
+        if (deleteColumn == null) {
+            return "DELETE FROM `%s` WHERE `%s` = '%s' AND `%s` = '%s'"
+                    .formatted(AgileTableMetadata.TABLE_NAME, AgileTableMetadata.COLUMN_TYPE, metadataType.name(), COLUMN_TABLE_NAME, tableName);
+        }
+        return "DELETE FROM `%s` WHERE `%s` = '%s' AND `%s` = '%s' AND `%s` = '%s'"
                 .formatted(AgileTableMetadata.TABLE_NAME, AgileTableMetadata.COLUMN_TYPE, metadataType.name(), COLUMN_TABLE_NAME, tableName, COLUMN_COLUMN_NAME, deleteColumn);
     }
 
     public static String updateSql(MetadataType metadataType, String tableName, String columnName, String signature) {
-        String changed = "`%s` = '%s', `%s` = '%s', `%s` = %s".formatted(COLUMN_SIGNATURE, signature, COLUMN_UPDATED_AT, DATE_FORMAT.format(new Date()), COLUMN_VERSION, "%s + 1".formatted(COLUMN_VERSION));
+        String changed = "`%s` = '%s', `%s` = '%s', `%s` = %s".formatted(COLUMN_SIGNATURE, signature, COLUMN_UPDATED_AT, DATE_FORMAT.format(new Date()), COLUMN_VERSION, "`%s` + 1".formatted(COLUMN_VERSION));
         String condition = "`%s` = '%s' AND `%s` = '%s' AND `%s` = '%s'".formatted(COLUMN_TABLE_NAME, tableName, COLUMN_TYPE, metadataType.name(), COLUMN_COLUMN_NAME, columnName);
         // 表示插入的是表级的元数据信息
         if (CharSequenceUtil.isEmpty(columnName)) {
             condition = "`%s` = '%s' AND `%s` = '%s'".formatted(COLUMN_TABLE_NAME, tableName, COLUMN_TYPE, metadataType.name());
         }
-        return "UPDATE %s t SET %s WHERE %s".formatted(AgileTableMetadata.TABLE_NAME, changed, condition);
+        return "UPDATE `%s` t SET %s WHERE %s".formatted(AgileTableMetadata.TABLE_NAME, changed, condition);
+    }
+
+    public static String listTablesSql() {
+        return "SELECT DISTINCT `TABLE_NAME` FROM `%s` WHERE `TABLE_NAME` != '%s'".formatted(AgileTableMetadata.TABLE_NAME, AgileTableMetadata.TABLE_NAME);
     }
 
     public enum MetadataType {

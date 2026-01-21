@@ -19,6 +19,7 @@ public class AgileDatabaseProperties {
     private boolean showSql = false;
     private boolean formatSql = true;
     private boolean deleteColumn = false;
+    private boolean deleteTable = false;
     private String tableNamePrefix;
 
     public enum DDLAuto {

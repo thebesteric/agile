@@ -7,6 +7,7 @@ import io.github.thebesteric.framework.agile.commons.util.CollectionUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.DatabaseProduct;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ReferenceDomain;
 import io.vavr.control.Try;
@@ -45,6 +46,7 @@ public class JdbcTemplateHelper {
     private final JdbcTemplate jdbcTemplate;
     private final PlatformTransactionManager transactionManager;
     private final String jdbcUrl;
+    private final DatabaseProduct databaseProduct;
     private final String schema;
 
     // 表对应的外键集合
@@ -56,6 +58,7 @@ public class JdbcTemplateHelper {
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMetaData metaData = connection.getMetaData();
             jdbcUrl = metaData.getURL();
+            databaseProduct = DatabaseProduct.of(metaData.getDatabaseProductName());
             schema = jdbcUrl.split("//")[1].split("/")[1].split("\\?")[0];
         }
     }
@@ -114,7 +117,7 @@ public class JdbcTemplateHelper {
         if (jdbcUrl == null || jdbcUrl.isEmpty()) {
             throw new IllegalArgumentException("JDBC URL cannot be null or empty");
         }
-        Pattern pattern = Pattern.compile("jdbc:mysql://[^/]+/([^/?]+)(\\?.*)?");
+        Pattern pattern = Pattern.compile("jdbc:" + databaseProduct.getDatabaseProductName().toLowerCase() + "://[^/]+/([^/?]+)(\\?.*)?");
         Matcher matcher = pattern.matcher(jdbcUrl);
         if (matcher.matches()) {
             return matcher.group(1);
@@ -201,14 +204,15 @@ public class JdbcTemplateHelper {
      * @since 2024/6/17 12:18
      */
     public boolean tableExists(String tableName) throws SQLException {
-        String tableExistsSql = TableMetadataHelper.tableExistsSql(schema, tableName);
-        Map<String, Object> result = executeSelect(tableExistsSql);
+        String tableExistsSql = TableMetadataHelper.tableExistsSql(databaseProduct, schema, tableName);
+        List<Map<String, Object>> results = executeSelect(tableExistsSql);
         // 判断结果是否为空
-        if (result == null || result.isEmpty()) {
+        if (results == null || results.isEmpty()) {
             loggerPrinter.warn("Failed to determine if table '{}' exists: query result is null or empty", tableName);
             return false;
         }
         // 安全获取 exists 值，兼容不同数值类型
+        Map<String, Object> result = results.get(0);
         Object existsObj = result.get("exists");
         if (existsObj == null) {
             loggerPrinter.warn("Failed to determine if table '{}' exists: 'exists' value is null", tableName);
@@ -219,6 +223,8 @@ public class JdbcTemplateHelper {
         try {
             if (existsObj instanceof Number number) {
                 existsValue = number.longValue();
+            } else if (existsObj instanceof Boolean booleanValue) {
+                existsValue = booleanValue ? 1 : 0;
             } else {
                 // 尝试将字符串等类型转为数字（应对特殊数据库驱动返回字符串的情况）
                 existsValue = Long.parseLong(existsObj.toString().trim());
@@ -397,15 +403,31 @@ public class JdbcTemplateHelper {
         String columnName = columnDomain.getName();
         // 字段名称变更的情况
         if (CharSequenceUtil.isNotEmpty(forUpdateColumn)) {
-            sb.append("CHANGE").append(" ").append("`").append(forUpdateColumn).append("`").append(" ").append("`").append(columnName).append("`").append(" ");
+            if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+                sb.append("ALTER COLUMN").append(" ").append("`").append(forUpdateColumn).append("`").append(" ").append("`").append(columnName).append("`").append(" ");
+            } else {
+                sb.append("CHANGE").append(" ").append("`").append(forUpdateColumn).append("`").append(" ").append("`").append(columnName).append("`").append(" ");
+            }
         }
         // 非字段名称变更的情况
         else {
-            sb.append("MODIFY").append(" ").append("`").append(columnName).append("`").append(" ");
-        }
-        sb.append(columnDomain.typeWithLength()).append(" ");
+            if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+                sb.append("ALTER COLUMN").append(" ").append("`").append(columnName).append("`").append(" ").append("TYPE").append(" ");
+            } else {
+                sb.append("MODIFY").append(" ").append("`").append(columnName).append("`").append(" ");
+            }
 
-        if (columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
+        }
+
+        // 字段类型
+        sb.append(columnDomain.typeWithLength());
+        if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+            sb.append(",").append(" ");
+        } else {
+            sb.append(" ");
+        }
+
+        if (databaseProduct == DatabaseProduct.MYSQL && columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
             sb.append("UNSIGNED").append(" ");
         }
 
@@ -413,14 +435,25 @@ public class JdbcTemplateHelper {
         if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
             sb.append("DEFAULT").append(" ").append(defaultExpression).append(" ");
         }
-
-        sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
+        if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+            if (columnDomain.isNullable()) {
+                sb.append("ALTER COLUMN").append(" ").append("`").append(columnName).append("`").append(" ").append("DROP NOT NULL").append(" ");
+            } else {
+                sb.append("ALTER COLUMN").append(" ").append("`").append(columnName).append("`").append(" ").append("SET NOT NULL").append(" ");
+            }
+        } else {
+            sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
+        }
 
         String comment = columnDomain.getComment();
-        if (CharSequenceUtil.isNotEmpty(comment)) {
+        if (databaseProduct == DatabaseProduct.MYSQL && CharSequenceUtil.isNotEmpty(comment)) {
             sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
         }
         this.executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.UPDATE);
+
+        if (databaseProduct == DatabaseProduct.POSTGRESQL && CharSequenceUtil.isNotEmpty(comment)) {
+            this.executeUpdate("COMMENT ON COLUMN " + tableName + "." + columnName + " IS '" + comment + "'", JdbcTemplateHelper.Operation.UPDATE);
+        }
 
         return columnDomain;
     }
@@ -476,7 +509,7 @@ public class JdbcTemplateHelper {
         String tableName = entityClassDomain.getTableName();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("CREATE TABLE `").append(tableName).append("` (");
+        sb.append("CREATE TABLE IF NOT EXISTS `").append(tableName).append("` (");
         List<Field> fields = entityClassDomain.getEntityFields();
 
         List<ColumnDomain> columnDomains = new ArrayList<>();
@@ -486,8 +519,8 @@ public class JdbcTemplateHelper {
         Map<String, List<String>> uniqueGroups = new HashMap<>();
         List<ColumnDomain> indexColumnDomains = new ArrayList<>();
         Map<String, List<Pair<String, Integer>>> indexGroups = new HashMap<>();
-
         List<ColumnDomain> foreignKeys = new ArrayList<>();
+        List<String> pgColumnComments = new ArrayList<>();
 
         for (Field field : fields) {
             // 获取字段信息
@@ -526,17 +559,24 @@ public class JdbcTemplateHelper {
             }
             // 非自增
             else {
-                // 是否为空判断
-                if (columnDomain.isNullable()) {
-                    sb.append(" ").append("NULL");
-                } else {
-                    sb.append(" ").append("NOT NULL");
+                // 默认值为空时，进行非空判断
+                if (CharSequenceUtil.isEmpty(defaultExpression)) {
+                    if (columnDomain.isNullable()) {
+                        sb.append(" ").append("NULL");
+                    } else {
+                        sb.append(" ").append("NOT NULL");
+                    }
                 }
             }
             // 注释
             String comment = columnDomain.getComment();
             if (CharSequenceUtil.isNotEmpty(comment)) {
-                sb.append(" ").append("COMMENT").append(" ").append("'").append(comment).append("'");
+                if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+                    String commentSql = String.format("COMMENT ON COLUMN %s.%s IS '%s'", tableName, columnDomain.getName(), comment);
+                    pgColumnComments.add(commentSql);
+                } else {
+                    sb.append(" ").append("COMMENT").append(" ").append("'").append(comment).append("'");
+                }
             }
             sb.append(", ");
 
@@ -609,14 +649,29 @@ public class JdbcTemplateHelper {
         if (lastChar == ',') {
             sb.deleteCharAt(length - 1);
         }
-        sb.append(") COMMENT ").append("'").append(entityClassDomain.getComment()).append("'").append(" ");
-        sb.append("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+        if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+            sb.append(")");
+        } else {
+            sb.append(") COMMENT ").append("'").append(entityClassDomain.getComment()).append("'").append(" ");
+            sb.append("ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+        }
 
         // 创建表
         this.executeUpdate(sb.toString(), Operation.CREATE, showSql, formatSql);
 
-        // 主键设置为第一列
-        if (primaryKey != null) {
+        // 添加注释（PostgreSQL 的注释都需要单独执行）
+        if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+            // 添加表注释
+            String tableCommentSql = "COMMENT ON TABLE \"%s\" IS '%s'".formatted(tableName, entityClassDomain.getComment());
+            this.executeUpdate(tableCommentSql, Operation.CREATE, showSql, formatSql);
+            // 添加列注释
+            for (String pgColumnComment : pgColumnComments) {
+                this.executeUpdate(pgColumnComment, Operation.CREATE, showSql, formatSql);
+            }
+        }
+
+        // 主键设置为第一列（仅 MySQL 支持逻辑调整字段顺序）
+        if (databaseProduct == DatabaseProduct.MYSQL && primaryKey != null) {
             String firstColumnSql = "ALTER TABLE `%s` MODIFY COLUMN `%s` %s %s NOT NULL FIRST"
                     .formatted(tableName, primaryKey.getName(), primaryKey.typeWithLength(), primaryKey.isAutoIncrement() ? "AUTO_INCREMENT" : "");
             this.executeUpdate(firstColumnSql, Operation.UPDATE);
@@ -715,6 +770,7 @@ public class JdbcTemplateHelper {
     }
 
     public void executeUpdate(final String sql, final Operation operation, boolean showSql, boolean formatSql) throws SQLException {
+        final String dialectSql = databaseProduct.toDialect(sql);
         DataSource dataSource = this.jdbcTemplate.getDataSource();
         if (dataSource == null) {
             throw new SQLException("DataSource is null");
@@ -722,47 +778,46 @@ public class JdbcTemplateHelper {
         AtomicReference<Connection> connection = new AtomicReference<>();
         Try.of(() -> {
             connection.set(dataSource.getConnection());
-            PreparedStatementCreator creator = conn -> conn.prepareStatement(sql);
+            PreparedStatementCreator creator = conn -> conn.prepareStatement(dialectSql);
             return creator.createPreparedStatement(connection.get()).executeUpdate();
         }).onFailure(e -> {
             // 更新或新建重复数据，忽略
             if (e instanceof SQLSyntaxErrorException && e.getMessage().startsWith("Duplicate key")) {
-                loggerPrinter.warn(e.getMessage() + ": {}", sql);
+                loggerPrinter.warn(e.getMessage() + ": {}", dialectSql);
                 return;
             }
-            if (Operation.DELETE != operation) {
-                loggerPrinter.error(e.getMessage() + ": {}", sql, e);
-            }
+            loggerPrinter.error(e.getMessage() + ": {}", dialectSql, e);
         }).andThen(result -> {
             if (showSql && result == 0) {
                 if (formatSql) {
-                    String formattedSql = SqlFormatter.format(sql);
+                    String formattedSql = SqlFormatter.format(dialectSql);
                     loggerPrinter.info(formattedSql);
                 } else {
-                    loggerPrinter.info(sql);
+                    loggerPrinter.info(dialectSql);
                 }
             }
         }).andFinallyTry(() -> connection.get().close());
     }
 
-    public Map<String, Object> executeSelect(final String sql) throws SQLException {
+    public List<Map<String, Object>> executeSelect(final String sql) throws SQLException {
         return this.executeSelect(sql, false, true);
     }
 
-    public Map<String, Object> executeSelect(final String sql, boolean showSql) throws SQLException {
+    public List<Map<String, Object>> executeSelect(final String sql, boolean showSql) throws SQLException {
         return this.executeSelect(sql, showSql, true);
     }
 
-    public Map<String, Object> executeSelect(final String sql, boolean showSql, boolean formatSql) throws SQLException {
+    public List<Map<String, Object>> executeSelect(final String sql, boolean showSql, boolean formatSql) throws SQLException {
+        final String dialectSql = databaseProduct.toDialect(sql);
         DataSource dataSource = this.jdbcTemplate.getDataSource();
         if (dataSource == null) {
             throw new SQLException("DataSource is null");
         }
         AtomicReference<Connection> connection = new AtomicReference<>();
         return Try.of(() -> {
-            Map<String, Object> result = new LinkedHashMap<>();
+            List<Map<String, Object>> results = new ArrayList<>();
             connection.set(dataSource.getConnection());
-            PreparedStatementCreator creator = conn -> conn.prepareStatement(sql);
+            PreparedStatementCreator creator = conn -> conn.prepareStatement(dialectSql);
             ResultSet resultSet = creator.createPreparedStatement(connection.get()).executeQuery();
             ResultSetMetaData metaData = resultSet.getMetaData();
             int columnsCount = metaData.getColumnCount();
@@ -772,21 +827,25 @@ public class JdbcTemplateHelper {
                 String columnName = metaData.getColumnName(i);
                 keys.add(columnName);
             }
-            // 封装 value
+            // 封装 value - 遍历所有行
             while (resultSet.next()) {
+                Map<String, Object> row = new LinkedHashMap<>();
                 for (int i = 1; i <= columnsCount; i++) {
                     Object columnValue = resultSet.getObject(i);
-                    result.put(keys.get(i - 1), columnValue);
+                    row.put(keys.get(i - 1), columnValue);
                 }
+                results.add(row);
             }
-            return result;
-        }).onFailure(e -> loggerPrinter.error(e.getMessage() + ": {}", sql, e)).andThen(result -> {
+            return results;
+        }).onFailure(e -> {
+            loggerPrinter.error(e.getMessage() + ": {}", dialectSql, e);
+        }).andThen(results -> {
             if (showSql) {
                 if (formatSql) {
-                    String formattedSql = SqlFormatter.format(sql);
+                    String formattedSql = SqlFormatter.format(dialectSql);
                     loggerPrinter.info(formattedSql);
                 } else {
-                    loggerPrinter.info(sql);
+                    loggerPrinter.info(dialectSql);
                 }
             }
         }).andFinallyTry(() -> connection.get().close()).get();
@@ -807,7 +866,7 @@ public class JdbcTemplateHelper {
             }
         }
         String indexGroupNameKey = generateUniqueIndexName ? ColumnDomain.generateIndexKeyName(tableName, uniqueGroupName) : uniqueGroupName;
-        String uniqueIndexSql = String.format("CREATE UNIQUE INDEX `%s` ON `%s` (%s);", indexGroupNameKey, tableName, columnKeyNames);
+        String uniqueIndexSql = String.format("CREATE UNIQUE INDEX `%s` ON `%s` (%s)", indexGroupNameKey, tableName, columnKeyNames);
         this.executeUpdate(uniqueIndexSql, Operation.CREATE);
     }
 

@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.database.core.jdbc;
 
 import io.github.thebesteric.framework.agile.commons.util.AbstractUtils;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.DatabaseProduct;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ReferenceDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.TableColumn;
 
@@ -33,7 +34,11 @@ public final class TableMetadataHelper extends AbstractUtils {
      * @author wangweijun
      * @since 2024/6/14 14:44
      */
-    public static String tableExistsSql(String schema, String tableName) {
+    public static String tableExistsSql(DatabaseProduct databaseProduct, String schema, String tableName) {
+        if (DatabaseProduct.POSTGRESQL.equals(databaseProduct)) {
+            return "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_catalog = '%s' AND table_name = '%s')"
+                    .formatted(schema, tableName);
+        }
         return "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = '%s' AND table_name = '%s') AS 'exists'"
                 .formatted(schema, tableName);
     }

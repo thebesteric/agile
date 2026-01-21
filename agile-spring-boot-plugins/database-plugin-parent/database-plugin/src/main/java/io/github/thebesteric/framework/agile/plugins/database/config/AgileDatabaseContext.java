@@ -9,6 +9,7 @@ import io.github.thebesteric.framework.agile.core.domain.PackageFinder;
 import io.github.thebesteric.framework.agile.core.scaner.AnnotationTypeCandidateComponentScanner;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableCreateListener;
+import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableDropListener;
 import io.github.thebesteric.framework.agile.plugins.database.core.listener.TableUpdateListener;
 import io.vavr.control.Try;
 import lombok.Getter;
@@ -37,6 +38,7 @@ public class AgileDatabaseContext extends AbstractAgileContext {
     private final AgileDatabaseProperties properties;
     private final List<TableCreateListener> tableCreateListeners;
     private final List<TableUpdateListener> tableUpdateListeners;
+    private final List<TableDropListener> tableDropListeners;
 
     public AgileDatabaseContext(ApplicationContext applicationContext, AgileDatabaseProperties properties) {
         super((GenericApplicationContext) applicationContext);
@@ -44,10 +46,11 @@ public class AgileDatabaseContext extends AbstractAgileContext {
         this.findEntityClasses();
         this.tableCreateListeners = this.getBeans(TableCreateListener.class);
         this.tableUpdateListeners = this.getBeans(TableUpdateListener.class);
+        this.tableDropListeners = this.getBeans(TableDropListener.class);
     }
 
     private void findEntityClasses() {
-        List<String> packageNames = PackageFinder.getPackageNames();
+        Set<String> packageNames = PackageFinder.getPackageNames();
         List<Class<? extends Annotation>> classes = List.of(EntityClass.class, TableName.class);
         AnnotationTypeCandidateComponentScanner scanner = new AnnotationTypeCandidateComponentScanner(packageNames, classes);
         Set<String> entityClassNames = scanner.scan();
