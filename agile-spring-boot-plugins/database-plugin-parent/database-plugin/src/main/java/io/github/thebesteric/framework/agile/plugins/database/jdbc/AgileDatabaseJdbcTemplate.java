@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.database.jdbc;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.CharSequenceUtil;
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseContext;
 import io.github.thebesteric.framework.agile.plugins.database.config.AgileDatabaseProperties;
@@ -32,6 +33,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AgileDatabaseJdbcTemplate {
 
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
     private final AgileDatabaseContext context;
     private final JdbcTemplate jdbcTemplate;
     private final JdbcTemplateHelper jdbcTemplateHelper;
@@ -47,6 +50,9 @@ public class AgileDatabaseJdbcTemplate {
     @SneakyThrows
     public void createOrUpdateTable() {
         AgileDatabaseProperties.DDLAuto ddlAuto = properties.getDdlAuto();
+        DatabaseProduct databaseProduct = jdbcTemplateHelper.getDatabaseProduct();
+        loggerPrinter.info("Database-plugin DDL auto mode is {}, dialect is {}.", ddlAuto, databaseProduct.getDatabaseProductName());
+
         // DDLAuto.NONE 直接退出，适用于自己维护表的情况
         if (AgileDatabaseProperties.DDLAuto.NONE == ddlAuto) {
             return;
