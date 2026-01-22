@@ -577,3 +577,9 @@
 - 数据库插件 (bugfix): 修复 PostgreSQL 数据库创建表时，针对数值字段映射为布尔字段错误的问题
 - 数据库插件 (perf): 优化主键字段调整到表中第一位的逻辑
 - 数据库插件 (perf): 优化字段排序逻辑
+
+### v1.0.21.6
+
+- 通用 (refactor): 优化 R 类对 HttpStatus 的处理和调用逻辑
+- 数据库插件 (bugfix): 修复 PostgreSQL 更新表结构时，语法报错的问题
+- 数据库插件 (refactor): 优化实体类基类，deleted 改为 int 类型，desc 重新命名为为 comments，以支持 PostgreSQL 数据库
