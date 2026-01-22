@@ -53,8 +53,8 @@ public abstract class BaseEntity implements Serializable {
     @EntityColumn(sequence = BASE_SEQUENCE + 4, type = EntityColumn.Type.VARCHAR, length = 32, comment = "更新人")
     protected String updatedBy;
 
-    /** 描述：对应数据库类型 varchar(255) */
-    @TableField(value = "`desc`")
-    @EntityColumn(sequence = BASE_SEQUENCE + 9999, type = EntityColumn.Type.VARCHAR, length = 255, comment = "描述")
-    protected String desc;
+    /** 描述：对应数据库类型 varchar(1024) */
+    @TableField(value = "comments")
+    @EntityColumn(sequence = BASE_SEQUENCE + 9999, type = EntityColumn.Type.VARCHAR, length = 1024, comment = "描述")
+    protected String comments;
 }

@@ -34,8 +34,8 @@ public abstract class BaseBizEntity extends BaseEntity {
 
     /** 逻辑删除：无需手动维护。0-正常，1-已删除 */
     @TableLogic(value = "0", delval = "1")
-    @EntityColumn(sequence = BASE_SEQUENCE + 7, type = EntityColumn.Type.TINY_INT, defaultExpression = "false", comment = "逻辑删除：无需手动维护。0-正常，1-已删除")
-    protected Boolean deleted = false;
+    @EntityColumn(sequence = BASE_SEQUENCE + 7, type = EntityColumn.Type.TINY_INT, defaultExpression = "0", comment = "逻辑删除：无需手动维护。0-正常，1-已删除")
+    protected Integer deleted = 0;
 
     /** 扩展字段：对应数据库类型 json */
     @TableField(value = "extra")
