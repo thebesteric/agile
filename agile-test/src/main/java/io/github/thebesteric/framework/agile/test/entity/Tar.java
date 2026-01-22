@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.test.entity;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
+import io.github.thebesteric.framework.agile.plugins.database.core.domain.entity.BaseBizEntity;
 
 /**
  * Tar
@@ -11,7 +12,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.annotation.En
  * @since 2024-12-11 09:58:55
  */
 @EntityClass(comment = "The tar")
-public class Tar extends BaseEntity {
+public class Tar extends BaseBizEntity {
 
     private String name;
 
