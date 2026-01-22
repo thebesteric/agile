@@ -6,6 +6,7 @@ import cn.hutool.db.sql.SqlFormatter;
 import io.github.thebesteric.framework.agile.commons.util.CollectionUtils;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
+import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.DatabaseProduct;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
@@ -551,6 +552,19 @@ public class JdbcTemplateHelper {
             // 默认值
             String defaultExpression = columnDomain.getDefaultExpression();
             if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
+                EntityColumn.Type type = columnDomain.getType();
+                if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+                    boolean boolValue = defaultExpression.equalsIgnoreCase("true") || defaultExpression.equalsIgnoreCase("false");
+                    // 默认类型非布尔类型，且默认值是布尔值时，进行特殊处理
+                    if (type != EntityColumn.Type.BOOLEAN && boolValue) {
+                        if (defaultExpression.equalsIgnoreCase("true")) {
+                            defaultExpression = "1";
+                        } else {
+                            defaultExpression = "0";
+                        }
+                    }
+                }
+                // 设置默认值
                 sb.append(" ").append("DEFAULT ").append(defaultExpression);
             }
             // 自增
