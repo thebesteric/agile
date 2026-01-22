@@ -71,7 +71,7 @@ public class HelloController {
     @GetMapping("/foo")
     public R<String> foo(String name, HttpServletResponse response) {
         loggerPrinter.info("entering foo");
-        return R.success(helloService.foo(name)).httpStatus(201, response);
+        return R.success(helloService.foo(name)).httpStatus(201);
     }
 
     @AgileLogger
@@ -83,7 +83,7 @@ public class HelloController {
     @AgileLogger
     @PostMapping("/error")
     public R<Map<String, Object>> error(@RequestBody Map<String, Object> body, HttpServletResponse response) {
-        return R.<Map<String, Object>>error("error", null).httpStatus(400, response);
+        return R.<Map<String, Object>>error("error", null).httpStatus(400);
     }
 
     @PostMapping("/upload")
