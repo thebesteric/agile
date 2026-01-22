@@ -310,10 +310,20 @@ public class JdbcTemplateHelper {
         sb.append(columnDomain.isNullable() ? "NULL" : "NOT NULL").append(" ");
 
         String comment = columnDomain.getComment();
+        String commentByPostgresql = null;
         if (CharSequenceUtil.isNotEmpty(comment)) {
-            sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
+            if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+                commentByPostgresql = "COMMENT ON COLUMN " + tableName + "." + columnDomain.getName() + " IS '" + comment + "'";
+            } else {
+                sb.append("COMMENT").append(" ").append("'").append(comment).append("'");
+            }
         }
         this.executeUpdate(sb.toString(), JdbcTemplateHelper.Operation.ADD);
+
+        // PostgreSQL 添加列注释
+        if (CharSequenceUtil.isNotEmpty(commentByPostgresql)) {
+            this.executeUpdate(commentByPostgresql, JdbcTemplateHelper.Operation.ADD);
+        }
 
         // 新建主键
         if (columnDomain.isPrimary()) {
@@ -417,7 +427,6 @@ public class JdbcTemplateHelper {
             } else {
                 sb.append("MODIFY").append(" ").append("`").append(columnName).append("`").append(" ");
             }
-
         }
 
         // 字段类型
@@ -434,8 +443,15 @@ public class JdbcTemplateHelper {
 
         String defaultExpression = columnDomain.getDefaultExpression();
         if (CharSequenceUtil.isNotEmpty(defaultExpression)) {
-            sb.append("DEFAULT").append(" ").append(defaultExpression).append(" ");
+            if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+                sb.append("ALTER COLUMN").append(" ").append("`").append(columnName).append("`").append(" ").append("SET DEFAULT").append(" ").append(defaultExpression);
+                sb.append(",").append(" ");
+            } else {
+                sb.append("DEFAULT").append(" ").append(defaultExpression);
+                sb.append(" ");
+            }
         }
+
         if (databaseProduct == DatabaseProduct.POSTGRESQL) {
             if (columnDomain.isNullable()) {
                 sb.append("ALTER COLUMN").append(" ").append("`").append(columnName).append("`").append(" ").append("DROP NOT NULL").append(" ");
