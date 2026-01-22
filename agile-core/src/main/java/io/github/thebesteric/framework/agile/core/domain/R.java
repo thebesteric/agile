@@ -4,6 +4,9 @@ import io.github.thebesteric.framework.agile.commons.util.TransactionUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Data;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.beans.Transient;
 import java.util.Optional;
@@ -26,13 +29,15 @@ public class R<T> {
 
     public static <T> R<T> build(int code, String message, T body, boolean isSuccess, HttpStatus httpStatus) {
         R<T> result = new R<>();
+        // Set Attributes
+        result.setCode(code);
+        result.setMessage(message);
+        result.setTrackId(TransactionUtils.get());
+        // Set data
         if (body != null) {
             result.setData(body);
         }
-        result.setCode(code);
-        result.setMessage(message);
-        result.setHttpStatus(httpStatus);
-        result.setTrackId(TransactionUtils.get());
+        // Set success or error code and succeed flag
         if (isSuccess) {
             result.setSuccessCode(code);
             result.setSucceed(true);
@@ -40,6 +45,18 @@ public class R<T> {
             result.setErrorCode(code);
             result.setSucceed(false);
         }
+        // If httpStatus is null, then set it to the status of the current request
+        if (httpStatus == null) {
+            HttpServletResponse httpServletResponse = result.getHttpServletResponse();
+            if (httpServletResponse != null) {
+                result.setHttpStatus(httpServletResponse.getStatus());
+            } else {
+                result.setHttpStatus(HttpStatus.OK);
+            }
+        } else {
+            result.setHttpStatus(httpStatus);
+        }
+        // Return result
         return result;
     }
 
@@ -123,32 +140,39 @@ public class R<T> {
         return this;
     }
 
-    public R<T> httpStatus(HttpStatus httpStatus, HttpServletResponse httpServletResponse) {
+    public R<T> httpStatus(HttpStatus httpStatus) {
         this.setHttpStatus(httpStatus);
-        httpServletResponse.setStatus(httpStatus.value());
         return this;
     }
 
-    public R<T> httpStatus(int httpStatusCode, HttpServletResponse httpServletResponse) {
-        this.httpStatus = HttpStatus.valueOf(httpStatusCode);
-        this.setHttpStatus(this.httpStatus);
-        httpServletResponse.setStatus(this.httpStatus.value());
+    public R<T> httpStatus(int httpStatusCode) {
+        setHttpStatus(httpStatusCode);
         return this;
     }
 
-    public void setHttpStatus(HttpStatus httpStatus, HttpServletResponse httpServletResponse) {
+    public void setHttpStatus(HttpStatus httpStatus) {
         this.httpStatus = httpStatus;
-        httpServletResponse.setStatus(this.httpStatus.value());
+        setHttpServletResponseStatus(httpStatus);
     }
 
-    public void setHttpStatus(int httpStatusCode, HttpServletResponse httpServletResponse) {
+    public void setHttpStatus(int httpStatusCode) {
         this.httpStatus = HttpStatus.valueOf(httpStatusCode);
-        httpServletResponse.setStatus(this.httpStatus.value());
+        setHttpStatus(this.httpStatus);
     }
 
-    /** 私有化 setHttpStatus 方法 */
-    private void setHttpStatus(HttpStatus httpStatus) {
-        this.httpStatus = httpStatus;
+    private HttpServletResponse getHttpServletResponse() {
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes instanceof ServletRequestAttributes servletRequestAttributes) {
+            return servletRequestAttributes.getResponse();
+        }
+        return null;
+    }
+
+    private void setHttpServletResponseStatus(HttpStatus httpStatus) {
+        HttpServletResponse httpServletResponse = getHttpServletResponse();
+        if (httpServletResponse != null) {
+            httpServletResponse.setStatus(httpStatus.value());
+        }
     }
 
     @Transient
