@@ -24,21 +24,21 @@ public abstract class BaseBizEntity extends BaseEntity {
 
     /** 状态：0-禁用，1-启用（可根据业务定义或扩充）*/
     @TableField(value = "state")
-    @EntityColumn(type = EntityColumn.Type.SMALL_INT, defaultExpression = "1", comment = "状态：0-禁用，1-启用（可根据业务定义或扩充）")
+    @EntityColumn(sequence = BASE_SEQUENCE + 5, type = EntityColumn.Type.SMALL_INT, defaultExpression = "1", comment = "状态：0-禁用，1-启用（可根据业务定义或扩充）")
     protected Integer state = 1;
 
     /** 乐观锁 */
     @Version
-    @EntityColumn(type = EntityColumn.Type.INT, defaultExpression = "0", comment = "乐观锁")
+    @EntityColumn(sequence = BASE_SEQUENCE + 6, type = EntityColumn.Type.INT, defaultExpression = "0", comment = "乐观锁")
     protected Integer version = 0;
 
     /** 逻辑删除：无需手动维护。0-正常，1-已删除 */
     @TableLogic(value = "0", delval = "1")
-    @EntityColumn(type = EntityColumn.Type.TINY_INT, defaultExpression = "false", comment = "逻辑删除：无需手动维护。0-正常，1-已删除")
+    @EntityColumn(sequence = BASE_SEQUENCE + 7, type = EntityColumn.Type.TINY_INT, defaultExpression = "false", comment = "逻辑删除：无需手动维护。0-正常，1-已删除")
     protected Boolean deleted = false;
 
     /** 扩展字段：对应数据库类型 json */
     @TableField(value = "extra")
-    @EntityColumn(type = EntityColumn.Type.JSON, comment = "扩展字段")
+    @EntityColumn(sequence = BASE_SEQUENCE + 8, type = EntityColumn.Type.JSON, comment = "扩展字段")
     protected String extra;
 }

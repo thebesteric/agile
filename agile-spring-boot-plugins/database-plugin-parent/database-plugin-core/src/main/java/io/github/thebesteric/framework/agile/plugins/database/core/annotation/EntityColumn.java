@@ -15,6 +15,10 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface EntityColumn {
+
+    /** 默认字段顺序常量 */
+    int DEFAULT_SEQUENCE = 9999;
+
     /** 对应字段名称，默认属性名的 snack_case 格式 */
     String name() default "";
 
@@ -70,7 +74,7 @@ public @interface EntityColumn {
     Reference reference() default @Reference();
 
     /** 字段排序 */
-    int sequence() default Integer.MAX_VALUE;
+    int sequence() default DEFAULT_SEQUENCE;
 
 
     @Getter

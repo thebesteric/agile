@@ -72,6 +72,7 @@ public class AgileDatabaseJdbcTemplate {
                         continue;
                     }
                 }
+                // 封装为 EntityClassDomain 对象，并内部完成字段排序
                 EntityClassDomain entityClassDomain = EntityClassDomain.of(properties.getTableNamePrefix(), clazz);
                 String tableName = entityClassDomain.getTableName();
                 String catalog = connection.getCatalog();

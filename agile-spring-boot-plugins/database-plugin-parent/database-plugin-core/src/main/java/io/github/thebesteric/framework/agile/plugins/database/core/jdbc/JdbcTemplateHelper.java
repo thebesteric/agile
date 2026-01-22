@@ -523,19 +523,24 @@ public class JdbcTemplateHelper {
         List<ColumnDomain> foreignKeys = new ArrayList<>();
         List<String> pgColumnComments = new ArrayList<>();
 
+        // 遍历字段，判断是否有主键字段，如果有的话，将主键字段放在第一位
         for (Field field : fields) {
             // 获取字段信息
             ColumnDomain columnDomain = ColumnDomain.of(tableName, field);
-            columnDomains.add(columnDomain);
-
             // 主键判断
             if (columnDomain.isPrimary()) {
                 if (primaryKey != null) {
                     throw new SQLException("Primary key is duplicate: %s".formatted(primaryKey));
                 }
                 primaryKey = columnDomain;
+                columnDomains.add(0, columnDomain);
+                continue;
             }
+            columnDomains.add(columnDomain);
+        }
 
+        // 遍历字段，生成建表语句
+        for (ColumnDomain columnDomain : columnDomains) {
             // 外键判断
             if (columnDomain.getReference() != null) {
                 foreignKeys.add(columnDomain);
@@ -682,13 +687,6 @@ public class JdbcTemplateHelper {
             for (String pgColumnComment : pgColumnComments) {
                 this.executeUpdate(pgColumnComment, Operation.CREATE, showSql, formatSql);
             }
-        }
-
-        // 主键设置为第一列（仅 MySQL 支持逻辑调整字段顺序）
-        if (databaseProduct == DatabaseProduct.MYSQL && primaryKey != null) {
-            String firstColumnSql = "ALTER TABLE `%s` MODIFY COLUMN `%s` %s %s NOT NULL FIRST"
-                    .formatted(tableName, primaryKey.getName(), primaryKey.typeWithLength(), primaryKey.isAutoIncrement() ? "AUTO_INCREMENT" : "");
-            this.executeUpdate(firstColumnSql, Operation.UPDATE);
         }
 
         // 创建唯一索引（包含使用 @Unique 注解的类上的列）
