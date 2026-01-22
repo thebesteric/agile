@@ -27,10 +27,6 @@ public class LoggerPrinter {
     @Getter
     private final String tag;
 
-    /** 日志前缀模板 */
-    @Getter
-    private final String logPrefix;
-
     public LoggerPrinter() {
         this(getCallerClass(), null);
     }
@@ -42,7 +38,6 @@ public class LoggerPrinter {
     public LoggerPrinter(Class<?> clazz, String tag) {
         this.logger = LoggerFactory.getLogger(clazz);
         this.tag = tag;
-        this.logPrefix = tag != null ? "[Agile] %s: ".formatted(tag) : "[Agile]: ";
     }
 
     public static LoggerPrinter newInstance() {
@@ -132,20 +127,34 @@ public class LoggerPrinter {
         }
     }
 
+    private String getLogPrefix() {
+        StackTraceElement caller = getCallerLocation();
+        int lineNumber = caller.getLineNumber();
+        return tag != null ? "[Agile:%d] %s: ".formatted(lineNumber, tag) : "[Agile:%d]: ".formatted(lineNumber);
+    }
+
+    private StackTraceElement getCallerLocation() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        // [0] = getStackTrace()
+        // [1] = getCallerLocation()
+        // [2] = getLogPrefixWithLocation()
+        // [3] = debug/info/warn/error/trace 方法
+        // [4] = 实际调用者 <--
+        return stackTrace[4];
+    }
+
     /**
      * 获取调用者的Class对象
      * 通过解析StackTrace确定实际的调用类
-     * <p>
-     * StackTrace结构:
-     * [0] = Thread.currentThread().getStackTrace()
-     * [1] = getCallerClass()
-     * [2] = LoggerPrinter() 构造方法
-     * [3] = 实际调用者 <--
      *
      * @return 调用者的Class对象，如果无法确定则返回LoggerPrinter.class
      */
     private static Class<?> getCallerClass() {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        // [0] = Thread.currentThread().getStackTrace()
+        // [1] = getCallerClass()
+        // [2] = LoggerPrinter() 构造方法
+        // [3] = 实际调用者 <--
         for (int i = 3; i < stackTrace.length; i++) {
             String className = stackTrace[i].getClassName();
             // 跳过 LoggerPrinter 类本身
