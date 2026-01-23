@@ -2,6 +2,12 @@ package io.github.thebesteric.framework.agile.plugins.database.core.listener;
 
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
 
+/**
+ * 表创建监听器
+ *
+ * @author wangweijun
+ * @since 2024/12/16 09:25
+ */
 public interface TableCreateListener {
 
     /**

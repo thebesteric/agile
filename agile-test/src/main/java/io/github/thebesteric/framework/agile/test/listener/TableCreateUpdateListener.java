@@ -7,7 +7,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.listener.Tabl
 import org.springframework.stereotype.Component;
 
 /**
- * TabeCreateUpdateListener
+ * 表创建更新监听器
  *
  * @author wangweijun
  * @version v1.0
