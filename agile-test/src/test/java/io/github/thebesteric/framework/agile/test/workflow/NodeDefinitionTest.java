@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.test.workflow;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveType;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.Operator;
@@ -352,7 +352,7 @@ class NodeDefinitionTest {
     void history() {
         String tenantId = "8888";
         WorkflowService workflowService = workflowEngine.getWorkflowService();
-        Page<NodeDefinitionHistory> page = workflowService.findNodeHistoriesByWorkflowDefinitionId(tenantId, 1, 1, 10);
+        PagingResponse<NodeDefinitionHistory> page = workflowService.findNodeHistoriesByWorkflowDefinitionId(tenantId, 1, 1, 10);
         page.getRecords().forEach(System.out::println);
     }
 }

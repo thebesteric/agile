@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.helper.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeType;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
@@ -538,12 +538,12 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @param page             当前页
      * @param pageSize         每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 16:00
      */
-    public Page<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize) {
         return this.workflowService.findNodeHistoriesByNodeDefinitionId(tenantId, nodeDefinitionId, page, pageSize);
     }
 
@@ -555,12 +555,12 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 16:00
      */
-    public Page<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         return this.workflowService.findNodeHistoriesByWorkflowDefinitionId(tenantId, workflowDefinitionId, page, pageSize);
     }
 
@@ -571,12 +571,12 @@ public class WorkflowServiceHelper extends AbstractServiceHelper {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 15:59
      */
-    public Page<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize) {
+    public PagingResponse<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize) {
         return this.workflowService.findNodeHistoriesByTenantId(tenantId, page, pageSize);
     }
 

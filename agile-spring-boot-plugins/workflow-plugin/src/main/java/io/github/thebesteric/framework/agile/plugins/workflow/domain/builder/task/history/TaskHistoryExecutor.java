@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.history;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskHistory;
 import lombok.Getter;
@@ -54,7 +54,7 @@ public class TaskHistoryExecutor extends AbstractExecutor<TaskHistory> {
      * @author wangweijun
      * @since 2024/7/11 15:06
      */
-    public Page<TaskHistory> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistory> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT h.* FROM awf_task_history h 
                 LEFT JOIN awf_wf_instance wi ON wi.id = h.wf_inst_id 
@@ -77,6 +77,6 @@ public class TaskHistoryExecutor extends AbstractExecutor<TaskHistory> {
         Integer offset = (page - 1) * pageSize;
         List<TaskHistory> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> TaskHistory.of(rs), tenantId, pageSize, offset);
 
-        return Page.of(page, pageSize, count, records);
+        return PagingResponse.of(page, pageSize, count, records);
     }
 }

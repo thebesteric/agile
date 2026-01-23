@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder;
 
+import io.github.thebesteric.framework.agile.core.domain.page.PagingRequest;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.OrderByParam;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.QueryParam;
 import lombok.Data;
 
@@ -18,15 +18,15 @@ import java.util.List;
 public class Query {
     private List<QueryParam> queryParams;
     private List<OrderByParam> orderByParams;
-    private Pager pager;
+    private PagingRequest pager;
 
-    private Query(List<QueryParam> queryParams, List<OrderByParam> orderByParams, Pager pager) {
+    private Query(List<QueryParam> queryParams, List<OrderByParam> orderByParams, PagingRequest pager) {
         this.queryParams = queryParams;
         this.orderByParams = orderByParams;
         this.pager = pager;
     }
 
-    public static Query of(List<QueryParam> queryParams, List<OrderByParam> orderByParams, Pager pager) {
+    public static Query of(List<QueryParam> queryParams, List<OrderByParam> orderByParams, PagingRequest pager) {
         return new Query(queryParams, orderByParams, pager);
     }
 

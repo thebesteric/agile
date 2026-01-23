@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.node.history;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.NodeDefinitionHistory;
 import lombok.Getter;
@@ -36,12 +36,12 @@ public class NodeDefinitionHistoryExecutor extends AbstractExecutor<NodeDefiniti
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 16:22
      */
-    public Page<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT t.* FROM awf_node_definition_history t
                 LEFT JOIN awf_node_definition nd ON nd.id = t.node_def_id
@@ -57,6 +57,6 @@ public class NodeDefinitionHistoryExecutor extends AbstractExecutor<NodeDefiniti
         RowMapper<NodeDefinitionHistory> rowMapper = (rs, rowNum) -> NodeDefinitionHistory.of(rs);
         List<NodeDefinitionHistory> records = this.jdbcTemplate.query(selectSql, rowMapper, pageSize, offset);
 
-        return Page.of(page, pageSize, count, records);
+        return PagingResponse.of(page, pageSize, count, records);
     }
 }

@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingRequest;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinitionHistory;
@@ -89,7 +89,7 @@ public interface DeploymentService {
      * @author wangweijun
      * @since 2024/6/17 15:26
      */
-    Page<WorkflowDefinition> find(String tenantId, Pager pager);
+    PagingResponse<WorkflowDefinition> find(String tenantId, PagingRequest pager);
 
     /**
      * 禁用
@@ -188,12 +188,12 @@ public interface DeploymentService {
      * @param page                  当前页
      * @param pageSize              每页显示数量
      *
-     * @return List<WorkflowDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 13:15
      */
-    Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize);
+    PagingResponse<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize);
 
     /**
      * 根据流程定义 ID 获取流程定义历史记录列表（分页）
@@ -203,12 +203,12 @@ public interface DeploymentService {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return List<WorkflowDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 13:15
      */
-    Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize);
+    PagingResponse<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize);
 
     /**
      * 获取所有流程定义历史记录列表（分页）
@@ -217,12 +217,12 @@ public interface DeploymentService {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<WorkflowDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 13:41
      */
-    Page<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize);
+    PagingResponse<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize);
 
     /**
      * 获取流程定义历史记录

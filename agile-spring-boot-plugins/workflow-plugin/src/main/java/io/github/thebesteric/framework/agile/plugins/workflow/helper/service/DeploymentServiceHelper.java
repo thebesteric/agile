@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.helper.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingRequest;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
@@ -153,8 +153,8 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @author wangweijun
      * @since 2024/7/8 16:26
      */
-    public Page<WorkflowDefinition> page(String tenantId, Integer page, Integer pageSize) {
-        Pager pager = Pager.of(page, pageSize);
+    public PagingResponse<WorkflowDefinition> page(String tenantId, Integer page, Integer pageSize) {
+        PagingRequest pager = PagingRequest.of(page.longValue(), pageSize.longValue());
         return this.deploymentService.find(tenantId, pager);
     }
 
@@ -263,12 +263,12 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @param page                  当前页
      * @param pageSize              每页显示数量
      *
-     * @return Page<WorkflowDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 13:15
      */
-    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize) {
         return this.deploymentService.findHistoriesByWorkflowDefinitionKey(tenantId, workflowDefinitionKey, page, pageSize);
     }
 
@@ -280,12 +280,12 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<WorkflowDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 13:15
      */
-    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         return this.deploymentService.findHistoriesByWorkflowDefinitionId(tenantId, workflowDefinitionId, page, pageSize);
     }
 
@@ -296,12 +296,12 @@ public class DeploymentServiceHelper extends AbstractServiceHelper {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<WorkflowDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 13:41
      */
-    public Page<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize) {
         return this.deploymentService.findHistories(tenantId, page, pageSize);
     }
 }

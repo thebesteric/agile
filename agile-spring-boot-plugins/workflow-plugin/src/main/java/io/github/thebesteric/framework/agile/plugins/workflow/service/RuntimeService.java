@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.NodeStatus;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.WorkflowStatus;
@@ -217,12 +217,12 @@ public interface RuntimeService {
      * @param page               页码
      * @param pageSize           每页大小
      *
-     * @return List<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize);
+    PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize);
 
 
     /**
@@ -238,12 +238,12 @@ public interface RuntimeService {
      * @param page                         页码
      * @param pageSize                     每页大小
      *
-     * @return List<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
+    PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
@@ -258,12 +258,12 @@ public interface RuntimeService {
      * @param page                         页码
      * @param pageSize                     每页大小
      *
-     * @return Page<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/9/23 19:49
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
+    PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
@@ -278,12 +278,12 @@ public interface RuntimeService {
      * @param page                         页码
      * @param pageSize                     每页大小
      *
-     * @return Page<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/9/23 19:49
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
+    PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
@@ -298,12 +298,12 @@ public interface RuntimeService {
      * @param page                         页码
      * @param pageSize                     每页大小
      *
-     * @return Page<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/9/23 19:49
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
+    PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
@@ -332,12 +332,12 @@ public interface RuntimeService {
      * @param page                         当前页
      * @param pageSize                     每页显示数量
      *
-     * @return List<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
+    PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 查询审批任务
@@ -380,12 +380,12 @@ public interface RuntimeService {
      * @param page                         当前页
      * @param pageSize                     每页显示数量
      *
-     * @return List<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/6/25 10:17
      */
-    Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
+    PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize);
 
     /**
      * 获取当前流程实例下正在进行的审批节点
@@ -480,7 +480,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/6/27 12:43
      */
-    Page<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId, List<WorkflowStatus> statuses, Integer page, Integer pageSize);
+    PagingResponse<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId, List<WorkflowStatus> statuses, Integer page, Integer pageSize);
 
     /**
      * 查找流程实例：根据发起人
@@ -519,12 +519,12 @@ public interface RuntimeService {
      * @param page             当前页
      * @param pageSize         每页显示数量
      *
-     * @return Page<WorkflowInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/9/10 17:40
      */
-    Page<WorkflowInstance> findWorkflowInstancesByApproverId(String tenantId, String approverId, List<WorkflowStatus> workflowStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize);
+    PagingResponse<WorkflowInstance> findWorkflowInstancesByApproverId(String tenantId, String approverId, List<WorkflowStatus> workflowStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize);
 
     /**
      * 查询审批日志
@@ -533,12 +533,12 @@ public interface RuntimeService {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/7/11 15:06
      */
-    Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer page, Integer pageSize);
+    PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer page, Integer pageSize);
 
     /**
      * 查询审批日志
@@ -550,12 +550,12 @@ public interface RuntimeService {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/7/11 15:06
      */
-    Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize);
+    PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize);
 
 
     /**
@@ -846,7 +846,7 @@ public interface RuntimeService {
      * @author wangweijun
      * @since 2024/10/14 10:10
      */
-    Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize);
+    PagingResponse<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize);
 
     /**
      * 查找动态审批人

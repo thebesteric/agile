@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.instance;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
@@ -73,12 +73,12 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @param page             页码
      * @param pageSize         每页数量
      *
-     * @return List<WorkflowInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/6/27 12:40
      */
-    public Page<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT i.* FROM awf_wf_instance i left join awf_wf_definition d
                 ON i.wf_def_id = d.id AND d.tenant_id = ?
@@ -96,7 +96,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
         Integer offset = (page - 1) * pageSize;
         List<WorkflowInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, requesterId, pageSize, offset);
 
-        return Page.of(page, pageSize, count == null ? 0 : count, records);
+        return PagingResponse.of(page, pageSize, count == null ? 0 : count, records);
     }
 
     /**
@@ -106,12 +106,12 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @param requesterId    发起人 ID
      * @param workflowStatus 流程状态
      *
-     * @return List<WorkflowInstance>
+     * @return List
      *
      * @author wangweijun
      * @since 2024/6/27 12:40
      */
-    public Page<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, WorkflowStatus workflowStatus) {
+    public PagingResponse<WorkflowInstance> findByRequesterId(String tenantId, String requesterId, WorkflowStatus workflowStatus) {
         return findByRequesterId(tenantId, requesterId, workflowStatus == null ? null : List.of(workflowStatus), 1, Integer.MAX_VALUE);
     }
 
@@ -121,13 +121,13 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @param tenantId    租户 ID
      * @param requesterId 发起人 ID
      *
-     * @return List<WorkflowInstance>
+     * @return List
      *
      * @author wangweijun
      * @since 2024/6/27 12:40
      */
     public List<WorkflowInstance> findByRequesterId(String tenantId, String requesterId) {
-        Page<WorkflowInstance> page = findByRequesterId(tenantId, requesterId, null);
+        PagingResponse<WorkflowInstance> page = findByRequesterId(tenantId, requesterId, null);
         return page.getRecords();
     }
 
@@ -146,7 +146,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @author wangweijun
      * @since 2024/9/10 17:40
      */
-    public Page<WorkflowInstance> findByApproverId(String tenantId, String approverId, List<WorkflowStatus> workflowStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowInstance> findByApproverId(String tenantId, String approverId, List<WorkflowStatus> workflowStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT DISTINCT wi.* FROM `awf_wf_instance` wi
                     LEFT JOIN `awf_wf_definition` wd ON wi.`wf_def_id` = wd.`id`
@@ -173,7 +173,7 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
         Integer offset = (page - 1) * pageSize;
         List<WorkflowInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, approverId, pageSize, offset);
 
-        return Page.of(page, pageSize, count == null ? 0 : count, records);
+        return PagingResponse.of(page, pageSize, count == null ? 0 : count, records);
     }
 
     /**
@@ -199,16 +199,16 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<WorkflowInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/9/12 15:34
      */
-    public Page<WorkflowInstance> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowInstance> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class)
                 .eq(WorkflowInstance::getTenantId, tenantId)
                 .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
-                .page(page, pageSize)
+                .page(page.longValue(), pageSize.longValue())
                 .build();
         return this.find(query);
     }
@@ -222,12 +222,12 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
      * @param page             当前页
      * @param pageSize         每页显示数量
      *
-     * @return Page<WorkflowInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/14 10:10
      */
-    public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT DISTINCT wi.* FROM `awf_wf_instance` wi
                     LEFT JOIN `awf_wf_definition` wd ON wi.`wf_def_id` = wd.`id`
@@ -245,6 +245,6 @@ public class WorkflowInstanceExecutor extends AbstractExecutor<WorkflowInstance>
         Integer offset = (page - 1) * pageSize;
         List<WorkflowInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowInstance.of(rs), tenantId, key, pageSize, offset);
 
-        return Page.of(page, pageSize, count == null ? 0 : count, records);
+        return PagingResponse.of(page, pageSize, count == null ? 0 : count, records);
     }
 }

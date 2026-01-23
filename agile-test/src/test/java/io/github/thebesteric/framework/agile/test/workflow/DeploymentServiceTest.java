@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.test.workflow;
 
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.definition.WorkflowDefinitionBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.WorkflowDefinitionFlowSchema;
@@ -114,7 +114,7 @@ class DeploymentServiceTest {
     @Test
     void history() {
         DeploymentService deploymentService = workflowEngine.getDeploymentService();
-        Page<WorkflowDefinitionHistory> page = deploymentService.findHistories(tenantId, 1, 2);
+        PagingResponse<WorkflowDefinitionHistory> page = deploymentService.findHistories(tenantId, 1, 2);
         for (WorkflowDefinitionHistory history : page.getRecords()) {
             System.out.println(history);
         }

@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.Approver;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.RoleApprover;
@@ -34,12 +34,12 @@ public interface WorkflowService {
      *
      * @param query 查询条件
      *
-     * @return List<WorkflowDefinition>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/6/28 17:59
      */
-    Page<WorkflowDefinition> findWorkflowDefinitions(Query query);
+    PagingResponse<WorkflowDefinition> findWorkflowDefinitions(Query query);
 
     /**
      * 获取流程实例
@@ -51,7 +51,7 @@ public interface WorkflowService {
      * @author wangweijun
      * @since 2024/6/28 17:59
      */
-    Page<WorkflowInstance> findWorkflowInstances(Query query);
+    PagingResponse<WorkflowInstance> findWorkflowInstances(Query query);
 
     /**
      * 创建节点定义
@@ -209,12 +209,12 @@ public interface WorkflowService {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 15:59
      */
-    Page<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize);
+    PagingResponse<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize);
 
     /**
      * 根据节点定义 ID 查找节点历史记录（分页）
@@ -224,12 +224,12 @@ public interface WorkflowService {
      * @param page             当前页
      * @param pageSize         每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 16:00
      */
-    Page<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize);
+    PagingResponse<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize);
 
     /**
      * 根据流程定义 ID 查找节点历史记录（分页）
@@ -239,12 +239,12 @@ public interface WorkflowService {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 16:00
      */
-    Page<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize);
+    PagingResponse<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize);
 
     /**
      * 获取流程定义历史记录

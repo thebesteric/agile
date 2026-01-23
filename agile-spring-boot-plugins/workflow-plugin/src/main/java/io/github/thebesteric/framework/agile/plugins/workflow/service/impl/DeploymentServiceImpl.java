@@ -1,9 +1,9 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingRequest;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.OrderByOperator;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
@@ -155,11 +155,11 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @param pager    分页参数
      */
     @Override
-    public Page<WorkflowDefinition> find(String tenantId, Pager pager) {
+    public PagingResponse<WorkflowDefinition> find(String tenantId, PagingRequest pager) {
         WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
                 .eq(WorkflowDefinition::getTenantId, tenantId)
-                .page(pager.getPage(), pager.getPageSize()).build();
+                .page(pager.getCurrent(), pager.getSize()).build();
         return executor.find(query);
     }
 
@@ -402,7 +402,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
                 .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinition.getId())
                 .in(WorkflowInstance::getStatus, List.of(WorkflowStatus.WAITING.getCode(), WorkflowStatus.IN_PROGRESS.getCode()))
                 .eq(WorkflowInstance::getState, 1).build();
-        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+        PagingResponse<WorkflowInstance> page = workflowInstanceExecutor.find(query);
         return page.getRecords();
     }
 
@@ -420,7 +420,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @since 2024/10/8 13:15
      */
     @Override
-    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionKey(String tenantId, String workflowDefinitionKey, Integer page, Integer pageSize) {
         WorkflowDefinitionExecutor executor = this.workflowDefinitionExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class)
                 .eq(WorkflowDefinition::getTenantId, tenantId)
@@ -428,7 +428,7 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
                 .build();
         WorkflowDefinition workflowDefinition = executor.get(query);
         if (workflowDefinition == null) {
-            return Page.of(Collections.emptyList());
+            PagingResponse.of(Collections.emptyList());
         }
         return this.findHistoriesByWorkflowDefinitionId(tenantId, workflowDefinition.getId(), page, pageSize);
     }
@@ -447,13 +447,13 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @since 2024/10/8 13:15
      */
     @Override
-    public Page<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowDefinitionHistory> findHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         WorkflowDefinitionHistoryExecutor executor = this.workflowDefinitionHistoryExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinitionHistory.class)
                 .eq(WorkflowDefinitionHistory::getTenantId, tenantId)
                 .eq(WorkflowDefinitionHistory::getWorkflowDefinitionId, workflowDefinitionId)
                 .orderBy(WorkflowDefinitionHistory::getId, OrderByOperator.DESC)
-                .page(page, pageSize)
+                .page(page.longValue(), pageSize.longValue())
                 .build();
         return executor.find(query);
     }
@@ -465,18 +465,18 @@ public class DeploymentServiceImpl extends AbstractDeploymentService {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<WorkflowDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 13:41
      */
     @Override
-    public Page<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowDefinitionHistory> findHistories(String tenantId, Integer page, Integer pageSize) {
         WorkflowDefinitionHistoryExecutor executor = this.workflowDefinitionHistoryExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinitionHistory.class)
                 .eq(WorkflowDefinitionHistory::getTenantId, tenantId)
                 .orderBy(WorkflowDefinitionHistory::getId, OrderByOperator.DESC)
-                .page(page, pageSize)
+                .page(page.longValue(), pageSize.longValue())
                 .build();
         return executor.find(query);
     }

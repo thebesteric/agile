@@ -6,12 +6,12 @@ import io.github.thebesteric.framework.agile.commons.exception.ExecuteErrorExcep
 import io.github.thebesteric.framework.agile.commons.util.*;
 import io.github.thebesteric.framework.agile.core.domain.BaseEnum;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingRequest;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityClass;
 import io.github.thebesteric.framework.agile.plugins.database.core.annotation.EntityColumn;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.OrderByParam;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.Pager;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.QueryOperator;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.QueryParam;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
@@ -316,7 +316,7 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
      * @since 2024/6/28 18:08
      */
     @SuppressWarnings("unchecked")
-    public Page<T> find(Query query) {
+    public PagingResponse<T> find(Query query) {
         String selectSql = this.queryToSelectSql(query);
         List<T> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> {
             try {
@@ -325,13 +325,13 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
                 throw new ExecuteErrorException(e.getMessage(), e);
             }
         });
-        Pager pager = query.getPager();
+        PagingRequest pager = query.getPager();
         if (pager != null) {
             String countSql = this.queryToCountSql(query);
             Long count = this.jdbcTemplate.queryForObject(countSql, Long.class);
-            return Page.of(pager.getPage(), pager.getPageSize(), count == null ? 0 : count, records);
+            return PagingResponse.of(pager.getCurrent(), pager.getSize(), count == null ? 0 : count, records);
         }
-        return Page.of(records);
+        return PagingResponse.of(records);
     }
 
     /**
@@ -356,9 +356,9 @@ public abstract class AbstractExecutor<T extends BaseEntity> {
         if (CharSequenceUtil.isNotEmpty(orderByClause)) {
             selectSql += " ORDER BY " + orderByClause;
         }
-        Pager pager = query.getPager();
+        PagingRequest pager = query.getPager();
         if (pager != null) {
-            selectSql += " LIMIT %s OFFSET %s".formatted(pager.getPageSize(), pager.getOffset());
+            selectSql += " LIMIT %s OFFSET %s".formatted(pager.getSize(), pager.getOffset());
         }
         return selectSql;
     }

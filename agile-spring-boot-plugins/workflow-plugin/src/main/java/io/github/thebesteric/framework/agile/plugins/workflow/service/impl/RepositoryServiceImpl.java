@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
@@ -172,7 +172,7 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      * @since 2024/7/15 14:19
      */
     @Override
-    public Page<WorkflowRepository> findAttachmentsByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachmentsByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
         WorkflowRepositoryExecutor executor = workflowRepositoryExecutorBuilder.build();
         return executor.findByWorkflowInstanceId(tenantId, workflowInstanceId, page, pageSize);
     }
@@ -189,7 +189,7 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      * @since 2024/7/15 14:19
      */
     @Override
-    public Page<WorkflowRepository> findAttachmentsByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachmentsByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         WorkflowRepositoryExecutor executor = workflowRepositoryExecutorBuilder.build();
         return executor.findByWorkflowDefinitionId(tenantId, workflowDefinitionId, page, pageSize);
     }
@@ -206,7 +206,7 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      * @since 2024/7/15 14:19
      */
     @Override
-    public Page<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize) {
         WorkflowRepositoryExecutor executor = workflowRepositoryExecutorBuilder.build();
         return executor.findAttachmentsByTaskInstanceId(tenantId, taskInstanceId, page, pageSize);
     }
@@ -222,7 +222,7 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      * @since 2024/7/15 14:19
      */
     @Override
-    public Page<WorkflowRepository> findAttachments(WorkflowInstance workflowInstance, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachments(WorkflowInstance workflowInstance, Integer page, Integer pageSize) {
         return this.findAttachmentsByWorkflowInstanceId(workflowInstance.getTenantId(), workflowInstance.getId(), page, pageSize);
     }
 
@@ -237,7 +237,7 @@ public class RepositoryServiceImpl extends AbstractRepositoryService {
      * @since 2024/7/15 14:19
      */
     @Override
-    public Page<WorkflowRepository> findAttachments(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachments(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize) {
         return this.findAttachmentsByWorkflowDefinitionId(workflowDefinition.getTenantId(), workflowDefinition.getId(), page, pageSize);
     }
 }

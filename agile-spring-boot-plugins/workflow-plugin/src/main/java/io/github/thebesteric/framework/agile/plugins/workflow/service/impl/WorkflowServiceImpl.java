@@ -2,7 +2,7 @@ package io.github.thebesteric.framework.agile.plugins.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.OrderByOperator;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
@@ -90,10 +90,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      *
      * @param query 查询参数
      *
-     * @return List<WorkflowDefinition>
+     * @return PagingResponse
      */
     @Override
-    public Page<WorkflowDefinition> findWorkflowDefinitions(Query query) {
+    public PagingResponse<WorkflowDefinition> findWorkflowDefinitions(Query query) {
         return workflowDefinitionExecutorBuilder.build().find(query);
     }
 
@@ -102,10 +102,10 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      *
      * @param query 查询条件
      *
-     * @return List<WorkflowInstance>
+     * @return PagingResponse
      */
     @Override
-    public Page<WorkflowInstance> findWorkflowInstances(Query query) {
+    public PagingResponse<WorkflowInstance> findWorkflowInstances(Query query) {
         return workflowInstanceExecutorBuilder.build().find(query);
     }
 
@@ -354,7 +354,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
      *
-     * @return List<WorkflowInstance>
+     * @return List
      *
      * @author wangweijun
      * @since 2024/10/8 11:51
@@ -367,7 +367,7 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
                 .eq(WorkflowInstance::getWorkflowDefinitionId, workflowDefinitionId)
                 .eq(WorkflowInstance::getStatus, WorkflowStatus.IN_PROGRESS.getCode())
                 .eq(WorkflowInstance::getState, 1).build();
-        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+        PagingResponse<WorkflowInstance> page = workflowInstanceExecutor.find(query);
         return page.getRecords();
     }
 
@@ -639,19 +639,19 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @param page             当前页
      * @param pageSize         每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 16:00
      */
     @Override
-    public Page<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<NodeDefinitionHistory> findNodeHistoriesByNodeDefinitionId(String tenantId, Integer nodeDefinitionId, Integer page, Integer pageSize) {
         NodeDefinitionHistoryExecutor executor = this.nodeDefinitionHistoryExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(NodeDefinitionHistory.class)
                 .eq(NodeDefinitionHistory::getTenantId, tenantId)
                 .eq(NodeDefinitionHistory::getNodeDefinitionId, nodeDefinitionId)
                 .orderBy(NodeDefinitionHistory::getId, OrderByOperator.DESC)
-                .page(page, pageSize)
+                .page(page.longValue(), pageSize.longValue())
                 .build();
         return executor.find(query);
     }
@@ -664,13 +664,13 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 16:00
      */
     @Override
-    public Page<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<NodeDefinitionHistory> findNodeHistoriesByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         NodeDefinitionHistoryExecutor executor = this.nodeDefinitionHistoryExecutorBuilder.build();
         return executor.findNodeHistoriesByWorkflowDefinitionId(tenantId, workflowDefinitionId, page, pageSize);
     }
@@ -682,18 +682,18 @@ public class WorkflowServiceImpl extends AbstractWorkflowService {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<NodeDefinitionHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/10/8 15:59
      */
     @Override
-    public Page<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize) {
+    public PagingResponse<NodeDefinitionHistory> findNodeHistoriesByTenantId(String tenantId, Integer page, Integer pageSize) {
         NodeDefinitionHistoryExecutor executor = this.nodeDefinitionHistoryExecutorBuilder.build();
         Query query = QueryBuilderWrapper.createLambda(NodeDefinitionHistory.class)
                 .eq(NodeDefinitionHistory::getTenantId, tenantId)
                 .orderBy(NodeDefinitionHistory::getId, OrderByOperator.DESC)
-                .page(page, pageSize)
+                .page(page.longValue(), pageSize.longValue())
                 .build();
         return executor.find(query);
     }

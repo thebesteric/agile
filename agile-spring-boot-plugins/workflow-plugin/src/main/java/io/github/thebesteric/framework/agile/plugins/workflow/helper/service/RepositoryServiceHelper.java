@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.helper.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.repository.WorkflowRepositoryBuilder;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.TaskInstance;
@@ -111,7 +111,7 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      *
      * @return 附件列表
      */
-    public Page<WorkflowRepository> findAttachments(WorkflowInstance workflowInstance, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachments(WorkflowInstance workflowInstance, Integer page, Integer pageSize) {
         return this.repositoryService.findAttachments(workflowInstance, page, pageSize);
     }
 
@@ -135,7 +135,7 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      *
      * @return 附件列表
      */
-    public Page<WorkflowRepository> findAttachments(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachments(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize) {
         return this.repositoryService.findAttachments(workflowDefinition, page, pageSize);
     }
 
@@ -159,7 +159,7 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      *
      * @return 附件列表
      */
-    public Page<WorkflowRepository> findAttachments(TaskInstance taskInstance, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachments(TaskInstance taskInstance, Integer page, Integer pageSize) {
         return this.findAttachmentsByWorkflowInstanceId(taskInstance.getTenantId(), taskInstance.getWorkflowInstanceId(), page, pageSize);
     }
 
@@ -184,7 +184,7 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      *
      * @return 附件列表
      */
-    public Page<WorkflowRepository> findAttachmentsByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachmentsByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
         return this.repositoryService.findAttachmentsByWorkflowInstanceId(tenantId, workflowInstanceId, page, pageSize);
     }
 
@@ -210,7 +210,7 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      *
      * @return 附件列表
      */
-    public Page<WorkflowRepository> findAttachmentsByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachmentsByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         return this.repositoryService.findAttachmentsByWorkflowDefinitionId(tenantId, workflowDefinitionId, page, pageSize);
     }
 
@@ -236,7 +236,7 @@ public class RepositoryServiceHelper extends AbstractServiceHelper {
      *
      * @return 附件列表
      */
-    public Page<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize) {
         return this.repositoryService.findAttachmentsByTaskInstanceId(tenantId, taskInstanceId, page, pageSize);
     }
 

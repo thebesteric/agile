@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.workflow.repository;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.AbstractExecutor;
@@ -61,12 +61,12 @@ public class WorkflowRepositoryExecutor extends AbstractExecutor<WorkflowReposit
      * @param tenantId           租户 ID
      * @param workflowInstanceId 流程实例 ID
      *
-     * @return Page<WorkflowRepository>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/7/15 12:03
      */
-    public Page<WorkflowRepository> findByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT * FROM awf_wf_repository WHERE `tenant_id` = ? AND `wf_inst_id` = ? AND `state` = 1
                 """;
@@ -77,7 +77,7 @@ public class WorkflowRepositoryExecutor extends AbstractExecutor<WorkflowReposit
         Integer offset = (page - 1) * pageSize;
         List<WorkflowRepository> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowRepository.of(rs), tenantId, workflowInstanceId, pageSize, offset);
 
-        return Page.of(page, pageSize, count == null ? 0 : count, records);
+        return PagingResponse.of(page, pageSize, count == null ? 0 : count, records);
     }
 
     /**
@@ -86,12 +86,12 @@ public class WorkflowRepositoryExecutor extends AbstractExecutor<WorkflowReposit
      * @param tenantId             租户 ID
      * @param workflowDefinitionId 流程定义 ID
      *
-     * @return Page<WorkflowRepository>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/7/15 12:03
      */
-    public Page<WorkflowRepository> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT r.* FROM awf_wf_repository r 
                 LEFT JOIN awf_wf_instance i ON i.id = r.wf_inst_id 
@@ -105,7 +105,7 @@ public class WorkflowRepositoryExecutor extends AbstractExecutor<WorkflowReposit
         Integer offset = (page - 1) * pageSize;
         List<WorkflowRepository> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowRepository.of(rs), tenantId, workflowDefinitionId, pageSize, offset);
 
-        return Page.of(page, pageSize, count == null ? 0 : count, records);
+        return PagingResponse.of(page, pageSize, count == null ? 0 : count, records);
     }
 
     /**
@@ -114,12 +114,12 @@ public class WorkflowRepositoryExecutor extends AbstractExecutor<WorkflowReposit
      * @param tenantId       租户 ID
      * @param taskInstanceId 任务实例 ID
      *
-     * @return Page<WorkflowRepository>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/7/15 12:03
      */
-    public Page<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize) {
         String selectSql = """
                 SELECT r.* FROM awf_wf_repository r 
                 LEFT JOIN awf_task_instance i ON i.wf_inst_id = r.wf_inst_id 
@@ -132,7 +132,7 @@ public class WorkflowRepositoryExecutor extends AbstractExecutor<WorkflowReposit
         Integer offset = (page - 1) * pageSize;
         List<WorkflowRepository> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> WorkflowRepository.of(rs), tenantId, taskInstanceId, pageSize, offset);
 
-        return Page.of(page, pageSize, count == null ? 0 : count, records);
+        return PagingResponse.of(page, pageSize, count == null ? 0 : count, records);
     }
 
     /**
@@ -140,16 +140,16 @@ public class WorkflowRepositoryExecutor extends AbstractExecutor<WorkflowReposit
      *
      * @param tenantId 租户 ID
      *
-     * @return Page<WorkflowRepository>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/7/15 12:03
      */
-    public Page<WorkflowRepository> findAll(String tenantId, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowRepository> findAll(String tenantId, Integer page, Integer pageSize) {
         Query query = QueryBuilderWrapper.createLambda(WorkflowRepository.class)
                 .eq(WorkflowRepository::getTenantId, tenantId)
                 .eq(WorkflowRepository::getState, 1)
-                .page(page, pageSize).build();
+                .page(page.longValue(), pageSize.longValue()).build();
         return this.find(query);
     }
 }

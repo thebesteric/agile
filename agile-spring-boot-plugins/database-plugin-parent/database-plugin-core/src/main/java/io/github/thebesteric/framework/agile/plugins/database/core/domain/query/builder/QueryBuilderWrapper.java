@@ -3,6 +3,7 @@ package io.github.thebesteric.framework.agile.plugins.database.core.domain.query
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.commons.util.MapWrapper;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingRequest;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.ColumnDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.EntityClassDomain;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.*;
@@ -40,7 +41,7 @@ public class QueryBuilderWrapper {
 
         private final List<QueryParam> queryParams;
         private final List<OrderByParam> orderByParams;
-        private Pager pager;
+        private PagingRequest pager;
         private final boolean toUnderline;
 
         public Builder(Class<T> clazz, boolean toUnderline) {
@@ -379,8 +380,8 @@ public class QueryBuilderWrapper {
             });
         }
 
-        public QueryBuilderWrapper.Builder<T> page(Integer page, Integer pageSize) {
-            pager = Pager.of(page, pageSize);
+        public QueryBuilderWrapper.Builder<T> page(Long page, Long pageSize) {
+            pager = PagingRequest.of(page, pageSize);
             return this;
         }
 

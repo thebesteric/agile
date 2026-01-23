@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.domain.builder.task.instance;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.ApproveStatus;
@@ -94,13 +94,13 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
      * @param page                         当前页
      * @param pageSize                     每页数量
      *
-     * @return List<TaskInstance>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/6/25 10:03
      */
-    public Page<TaskInstance> findByApproverId(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses,
-                                               ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
+    public PagingResponse<TaskInstance> findByApproverId(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId, List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses,
+                                                         ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         // 判断是否是动态审批人
         if (isDynamicApproverId(approverId)) {
             throw new WorkflowException("非法请求，请先设置动态审批人：%s", approverId);
@@ -222,7 +222,7 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
         Integer offset = (page - 1) * pageSize;
         List<TaskInstance> records = this.jdbcTemplate.query(selectSql, (rs, rowNum) -> TaskInstance.of(rs), tenantId, pageSize, offset);
 
-        return Page.of(page, pageSize, count, records);
+        return PagingResponse.of(page, pageSize, count, records);
     }
 
     /**
@@ -250,7 +250,7 @@ public class TaskInstanceExecutor extends AbstractExecutor<TaskInstance> {
      * @param approveStatus                审批人审批状态
      * @param approveDatesSegmentCondition 审批时间段查询条件
      *
-     * @return List<TaskInstance>
+     * @return List
      *
      * @author wangweijun
      * @since 2024/6/25 10:03

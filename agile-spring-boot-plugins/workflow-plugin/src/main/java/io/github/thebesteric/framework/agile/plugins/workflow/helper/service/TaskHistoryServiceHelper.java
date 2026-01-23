@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.helper.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.response.TaskHistoryResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
@@ -31,9 +31,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer page, Integer pageSize) {
         return runtimeService.findTaskHistories(tenantId, page, pageSize);
     }
 
@@ -44,9 +44,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page               当前页
      * @param pageSize           每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize) {
         return this.findTaskHistories(workflowDefinition.getTenantId(), workflowDefinition.getId(), null, null, page, pageSize);
     }
 
@@ -57,9 +57,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page             当前页
      * @param pageSize         每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(WorkflowInstance workflowInstance, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(WorkflowInstance workflowInstance, Integer page, Integer pageSize) {
         return this.findTaskHistories(workflowInstance.getTenantId(), workflowInstance.getWorkflowDefinitionId(), workflowInstance.getId(), workflowInstance.getRequesterId(), page, pageSize);
     }
 
@@ -72,9 +72,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, String requesterId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, String requesterId, Integer page, Integer pageSize) {
         return this.findTaskHistories(tenantId, workflowDefinitionId, null, requesterId, page, pageSize);
     }
 
@@ -86,9 +86,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page        当前页
      * @param pageSize    每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, String requesterId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, String requesterId, Integer page, Integer pageSize) {
         return this.findTaskHistories(tenantId, null, null, requesterId, page, pageSize);
     }
 
@@ -100,9 +100,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page               当前页
      * @param pageSize           每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
         return this.findTaskHistories(tenantId, null, workflowInstanceId, null, page, pageSize);
     }
 
@@ -115,9 +115,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, Integer page, Integer pageSize) {
         return this.findTaskHistories(tenantId, workflowDefinitionId, workflowInstanceId, null, page, pageSize);
     }
 
@@ -131,9 +131,9 @@ public class TaskHistoryServiceHelper extends AbstractServiceHelper {
      * @param page                 当前页
      * @param pageSize             每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      */
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize) {
         return runtimeService.findTaskHistories(tenantId, workflowDefinitionId, workflowInstanceId, requesterId, page, pageSize);
     }
 

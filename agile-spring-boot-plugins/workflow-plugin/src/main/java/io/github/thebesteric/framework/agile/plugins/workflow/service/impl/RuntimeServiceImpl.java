@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import io.github.thebesteric.framework.agile.commons.exception.InvalidDataException;
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.core.domain.Pair;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.Query;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder.QueryBuilderWrapper;
 import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemplateHelper;
@@ -2061,7 +2061,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     .eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId)
                     .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
                     .eq(TaskInstance::getState, 1).build();
-            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            PagingResponse<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
             nextTaskInstances = taskInstancePage.getRecords();
 
 
@@ -3141,14 +3141,14 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param page               当前页
      * @param pageSize           每页显示数量
      *
-     * @return List<TaskInstance>
+     * @return PagingResponse
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize) {
         Query query = QueryBuilderWrapper.createLambda(TaskInstance.class)
                 .eq(TaskInstance::getTenantId, tenantId)
                 .eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId)
-                .page(1, pageSize)
+                .page(page.longValue(), pageSize.longValue())
                 .build();
         TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
         return taskInstanceExecutor.find(query);
@@ -3166,7 +3166,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId,
+    public PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId,
                                                 ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         return this.findTaskInstances(tenantId, workflowInstanceId, null, null, approveDatesSegmentCondition, page, pageSize);
     }
@@ -3217,7 +3217,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+    public PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
                                                 ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
         return this.findTaskInstances(tenantId, workflowInstanceId, roleIds, approverId, new ArrayList<>(), new ArrayList<>(), approveDatesSegmentCondition, page, pageSize);
@@ -3258,7 +3258,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+    public PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
                                                 NodeStatus nodeStatus, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<NodeStatus> nodeStatuses = nodeStatus == null ? null : List.of(nodeStatus);
         List<ApproveStatus> approveStatuses = approveStatus == null ? null : List.of(approveStatus);
@@ -3282,7 +3282,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId,
+    public PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, List<String> roleIds, String approverId,
                                                 List<NodeStatus> nodeStatuses, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         TaskInstanceExecutor taskInstanceExecutor = taskInstanceExecutorBuilder.build();
         return taskInstanceExecutor.findByApproverId(tenantId, workflowInstanceId, roleIds, approverId, nodeStatuses, approveStatuses, approveDatesSegmentCondition, page, pageSize);
@@ -3303,7 +3303,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+    public PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
                                                 NodeStatus nodeStatus, List<ApproveStatus> approveStatuses, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<NodeStatus> nodeStatuses = nodeStatus == null ? null : List.of(nodeStatus);
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
@@ -3325,7 +3325,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @return List<TaskInstance>
      */
     @Override
-    public Page<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
+    public PagingResponse<TaskInstance> findTaskInstances(String tenantId, Integer workflowInstanceId, String roleId, String approverId,
                                                 List<NodeStatus> nodeStatuses, ApproveStatus approveStatus, ApproveDatesSegmentCondition approveDatesSegmentCondition, Integer page, Integer pageSize) {
         List<ApproveStatus> approveStatuses = approveStatus == null ? null : List.of(approveStatus);
         List<String> roleIds = StringUtils.isEmpty(roleId) ? null : List.of(roleId);
@@ -3476,10 +3476,10 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param page        页码
      * @param pageSize    每页数量
      *
-     * @return List<WorkflowInstance>
+     * @return PagingResponse
      */
     @Override
-    public Page<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId, List<WorkflowStatus> statuses, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId, List<WorkflowStatus> statuses, Integer page, Integer pageSize) {
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         return workflowInstanceExecutor.findByRequesterId(tenantId, requesterId, statuses, page, pageSize);
     }
@@ -3495,7 +3495,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      */
     @Override
     public List<WorkflowInstance> findWorkflowInstancesByRequestId(String tenantId, String requesterId, WorkflowStatus status) {
-        Page<WorkflowInstance> page = this.findWorkflowInstancesByRequestId(tenantId, requesterId, List.of(status), 1, Integer.MAX_VALUE);
+        PagingResponse<WorkflowInstance> page = this.findWorkflowInstancesByRequestId(tenantId, requesterId, List.of(status), 1, Integer.MAX_VALUE);
         return page.getRecords();
     }
 
@@ -3528,7 +3528,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/9/10 17:40
      */
     @Override
-    public Page<WorkflowInstance> findWorkflowInstancesByApproverId(String tenantId, String approverId, List<WorkflowStatus> workflowStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowInstance> findWorkflowInstancesByApproverId(String tenantId, String approverId, List<WorkflowStatus> workflowStatuses, List<ApproveStatus> approveStatuses, Integer page, Integer pageSize) {
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         return workflowInstanceExecutor.findByApproverId(tenantId, approverId, workflowStatuses, approveStatuses, page, pageSize);
     }
@@ -3572,13 +3572,13 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @param page     当前页
      * @param pageSize 每页显示数量
      *
-     * @return Page<TaskHistory>
+     * @return PagingResponse
      *
      * @author wangweijun
      * @since 2024/7/11 15:06
      */
     @Override
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer page, Integer pageSize) {
         return this.findTaskHistories(tenantId, null, null, null, page, pageSize);
     }
 
@@ -3598,11 +3598,11 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/7/11 15:06
      */
     @Override
-    public Page<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize) {
+    public PagingResponse<TaskHistoryResponse> findTaskHistories(String tenantId, Integer workflowDefinitionId, Integer workflowInstanceId, String requesterId, Integer page, Integer pageSize) {
         TaskHistoryExecutor taskHistoryExecutor = taskHistoryExecutorBuilder.build();
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         WorkflowDefinitionExecutor workflowDefinitionExecutor = workflowDefinitionExecutorBuilder.build();
-        Page<TaskHistory> result = taskHistoryExecutor.findTaskHistories(tenantId, workflowDefinitionId, workflowInstanceId, requesterId, page, pageSize);
+        PagingResponse<TaskHistory> result = taskHistoryExecutor.findTaskHistories(tenantId, workflowDefinitionId, workflowInstanceId, requesterId, page, pageSize);
 
         List<TaskHistoryResponse> responses = new ArrayList<>();
         result.getRecords().forEach(taskHistory -> {
@@ -3612,7 +3612,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             responses.add(taskHistoryResponse);
         });
 
-        return Page.of(page, pageSize, result.getTotal(), responses);
+        return PagingResponse.of(page, pageSize, result.getTotal(), responses);
     }
 
     /**
@@ -3991,7 +3991,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
                     .eq(TaskInstance::getState, 1)
                     .build();
-            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            PagingResponse<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
             List<TaskInstance> taskInstances = taskInstancePage.getRecords();
             if (taskInstances.isEmpty()) {
                 WorkflowException.throwWorkflowInstanceNotFoundException();
@@ -4053,7 +4053,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 builder.eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId);
             }
             Query query = builder.build();
-            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            PagingResponse<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
             List<TaskInstance> taskInstances = taskInstancePage.getRecords();
             if (taskInstances.isEmpty()) {
                 WorkflowException.throwWorkflowInstanceNotFoundException();
@@ -4085,7 +4085,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     .eq(TaskInstance::getStatus, NodeStatus.IN_PROGRESS.getCode())
                     .eq(TaskInstance::getState, 1)
                     .build();
-            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            PagingResponse<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
             List<TaskInstance> taskInstances = taskInstancePage.getRecords();
             if (taskInstances.isEmpty()) {
                 WorkflowException.throwWorkflowInstanceNotFoundException();
@@ -4149,7 +4149,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                 builder.eq(TaskInstance::getWorkflowInstanceId, workflowInstanceId);
             }
             Query query = builder.build();
-            Page<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
+            PagingResponse<TaskInstance> taskInstancePage = taskInstanceExecutor.find(query);
             List<TaskInstance> taskInstances = taskInstancePage.getRecords();
             if (taskInstances.isEmpty()) {
                 WorkflowException.throwWorkflowInstanceNotFoundException();
@@ -4364,7 +4364,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
      * @since 2024/10/14 10:10
      */
     @Override
-    public Page<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
+    public PagingResponse<WorkflowInstance> findWorkflowInstancesByKey(String tenantId, String key, List<WorkflowStatus> workflowStatuses, Integer page, Integer pageSize) {
         WorkflowInstanceExecutor workflowInstanceExecutor = workflowInstanceExecutorBuilder.build();
         return workflowInstanceExecutor.findWorkflowInstancesByKey(tenantId, key, workflowStatuses, page, pageSize);
     }
@@ -4467,7 +4467,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
             builder.eq(WorkflowInstance::getStatus, workflowStatus.getCode());
         }
         Query query = builder.build();
-        Page<WorkflowInstance> page = workflowInstanceExecutor.find(query);
+        PagingResponse<WorkflowInstance> page = workflowInstanceExecutor.find(query);
         return page.getRecords();
     }
 
@@ -4612,7 +4612,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     .eq(NodeAssignment::getApproverId, sourceApproverId)
                     .eq(NodeAssignment::getState, 1)
                     .build();
-            Page<NodeAssignment> nodeAssignmentPage = nodeAssignmentExecutor.find(query);
+            PagingResponse<NodeAssignment> nodeAssignmentPage = nodeAssignmentExecutor.find(query);
             List<NodeAssignment> nodeAssignments = nodeAssignmentPage.getRecords();
             if (CollectionUtils.isNotEmpty(nodeAssignments)) {
                 for (NodeAssignment nodeAssignment : nodeAssignments) {
@@ -4637,7 +4637,7 @@ public class RuntimeServiceImpl extends AbstractRuntimeService {
                     .eq(TaskApprove::getActive, ActiveStatus.ACTIVE.getCode())
                     .eq(TaskApprove::getState, 1)
                     .build();
-            Page<TaskApprove> taskApprovePage = taskApproveExecutor.find(query);
+            PagingResponse<TaskApprove> taskApprovePage = taskApproveExecutor.find(query);
             List<TaskApprove> taskApproves = taskApprovePage.getRecords();
             if (CollectionUtils.isNotEmpty(taskApproves)) {
                 for (TaskApprove taskApprove : taskApproves) {

@@ -1,6 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.workflow.service;
 
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowDefinition;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowInstance;
 import io.github.thebesteric.framework.agile.plugins.workflow.entity.WorkflowRepository;
@@ -126,7 +126,7 @@ public interface RepositoryService {
      * @author wangweijun
      * @since 2024/7/15 14:11
      */
-    Page<WorkflowRepository> findAttachmentsByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize);
+    PagingResponse<WorkflowRepository> findAttachmentsByWorkflowInstanceId(String tenantId, Integer workflowInstanceId, Integer page, Integer pageSize);
 
     /**
      * 查询附件
@@ -141,7 +141,7 @@ public interface RepositoryService {
      * @author wangweijun
      * @since 2024/7/15 14:11
      */
-    Page<WorkflowRepository> findAttachmentsByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize);
+    PagingResponse<WorkflowRepository> findAttachmentsByWorkflowDefinitionId(String tenantId, Integer workflowDefinitionId, Integer page, Integer pageSize);
 
     /**
      * 查询附件
@@ -156,7 +156,7 @@ public interface RepositoryService {
      * @author wangweijun
      * @since 2024/7/15 14:11
      */
-    Page<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize);
+    PagingResponse<WorkflowRepository> findAttachmentsByTaskInstanceId(String tenantId, Integer taskInstanceId, Integer page, Integer pageSize);
 
     /**
      * 查询附件
@@ -170,7 +170,7 @@ public interface RepositoryService {
      * @author wangweijun
      * @since 2024/7/15 14:11
      */
-    Page<WorkflowRepository> findAttachments(WorkflowInstance workflowInstance, Integer page, Integer pageSize);
+    PagingResponse<WorkflowRepository> findAttachments(WorkflowInstance workflowInstance, Integer page, Integer pageSize);
 
     /**
      * 查询附件
@@ -184,5 +184,5 @@ public interface RepositoryService {
      * @author wangweijun
      * @since 2024/7/15 14:11
      */
-    Page<WorkflowRepository> findAttachments(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize);
+    PagingResponse<WorkflowRepository> findAttachments(WorkflowDefinition workflowDefinition, Integer page, Integer pageSize);
 }

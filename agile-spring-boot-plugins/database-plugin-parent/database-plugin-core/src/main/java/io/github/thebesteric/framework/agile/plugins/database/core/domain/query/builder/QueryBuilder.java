@@ -1,5 +1,6 @@
 package io.github.thebesteric.framework.agile.plugins.database.core.domain.query.builder;
 
+import io.github.thebesteric.framework.agile.core.domain.page.PagingRequest;
 import io.github.thebesteric.framework.agile.plugins.database.core.domain.query.*;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ public class QueryBuilder {
 
     private final List<QueryParam> queryParams;
     private final List<OrderByParam> orderByParams;
-    private Pager pager;
+    private PagingRequest pager;
 
 
     private final boolean toUnderline;
@@ -105,7 +106,7 @@ public class QueryBuilder {
     }
 
     public QueryBuilder page(Integer page, Integer pageSize) {
-        pager = Pager.of(page, pageSize);
+        pager = PagingRequest.of(page.longValue(), pageSize.longValue());
         return this;
     }
 

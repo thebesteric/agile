@@ -2,7 +2,7 @@ package io.github.thebesteric.framework.agile.test.workflow;
 
 import io.github.thebesteric.framework.agile.commons.util.JsonUtils;
 import io.github.thebesteric.framework.agile.commons.util.MapWrapper;
-import io.github.thebesteric.framework.agile.plugins.database.core.domain.Page;
+import io.github.thebesteric.framework.agile.core.domain.page.PagingResponse;
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.plugins.workflow.constant.*;
 import io.github.thebesteric.framework.agile.plugins.workflow.domain.*;
@@ -652,7 +652,7 @@ class WorkflowHelperTest {
         System.out.println(inCurrentlyEffectRoleApprovers);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, List.of(roleId), approverId, nodeStatuses, approveStatuses, null, 1, 10);
+        PagingResponse<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, List.of(roleId), approverId, nodeStatuses, approveStatuses, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
@@ -757,7 +757,7 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
+        PagingResponse<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
@@ -792,7 +792,7 @@ class WorkflowHelperTest {
         runtimeServiceHelper.setCurrentUser(approverId);
 
         // 查找待审批待实例
-        Page<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
+        PagingResponse<TaskInstance> page = runtimeServiceHelper.findTaskInstances(tenantId, null, roleId, approverId, NodeStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, null, 1, 10);
         List<TaskInstance> taskInstances = page.getRecords();
         taskInstances.forEach(System.out::println);
 
@@ -811,7 +811,7 @@ class WorkflowHelperTest {
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
         runtimeServiceHelper.setCurrentUser(requesterId);
 
-        Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, requesterId, WorkflowStatus.IN_PROGRESS, 1, 10);
+        PagingResponse<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, requesterId, WorkflowStatus.IN_PROGRESS, 1, 10);
         List<WorkflowInstance> workflowInstances = page.getRecords();
         workflowInstances.forEach(workflowInstance -> {
             runtimeServiceHelper.cancel(workflowInstance);
@@ -827,7 +827,7 @@ class WorkflowHelperTest {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         TaskHistoryServiceHelper taskHistoryServiceHelper = workflowHelper.getTaskHistoryServiceHelper();
 
-        Page<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, 1, 1, 20);
+        PagingResponse<TaskHistoryResponse> taskHistories = taskHistoryServiceHelper.findTaskHistories(tenantId, 1, 1, 20);
         taskHistories.getRecords().forEach(System.out::println);
     }
 
@@ -910,7 +910,7 @@ class WorkflowHelperTest {
 
         DeploymentServiceHelper deploymentServiceHelper = workflowHelper.getDeploymentServiceHelper();
 
-        Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByApproverId(tenantId, approverId, WorkflowStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
+        PagingResponse<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByApproverId(tenantId, approverId, WorkflowStatus.IN_PROGRESS, ApproveStatus.IN_PROGRESS, 1, 10);
         List<WorkflowInstance> workflowInstances = page.getRecords();
         workflowInstances.forEach(workflowInstance -> {
             WorkflowDefinition workflowDefinition = deploymentServiceHelper.getById(tenantId, workflowInstance.getWorkflowDefinitionId());
@@ -1121,7 +1121,7 @@ class WorkflowHelperTest {
         System.out.println(runtimeServiceHelper.getWorkflowInstanceById(tenantId, 1));
         System.out.println(runtimeServiceHelper.getWorkflowInstanceByTaskInstanceId(tenantId, 2));
 
-        Page<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstancesByKey(tenantId, workflowKey, List.of(WorkflowStatus.IN_PROGRESS), 1, 10);
+        PagingResponse<WorkflowInstance> workflowInstances = runtimeServiceHelper.findWorkflowInstancesByKey(tenantId, workflowKey, List.of(WorkflowStatus.IN_PROGRESS), 1, 10);
         System.out.println(workflowInstances);
     }
 
@@ -1143,7 +1143,7 @@ class WorkflowHelperTest {
     void findByRequestId() {
         WorkflowHelper workflowHelper = new WorkflowHelper(workflowEngine);
         RuntimeServiceHelper runtimeServiceHelper = workflowHelper.getRuntimeServiceHelper();
-        Page<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, "eric", WorkflowStatus.IN_PROGRESS, 1, 10);
+        PagingResponse<WorkflowInstance> page = runtimeServiceHelper.findWorkflowInstancesByRequestId(tenantId, "eric", WorkflowStatus.IN_PROGRESS, 1, 10);
         List<WorkflowInstance> workflowInstances = page.getRecords();
         workflowInstances.forEach(System.out::println);
     }
