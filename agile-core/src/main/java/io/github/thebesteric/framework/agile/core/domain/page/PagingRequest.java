@@ -3,14 +3,16 @@ package io.github.thebesteric.framework.agile.core.domain.page;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 分页请求基类
+ * 分页请求类（如需扩展可继承）
  *
  * @author wangweijun
  * @version v1.0
@@ -18,7 +20,9 @@ import java.io.Serializable;
  */
 @Getter
 @Setter
-public abstract class PagingRequest implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class PagingRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = 2067724472495543463L;
 
@@ -27,6 +31,10 @@ public abstract class PagingRequest implements Serializable {
 
     @Schema(description = "当前页，默认：1")
     protected long current = 1;
+
+    public static PagingRequest of(Long current, Long size) {
+        return new PagingRequest(current, size);
+    }
 
     public void setSize(long size) {
         if (size < 0) {
@@ -46,6 +54,10 @@ public abstract class PagingRequest implements Serializable {
 
     public <T> IPage<T> getPage(Class<T> recordType) {
         return new Page<>(this.current, this.size);
+    }
+
+    public Long getOffset() {
+        return (this.current - 1) * this.size;
     }
 
     /**

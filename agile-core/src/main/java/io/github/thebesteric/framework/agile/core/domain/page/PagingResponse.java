@@ -44,17 +44,18 @@ public class PagingResponse<T> implements Serializable {
         this.size = size;
         this.total = total;
         this.records = records;
+        this.pages = this.getPages();
     }
 
     public long getPages() {
-        if (this.getSize() == 0L) {
+        if (this.size == 0L) {
             return 0L;
         } else {
-            long pages = this.getTotal() / this.getSize();
-            if (this.getTotal() % this.getSize() != 0L) {
-                ++pages;
+            long calcPages = this.total / this.size;
+            if (this.total % this.size != 0L) {
+                ++calcPages;
             }
-            return pages;
+            return calcPages;
         }
     }
 
@@ -68,6 +69,10 @@ public class PagingResponse<T> implements Serializable {
 
     public static <T> PagingResponse<T> of(long current, long size, long total, List<T> records) {
         return new PagingResponse<>(current, size, total, records);
+    }
+
+    public static <T extends Serializable> PagingResponse<T> of(List<T> records) {
+        return new PagingResponse<>(1, records.size(), records.size(), records);
     }
 
     public static <T extends Serializable> PagingResponse<T> of(IPage<T> page) {
