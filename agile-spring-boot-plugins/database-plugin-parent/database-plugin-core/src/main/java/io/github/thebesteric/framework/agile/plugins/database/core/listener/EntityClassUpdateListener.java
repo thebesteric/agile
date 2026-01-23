@@ -8,7 +8,7 @@ import io.github.thebesteric.framework.agile.plugins.database.core.jdbc.JdbcTemp
  *
  * @author wangweijun
  * @version v1.0
- * @since 2024-12-10 18:30:31
+ * @since 2024-12-10 20:08:31
  */
 public interface EntityClassUpdateListener {
     /**
