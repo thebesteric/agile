@@ -26,11 +26,11 @@ public class PagingRequest implements Serializable {
     @Serial
     private static final long serialVersionUID = 2067724472495543463L;
 
-    @Schema(description = "每页显示数量，，默认：10")
-    protected long size = 10;
-
     @Schema(description = "当前页，默认：1")
     protected long current = 1;
+
+    @Schema(description = "每页显示数量，，默认：10")
+    protected long size = 10;
 
     public static PagingRequest of(Long current, Long size) {
         return new PagingRequest(current, size);
