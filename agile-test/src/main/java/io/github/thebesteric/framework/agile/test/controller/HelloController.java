@@ -12,6 +12,7 @@ import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogg
 import io.github.thebesteric.framework.agile.plugins.workflow.WorkflowEngine;
 import io.github.thebesteric.framework.agile.test.domain.FileVo;
 import io.github.thebesteric.framework.agile.test.domain.Id2Vo;
+import io.github.thebesteric.framework.agile.test.entity.Tar;
 import io.github.thebesteric.framework.agile.test.service.HelloService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,7 +107,12 @@ public class HelloController {
     }
 
     @GetMapping("/save")
-    public R<Id2Vo> save() {
+    public R<String> save() {
+        Tar tar = new Tar();
+        tar.setName("tar");
+        tar.setTenantId("1");
+        tar.setA("a");
+        helloService.save(tar);
         return R.success();
     }
 

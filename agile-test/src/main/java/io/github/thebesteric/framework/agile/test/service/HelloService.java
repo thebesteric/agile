@@ -1,9 +1,12 @@
 package io.github.thebesteric.framework.agile.test.service;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileContext;
 import io.github.thebesteric.framework.agile.plugins.logger.annotation.AgileLogger;
 import io.github.thebesteric.framework.agile.test.domain.FileVo;
+import io.github.thebesteric.framework.agile.test.entity.Tar;
+import io.github.thebesteric.framework.agile.test.mapper.TarMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -18,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @AgileLogger
 @Service
-public class HelloService {
+public class HelloService extends ServiceImpl<TarMapper, Tar> {
 
     private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
 
