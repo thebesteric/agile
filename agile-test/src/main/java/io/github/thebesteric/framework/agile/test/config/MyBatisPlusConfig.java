@@ -1,7 +1,7 @@
 package io.github.thebesteric.framework.agile.test.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
-import io.github.thebesteric.framework.agile.plugins.database.config.AbstractAgileMyBatisPlusConfig;
+import io.github.thebesteric.framework.agile.plugins.database.core.config.AbstractAgileMyBatisPlusConfig;
 import io.github.thebesteric.framework.agile.test.domain.MyUserInfo;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,8 +29,5 @@ public class MyBatisPlusConfig extends AbstractAgileMyBatisPlusConfig<MyUserInfo
     public boolean getPaginationOverflow() {
         return true;
     }
-
-
-
 
 }
