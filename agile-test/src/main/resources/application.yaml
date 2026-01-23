@@ -76,14 +76,14 @@ sourceflag:
 spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-#    url: jdbc:mysql://127.0.0.1:3306/doc_transfer?useUnicode=true&characterEncoding=UTF-8&userSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull
-#    username: root
-#    password: root
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:postgresql://127.0.0.1:5432/doc_transfer?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-    username: admin
-    password: 123456
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://127.0.0.1:3306/doc_transfer?useUnicode=true&characterEncoding=UTF-8&userSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true&zeroDateTimeBehavior=convertToNull
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:postgresql://127.0.0.1:5432/doc_transfer?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+#    username: admin
+#    password: 123456
+#    driver-class-name: org.postgresql.Driver
   data:
     redis:
       host: 127.0.0.1
