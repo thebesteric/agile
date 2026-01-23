@@ -299,7 +299,7 @@ public class JdbcTemplateHelper {
         sb.append("ALTER TABLE").append(" ").append("`").append(tableName).append("`").append(" ");
         sb.append("ADD").append(" ").append("`").append(columnDomain.getName()).append("`").append(" ").append(columnDomain.typeWithLength()).append(" ");
 
-        if (columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
+        if (databaseProduct != DatabaseProduct.POSTGRESQL && columnDomain.getType().isSupportSign() && columnDomain.isUnsigned()) {
             sb.append("UNSIGNED").append(" ");
         }
 
