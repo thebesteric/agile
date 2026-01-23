@@ -37,7 +37,7 @@ class WorkflowServiceTest {
         String tenantId = "8888";
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         Query query = QueryBuilderWrapper.createLambda(WorkflowDefinition.class).eq(WorkflowDefinition::getTenantId, tenantId)
-                .page(1, 10).build();
+                .page(1L, 10L).build();
         List<WorkflowDefinition> workflowInstances = workflowService.findWorkflowDefinitions(query).getRecords();
         workflowInstances.forEach(System.out::println);
     }
@@ -48,7 +48,7 @@ class WorkflowServiceTest {
         WorkflowService workflowService = workflowEngine.getWorkflowService();
         Query query = QueryBuilderWrapper.createLambda(WorkflowInstance.class).eq(WorkflowInstance::getTenantId, tenantId)
                 .orderBy(WorkflowInstance::getCreatedAt, OrderByOperator.DESC)
-                .page(1, 10)
+                .page(1L, 10L)
                 .build();
         List<WorkflowInstance> workflowInstances = workflowService.findWorkflowInstances(query).getRecords();
         workflowInstances.forEach(System.out::println);
