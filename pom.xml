@@ -82,6 +82,7 @@
         <mybatis.version>3.5.19</mybatis.version>
         <swagger-annotations-jakarta.version>2.2.41</swagger-annotations-jakarta.version>
         <jjwt.version>0.13.0</jjwt.version>
+        <jbcrypt.version>0.4</jbcrypt.version>
     </properties>
 
     <dependencies>
@@ -264,6 +265,13 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations-jakarta</artifactId>
                 <version>${swagger-annotations-jakarta.version}</version>
+            </dependency>
+
+            <!-- BCrypt -->
+            <dependency>
+                <groupId>org.mindrot</groupId>
+                <artifactId>jbcrypt</artifactId>
+                <version>${jbcrypt.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
