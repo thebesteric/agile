@@ -583,3 +583,10 @@
 - 通用 (refactor): 优化 R 类对 HttpStatus 的处理和调用逻辑
 - 数据库插件 (bugfix): 修复 PostgreSQL 更新表结构时，语法报错的问题
 - 数据库插件 (refactor): 优化实体类基类，deleted 改为 int 类型，desc 重新命名为为 comments，以支持 PostgreSQL 数据库
+
+### v1.0.21.7
+
+- 通用 (perf): 优化 PagingRequest 和 PagingResponse 分页类
+- 通用 (feat): 增加 `EncryptUtils` 加解密工具类
+- 工作流插件 (refactor): 统一分页类的使用 PagingRequest 和 PagingResponse
+- 数据库插件 (feat): 添加抽象的 `AbstractAgileMyBatisPlusConfig` 类，简化 MyBatis-Plus 配置
