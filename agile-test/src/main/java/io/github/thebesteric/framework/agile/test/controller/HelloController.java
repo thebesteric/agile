@@ -107,12 +107,19 @@ public class HelloController {
     }
 
     @GetMapping("/save")
-    public R<String> save() {
+    public R<String> save(String name) {
         Tar tar = new Tar();
-        tar.setName("tar");
+        tar.setName(name);
         tar.setTenantId("1");
         tar.setA("a");
+        tar.setActive(true);
         helloService.save(tar);
+        return R.success();
+    }
+
+    @GetMapping("/delete")
+    public R<String> delete(String name) {
+        helloService.remove(name);
         return R.success();
     }
 

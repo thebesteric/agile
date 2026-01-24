@@ -22,7 +22,7 @@ public class MyBatisPlusConfig extends AbstractAgileMyBatisPlusConfig<MyUserInfo
 
     @Override
     public DbType getDbType() {
-        return DbType.MYSQL;
+        return DbType.POSTGRE_SQL;
     }
 
     @Override

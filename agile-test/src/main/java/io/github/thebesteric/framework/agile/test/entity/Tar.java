@@ -24,4 +24,7 @@ public class Tar extends BaseBizEntity {
     @EntityColumn(sequence = 1, comment = "a")
     private String a;
 
+    @EntityColumn(type = EntityColumn.Type.BOOLEAN, defaultExpression = "false", comment = "是否激活")
+    private Boolean active;
+
 }

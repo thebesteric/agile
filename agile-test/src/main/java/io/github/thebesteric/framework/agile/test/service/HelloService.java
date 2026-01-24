@@ -1,5 +1,7 @@
 package io.github.thebesteric.framework.agile.test.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileContext;
@@ -45,6 +47,11 @@ public class HelloService extends ServiceImpl<TarMapper, Tar> {
 
     public FileVo parseFile(MultipartFile file) {
         return new FileVo(file.getOriginalFilename(), file.getResource());
+    }
+
+    public void remove(String name) {
+        Wrapper<Tar> queryWrapper = new LambdaQueryWrapper<Tar>().eq(Tar::getName, name);
+        this.remove(queryWrapper);
     }
 
 
