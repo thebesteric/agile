@@ -590,3 +590,4 @@
 - 通用 (feat): 增加 `EncryptUtils` 加解密工具类
 - 工作流插件 (refactor): 统一分页类的使用 PagingRequest 和 PagingResponse
 - 数据库插件 (feat): 添加抽象的 `AbstractAgileMyBatisPlusConfig` 类，简化 MyBatis-Plus 配置
+- 数据库插件 (feat): 支持 Boolean 类型数据库字段的创建和更新（不支持 @TableLogic 逻辑字段）
