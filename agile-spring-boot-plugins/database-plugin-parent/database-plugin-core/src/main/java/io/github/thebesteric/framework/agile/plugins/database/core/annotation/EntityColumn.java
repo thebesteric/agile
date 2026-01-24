@@ -81,7 +81,7 @@ public @interface EntityColumn {
     enum Type {
         DETERMINE("DETERMINE", false, false, false),
 
-        BOOLEAN("TINYINT", true, false, false),
+        BOOLEAN("BOOLEAN", true, false, false),
         TINY_INT("TINYINT", true, false, false),
         SMALL_INT("SMALLINT", true, false, false),
         MEDIUM_INT("MEDIUMINT", true, false, false),

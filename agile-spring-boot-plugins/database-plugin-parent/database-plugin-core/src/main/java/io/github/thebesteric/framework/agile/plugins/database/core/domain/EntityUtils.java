@@ -108,18 +108,16 @@ public final class EntityUtils extends AbstractUtils {
      * @param field 字段
      *
      * @return Type
-     *
-     * @author wangweijun
-     * @since 2024/8/29 15:56
      */
     public static EntityColumn.Type getColumnType(Field field) {
         EntityColumn entityColumn = field.getAnnotation(EntityColumn.class);
         if (entityColumn != null && entityColumn.type() != EntityColumn.Type.DETERMINE) {
             return entityColumn.type();
         }
-
         Class<?> fieldType = field.getType();
-        if (fieldType == Boolean.class || fieldType == boolean.class || fieldType == Byte.class || fieldType == byte.class) {
+        if (fieldType == Boolean.class || fieldType == boolean.class) {
+            return EntityColumn.Type.BOOLEAN;
+        } else if (fieldType == Byte.class || fieldType == byte.class) {
             return EntityColumn.Type.TINY_INT;
         } else if (fieldType == Short.class || fieldType == short.class) {
             return EntityColumn.Type.SMALL_INT;
