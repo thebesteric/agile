@@ -39,7 +39,7 @@ public class TaskInstance extends BaseEntity {
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "节点状态")
     private NodeStatus status;
 
-    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是角色审批节点")
+    @EntityColumn(nullable = false, defaultExpression = "false", comment = "是否是角色审批节点")
     private boolean roleApprove = false;
 
     @EntityColumn(comment = "审批人数（已完成）")

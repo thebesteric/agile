@@ -252,4 +252,27 @@ public class ColumnDomain {
         }
         return key;
     }
+
+    public String getDefaultExpression(DatabaseProduct databaseProduct) {
+        if (databaseProduct == DatabaseProduct.POSTGRESQL) {
+            boolean boolValue = this.defaultExpression.equalsIgnoreCase("true") || this.defaultExpression.equalsIgnoreCase("false");
+            // 类型不是布尔类型，且默认值是布尔值时，进行特殊处理
+            if (this.type != EntityColumn.Type.BOOLEAN && boolValue) {
+                if (this.defaultExpression.equalsIgnoreCase("true")) {
+                    this.defaultExpression = "1";
+                } else {
+                    this.defaultExpression = "0";
+                }
+            }
+            // 类型是布尔类型，但是给的默认值不是布尔值，进行特殊处理
+            else if(this.type == EntityColumn.Type.BOOLEAN && !boolValue) {
+                if (this.defaultExpression.equalsIgnoreCase("1")) {
+                    this.defaultExpression = "true";
+                } else {
+                    this.defaultExpression = "false";
+                }
+            }
+        }
+        return this.defaultExpression;
+    }
 }

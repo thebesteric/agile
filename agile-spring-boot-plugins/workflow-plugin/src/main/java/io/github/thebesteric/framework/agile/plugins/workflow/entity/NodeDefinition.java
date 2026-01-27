@@ -62,13 +62,13 @@ public class NodeDefinition extends BaseEntity {
     @EntityColumn(nullable = false, length = 12, precision = 2, comment = "排序")
     private Double sequence;
 
-    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是动态指定审批节点")
+    @EntityColumn(nullable = false, defaultExpression = "false", comment = "是否是动态指定审批节点")
     private boolean dynamic = false;
 
     @EntityColumn(nullable = false, defaultExpression = "0", comment = "动态审批人数量")
     private Integer dynamicAssignmentNum = 0;
 
-    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否是角色审批节点")
+    @EntityColumn(nullable = false, defaultExpression = "false", comment = "是否是角色审批节点")
     private boolean roleApprove = false;
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "角色用户审批类型")

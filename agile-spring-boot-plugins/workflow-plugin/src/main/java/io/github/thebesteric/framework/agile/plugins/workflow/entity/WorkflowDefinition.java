@@ -51,16 +51,16 @@ public class WorkflowDefinition extends BaseEntity {
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "没有条件节点符合时的处理策略: 默认抛出异常")
     private ConditionNotMatchedAnyStrategy conditionNotMatchedAnyStrategy = ConditionNotMatchedAnyStrategy.PROCESS_THROW_EXCEPTION;
 
-    @EntityColumn(nullable = false, defaultExpression = "0", comment = "审批人为空时，是否允许自动审批")
+    @EntityColumn(nullable = false, defaultExpression = "false", comment = "审批人为空时，是否允许自动审批")
     private boolean allowEmptyAutoApprove = false;
 
-    @EntityColumn(nullable = false, defaultExpression = "1", comment = "是否允许撤回")
+    @EntityColumn(nullable = false, defaultExpression = "true", comment = "是否允许撤回")
     private boolean allowRedo = true;
 
-    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否必须填写审批意见")
+    @EntityColumn(nullable = false, defaultExpression = "false", comment = "是否必须填写审批意见")
     private boolean requiredComment = false;
 
-    @EntityColumn(nullable = false, defaultExpression = "0", comment = "是否锁定（解锁不会更新流程定义）")
+    @EntityColumn(nullable = false, defaultExpression = "false", comment = "是否锁定（解锁不会更新流程定义）")
     private boolean lock = false;
 
     @EntityColumn(type = EntityColumn.Type.TINY_INT, nullable = false, comment = "发布状态")
