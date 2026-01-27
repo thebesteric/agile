@@ -2,6 +2,7 @@ package io.github.thebesteric.framework.agile.core.domain.page;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -56,6 +57,7 @@ public class PagingRequest implements Serializable {
         return new Page<>(this.current, this.size);
     }
 
+    @Hidden
     public Long getOffset() {
         return (this.current - 1) * this.size;
     }
