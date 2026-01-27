@@ -18,6 +18,7 @@ public class RateLimitException extends RuntimeException {
     public RateLimitException() {
         super("Rate limit exception");
     }
+
     public RateLimitException(String message, Object... params) {
         super(MessageFormatUtils.format(message, params));
     }

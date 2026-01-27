@@ -18,6 +18,7 @@ public class IdempotentException extends RuntimeException {
     public IdempotentException() {
         super("Idempotent check exception");
     }
+
     public IdempotentException(String message, Object... params) {
         super(MessageFormatUtils.format(message, params));
     }
