@@ -1,9 +1,12 @@
 package io.github.thebesteric.framework.agile.plugins.idempotent.redis.config;
 
+import io.github.thebesteric.framework.agile.commons.util.LoggerPrinter;
 import io.github.thebesteric.framework.agile.core.AgileConstants;
+import io.github.thebesteric.framework.agile.core.config.AbstractAgileInitialization;
 import io.github.thebesteric.framework.agile.plugins.idempotent.config.AgileIdempotentProperties;
 import io.github.thebesteric.framework.agile.plugins.idempotent.processor.IdempotentProcessor;
 import io.github.thebesteric.framework.agile.plugins.idempotent.redis.processor.impl.RedisIdempotentProcessor;
+import lombok.RequiredArgsConstructor;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -21,9 +24,22 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @EnableConfigurationProperties(AgileIdempotentProperties.class)
+@RequiredArgsConstructor
 @ConditionalOnProperty(prefix = AgileConstants.PROPERTIES_PREFIX + ".idempotent", name = "enable", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(RedissonClient.class)
-public class AgileIdempotentRedisAutoConfiguration {
+public class AgileIdempotentRedisAutoConfiguration extends AbstractAgileInitialization {
+
+    private static final LoggerPrinter loggerPrinter = LoggerPrinter.newInstance();
+
+    private final AgileIdempotentProperties properties;
+
+    @Override
+    public void start() {
+        if (!properties.isEnable()) {
+            return;
+        }
+        loggerPrinter.info("Idempotent-plugin-redis is applied");
+    }
 
     @Bean
     @ConditionalOnMissingBean(IdempotentProcessor.class)
