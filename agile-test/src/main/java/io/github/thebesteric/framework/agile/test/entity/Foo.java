@@ -52,7 +52,7 @@ public class Foo extends BaseEntity implements EntityClassCreateListener, Entity
     @EntityColumn(length = 64, nullable = false, defaultExpression = "'hello'", sequence = 2)
     private String test;
 
-    @EntityColumn(nullable = false, defaultExpression = "0")
+    @EntityColumn(nullable = false, defaultExpression = "false")
     private boolean deleted;
 
     @EntityColumn(length = 64, nullable = false, uniqueGroup = "a_b")
